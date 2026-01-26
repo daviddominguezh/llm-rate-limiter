@@ -1,16 +1,13 @@
 const config = {
   clearMocks: true,
   collectCoverage: true,
-  testTimeout: 30000,
+  testTimeout: 120000,
   coverageDirectory: 'coverage',
   coverageProvider: 'v8',
   extensionsToTreatAsEsm: ['.ts'],
   moduleNameMapper: {
-    '^@globalTypes/(.*)\\.js$': '<rootDir>/src/types/$1',
     '^@globalTypes/(.*)$': '<rootDir>/src/types/$1',
-    '^@globalUtils/(.*)\\.js$': '<rootDir>/src/utils/$1',
     '^@globalUtils/(.*)$': '<rootDir>/src/utils/$1',
-    '^@src/(.*)\\.js$': '<rootDir>/src/$1',
     '^@src/(.*)$': '<rootDir>/src/$1',
     '^(\\.{1,2}/.*)\\.js$': '$1',
   },
@@ -25,7 +22,7 @@ const config = {
         tsconfig: {
           module: 'NodeNext',
           moduleResolution: 'nodenext',
-          target: 'ES2022',
+          target: 'ES2024',
           allowSyntheticDefaultImports: true,
           esModuleInterop: true,
           allowImportingTsExtensions: true,

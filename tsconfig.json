@@ -20,7 +20,7 @@
     "resolveJsonModule": true,
     "incremental": true,
 
-    "types": ["node"],
+    "types": ["node", "jest"],
 
     "paths": {
       "@globalTypes/*": ["./src/types/*"],
@@ -29,5 +29,5 @@
     }
   },
   "include": ["src/**/*.ts"],
-  "exclude": ["node_modules", "dist", "**/*.test.ts", "**/__tests__/**"]
+  "exclude": ["node_modules", "dist"]
 }

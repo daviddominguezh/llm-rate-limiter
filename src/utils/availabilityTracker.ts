@@ -52,18 +52,14 @@ const availabilityEquals = (a: Availability, b: Availability): boolean =>
   a.memoryKB === b.memoryKB;
 
 /** Determine the reason based on what changed (priority order) */
-const determineReason = (
-  prev: Availability,
-  curr: Availability,
-  hintReason: AvailabilityChangeReason
-): AvailabilityChangeReason => {
+const determineReason = (prev: Availability, curr: Availability): AvailabilityChangeReason => {
   if (prev.tokensPerMinute !== curr.tokensPerMinute) return 'tokensMinute';
   if (prev.tokensPerDay !== curr.tokensPerDay) return 'tokensDay';
   if (prev.requestsPerMinute !== curr.requestsPerMinute) return 'requestsMinute';
   if (prev.requestsPerDay !== curr.requestsPerDay) return 'requestsDay';
   if (prev.concurrentRequests !== curr.concurrentRequests) return 'concurrentRequests';
-  if (prev.memoryKB !== curr.memoryKB) return 'memory';
-  return hintReason;
+  // Slots are derived from the fields above plus memory. If we reach here, memory changed.
+  return 'memory';
 };
 
 /** Add slot candidate if value and divisor are valid */
@@ -140,7 +136,7 @@ export class AvailabilityTracker {
     const reason =
       previousAvailability === null
         ? hintReason
-        : determineReason(previousAvailability, currentAvailability, hintReason);
+        : determineReason(previousAvailability, currentAvailability);
     this.previousAvailability = currentAvailability;
     this.callback(currentAvailability, reason, undefined);
   }

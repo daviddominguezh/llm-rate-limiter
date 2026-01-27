@@ -7,3 +7,22 @@ export type {
   LLMRateLimiterStats,
   LLMRateLimiterInstance,
 } from './rateLimiter.js';
+
+export { createMultiModelRateLimiter } from './multiModelRateLimiter.js';
+export type {
+  ArgsWithoutModelId,
+  JobArgs,
+  JobCallbackContext,
+  JobRejectOptions,
+  JobUsage,
+  ModelRateLimitConfig,
+  ModelsConfig,
+  MultiModelJob,
+  MultiModelJobResult,
+  MultiModelRateLimiterConfig,
+  MultiModelRateLimiterInstance,
+  MultiModelRateLimiterStats,
+  QueueJobOptions,
+  UsageEntry,
+  ValidatedMultiModelConfig,
+} from './multiModelTypes.js';

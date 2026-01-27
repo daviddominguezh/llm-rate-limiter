@@ -1,0 +1,116 @@
+import { setTimeout as setTimeoutAsync } from 'node:timers/promises';
+
+import { createMultiModelRateLimiter } from '../multiModelRateLimiter.js';
+
+import type { LLMJobResult } from '../types.js';
+import type { MultiModelRateLimiterInstance } from '../multiModelTypes.js';
+import { createJobOptions, createMockJobResult, DELAY_MS_MEDIUM, DELAY_MS_SHORT, MOCK_TOTAL_TOKENS, ONE, RPM_LIMIT_HIGH, RPM_LIMIT_LOW, simpleJob, ZERO } from './multiModelRateLimiter.helpers.js';
+
+describe('MultiModelRateLimiter - automatic fallback RPM', () => {
+  let limiter: MultiModelRateLimiterInstance | undefined = undefined;
+  afterEach(() => { limiter?.stop(); limiter = undefined; });
+
+  it('should fallback to second model when first is exhausted (RPM)', async () => {
+    limiter = createMultiModelRateLimiter({
+      models: {
+        'gpt-4': { requestsPerMinute: RPM_LIMIT_LOW, resourcesPerEvent: { estimatedNumberOfRequests: ONE } },
+        'gpt-3.5': { requestsPerMinute: RPM_LIMIT_HIGH, resourcesPerEvent: { estimatedNumberOfRequests: ONE } },
+      },
+      order: ['gpt-4', 'gpt-3.5'],
+    });
+    const result1 = await limiter.queueJob(simpleJob(createMockJobResult('job-1')));
+    expect(result1.modelUsed).toBe('gpt-4');
+    const result2 = await limiter.queueJob(simpleJob(createMockJobResult('job-2')));
+    expect(result2.modelUsed).toBe('gpt-3.5');
+  });
+});
+
+describe('MultiModelRateLimiter - automatic fallback concurrency', () => {
+  let limiter: MultiModelRateLimiterInstance | undefined = undefined;
+  afterEach(() => { limiter?.stop(); limiter = undefined; });
+
+  it('should fallback to second model when first is exhausted (concurrency)', async () => {
+    limiter = createMultiModelRateLimiter({
+      models: { 'gpt-4': { maxConcurrentRequests: ONE }, 'gpt-3.5': { maxConcurrentRequests: ONE } },
+      order: ['gpt-4', 'gpt-3.5'],
+    });
+    const modelsUsed: string[] = [];
+    const job1Promise = limiter.queueJob(createJobOptions(async ({ modelId }) => {
+      modelsUsed.push(modelId);
+      await setTimeoutAsync(DELAY_MS_MEDIUM);
+      return createMockJobResult('job-1');
+    }));
+    await setTimeoutAsync(DELAY_MS_SHORT);
+    const job2Promise = limiter.queueJob(createJobOptions(({ modelId }) => {
+      modelsUsed.push(modelId);
+      return createMockJobResult('job-2');
+    }));
+    await Promise.all([job1Promise, job2Promise]);
+    expect(modelsUsed).toEqual(['gpt-4', 'gpt-3.5']);
+  });
+});
+
+describe('MultiModelRateLimiter - token limits fallback', () => {
+  let limiter: MultiModelRateLimiterInstance | undefined = undefined;
+  afterEach(() => { limiter?.stop(); limiter = undefined; });
+
+  it('should track token usage per model', async () => {
+    const TPM_LIMIT = 10000;
+    limiter = createMultiModelRateLimiter({
+      models: { 'gpt-4': { tokensPerMinute: TPM_LIMIT, resourcesPerEvent: { estimatedUsedTokens: MOCK_TOTAL_TOKENS } } },
+    });
+    await limiter.queueJob(simpleJob(createMockJobResult('job-1')));
+    const stats = limiter.getModelStats('gpt-4');
+    expect(stats.tokensPerMinute?.current).toBe(MOCK_TOTAL_TOKENS);
+  });
+
+  it('should fallback when token limit is reached', async () => {
+    const TPM_LIMIT_LOW = MOCK_TOTAL_TOKENS;
+    const TPM_LIMIT_HIGH = 100000;
+    limiter = createMultiModelRateLimiter({
+      models: {
+        'gpt-4': { tokensPerMinute: TPM_LIMIT_LOW, resourcesPerEvent: { estimatedUsedTokens: MOCK_TOTAL_TOKENS } },
+        'gpt-3.5': { tokensPerMinute: TPM_LIMIT_HIGH, resourcesPerEvent: { estimatedUsedTokens: MOCK_TOTAL_TOKENS } },
+      },
+      order: ['gpt-4', 'gpt-3.5'],
+    });
+    const result1 = await limiter.queueJob(simpleJob(createMockJobResult('job-1')));
+    expect(result1.modelUsed).toBe('gpt-4');
+    const result2 = await limiter.queueJob(simpleJob(createMockJobResult('job-2')));
+    expect(result2.modelUsed).toBe('gpt-3.5');
+  });
+});
+
+describe('MultiModelRateLimiter - job errors queueJob', () => {
+  let limiter: MultiModelRateLimiterInstance | undefined = undefined;
+  afterEach(() => { limiter?.stop(); limiter = undefined; });
+
+  it('should propagate job errors when reject with delegate false', async () => {
+    limiter = createMultiModelRateLimiter({ models: { 'gpt-4': { maxConcurrentRequests: ONE } } });
+    const failingJob = {
+      job: (_args: { modelId: string }, _resolve: () => void, reject: (opts?: { delegate?: boolean }) => void): LLMJobResult => {
+        reject({ delegate: false });
+        return createMockJobResult('never');
+      },
+    };
+    await expect(limiter.queueJob(failingJob)).rejects.toThrow('Job rejected without delegation');
+    const stats = limiter.getModelStats('gpt-4');
+    expect(stats.concurrency?.active).toBe(ZERO);
+  });
+});
+
+describe('MultiModelRateLimiter - job errors queueJobForModel', () => {
+  let limiter: MultiModelRateLimiterInstance | undefined = undefined;
+  afterEach(() => { limiter?.stop(); limiter = undefined; });
+
+  it('should propagate queueJobForModel errors', async () => {
+    limiter = createMultiModelRateLimiter({ models: { 'gpt-4': { maxConcurrentRequests: ONE } } });
+    const failingJob = async (): Promise<LLMJobResult> => {
+      await Promise.reject(new Error('Specific model job failed'));
+      return createMockJobResult('never');
+    };
+    await expect(limiter.queueJobForModel('gpt-4', failingJob)).rejects.toThrow('Specific model job failed');
+    const stats = limiter.getModelStats('gpt-4');
+    expect(stats.concurrency?.active).toBe(ZERO);
+  });
+});

@@ -126,3 +126,14 @@ export const simpleJob = <T extends InternalJobResult>(result: T): QueueJobOptio
 
 /** Delay constant for long-running jobs in tests (used to hold resources while checking concurrency) */
 export const DELAY_MS_LONG = 100;
+
+/** Type narrowing helper for tests - throws if value is undefined, returns the value otherwise */
+export function ensureDefined<T extends object>(
+  value: T | undefined | null,
+  message = 'Expected value to be defined'
+): T {
+  if (value === undefined || value === null) {
+    throw new Error(message);
+  }
+  return value;
+}

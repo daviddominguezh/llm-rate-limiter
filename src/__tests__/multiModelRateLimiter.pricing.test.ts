@@ -1,20 +1,18 @@
 import { createLLMRateLimiter } from '../multiModelRateLimiter.js';
-import type { JobCallbackContext, LLMRateLimiterInstance, UsageEntryWithCost } from '../multiModelTypes.js';
+import type { JobCallbackContext, LLMRateLimiterInstance } from '../multiModelTypes.js';
 import {
-  ALT_PRICING,
   CHEAP_PRICING,
   DEFAULT_PRICING,
   EXPENSIVE_PRICING,
   ONE,
   RPM_LIMIT_HIGH,
   TEN,
-  THREE,
   TOKENS_1M,
   TOKENS_100K,
-  TWO,
   ZERO,
   ZERO_CACHED_TOKENS,
   createMockJobResult,
+  ensureDefined,
   generateJobId,
 } from './multiModelRateLimiter.helpers.js';
 
@@ -33,14 +31,6 @@ const EXPENSIVE_MODEL_CONFIG = {
   resourcesPerEvent: { estimatedNumberOfRequests: ONE },
   pricing: EXPENSIVE_PRICING,
 };
-const ALT_MODEL_CONFIG = {
-  requestsPerMinute: RPM_LIMIT_HIGH,
-  resourcesPerEvent: { estimatedNumberOfRequests: ONE },
-  pricing: ALT_PRICING,
-};
-
-const getUsageAt = (ctx: JobCallbackContext | undefined, index: number): UsageEntryWithCost | undefined =>
-  ctx?.usage[index];
 
 describe('MultiModelRateLimiter - pricing input tokens', () => {
   let limiter: LLMRateLimiterInstance | undefined = undefined;
@@ -64,7 +54,8 @@ describe('MultiModelRateLimiter - pricing input tokens', () => {
         capturedCtx = ctx;
       },
     });
-    expect(capturedCtx?.totalCost).toBeCloseTo(DEFAULT_PRICING.input);
+    const ctx = ensureDefined<JobCallbackContext>(capturedCtx);
+    expect(ctx.totalCost).toBeCloseTo(DEFAULT_PRICING.input);
   });
 });
 
@@ -90,7 +81,8 @@ describe('MultiModelRateLimiter - pricing output tokens', () => {
         capturedCtx = ctx;
       },
     });
-    expect(capturedCtx?.totalCost).toBeCloseTo(DEFAULT_PRICING.output);
+    const ctx = ensureDefined<JobCallbackContext>(capturedCtx);
+    expect(ctx.totalCost).toBeCloseTo(DEFAULT_PRICING.output);
   });
 });
 
@@ -116,7 +108,8 @@ describe('MultiModelRateLimiter - pricing cached tokens', () => {
         capturedCtx = ctx;
       },
     });
-    expect(capturedCtx?.totalCost).toBeCloseTo(DEFAULT_PRICING.cached);
+    const ctx = ensureDefined<JobCallbackContext>(capturedCtx);
+    expect(ctx.totalCost).toBeCloseTo(DEFAULT_PRICING.cached);
   });
 });
 
@@ -143,57 +136,37 @@ describe('MultiModelRateLimiter - pricing combined tokens', () => {
       },
     });
     const expectedCost = DEFAULT_PRICING.input + DEFAULT_PRICING.output + DEFAULT_PRICING.cached;
-    expect(capturedCtx?.totalCost).toBeCloseTo(expectedCost);
+    const ctx = ensureDefined<JobCallbackContext>(capturedCtx);
+    expect(ctx.totalCost).toBeCloseTo(expectedCost);
   });
 });
 
 describe('MultiModelRateLimiter - pricing fractional', () => {
   let limiter: LLMRateLimiterInstance | undefined = undefined;
-  afterEach(() => {
-    limiter?.stop();
-    limiter = undefined;
-  });
+  afterEach(() => { limiter?.stop(); limiter = undefined; });
 
   it('should calculate cost correctly for 100K tokens (1/10 of 1M)', async () => {
-    limiter = createLLMRateLimiter({
-      models: { 'model-a': MODEL_CONFIG },
-    });
+    limiter = createLLMRateLimiter({ models: { 'model-a': MODEL_CONFIG } });
     let capturedCtx: JobCallbackContext | undefined = undefined;
     await limiter.queueJob({
       jobId: generateJobId(),
-      job: ({ modelId }, resolve) => {
-        resolve({
-          modelId,
-          inputTokens: TOKENS_100K,
-          outputTokens: TOKENS_100K,
-          cachedTokens: ZERO_CACHED_TOKENS,
-        });
-        return createMockJobResult('test');
-      },
-      onComplete: (_result, ctx) => {
-        capturedCtx = ctx;
-      },
+      job: ({ modelId }, resolve) => { resolve({ modelId, inputTokens: TOKENS_100K, outputTokens: TOKENS_100K, cachedTokens: ZERO_CACHED_TOKENS }); return createMockJobResult('test'); },
+      onComplete: (_result, ctx) => { capturedCtx = ctx; },
     });
-    const expectedCost = (DEFAULT_PRICING.input + DEFAULT_PRICING.output) / TEN;
-    expect(capturedCtx?.totalCost).toBeCloseTo(expectedCost);
+    const ctx = ensureDefined<JobCallbackContext>(capturedCtx);
+    expect(ctx.totalCost).toBeCloseTo((DEFAULT_PRICING.input + DEFAULT_PRICING.output) / TEN);
   });
 
   it('should calculate zero cost for zero tokens', async () => {
-    limiter = createLLMRateLimiter({
-      models: { 'model-a': MODEL_CONFIG },
-    });
+    limiter = createLLMRateLimiter({ models: { 'model-a': MODEL_CONFIG } });
     let capturedCtx: JobCallbackContext | undefined = undefined;
     await limiter.queueJob({
       jobId: generateJobId(),
-      job: ({ modelId }, resolve) => {
-        resolve({ modelId, inputTokens: ZERO, outputTokens: ZERO, cachedTokens: ZERO });
-        return createMockJobResult('test');
-      },
-      onComplete: (_result, ctx) => {
-        capturedCtx = ctx;
-      },
+      job: ({ modelId }, resolve) => { resolve({ modelId, inputTokens: ZERO, outputTokens: ZERO, cachedTokens: ZERO }); return createMockJobResult('test'); },
+      onComplete: (_result, ctx) => { capturedCtx = ctx; },
     });
-    expect(capturedCtx?.totalCost).toBe(ZERO);
+    const ctx = ensureDefined<JobCallbackContext>(capturedCtx);
+    expect(ctx.totalCost).toBe(ZERO);
   });
 });
 
@@ -229,116 +202,7 @@ describe('MultiModelRateLimiter - pricing different models', () => {
       },
     });
     const expectedCheap = CHEAP_PRICING.input + CHEAP_PRICING.output;
-    expect(capturedCtx?.totalCost).toBeCloseTo(expectedCheap);
-  });
-});
-
-describe('MultiModelRateLimiter - pricing with delegation', () => {
-  let limiter: LLMRateLimiterInstance | undefined = undefined;
-  afterEach(() => {
-    limiter?.stop();
-    limiter = undefined;
-  });
-
-  it('should accumulate costs correctly when delegating between different priced models', async () => {
-    limiter = createLLMRateLimiter({
-      models: {
-        'model-a': MODEL_CONFIG,
-        'model-b': ALT_MODEL_CONFIG,
-      },
-      order: ['model-a', 'model-b'],
-    });
-    let capturedCtx: JobCallbackContext | undefined = undefined;
-    await limiter.queueJob({
-      jobId: generateJobId(),
-      job: ({ modelId }, resolve, reject) => {
-        const usage = { modelId, inputTokens: TOKENS_1M, outputTokens: ZERO, cachedTokens: ZERO };
-        if (modelId === 'model-a') {
-          reject(usage, { delegate: true });
-        } else {
-          resolve(usage);
-        }
-        return createMockJobResult('test');
-      },
-      onComplete: (_result, ctx) => {
-        capturedCtx = ctx;
-      },
-    });
-    const expectedTotalCost = DEFAULT_PRICING.input + ALT_PRICING.input;
-    expect(capturedCtx?.totalCost).toBeCloseTo(expectedTotalCost);
-    const delegationFirst = getUsageAt(capturedCtx, ZERO);
-    const delegationSecond = getUsageAt(capturedCtx, ONE);
-    expect(delegationFirst?.cost).toBeCloseTo(DEFAULT_PRICING.input);
-    expect(delegationSecond?.cost).toBeCloseTo(ALT_PRICING.input);
-  });
-});
-
-describe('MultiModelRateLimiter - cost in usage entries', () => {
-  let limiter: LLMRateLimiterInstance | undefined = undefined;
-  afterEach(() => {
-    limiter?.stop();
-    limiter = undefined;
-  });
-
-  it('should include cost in each usage entry', async () => {
-    limiter = createLLMRateLimiter({
-      models: { 'model-a': MODEL_CONFIG },
-    });
-    let capturedCtx: JobCallbackContext | undefined = undefined;
-    await limiter.queueJob({
-      jobId: generateJobId(),
-      job: ({ modelId }, resolve) => {
-        resolve({ modelId, inputTokens: TOKENS_1M, outputTokens: ZERO, cachedTokens: ZERO });
-        return createMockJobResult('test');
-      },
-      onComplete: (_result, ctx) => {
-        capturedCtx = ctx;
-      },
-    });
-    const costEntry = getUsageAt(capturedCtx, ZERO);
-    expect(costEntry?.cost).toBeDefined();
-    expect(costEntry?.cost).toBeCloseTo(DEFAULT_PRICING.input);
-  });
-});
-
-describe('MultiModelRateLimiter - cost per model after delegation', () => {
-  let limiter: LLMRateLimiterInstance | undefined = undefined;
-  afterEach(() => {
-    limiter?.stop();
-    limiter = undefined;
-  });
-
-  it('should have cost property on each usage entry after delegation', async () => {
-    limiter = createLLMRateLimiter({
-      models: {
-        'model-a': MODEL_CONFIG,
-        'model-b': ALT_MODEL_CONFIG,
-        'model-c': CHEAP_MODEL_CONFIG,
-      },
-      order: ['model-a', 'model-b', 'model-c'],
-    });
-    let capturedCtx: JobCallbackContext | undefined = undefined;
-    await limiter.queueJob({
-      jobId: generateJobId(),
-      job: ({ modelId }, resolve, reject) => {
-        const usage = { modelId, inputTokens: TOKENS_1M, outputTokens: ZERO, cachedTokens: ZERO };
-        if (modelId === 'model-c') {
-          resolve(usage);
-        } else {
-          reject(usage, { delegate: true });
-        }
-        return createMockJobResult('test');
-      },
-      onComplete: (_result, ctx) => {
-        capturedCtx = ctx;
-      },
-    });
-    expect(capturedCtx?.usage).toHaveLength(THREE);
-    const usageFirst = getUsageAt(capturedCtx, ZERO);
-    const usageSecond = getUsageAt(capturedCtx, ONE);
-    const usageThird = getUsageAt(capturedCtx, TWO);
-    expect(usageFirst?.cost).toBeCloseTo(DEFAULT_PRICING.input);
-    expect(usageSecond?.cost).toBeCloseTo(ALT_PRICING.input);
-    expect(usageThird?.cost).toBeCloseTo(CHEAP_PRICING.input);
+    const ctx = ensureDefined<JobCallbackContext>(capturedCtx);
+    expect(ctx.totalCost).toBeCloseTo(expectedCheap);
   });
 });

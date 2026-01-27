@@ -1,7 +1,13 @@
 /**
  * Helper utilities for job execution in the multi-model rate limiter.
  */
-import type { ArgsWithoutModelId, JobUsage, ModelRateLimitConfig, ModelsConfig } from '../multiModelTypes.js';
+import type {
+  ArgsWithoutModelId,
+  JobArgs,
+  JobUsage,
+  ModelRateLimitConfig,
+  ModelsConfig,
+} from '../multiModelTypes.js';
 
 const ZERO = 0;
 
@@ -16,14 +22,34 @@ export class DelegationError extends Error {
 export const isDelegationError = (error: unknown): error is DelegationError =>
   error instanceof DelegationError;
 
-/** Build job arguments by merging modelId with user-provided args. */
+/**
+ * Build job arguments for when args is undefined.
+ * Returns { modelId } typed as a base job args object.
+ */
+export function buildJobArgs(
+  modelId: string,
+  args: undefined
+): { modelId: string } & Record<string, unknown>;
+/**
+ * Build job arguments by merging modelId with user-provided args.
+ * When args is provided, merges them with modelId.
+ * When args is undefined, returns just { modelId }.
+ */
 export function buildJobArgs<Args extends ArgsWithoutModelId>(
   modelId: string,
   args: Args | undefined
-): { modelId: string } & Args {
+): JobArgs<Args>;
+/**
+ * Implementation: merges modelId with args when defined, otherwise returns just modelId.
+ */
+export function buildJobArgs<Args extends ArgsWithoutModelId>(
+  modelId: string,
+  args: Args | undefined
+): JobArgs<Args> | ({ modelId: string } & Record<string, unknown>) {
   if (args === undefined) {
-    const result: { modelId: string } & ArgsWithoutModelId = { modelId };
-    return result as { modelId: string } & Args;
+    // Return object with index signature that satisfies the base JobArgs shape
+    const result: { modelId: string } & Record<string, unknown> = { modelId };
+    return result;
   }
   return { modelId, ...args };
 }

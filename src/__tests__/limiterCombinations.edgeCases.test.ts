@@ -56,6 +56,9 @@ describe('EdgeCase - buildHighLimitConfig with concurrency only', () => {
     const {
       models: { default: modelConfig },
     } = config;
+    if (modelConfig === undefined) {
+      throw new Error('Expected default model config to be defined');
+    }
     expect(modelConfig.maxConcurrentRequests).toBe(HIGH_CONCURRENCY);
     expect(modelConfig.resourcesPerEvent).toBeUndefined();
     const limiter = createLLMRateLimiter(config);

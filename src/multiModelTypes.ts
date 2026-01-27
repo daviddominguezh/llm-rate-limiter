@@ -189,8 +189,9 @@ export type ArgsWithoutModelId = Record<string, unknown> & { modelId?: never };
 
 /**
  * Job args with modelId injected by the rate limiter.
+ * Uses Omit to avoid intersection conflict with ArgsWithoutModelId's `modelId?: never`.
  */
-export type JobArgs<Args extends ArgsWithoutModelId> = { modelId: string } & Args;
+export type JobArgs<Args extends ArgsWithoutModelId> = { modelId: string } & Omit<Args, 'modelId'>;
 
 /**
  * Job function signature with resolve/reject callbacks for delegation support.
@@ -325,6 +326,23 @@ export type OnAvailableSlotsChange = (
   reason: AvailabilityChangeReason,
   adjustment?: RelativeAvailabilityAdjustment
 ) => void;
+
+// =============================================================================
+// Job Execution Context
+// =============================================================================
+
+/**
+ * Internal context for tracking job execution state during delegation.
+ */
+export interface JobExecutionContext<T extends InternalJobResult, Args extends ArgsWithoutModelId> {
+  jobId: string;
+  job: QueueJobOptions<T, Args>['job'];
+  args: Args | undefined;
+  triedModels: Set<string>;
+  usage: JobUsage;
+  onComplete: ((result: LLMJobResult<T>, context: JobCallbackContext) => void) | undefined;
+  onError: ((error: Error, context: JobCallbackContext) => void) | undefined;
+}
 
 // =============================================================================
 // Instance Type

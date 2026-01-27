@@ -115,12 +115,8 @@ describe('Semaphore - variable permits ordering', () => {
     const semaphore = createSemaphore();
     const order: number[] = [];
     await semaphore.acquire(INITIAL_PERMITS);
-    const p1 = semaphore.acquire(TWO).then(() => {
-      order.push(ONE);
-    });
-    const p2 = semaphore.acquire(ONE).then(() => {
-      order.push(TWO);
-    });
+    const p1 = semaphore.acquire(TWO).then(() => { order.push(ONE); });
+    const p2 = semaphore.acquire(ONE).then(() => { order.push(TWO); });
     semaphore.release(TWO);
     await p1;
     semaphore.release(ONE);
@@ -133,12 +129,8 @@ describe('Semaphore - variable permits ordering', () => {
     await semaphore.acquire(INITIAL_PERMITS);
     let first = false;
     let second = false;
-    const p1 = semaphore.acquire(THREE).then(() => {
-      first = true;
-    });
-    const p2 = semaphore.acquire(ONE).then(() => {
-      second = true;
-    });
+    const p1 = semaphore.acquire(THREE).then(() => { first = true; });
+    const p2 = semaphore.acquire(ONE).then(() => { second = true; });
     semaphore.release(ONE);
     await setTimeoutAsync(DELAY_MS);
     expect(first).toBe(false);
@@ -154,9 +146,7 @@ describe('Semaphore - variable permits ordering', () => {
   it('should handle resize to satisfy large request', async () => {
     const semaphore = createSemaphore();
     let acquired = false;
-    const acquirePromise = semaphore.acquire(TEN).then(() => {
-      acquired = true;
-    });
+    const acquirePromise = semaphore.acquire(TEN).then(() => { acquired = true; });
     semaphore.resize(FIFTEEN);
     await acquirePromise;
     expect(acquired).toBe(true);
@@ -202,12 +192,8 @@ describe('Semaphore - resize', () => {
     await acquireMultiple(semaphore, INITIAL_PERMITS);
     let a1 = false;
     let a2 = false;
-    void semaphore.acquire().then(() => {
-      a1 = true;
-    });
-    void semaphore.acquire().then(() => {
-      a2 = true;
-    });
+    void semaphore.acquire().then(() => { a1 = true; });
+    void semaphore.acquire().then(() => { a2 = true; });
     semaphore.resize(FIVE);
     await setTimeoutAsync(ZERO);
     expect(a1).toBe(true);

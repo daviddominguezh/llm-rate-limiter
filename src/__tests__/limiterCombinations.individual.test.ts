@@ -86,23 +86,13 @@ describe('Individual Limiter - memory restore', () => {
 
 describe('Individual Limiter - concurrency', () => {
   let limiter: LLMRateLimiterInstance | undefined = undefined;
-  afterEach(() => {
-    limiter?.stop();
-    limiter = undefined;
-  });
-
+  afterEach(() => { limiter?.stop(); limiter = undefined; });
   it('should block when concurrency limit is exhausted', async () => {
-    limiter = createLLMRateLimiter({
-      models: { default: { maxConcurrentRequests: CONCURRENCY_LIMIT, pricing: ZERO_PRICING } },
-    });
+    limiter = createLLMRateLimiter({ models: { default: { maxConcurrentRequests: CONCURRENCY_LIMIT, pricing: ZERO_PRICING } } });
     expect(limiter.hasCapacity()).toBe(true);
     const jobPromise = limiter.queueJob({
       jobId: generateJobId(),
-      job: async ({ modelId }, resolve) => {
-        await setTimeoutAsync(LONG_JOB_DELAY_MS);
-        resolve(createMockUsage(modelId));
-        return createMockJobResult('slow-job');
-      },
+      job: async ({ modelId }, resolve) => { await setTimeoutAsync(LONG_JOB_DELAY_MS); resolve(createMockUsage(modelId)); return createMockJobResult('slow-job'); },
     });
     await setTimeoutAsync(SEMAPHORE_ACQUIRE_WAIT_MS);
     const stats = limiter.getModelStats('default');
@@ -111,18 +101,9 @@ describe('Individual Limiter - concurrency', () => {
     expect(limiter.hasCapacity()).toBe(false);
     await jobPromise;
   });
-
   it('should restore capacity after job completes', async () => {
-    limiter = createLLMRateLimiter({
-      models: { default: { maxConcurrentRequests: CONCURRENCY_LIMIT, pricing: ZERO_PRICING } },
-    });
-    await limiter.queueJob({
-      jobId: generateJobId(),
-      job: ({ modelId }, resolve) => {
-        resolve(createMockUsage(modelId));
-        return createMockJobResult('job-1');
-      },
-    });
+    limiter = createLLMRateLimiter({ models: { default: { maxConcurrentRequests: CONCURRENCY_LIMIT, pricing: ZERO_PRICING } } });
+    await limiter.queueJob({ jobId: generateJobId(), job: ({ modelId }, resolve) => { resolve(createMockUsage(modelId)); return createMockJobResult('job-1'); } });
     expect(limiter.hasCapacity()).toBe(true);
     const stats = limiter.getModelStats('default');
     expect(stats.concurrency?.available).toBe(ONE);

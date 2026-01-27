@@ -133,8 +133,9 @@ export class AvailabilityTracker {
       return;
     }
 
-    if (previousAvailability !== null && availabilityEquals(previousAvailability, currentAvailability))
+    if (previousAvailability !== null && availabilityEquals(previousAvailability, currentAvailability)) {
       return;
+    }
 
     const reason =
       previousAvailability === null

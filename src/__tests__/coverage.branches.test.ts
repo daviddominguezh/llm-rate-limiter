@@ -16,6 +16,24 @@ const HUNDRED = 100;
 const THOUSAND = 1000;
 const RATIO_HALF = 0.5;
 
+/** Config type for testing internal access */
+interface TestableConfig { models: Record<string, { pricing?: unknown }> }
+
+describe('multiModelRateLimiter - calculateCost with undefined pricing', () => {
+  it('should return zero cost when pricing is undefined', async () => {
+    const limiter = createLLMRateLimiter({ models: { default: { requestsPerMinute: TEN, resourcesPerEvent: { estimatedNumberOfRequests: ONE }, pricing: { input: ONE, cached: ONE, output: ONE } } } });
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- Testing defensive code path for undefined pricing
+    const { models } = Reflect.get(limiter, 'config') as TestableConfig;
+    const { default: defaultModel } = models;
+    if (defaultModel !== undefined) { delete defaultModel.pricing; }
+    let capturedCost = -ONE;
+    await limiter.queueJob({ jobId: 'no-pricing', job: ({ modelId }, resolve) => { resolve({ modelId, inputTokens: HUNDRED, cachedTokens: ZERO, outputTokens: FIFTY }); return { requestCount: ONE, usage: { input: HUNDRED, output: FIFTY, cached: ZERO } }; }, onComplete: (_, { totalCost }) => { capturedCost = totalCost; } });
+    expect(capturedCost).toBe(ZERO);
+    limiter.stop();
+  });
+});
+
+
 describe('multiModelRateLimiter - error and queueJobForModel', () => {
   it('should call onError when job throws', async () => {
     const limiter = createLLMRateLimiter({ models: { default: { requestsPerMinute: TEN, resourcesPerEvent: { estimatedNumberOfRequests: ONE }, pricing: { input: ZERO, cached: ZERO, output: ZERO } } } });
@@ -25,8 +43,29 @@ describe('multiModelRateLimiter - error and queueJobForModel', () => {
     expect(errors[ZERO]?.message).toBe('Test error');
     limiter.stop();
   });
+  it('should throw when job does not call resolve or reject', async () => {
+    const limiter = createLLMRateLimiter({ models: { default: { requestsPerMinute: TEN, resourcesPerEvent: { estimatedNumberOfRequests: ONE }, pricing: { input: ZERO, cached: ZERO, output: ZERO } } } });
+    const jobPromise = limiter.queueJob({ jobId: 'no-callback', job: () => ({ requestCount: ONE, usage: { input: ZERO, output: ZERO, cached: ZERO } }) });
+    await expect(jobPromise).rejects.toThrow('Job must call resolve() or reject()');
+    limiter.stop();
+  });
+  it('should wrap non-Error throws in Error object for onError callback', async () => {
+    const limiter = createLLMRateLimiter({ models: { default: { requestsPerMinute: TEN, resourcesPerEvent: { estimatedNumberOfRequests: ONE }, pricing: { input: ZERO, cached: ZERO, output: ZERO } } } });
+    const errors: Error[] = [];
+    // eslint-disable-next-line @typescript-eslint/only-throw-error -- Testing defensive code that handles non-Error throws
+    const jobPromise = limiter.queueJob({ jobId: 'string-error', job: (_, resolve) => { resolve({ modelId: 'default', inputTokens: ZERO, cachedTokens: ZERO, outputTokens: ZERO }); throw 'string error'; }, onError: (err) => { errors.push(err); } });
+    await expect(jobPromise).rejects.toBe('string error');
+    expect(errors[ZERO]?.message).toBe('string error');
+    limiter.stop();
+  });
   it('should queue job for specific model without memory manager', async () => {
     const limiter = createLLMRateLimiter({ models: { default: { requestsPerMinute: TEN, resourcesPerEvent: { estimatedNumberOfRequests: ONE }, pricing: { input: ZERO, cached: ZERO, output: ZERO } } } });
+    const result = await limiter.queueJobForModel('default', () => ({ requestCount: ONE, usage: { input: TEN, output: TEN, cached: ZERO } }));
+    expect(result.requestCount).toBe(ONE);
+    limiter.stop();
+  });
+  it('should queue job for specific model with memory manager', async () => {
+    const limiter = createLLMRateLimiter({ models: { default: { requestsPerMinute: TEN, resourcesPerEvent: { estimatedNumberOfRequests: ONE, estimatedUsedMemoryKB: ONE }, pricing: { input: ZERO, cached: ZERO, output: ZERO } } }, memory: { freeMemoryRatio: RATIO_HALF } });
     const result = await limiter.queueJobForModel('default', () => ({ requestCount: ONE, usage: { input: TEN, output: TEN, cached: ZERO } }));
     expect(result.requestCount).toBe(ONE);
     limiter.stop();

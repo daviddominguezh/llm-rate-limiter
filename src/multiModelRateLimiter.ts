@@ -122,14 +122,9 @@ class LLMRateLimiter implements LLMRateLimiterInstance {
   }
 
   private calculateCost(modelId: string, usage: UsageEntry): number {
-    const p = this.config.models[modelId]?.pricing;
-    if (p === undefined) {
-      return ZERO;
-    }
-    return (
-      (usage.inputTokens * p.input + usage.cachedTokens * p.cached + usage.outputTokens * p.output) /
-      TOKENS_PER_MILLION
-    );
+    const defaultPricing = { input: ZERO, cached: ZERO, output: ZERO };
+    const { input, cached, output } = this.config.models[modelId]?.pricing ?? defaultPricing;
+    return (usage.inputTokens * input + usage.cachedTokens * cached + usage.outputTokens * output) / TOKENS_PER_MILLION;
   }
 
   private addUsageWithCost(ctx: { usage: JobUsage }, modelId: string, usage: UsageEntry): void {

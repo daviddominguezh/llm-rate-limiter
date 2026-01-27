@@ -1,16 +1,16 @@
 import { setTimeout as setTimeoutAsync } from 'node:timers/promises';
 
-import { createMultiModelRateLimiter } from '../multiModelRateLimiter.js';
+import { createLLMRateLimiter } from '../multiModelRateLimiter.js';
 
-import type { MultiModelRateLimiterInstance } from '../multiModelTypes.js';
+import type { LLMRateLimiterInstance } from '../multiModelTypes.js';
 import { createMockJobResult, createMockUsage, DEFAULT_PRICING, DELAY_MS_LONG, DELAY_MS_SHORT, generateJobId, ONE, ZERO } from './multiModelRateLimiter.helpers.js';
 
 describe('MultiModelRateLimiter - resource release after resolve', () => {
-  let limiter: MultiModelRateLimiterInstance | undefined = undefined;
+  let limiter: LLMRateLimiterInstance | undefined = undefined;
   afterEach(() => { limiter?.stop(); limiter = undefined; });
 
   it('should free resources only after job resolves', async () => {
-    limiter = createMultiModelRateLimiter({
+    limiter = createLLMRateLimiter({
       models: { 'model-a': { maxConcurrentRequests: ONE, pricing: DEFAULT_PRICING } },
     });
     expect(limiter.getModelStats('model-a').concurrency?.active).toBe(ZERO);
@@ -36,11 +36,11 @@ describe('MultiModelRateLimiter - resource release after resolve', () => {
 });
 
 describe('MultiModelRateLimiter - resource release after reject', () => {
-  let limiter: MultiModelRateLimiterInstance | undefined = undefined;
+  let limiter: LLMRateLimiterInstance | undefined = undefined;
   afterEach(() => { limiter?.stop(); limiter = undefined; });
 
   it('should free resources only after job rejects without delegation', async () => {
-    limiter = createMultiModelRateLimiter({
+    limiter = createLLMRateLimiter({
       models: { 'model-a': { maxConcurrentRequests: ONE, pricing: DEFAULT_PRICING } },
     });
     expect(limiter.getModelStats('model-a').concurrency?.active).toBe(ZERO);
@@ -64,11 +64,11 @@ describe('MultiModelRateLimiter - resource release after reject', () => {
 });
 
 describe('MultiModelRateLimiter - resource release per model', () => {
-  let limiter: MultiModelRateLimiterInstance | undefined = undefined;
+  let limiter: LLMRateLimiterInstance | undefined = undefined;
   afterEach(() => { limiter?.stop(); limiter = undefined; });
 
   it('should free resources only for the model that resolved', async () => {
-    limiter = createMultiModelRateLimiter({
+    limiter = createLLMRateLimiter({
       models: {
         'model-a': { maxConcurrentRequests: ONE, pricing: DEFAULT_PRICING },
         'model-b': { maxConcurrentRequests: ONE, pricing: DEFAULT_PRICING },
@@ -110,11 +110,11 @@ describe('MultiModelRateLimiter - resource release per model', () => {
 });
 
 describe('MultiModelRateLimiter - resource release on delegation', () => {
-  let limiter: MultiModelRateLimiterInstance | undefined = undefined;
+  let limiter: LLMRateLimiterInstance | undefined = undefined;
   afterEach(() => { limiter?.stop(); limiter = undefined; });
 
   it('should free resources for delegated model before trying next', async () => {
-    limiter = createMultiModelRateLimiter({
+    limiter = createLLMRateLimiter({
       models: {
         'model-a': { maxConcurrentRequests: ONE, pricing: DEFAULT_PRICING },
         'model-b': { maxConcurrentRequests: ONE, pricing: DEFAULT_PRICING },

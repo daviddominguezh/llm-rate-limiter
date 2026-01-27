@@ -12,8 +12,8 @@
 
 import type {
   BaseResourcesPerEvent,
-  LLMJobResult,
-  LLMRateLimiterStats,
+  InternalJobResult,
+  InternalLimiterStats,
   LogFn,
   MemoryLimitConfig,
 } from './types.js';
@@ -93,9 +93,9 @@ export type HasMultipleModels<T extends ModelsConfig> = IsSingleModel<T> extends
 // =============================================================================
 
 /**
- * Base configuration for multi-model rate limiter (without order).
+ * Base configuration for rate limiter (without order).
  */
-export interface MultiModelRateLimiterConfigBase<T extends ModelsConfig> {
+export interface LLMRateLimiterConfigBase<T extends ModelsConfig> {
   /** Map of model ID to its rate limit configuration */
   models: T;
   /** Memory-based limits configuration (shared across all models) */
@@ -115,23 +115,23 @@ export interface MultiModelRateLimiterConfigBase<T extends ModelsConfig> {
 // =============================================================================
 
 /**
- * Validated multi-model configuration that enforces order requirements at compile time.
+ * Validated configuration that enforces order requirements at compile time.
  *
  * - If only one model is defined, `order` is optional
  * - If multiple models are defined, `order` is REQUIRED
  * - The `order` array can only contain model IDs that are defined in `models`
  */
-export type ValidatedMultiModelConfig<T extends ModelsConfig> =
-  MultiModelRateLimiterConfigBase<T> &
+export type ValidatedLLMRateLimiterConfig<T extends ModelsConfig> =
+  LLMRateLimiterConfigBase<T> &
     (HasMultipleModels<T> extends true
       ? { order: ReadonlyArray<ModelIds<T>> }
       : { order?: ReadonlyArray<ModelIds<T>> });
 
 /**
- * Loose multi-model configuration type for internal use.
- * Use ValidatedMultiModelConfig<T> for strict compile-time checking.
+ * Loose configuration type for internal use.
+ * Use ValidatedLLMRateLimiterConfig<T> for strict compile-time checking.
  */
-export interface MultiModelRateLimiterConfig {
+export interface LLMRateLimiterConfig {
   models: ModelsConfig;
   order?: readonly string[];
   memory?: MemoryLimitConfig;
@@ -200,7 +200,7 @@ export type JobArgs<Args extends ArgsWithoutModelId> = { modelId: string } & Arg
  * @param resolve - Call when job succeeds, must provide usage for this model
  * @param reject - Call when job fails, must provide usage for this model
  */
-export type MultiModelJob<T extends LLMJobResult, Args extends ArgsWithoutModelId = ArgsWithoutModelId> = (
+export type LLMJob<T extends InternalJobResult, Args extends ArgsWithoutModelId = ArgsWithoutModelId> = (
   args: JobArgs<Args>,
   resolve: (usage: UsageEntry) => void,
   reject: (usage: UsageEntry, opts?: JobRejectOptions) => void
@@ -221,15 +221,15 @@ export interface JobCallbackContext {
 /**
  * Options for queueJob with delegation support.
  */
-export interface QueueJobOptions<T extends LLMJobResult, Args extends ArgsWithoutModelId = ArgsWithoutModelId> {
+export interface QueueJobOptions<T extends InternalJobResult, Args extends ArgsWithoutModelId = ArgsWithoutModelId> {
   /** Unique identifier for this job (for traceability) */
   jobId: string;
   /** Job function that receives args with modelId, and resolve/reject callbacks */
-  job: MultiModelJob<T, Args>;
+  job: LLMJob<T, Args>;
   /** User-defined args passed to job (modelId is injected automatically) */
   args?: Args;
   /** Called when job completes successfully on any model */
-  onComplete?: (result: MultiModelJobResult<T>, context: JobCallbackContext) => void;
+  onComplete?: (result: LLMJobResult<T>, context: JobCallbackContext) => void;
   /** Called when job fails without delegation or all models exhausted */
   onError?: (error: Error, context: JobCallbackContext) => void;
 }
@@ -239,9 +239,9 @@ export interface QueueJobOptions<T extends LLMJobResult, Args extends ArgsWithou
 // =============================================================================
 
 /**
- * Result type for multi-model jobs that includes which model was used.
+ * Result type for jobs that includes which model was used.
  */
-export type MultiModelJobResult<T extends LLMJobResult> = T & {
+export type LLMJobResult<T extends InternalJobResult> = T & {
   /** The model ID that was used to execute this job */
   modelUsed: string;
 };
@@ -251,11 +251,11 @@ export type MultiModelJobResult<T extends LLMJobResult> = T & {
 // =============================================================================
 
 /**
- * Statistics for all models in the multi-model rate limiter.
+ * Statistics for all models in the rate limiter.
  */
-export interface MultiModelRateLimiterStats {
+export interface LLMRateLimiterStats {
   /** Stats per model, keyed by model ID */
-  models: Record<string, LLMRateLimiterStats>;
+  models: Record<string, InternalLimiterStats>;
   /** Shared memory stats (if memory is configured) */
   memory?: {
     activeKB: number;
@@ -270,9 +270,9 @@ export interface MultiModelRateLimiterStats {
 // =============================================================================
 
 /**
- * Multi-model rate limiter instance returned by createMultiModelRateLimiter().
+ * Rate limiter instance returned by createLLMRateLimiter().
  */
-export interface MultiModelRateLimiterInstance {
+export interface LLMRateLimiterInstance {
   /**
    * Queue a job with automatic model selection, delegation support, and callbacks.
    *
@@ -284,9 +284,9 @@ export interface MultiModelRateLimiterInstance {
    * @param options - Job options including job function, args, and callbacks
    * @returns Promise resolving to job result with modelUsed property
    */
-  queueJob: <T extends LLMJobResult, Args extends ArgsWithoutModelId = ArgsWithoutModelId>(
+  queueJob: <T extends InternalJobResult, Args extends ArgsWithoutModelId = ArgsWithoutModelId>(
     options: QueueJobOptions<T, Args>
-  ) => Promise<MultiModelJobResult<T>>;
+  ) => Promise<LLMJobResult<T>>;
 
   /**
    * Queue a job for a specific model without fallback.
@@ -296,7 +296,7 @@ export interface MultiModelRateLimiterInstance {
    * @param job - Function that returns a job result
    * @returns Promise resolving to job result
    */
-  queueJobForModel: <T extends LLMJobResult>(
+  queueJobForModel: <T extends InternalJobResult>(
     modelId: string,
     job: () => Promise<T> | T
   ) => Promise<T>;
@@ -328,7 +328,7 @@ export interface MultiModelRateLimiterInstance {
    *
    * @returns Stats object with per-model stats and shared memory stats
    */
-  getStats: () => MultiModelRateLimiterStats;
+  getStats: () => LLMRateLimiterStats;
 
   /**
    * Get statistics for a specific model.
@@ -336,7 +336,7 @@ export interface MultiModelRateLimiterInstance {
    * @param modelId - The model to get stats for
    * @returns Stats for the specified model
    */
-  getModelStats: (modelId: string) => LLMRateLimiterStats;
+  getModelStats: (modelId: string) => InternalLimiterStats;
 
   /**
    * Stop all intervals for cleanup.

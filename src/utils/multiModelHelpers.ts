@@ -1,6 +1,6 @@
-/** Helper functions for Multi-Model Rate Limiter. */
-import type { LLMRateLimiterConfig } from '../types.js';
-import type { ModelsConfig, MultiModelRateLimiterConfig } from '../multiModelTypes.js';
+/** Helper functions for LLM Rate Limiter. */
+import type { InternalLimiterConfig } from '../types.js';
+import type { LLMRateLimiterConfig, ModelsConfig } from '../multiModelTypes.js';
 
 const ZERO = 0;
 const ONE = 1;
@@ -13,7 +13,7 @@ const validateOrderArray = (order: readonly string[], models: ModelsConfig): voi
   }
 };
 
-export const validateMultiModelConfig = (config: MultiModelRateLimiterConfig): void => {
+export const validateMultiModelConfig = (config: LLMRateLimiterConfig): void => {
   const modelIds = Object.keys(config.models);
   if (modelIds.length === ZERO) {
     throw new Error('At least one model must be configured in models');
@@ -26,15 +26,15 @@ export const validateMultiModelConfig = (config: MultiModelRateLimiterConfig): v
   }
 };
 
-export const getEffectiveOrder = (config: MultiModelRateLimiterConfig): readonly string[] =>
+export const getEffectiveOrder = (config: LLMRateLimiterConfig): readonly string[] =>
   config.order ?? Object.keys(config.models);
 
 export const buildModelLimiterConfig = (
   modelId: string,
-  modelConfig: LLMRateLimiterConfig,
+  modelConfig: InternalLimiterConfig,
   parentLabel: string,
   onLog?: (message: string, data?: Record<string, unknown>) => void
-): LLMRateLimiterConfig => ({
+): InternalLimiterConfig => ({
   requestsPerMinute: modelConfig.requestsPerMinute,
   requestsPerDay: modelConfig.requestsPerDay,
   tokensPerMinute: modelConfig.tokensPerMinute,

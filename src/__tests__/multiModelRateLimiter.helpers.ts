@@ -1,5 +1,5 @@
-import type { LLMJobResult } from '../types.js';
-import type { JobArgs, ArgsWithoutModelId, ModelPricing, QueueJobOptions, UsageEntry } from '../multiModelTypes.js';
+import type { InternalJobResult } from '../types.js';
+import type { ArgsWithoutModelId, JobArgs, ModelPricing, QueueJobOptions, UsageEntry } from '../multiModelTypes.js';
 
 export const MOCK_INPUT_TOKENS = 100;
 export const MOCK_OUTPUT_TOKENS = 50;
@@ -53,7 +53,7 @@ let jobIdCounter = ZERO;
 /** Generate a unique job ID for tests */
 export const generateJobId = (): string => { jobIdCounter += ONE; return `test-job-${String(jobIdCounter)}`; };
 
-export interface MockJobResult extends LLMJobResult {
+export interface MockJobResult extends InternalJobResult {
   text: string;
 }
 
@@ -69,12 +69,12 @@ export const createMockUsage = (modelId: string): UsageEntry => ({
 });
 
 /** Helper to create job options for tests. The job auto-resolves after execution. */
-export const createJobOptions = <T extends LLMJobResult, Args extends ArgsWithoutModelId = ArgsWithoutModelId>(
+export const createJobOptions = <T extends InternalJobResult, Args extends ArgsWithoutModelId = ArgsWithoutModelId>(
   jobFn: (args: JobArgs<Args>) => T | Promise<T>,
   args?: Args
 ): QueueJobOptions<T, Args> => ({
   jobId: generateJobId(),
-  job: async (jobArgs, resolve) => {
+  job: async (jobArgs, resolve): Promise<T> => {
     const result = await jobFn(jobArgs);
     const { modelId } = jobArgs;
     resolve(createMockUsage(modelId));
@@ -84,9 +84,9 @@ export const createJobOptions = <T extends LLMJobResult, Args extends ArgsWithou
 });
 
 /** Helper to create simple job options that just returns a result. */
-export const simpleJob = <T extends LLMJobResult>(result: T): QueueJobOptions<T> => ({
+export const simpleJob = <T extends InternalJobResult>(result: T): QueueJobOptions<T> => ({
   jobId: generateJobId(),
-  job: (jobArgs, resolve) => { const { modelId } = jobArgs; resolve(createMockUsage(modelId)); return result; },
+  job: (jobArgs, resolve): T => { const { modelId } = jobArgs; resolve(createMockUsage(modelId)); return result; },
 });
 
 /** Delay constant for long-running jobs in tests (used to hold resources while checking concurrency) */

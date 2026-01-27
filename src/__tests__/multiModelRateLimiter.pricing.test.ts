@@ -1,6 +1,6 @@
-import { createMultiModelRateLimiter } from '../multiModelRateLimiter.js';
+import { createLLMRateLimiter } from '../multiModelRateLimiter.js';
 
-import type { JobCallbackContext, MultiModelRateLimiterInstance, UsageEntryWithCost } from '../multiModelTypes.js';
+import type { JobCallbackContext, LLMRateLimiterInstance, UsageEntryWithCost } from '../multiModelTypes.js';
 import { ALT_PRICING, CHEAP_PRICING, DEFAULT_PRICING, EXPENSIVE_PRICING, generateJobId, createMockJobResult, RPM_LIMIT_HIGH, TEN, TOKENS_100K, TOKENS_1M, ZERO, ZERO_CACHED_TOKENS, THREE, ONE, TWO } from './multiModelRateLimiter.helpers.js';
 
 const MODEL_CONFIG = { requestsPerMinute: RPM_LIMIT_HIGH, resourcesPerEvent: { estimatedNumberOfRequests: ONE }, pricing: DEFAULT_PRICING };
@@ -11,11 +11,11 @@ const ALT_MODEL_CONFIG = { requestsPerMinute: RPM_LIMIT_HIGH, resourcesPerEvent:
 const getUsageAt = (ctx: JobCallbackContext | undefined, index: number): UsageEntryWithCost | undefined => ctx?.usage[index];
 
 describe('MultiModelRateLimiter - pricing input tokens', () => {
-  let limiter: MultiModelRateLimiterInstance | undefined = undefined;
+  let limiter: LLMRateLimiterInstance | undefined = undefined;
   afterEach(() => { limiter?.stop(); limiter = undefined; });
 
   it('should calculate cost correctly for 1M input tokens', async () => {
-    limiter = createMultiModelRateLimiter({
+    limiter = createLLMRateLimiter({
       models: { 'model-a': MODEL_CONFIG },
     });
     let capturedCtx: JobCallbackContext | undefined = undefined;
@@ -32,11 +32,11 @@ describe('MultiModelRateLimiter - pricing input tokens', () => {
 });
 
 describe('MultiModelRateLimiter - pricing output tokens', () => {
-  let limiter: MultiModelRateLimiterInstance | undefined = undefined;
+  let limiter: LLMRateLimiterInstance | undefined = undefined;
   afterEach(() => { limiter?.stop(); limiter = undefined; });
 
   it('should calculate cost correctly for 1M output tokens', async () => {
-    limiter = createMultiModelRateLimiter({
+    limiter = createLLMRateLimiter({
       models: { 'model-a': MODEL_CONFIG },
     });
     let capturedCtx: JobCallbackContext | undefined = undefined;
@@ -53,11 +53,11 @@ describe('MultiModelRateLimiter - pricing output tokens', () => {
 });
 
 describe('MultiModelRateLimiter - pricing cached tokens', () => {
-  let limiter: MultiModelRateLimiterInstance | undefined = undefined;
+  let limiter: LLMRateLimiterInstance | undefined = undefined;
   afterEach(() => { limiter?.stop(); limiter = undefined; });
 
   it('should calculate cost correctly for 1M cached tokens', async () => {
-    limiter = createMultiModelRateLimiter({
+    limiter = createLLMRateLimiter({
       models: { 'model-a': MODEL_CONFIG },
     });
     let capturedCtx: JobCallbackContext | undefined = undefined;
@@ -74,11 +74,11 @@ describe('MultiModelRateLimiter - pricing cached tokens', () => {
 });
 
 describe('MultiModelRateLimiter - pricing combined tokens', () => {
-  let limiter: MultiModelRateLimiterInstance | undefined = undefined;
+  let limiter: LLMRateLimiterInstance | undefined = undefined;
   afterEach(() => { limiter?.stop(); limiter = undefined; });
 
   it('should calculate cost correctly for combined tokens', async () => {
-    limiter = createMultiModelRateLimiter({
+    limiter = createLLMRateLimiter({
       models: { 'model-a': MODEL_CONFIG },
     });
     let capturedCtx: JobCallbackContext | undefined = undefined;
@@ -96,11 +96,11 @@ describe('MultiModelRateLimiter - pricing combined tokens', () => {
 });
 
 describe('MultiModelRateLimiter - pricing fractional', () => {
-  let limiter: MultiModelRateLimiterInstance | undefined = undefined;
+  let limiter: LLMRateLimiterInstance | undefined = undefined;
   afterEach(() => { limiter?.stop(); limiter = undefined; });
 
   it('should calculate cost correctly for 100K tokens (1/10 of 1M)', async () => {
-    limiter = createMultiModelRateLimiter({
+    limiter = createLLMRateLimiter({
       models: { 'model-a': MODEL_CONFIG },
     });
     let capturedCtx: JobCallbackContext | undefined = undefined;
@@ -117,7 +117,7 @@ describe('MultiModelRateLimiter - pricing fractional', () => {
   });
 
   it('should calculate zero cost for zero tokens', async () => {
-    limiter = createMultiModelRateLimiter({
+    limiter = createLLMRateLimiter({
       models: { 'model-a': MODEL_CONFIG },
     });
     let capturedCtx: JobCallbackContext | undefined = undefined;
@@ -134,11 +134,11 @@ describe('MultiModelRateLimiter - pricing fractional', () => {
 });
 
 describe('MultiModelRateLimiter - pricing different models', () => {
-  let limiter: MultiModelRateLimiterInstance | undefined = undefined;
+  let limiter: LLMRateLimiterInstance | undefined = undefined;
   afterEach(() => { limiter?.stop(); limiter = undefined; });
 
   it('should calculate cost using correct model pricing', async () => {
-    limiter = createMultiModelRateLimiter({
+    limiter = createLLMRateLimiter({
       models: {
         'cheap-model': CHEAP_MODEL_CONFIG,
         'expensive-model': EXPENSIVE_MODEL_CONFIG,
@@ -160,11 +160,11 @@ describe('MultiModelRateLimiter - pricing different models', () => {
 });
 
 describe('MultiModelRateLimiter - pricing with delegation', () => {
-  let limiter: MultiModelRateLimiterInstance | undefined = undefined;
+  let limiter: LLMRateLimiterInstance | undefined = undefined;
   afterEach(() => { limiter?.stop(); limiter = undefined; });
 
   it('should accumulate costs correctly when delegating between different priced models', async () => {
-    limiter = createMultiModelRateLimiter({
+    limiter = createLLMRateLimiter({
       models: {
         'model-a': MODEL_CONFIG,
         'model-b': ALT_MODEL_CONFIG,
@@ -192,11 +192,11 @@ describe('MultiModelRateLimiter - pricing with delegation', () => {
 });
 
 describe('MultiModelRateLimiter - cost in usage entries', () => {
-  let limiter: MultiModelRateLimiterInstance | undefined = undefined;
+  let limiter: LLMRateLimiterInstance | undefined = undefined;
   afterEach(() => { limiter?.stop(); limiter = undefined; });
 
   it('should include cost in each usage entry', async () => {
-    limiter = createMultiModelRateLimiter({
+    limiter = createLLMRateLimiter({
       models: { 'model-a': MODEL_CONFIG },
     });
     let capturedCtx: JobCallbackContext | undefined = undefined;
@@ -215,11 +215,11 @@ describe('MultiModelRateLimiter - cost in usage entries', () => {
 });
 
 describe('MultiModelRateLimiter - cost per model after delegation', () => {
-  let limiter: MultiModelRateLimiterInstance | undefined = undefined;
+  let limiter: LLMRateLimiterInstance | undefined = undefined;
   afterEach(() => { limiter?.stop(); limiter = undefined; });
 
   it('should have cost property on each usage entry after delegation', async () => {
-    limiter = createMultiModelRateLimiter({
+    limiter = createLLMRateLimiter({
       models: {
         'model-a': MODEL_CONFIG,
         'model-b': ALT_MODEL_CONFIG,

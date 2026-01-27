@@ -1,16 +1,16 @@
 /**
  * Configuration validation utilities for LLM Rate Limiter.
  */
-import type { LLMRateLimiterConfig } from '../types.js';
+import type { InternalLimiterConfig } from '../types.js';
 
 const ZERO = 0;
 
-type ResourcesPerEvent = LLMRateLimiterConfig['resourcesPerEvent'];
+type ResourcesPerEvent = InternalLimiterConfig['resourcesPerEvent'];
 
 /**
  * Validates that request limits have the required resourcesPerEvent fields.
  */
-export const validateRequestLimits = (config: LLMRateLimiterConfig, resources: ResourcesPerEvent): void => {
+export const validateRequestLimits = (config: InternalLimiterConfig, resources: ResourcesPerEvent): void => {
   const hasRequestLimit = config.requestsPerMinute !== undefined || config.requestsPerDay !== undefined;
   const hasValidEstimate = resources?.estimatedNumberOfRequests !== undefined && resources.estimatedNumberOfRequests > ZERO;
   if (hasRequestLimit && !hasValidEstimate) {
@@ -24,7 +24,7 @@ export const validateRequestLimits = (config: LLMRateLimiterConfig, resources: R
 /**
  * Validates that token limits have the required resourcesPerEvent fields.
  */
-export const validateTokenLimits = (config: LLMRateLimiterConfig, resources: ResourcesPerEvent): void => {
+export const validateTokenLimits = (config: InternalLimiterConfig, resources: ResourcesPerEvent): void => {
   const hasTokenLimit = config.tokensPerMinute !== undefined || config.tokensPerDay !== undefined;
   const hasValidEstimate = resources?.estimatedUsedTokens !== undefined && resources.estimatedUsedTokens > ZERO;
   if (hasTokenLimit && !hasValidEstimate) {
@@ -38,7 +38,7 @@ export const validateTokenLimits = (config: LLMRateLimiterConfig, resources: Res
 /**
  * Validates that memory limits have the required resourcesPerEvent fields.
  */
-export const validateMemoryLimits = (config: LLMRateLimiterConfig, resources: ResourcesPerEvent): void => {
+export const validateMemoryLimits = (config: InternalLimiterConfig, resources: ResourcesPerEvent): void => {
   const hasValidEstimate = resources?.estimatedUsedMemoryKB !== undefined && resources.estimatedUsedMemoryKB > ZERO;
   if (config.memory !== undefined && !hasValidEstimate) {
     throw new Error(
@@ -51,7 +51,7 @@ export const validateMemoryLimits = (config: LLMRateLimiterConfig, resources: Re
 /**
  * Validates the entire LLM Rate Limiter configuration.
  */
-export const validateConfig = (config: LLMRateLimiterConfig): void => {
+export const validateConfig = (config: InternalLimiterConfig): void => {
   const { resourcesPerEvent: resources } = config;
   validateRequestLimits(config, resources);
   validateTokenLimits(config, resources);

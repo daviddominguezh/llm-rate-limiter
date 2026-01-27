@@ -1,8 +1,9 @@
 import { setTimeout as setTimeoutAsync } from 'node:timers/promises';
 
-import { createLLMRateLimiter } from '../rateLimiter.js';
+import { createLLMRateLimiter } from '../multiModelRateLimiter.js';
 
-import type { LLMJobResult, LLMRateLimiterConfig, LLMRateLimiterInstance } from '../types.js';
+import type { LLMRateLimiterConfig, LLMRateLimiterInstance, ModelRateLimitConfig, UsageEntry } from '../multiModelTypes.js';
+import type { InternalJobResult } from '../types.js';
 
 // Test constants
 export const MOCK_INPUT_TOKENS = 100;
@@ -59,16 +60,36 @@ export type LimiterType = 'memory' | 'concurrency' | 'rpm' | 'rpd' | 'tpm' | 'tp
 
 export const allLimiters: LimiterType[] = ['memory', 'concurrency', 'rpm', 'rpd', 'tpm', 'tpd'];
 
+// Zero pricing for tests (no cost calculation needed)
+export const ZERO_PRICING = { input: ZERO, cached: ZERO, output: ZERO };
+
+// Job ID counter for unique IDs
+let jobIdCounter = ZERO;
+export const generateJobId = (): string => { jobIdCounter += ONE; return `combo-job-${String(jobIdCounter)}`; };
+
+// Mock job result type
+export interface MockJobResult extends InternalJobResult {
+  text: string;
+}
+
 // Helper to create mock job results
-export const createMockJobResult = (text: string, requestCount = DEFAULT_REQUEST_COUNT): LLMJobResult => ({
+export const createMockJobResult = (text: string, requestCount = DEFAULT_REQUEST_COUNT): MockJobResult => ({
   text,
   requestCount,
   usage: { input: MOCK_INPUT_TOKENS, output: MOCK_OUTPUT_TOKENS, cached: ZERO_CACHED_TOKENS },
 });
 
-const getHighLimitPart = (limiter: LimiterType): Partial<LLMRateLimiterConfig> => {
+// Helper to create mock usage entry
+export const createMockUsage = (modelId: string): UsageEntry => ({
+  modelId,
+  inputTokens: MOCK_INPUT_TOKENS,
+  outputTokens: MOCK_OUTPUT_TOKENS,
+  cachedTokens: ZERO_CACHED_TOKENS,
+});
+
+const getHighLimitPart = (limiter: LimiterType): Partial<ModelRateLimitConfig> => {
   switch (limiter) {
-    case 'memory': return { memory: { freeMemoryRatio: FREE_MEMORY_RATIO }, maxCapacity: HIGH_MEMORY_MAX_CAPACITY_KB };
+    case 'memory': return {}; // memory is top-level, not per-model
     case 'concurrency': return { maxConcurrentRequests: HIGH_CONCURRENCY };
     case 'rpm': return { requestsPerMinute: HIGH_RPM };
     case 'rpd': return { requestsPerDay: HIGH_RPD };
@@ -77,9 +98,9 @@ const getHighLimitPart = (limiter: LimiterType): Partial<LLMRateLimiterConfig> =
   }
 };
 
-const getBlockingLimitPart = (limiter: LimiterType): Partial<LLMRateLimiterConfig> => {
+const getBlockingLimitPart = (limiter: LimiterType): Partial<ModelRateLimitConfig> => {
   switch (limiter) {
-    case 'memory': return { maxCapacity: MEMORY_MAX_CAPACITY_KB };
+    case 'memory': return {}; // memory is top-level, not per-model
     case 'concurrency': return { maxConcurrentRequests: CONCURRENCY_LIMIT };
     case 'rpm': return { requestsPerMinute: RPM_LIMIT };
     case 'rpd': return { requestsPerDay: RPD_LIMIT };
@@ -88,14 +109,14 @@ const getBlockingLimitPart = (limiter: LimiterType): Partial<LLMRateLimiterConfi
   }
 };
 
-// Helper to build config for given limiters with high limits (non-blocking)
-export const buildHighLimitConfig = (limiters: LimiterType[]): LLMRateLimiterConfig => {
+// Helper to build model config for given limiters with high limits (non-blocking)
+const buildModelConfig = (limiters: LimiterType[]): ModelRateLimitConfig => {
   const hasMemory = limiters.includes('memory');
   const hasRequest = limiters.includes('rpm') || limiters.includes('rpd');
   const hasToken = limiters.includes('tpm') || limiters.includes('tpd');
 
   const limiterParts = limiters.map((l) => getHighLimitPart(l));
-  const merged = limiterParts.reduce<LLMRateLimiterConfig>((acc, part) => ({ ...acc, ...part }), {});
+  const merged = limiterParts.reduce<Partial<ModelRateLimitConfig>>((acc, part) => ({ ...acc, ...part }), {});
 
   const resources = {
     ...(hasMemory ? { estimatedUsedMemoryKB: ESTIMATED_MEMORY_KB } : {}),
@@ -103,9 +124,19 @@ export const buildHighLimitConfig = (limiters: LimiterType[]): LLMRateLimiterCon
     ...(hasToken ? { estimatedUsedTokens: MOCK_TOTAL_TOKENS } : {}),
   };
 
+  const base: ModelRateLimitConfig = { ...merged, pricing: ZERO_PRICING };
   return (hasMemory || hasRequest || hasToken)
-    ? { ...merged, resourcesPerEvent: resources }
-    : merged;
+    ? { ...base, resourcesPerEvent: resources }
+    : base;
+};
+
+// Helper to build config for given limiters with high limits (non-blocking)
+export const buildHighLimitConfig = (limiters: LimiterType[]): LLMRateLimiterConfig => {
+  const hasMemory = limiters.includes('memory');
+  return {
+    ...(hasMemory ? { memory: { freeMemoryRatio: FREE_MEMORY_RATIO }, maxCapacity: HIGH_MEMORY_MAX_CAPACITY_KB } : {}),
+    models: { default: buildModelConfig(limiters) },
+  };
 };
 
 // Helper to build config where one limiter blocks and others have high limits
@@ -113,17 +144,26 @@ export const buildConfigWithBlockingLimiter = (
   activeLimiters: LimiterType[],
   blockingLimiter: LimiterType
 ): LLMRateLimiterConfig => {
-  const base = buildHighLimitConfig(activeLimiters);
+  const hasMemory = activeLimiters.includes('memory');
+  const isMemoryBlocking = blockingLimiter === 'memory';
+  const modelConfig = buildModelConfig(activeLimiters);
   const blocking = getBlockingLimitPart(blockingLimiter);
-  return { ...base, ...blocking };
+  const memoryConfig = hasMemory
+    ? { memory: { freeMemoryRatio: FREE_MEMORY_RATIO }, maxCapacity: isMemoryBlocking ? MEMORY_MAX_CAPACITY_KB : HIGH_MEMORY_MAX_CAPACITY_KB }
+    : {};
+  return { ...memoryConfig, models: { default: { ...modelConfig, ...blocking } } };
 };
+
+// Helper to get model stats from the limiter
+const getDefaultModelStats = (limiter: LLMRateLimiterInstance): ReturnType<LLMRateLimiterInstance['getModelStats']> =>
+  limiter.getModelStats('default');
 
 // Helper to check which limiter is blocking
 export const getBlockingReason = (
   limiter: LLMRateLimiterInstance,
   activeLimiters: LimiterType[]
 ): LimiterType | null => {
-  const stats = limiter.getStats();
+  const stats = getDefaultModelStats(limiter);
   for (const lt of activeLimiters) {
     if (isLimiterBlocking(stats, lt)) { return lt; }
   }
@@ -131,7 +171,7 @@ export const getBlockingReason = (
 };
 
 const isLimiterBlocking = (
-  stats: ReturnType<LLMRateLimiterInstance['getStats']>,
+  stats: ReturnType<LLMRateLimiterInstance['getModelStats']>,
   limiter: LimiterType
 ): boolean => {
   switch (limiter) {
@@ -167,14 +207,18 @@ export const testSemaphoreBlocker = async (
 
   expect(newLimiter.hasCapacity()).toBe(true);
 
-  const slowJobPromise = newLimiter.queueJob(async () => {
-    await setTimeoutAsync(LONG_JOB_DELAY_MS);
-    return createMockJobResult('slow-job');
+  const slowJobPromise = newLimiter.queueJob({
+    jobId: generateJobId(),
+    job: async ({ modelId }, resolve) => {
+      await setTimeoutAsync(LONG_JOB_DELAY_MS);
+      resolve(createMockUsage(modelId));
+      return createMockJobResult('slow-job');
+    },
   });
 
   await setTimeoutAsync(SEMAPHORE_ACQUIRE_WAIT_MS);
 
-  const stats = newLimiter.getStats();
+  const stats = getDefaultModelStats(newLimiter);
   if (blocker === 'memory') {
     expect(stats.memory?.activeKB).toBe(ESTIMATED_MEMORY_KB);
     expect(stats.memory?.availableKB).toBe(ZERO);
@@ -199,10 +243,42 @@ export const testTimeWindowBlocker = async (
   setLimiter(newLimiter);
 
   expect(newLimiter.hasCapacity()).toBe(true);
-  await newLimiter.queueJob(() => createMockJobResult('exhaust-job'));
+  await newLimiter.queueJob({
+    jobId: generateJobId(),
+    job: ({ modelId }, resolve) => { resolve(createMockUsage(modelId)); return createMockJobResult('exhaust-job'); },
+  });
   expect(newLimiter.hasCapacity()).toBe(false);
   expect(getBlockingReason(newLimiter, limiters)).toBe(blocker);
 };
 
+// Helper to queue a simple job that resolves immediately
+export const queueSimpleJob = async <T extends MockJobResult>(
+  limiter: LLMRateLimiterInstance,
+  result: T
+): Promise<T> => {
+  const jobResult = await limiter.queueJob({
+    jobId: generateJobId(),
+    job: ({ modelId }, resolve) => { resolve(createMockUsage(modelId)); return result; },
+  });
+  return jobResult;
+};
+
+// Helper to queue an async job with delay
+export const queueDelayedJob = async (
+  limiter: LLMRateLimiterInstance,
+  text: string,
+  delayMs: number
+): Promise<MockJobResult> => {
+  const jobResult = await limiter.queueJob({
+    jobId: generateJobId(),
+    job: async ({ modelId }, resolve) => {
+      await setTimeoutAsync(delayMs);
+      resolve(createMockUsage(modelId));
+      return createMockJobResult(text);
+    },
+  });
+  return jobResult;
+};
+
 export { createLLMRateLimiter, setTimeoutAsync };
-export type { LLMJobResult, LLMRateLimiterConfig, LLMRateLimiterInstance };
+export type { LLMRateLimiterConfig, LLMRateLimiterInstance, MockJobResult as LLMJobResult };

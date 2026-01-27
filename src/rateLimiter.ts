@@ -13,24 +13,24 @@ import { Semaphore } from '@globalUtils/semaphore.js';
 import { TimeWindowCounter } from '@globalUtils/timeWindowCounter.js';
 
 import type {
-  LLMJobResult,
-  LLMRateLimiterConfig,
-  LLMRateLimiterConfigBase,
-  LLMRateLimiterInstance,
-  LLMRateLimiterStats,
-  ValidatedConfig,
+  InternalJobResult,
+  InternalLimiterConfig,
+  InternalLimiterConfigBase,
+  InternalLimiterInstance,
+  InternalLimiterStats,
+  InternalValidatedConfig,
 } from './types.js';
 
 export type {
   TokenUsage,
-  LLMJobResult,
+  InternalJobResult,
   MemoryLimitConfig,
-  LLMRateLimiterConfig,
-  LLMRateLimiterConfigBase,
-  LLMRateLimiterStats,
-  LLMRateLimiterInstance,
+  InternalLimiterConfig,
+  InternalLimiterConfigBase,
+  InternalLimiterStats,
+  InternalLimiterInstance,
   BaseResourcesPerEvent,
-  ValidatedConfig,
+  InternalValidatedConfig,
 } from './types.js';
 
 const ZERO = 0;
@@ -42,8 +42,8 @@ const DEFAULT_MIN_CAPACITY = 0;
 const DEFAULT_RECALCULATION_INTERVAL_MS = 1000;
 const DEFAULT_LABEL = 'LLMRateLimiter';
 
-class LLMRateLimiter implements LLMRateLimiterInstance {
-  private readonly config: LLMRateLimiterConfig;
+class LLMRateLimiter implements InternalLimiterInstance {
+  private readonly config: InternalLimiterConfig;
   private readonly label: string;
   private readonly estimatedNumberOfRequests: number;
   private readonly estimatedUsedTokens: number;
@@ -56,7 +56,7 @@ class LLMRateLimiter implements LLMRateLimiterInstance {
   private tpmCounter: TimeWindowCounter | null = null;
   private tpdCounter: TimeWindowCounter | null = null;
 
-  constructor(config: LLMRateLimiterConfig) {
+  constructor(config: InternalLimiterConfig) {
     validateConfig(config);
     this.config = config;
     this.label = config.label ?? DEFAULT_LABEL;
@@ -178,7 +178,7 @@ class LLMRateLimiter implements LLMRateLimiterInstance {
     this.tpdCounter?.add(this.estimatedUsedTokens);
   }
 
-  private refundDifference(result: LLMJobResult): void {
+  private refundDifference(result: InternalJobResult): void {
     // Calculate actual usage
     const { requestCount: actualRequests, usage } = result;
     const actualTokens = usage.input + usage.output;
@@ -198,7 +198,7 @@ class LLMRateLimiter implements LLMRateLimiterInstance {
     }
   }
 
-  async queueJob<T extends LLMJobResult>(job: () => Promise<T> | T): Promise<T> {
+  async queueJob<T extends InternalJobResult>(job: () => Promise<T> | T): Promise<T> {
     // Wait for time window capacity
     await this.waitForTimeWindowCapacity();
 
@@ -254,8 +254,8 @@ class LLMRateLimiter implements LLMRateLimiterInstance {
     return this.hasTimeWindowCapacity();
   }
 
-  getStats(): LLMRateLimiterStats {
-    const stats: LLMRateLimiterStats = {};
+  getStats(): InternalLimiterStats {
+    const stats: InternalLimiterStats = {};
     if (this.memorySemaphore !== null) {
       const { inUse, max, available } = this.memorySemaphore.getStats();
       stats.memory = { activeKB: inUse, maxCapacityKB: max, availableKB: available, systemAvailableKB: Math.round(getAvailableMemoryKB()) };
@@ -273,7 +273,8 @@ class LLMRateLimiter implements LLMRateLimiterInstance {
 }
 
 /**
- * Create a new LLM Rate Limiter instance.
+ * Create a new internal LLM Rate Limiter instance.
+ * This is used internally by the multi-model rate limiter.
  *
  * The type system enforces that resourcesPerEvent contains the required fields
  * based on which limits are configured:
@@ -281,6 +282,6 @@ class LLMRateLimiter implements LLMRateLimiterInstance {
  * - If tokensPerMinute or tokensPerDay is set, estimatedUsedTokens is required
  * - If memory is set, estimatedUsedMemoryKB is required
  */
-export const createLLMRateLimiter = <T extends LLMRateLimiterConfigBase>(
-  config: ValidatedConfig<T>
-): LLMRateLimiterInstance => new LLMRateLimiter(config as LLMRateLimiterConfig);
+export const createInternalLimiter = <T extends InternalLimiterConfigBase>(
+  config: InternalValidatedConfig<T>
+): InternalLimiterInstance => new LLMRateLimiter(config as InternalLimiterConfig);

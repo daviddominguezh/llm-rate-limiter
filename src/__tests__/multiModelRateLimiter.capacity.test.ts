@@ -1,16 +1,16 @@
 import { setTimeout as setTimeoutAsync } from 'node:timers/promises';
 
-import { createMultiModelRateLimiter } from '../multiModelRateLimiter.js';
+import { createLLMRateLimiter } from '../multiModelRateLimiter.js';
 
-import type { MultiModelRateLimiterInstance } from '../multiModelTypes.js';
+import type { LLMRateLimiterInstance } from '../multiModelTypes.js';
 import { CONCURRENCY_LIMIT, createJobOptions, createMockJobResult, DEFAULT_PRICING, DELAY_MS_MEDIUM, ONE, RPM_LIMIT_HIGH, RPM_LIMIT_LOW, simpleJob, ZERO } from './multiModelRateLimiter.helpers.js';
 
 describe('MultiModelRateLimiter - hasCapacity true', () => {
-  let limiter: MultiModelRateLimiterInstance | undefined = undefined;
+  let limiter: LLMRateLimiterInstance | undefined = undefined;
   afterEach(() => { limiter?.stop(); limiter = undefined; });
 
   it('should return true when any model has capacity', () => {
-    limiter = createMultiModelRateLimiter({
+    limiter = createLLMRateLimiter({
       models: {
         'gpt-4': { requestsPerMinute: RPM_LIMIT_HIGH, resourcesPerEvent: { estimatedNumberOfRequests: ONE }, pricing: DEFAULT_PRICING },
         'gpt-3.5': { requestsPerMinute: RPM_LIMIT_HIGH, resourcesPerEvent: { estimatedNumberOfRequests: ONE }, pricing: DEFAULT_PRICING },
@@ -22,11 +22,11 @@ describe('MultiModelRateLimiter - hasCapacity true', () => {
 });
 
 describe('MultiModelRateLimiter - hasCapacity false', () => {
-  let limiter: MultiModelRateLimiterInstance | undefined = undefined;
+  let limiter: LLMRateLimiterInstance | undefined = undefined;
   afterEach(() => { limiter?.stop(); limiter = undefined; });
 
   it('should return false when all models are exhausted', async () => {
-    limiter = createMultiModelRateLimiter({
+    limiter = createLLMRateLimiter({
       models: {
         'gpt-4': { requestsPerMinute: RPM_LIMIT_LOW, resourcesPerEvent: { estimatedNumberOfRequests: ONE }, pricing: DEFAULT_PRICING },
         'gpt-3.5': { requestsPerMinute: RPM_LIMIT_LOW, resourcesPerEvent: { estimatedNumberOfRequests: ONE }, pricing: DEFAULT_PRICING },
@@ -40,18 +40,18 @@ describe('MultiModelRateLimiter - hasCapacity false', () => {
 });
 
 describe('MultiModelRateLimiter - hasCapacityForModel', () => {
-  let limiter: MultiModelRateLimiterInstance | undefined = undefined;
+  let limiter: LLMRateLimiterInstance | undefined = undefined;
   afterEach(() => { limiter?.stop(); limiter = undefined; });
 
   it('should return true for model with capacity', () => {
-    limiter = createMultiModelRateLimiter({
+    limiter = createLLMRateLimiter({
       models: { 'gpt-4': { requestsPerMinute: RPM_LIMIT_HIGH, resourcesPerEvent: { estimatedNumberOfRequests: ONE }, pricing: DEFAULT_PRICING } },
     });
     expect(limiter.hasCapacityForModel('gpt-4')).toBe(true);
   });
 
   it('should return false for exhausted model', async () => {
-    limiter = createMultiModelRateLimiter({
+    limiter = createLLMRateLimiter({
       models: { 'gpt-4': { requestsPerMinute: RPM_LIMIT_LOW, resourcesPerEvent: { estimatedNumberOfRequests: ONE }, pricing: DEFAULT_PRICING } },
     });
     await limiter.queueJob(simpleJob(createMockJobResult('job-1')));
@@ -59,7 +59,7 @@ describe('MultiModelRateLimiter - hasCapacityForModel', () => {
   });
 
   it('should throw error for unknown model', () => {
-    limiter = createMultiModelRateLimiter({
+    limiter = createLLMRateLimiter({
       models: { 'gpt-4': { requestsPerMinute: RPM_LIMIT_HIGH, resourcesPerEvent: { estimatedNumberOfRequests: ONE }, pricing: DEFAULT_PRICING } },
     });
     expect(() => limiter?.hasCapacityForModel('unknown-model')).toThrow('Unknown model: unknown-model');
@@ -67,11 +67,11 @@ describe('MultiModelRateLimiter - hasCapacityForModel', () => {
 });
 
 describe('MultiModelRateLimiter - getAvailableModel', () => {
-  let limiter: MultiModelRateLimiterInstance | undefined = undefined;
+  let limiter: LLMRateLimiterInstance | undefined = undefined;
   afterEach(() => { limiter?.stop(); limiter = undefined; });
 
   it('should return first model in order when all have capacity', () => {
-    limiter = createMultiModelRateLimiter({
+    limiter = createLLMRateLimiter({
       models: {
         'gpt-4': { requestsPerMinute: RPM_LIMIT_HIGH, resourcesPerEvent: { estimatedNumberOfRequests: ONE }, pricing: DEFAULT_PRICING },
         'gpt-3.5': { requestsPerMinute: RPM_LIMIT_HIGH, resourcesPerEvent: { estimatedNumberOfRequests: ONE }, pricing: DEFAULT_PRICING },
@@ -82,7 +82,7 @@ describe('MultiModelRateLimiter - getAvailableModel', () => {
   });
 
   it('should return next available model when first is exhausted', async () => {
-    limiter = createMultiModelRateLimiter({
+    limiter = createLLMRateLimiter({
       models: {
         'gpt-4': { requestsPerMinute: RPM_LIMIT_LOW, resourcesPerEvent: { estimatedNumberOfRequests: ONE }, pricing: DEFAULT_PRICING },
         'gpt-3.5': { requestsPerMinute: RPM_LIMIT_HIGH, resourcesPerEvent: { estimatedNumberOfRequests: ONE }, pricing: DEFAULT_PRICING },
@@ -94,7 +94,7 @@ describe('MultiModelRateLimiter - getAvailableModel', () => {
   });
 
   it('should return null when all models are exhausted', async () => {
-    limiter = createMultiModelRateLimiter({
+    limiter = createLLMRateLimiter({
       models: {
         'gpt-4': { requestsPerMinute: RPM_LIMIT_LOW, resourcesPerEvent: { estimatedNumberOfRequests: ONE }, pricing: DEFAULT_PRICING },
         'gpt-3.5': { requestsPerMinute: RPM_LIMIT_LOW, resourcesPerEvent: { estimatedNumberOfRequests: ONE }, pricing: DEFAULT_PRICING },
@@ -108,11 +108,11 @@ describe('MultiModelRateLimiter - getAvailableModel', () => {
 });
 
 describe('MultiModelRateLimiter - getModelStats', () => {
-  let limiter: MultiModelRateLimiterInstance | undefined = undefined;
+  let limiter: LLMRateLimiterInstance | undefined = undefined;
   afterEach(() => { limiter?.stop(); limiter = undefined; });
 
   it('should return stats for specific model', async () => {
-    limiter = createMultiModelRateLimiter({
+    limiter = createLLMRateLimiter({
       models: {
         'gpt-4': { requestsPerMinute: RPM_LIMIT_HIGH, resourcesPerEvent: { estimatedNumberOfRequests: ONE }, pricing: DEFAULT_PRICING },
         'gpt-3.5': { requestsPerMinute: RPM_LIMIT_HIGH, resourcesPerEvent: { estimatedNumberOfRequests: ONE }, pricing: DEFAULT_PRICING },
@@ -127,7 +127,7 @@ describe('MultiModelRateLimiter - getModelStats', () => {
   });
 
   it('should throw error for unknown model', () => {
-    limiter = createMultiModelRateLimiter({
+    limiter = createLLMRateLimiter({
       models: { 'gpt-4': { requestsPerMinute: RPM_LIMIT_HIGH, resourcesPerEvent: { estimatedNumberOfRequests: ONE }, pricing: DEFAULT_PRICING } },
     });
     expect(() => limiter?.getModelStats('unknown-model')).toThrow('Unknown model: unknown-model');
@@ -135,11 +135,11 @@ describe('MultiModelRateLimiter - getModelStats', () => {
 });
 
 describe('MultiModelRateLimiter - queueJobForModel', () => {
-  let limiter: MultiModelRateLimiterInstance | undefined = undefined;
+  let limiter: LLMRateLimiterInstance | undefined = undefined;
   afterEach(() => { limiter?.stop(); limiter = undefined; });
 
   it('should execute job on specified model', async () => {
-    limiter = createMultiModelRateLimiter({
+    limiter = createLLMRateLimiter({
       models: {
         'gpt-4': { requestsPerMinute: RPM_LIMIT_HIGH, resourcesPerEvent: { estimatedNumberOfRequests: ONE }, pricing: DEFAULT_PRICING },
         'gpt-3.5': { requestsPerMinute: RPM_LIMIT_HIGH, resourcesPerEvent: { estimatedNumberOfRequests: ONE }, pricing: DEFAULT_PRICING },
@@ -157,7 +157,7 @@ describe('MultiModelRateLimiter - queueJobForModel', () => {
   });
 
   it('should throw error for unknown model', async () => {
-    limiter = createMultiModelRateLimiter({
+    limiter = createLLMRateLimiter({
       models: { 'gpt-4': { requestsPerMinute: RPM_LIMIT_HIGH, resourcesPerEvent: { estimatedNumberOfRequests: ONE }, pricing: DEFAULT_PRICING } },
     });
     await expect(limiter.queueJobForModel('unknown-model', () => createMockJobResult('test'))).rejects.toThrow('Unknown model');
@@ -165,11 +165,11 @@ describe('MultiModelRateLimiter - queueJobForModel', () => {
 });
 
 describe('MultiModelRateLimiter - concurrency', () => {
-  let limiter: MultiModelRateLimiterInstance | undefined = undefined;
+  let limiter: LLMRateLimiterInstance | undefined = undefined;
   afterEach(() => { limiter?.stop(); limiter = undefined; });
 
   it('should respect per-model concurrency limits', async () => {
-    limiter = createMultiModelRateLimiter({ models: { 'gpt-4': { maxConcurrentRequests: CONCURRENCY_LIMIT, pricing: DEFAULT_PRICING } } });
+    limiter = createLLMRateLimiter({ models: { 'gpt-4': { maxConcurrentRequests: CONCURRENCY_LIMIT, pricing: DEFAULT_PRICING } } });
     let concurrentCount = ZERO;
     let maxConcurrent = ZERO;
     const concurrentJob = createJobOptions(async () => {

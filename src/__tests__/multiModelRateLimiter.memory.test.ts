@@ -1,8 +1,8 @@
 import { setTimeout as setTimeoutAsync } from 'node:timers/promises';
 
-import { createMultiModelRateLimiter } from '../multiModelRateLimiter.js';
+import { createLLMRateLimiter } from '../multiModelRateLimiter.js';
 
-import type { MultiModelRateLimiterInstance } from '../multiModelTypes.js';
+import type { LLMRateLimiterInstance } from '../multiModelTypes.js';
 import { createMockJobResult, DEFAULT_PRICING, DELAY_MS_SHORT, ONE, RPM_LIMIT_HIGH, RPM_LIMIT_LOW, simpleJob, ZERO } from './multiModelRateLimiter.helpers.js';
 
 const MEMORY_KB = 1000;
@@ -14,11 +14,11 @@ const MAX_CAPACITY = 5000;
 const MIN_CAPACITY = 1000;
 
 describe('MultiModelRateLimiter - memory config create', () => {
-  let limiter: MultiModelRateLimiterInstance | undefined = undefined;
+  let limiter: LLMRateLimiterInstance | undefined = undefined;
   afterEach(() => { limiter?.stop(); limiter = undefined; });
 
   it('should create limiter with memory configuration', () => {
-    limiter = createMultiModelRateLimiter({
+    limiter = createLLMRateLimiter({
       models: { 'gpt-4': { requestsPerMinute: RPM_LIMIT_HIGH, resourcesPerEvent: { estimatedNumberOfRequests: ONE, estimatedUsedMemoryKB: MEMORY_KB }, pricing: DEFAULT_PRICING } },
       memory: { freeMemoryRatio: FREE_MEMORY_RATIO, recalculationIntervalMs: RECALCULATION_INTERVAL_MS },
     });
@@ -27,7 +27,7 @@ describe('MultiModelRateLimiter - memory config create', () => {
   });
 
   it('should throw error when memory config but no estimatedUsedMemoryKB', () => {
-    expect(() => createMultiModelRateLimiter({
+    expect(() => createLLMRateLimiter({
       models: { 'gpt-4': { requestsPerMinute: RPM_LIMIT_HIGH, resourcesPerEvent: { estimatedNumberOfRequests: ONE } } },
       memory: { freeMemoryRatio: FREE_MEMORY_RATIO },
     })).toThrow('resourcesPerEvent.estimatedUsedMemoryKB is required in at least one model when memory limits are configured');
@@ -35,11 +35,11 @@ describe('MultiModelRateLimiter - memory config create', () => {
 });
 
 describe('MultiModelRateLimiter - memory config stats', () => {
-  let limiter: MultiModelRateLimiterInstance | undefined = undefined;
+  let limiter: LLMRateLimiterInstance | undefined = undefined;
   afterEach(() => { limiter?.stop(); limiter = undefined; });
 
   it('should include memory stats when memory config is provided', async () => {
-    limiter = createMultiModelRateLimiter({
+    limiter = createLLMRateLimiter({
       models: { 'gpt-4': { requestsPerMinute: RPM_LIMIT_HIGH, resourcesPerEvent: { estimatedNumberOfRequests: ONE, estimatedUsedMemoryKB: MEMORY_KB }, pricing: DEFAULT_PRICING } },
       memory: { freeMemoryRatio: FREE_MEMORY_RATIO, recalculationIntervalMs: RECALCULATION_INTERVAL_MS },
     });
@@ -54,11 +54,11 @@ describe('MultiModelRateLimiter - memory config stats', () => {
 });
 
 describe('MultiModelRateLimiter - memory capacity bounds', () => {
-  let limiter: MultiModelRateLimiterInstance | undefined = undefined;
+  let limiter: LLMRateLimiterInstance | undefined = undefined;
   afterEach(() => { limiter?.stop(); limiter = undefined; });
 
   it('should respect minCapacity and maxCapacity', () => {
-    limiter = createMultiModelRateLimiter({
+    limiter = createLLMRateLimiter({
       models: { 'gpt-4': { requestsPerMinute: RPM_LIMIT_HIGH, resourcesPerEvent: { estimatedNumberOfRequests: ONE, estimatedUsedMemoryKB: MEMORY_KB }, pricing: DEFAULT_PRICING } },
       memory: { freeMemoryRatio: FREE_MEMORY_RATIO, recalculationIntervalMs: RECALCULATION_INTERVAL_MS },
       minCapacity: MIN_CAPACITY,
@@ -71,11 +71,11 @@ describe('MultiModelRateLimiter - memory capacity bounds', () => {
 });
 
 describe('MultiModelRateLimiter - memory recalculation', () => {
-  let limiter: MultiModelRateLimiterInstance | undefined = undefined;
+  let limiter: LLMRateLimiterInstance | undefined = undefined;
   afterEach(() => { limiter?.stop(); limiter = undefined; });
 
   it('should recalculate memory capacity on interval', async () => {
-    limiter = createMultiModelRateLimiter({
+    limiter = createLLMRateLimiter({
       models: { 'gpt-4': { requestsPerMinute: RPM_LIMIT_HIGH, resourcesPerEvent: { estimatedNumberOfRequests: ONE, estimatedUsedMemoryKB: MEMORY_KB }, pricing: DEFAULT_PRICING } },
       memory: { freeMemoryRatio: FREE_MEMORY_RATIO, recalculationIntervalMs: RECALCULATION_INTERVAL_MS },
     });
@@ -88,11 +88,11 @@ describe('MultiModelRateLimiter - memory recalculation', () => {
 });
 
 describe('MultiModelRateLimiter - memory with multiple models', () => {
-  let limiter: MultiModelRateLimiterInstance | undefined = undefined;
+  let limiter: LLMRateLimiterInstance | undefined = undefined;
   afterEach(() => { limiter?.stop(); limiter = undefined; });
 
   it('should use max estimated memory across all models', () => {
-    limiter = createMultiModelRateLimiter({
+    limiter = createLLMRateLimiter({
       models: {
         'gpt-4': { requestsPerMinute: RPM_LIMIT_HIGH, resourcesPerEvent: { estimatedNumberOfRequests: ONE, estimatedUsedMemoryKB: LARGE_MEMORY_KB }, pricing: DEFAULT_PRICING },
         'gpt-3.5': { requestsPerMinute: RPM_LIMIT_HIGH, resourcesPerEvent: { estimatedNumberOfRequests: ONE, estimatedUsedMemoryKB: MEMORY_KB }, pricing: DEFAULT_PRICING },
@@ -104,7 +104,7 @@ describe('MultiModelRateLimiter - memory with multiple models', () => {
   });
 
   it('should check memory capacity per model', async () => {
-    limiter = createMultiModelRateLimiter({
+    limiter = createLLMRateLimiter({
       models: {
         'gpt-4': { requestsPerMinute: RPM_LIMIT_HIGH, resourcesPerEvent: { estimatedNumberOfRequests: ONE, estimatedUsedMemoryKB: MEMORY_KB }, pricing: DEFAULT_PRICING },
         'gpt-3.5': { requestsPerMinute: RPM_LIMIT_HIGH, resourcesPerEvent: { estimatedNumberOfRequests: ONE, estimatedUsedMemoryKB: MEMORY_KB }, pricing: DEFAULT_PRICING },
@@ -119,12 +119,12 @@ describe('MultiModelRateLimiter - memory with multiple models', () => {
 });
 
 describe('MultiModelRateLimiter - logging', () => {
-  let limiter: MultiModelRateLimiterInstance | undefined = undefined;
+  let limiter: LLMRateLimiterInstance | undefined = undefined;
   afterEach(() => { limiter?.stop(); limiter = undefined; });
 
   it('should call onLog callback during initialization and stop', () => {
     const logMessages: Array<{ message: string; data?: Record<string, unknown> }> = [];
-    limiter = createMultiModelRateLimiter({
+    limiter = createLLMRateLimiter({
       models: { 'gpt-4': { requestsPerMinute: RPM_LIMIT_HIGH, resourcesPerEvent: { estimatedNumberOfRequests: ONE } } },
       onLog: (message, data) => { logMessages.push({ message, data }); },
     });
@@ -137,7 +137,7 @@ describe('MultiModelRateLimiter - logging', () => {
   it('should include custom label in log messages', () => {
     const logMessages: string[] = [];
     const CUSTOM_LABEL = 'MyCustomLimiter';
-    limiter = createMultiModelRateLimiter({
+    limiter = createLLMRateLimiter({
       models: { 'gpt-4': { requestsPerMinute: RPM_LIMIT_HIGH, resourcesPerEvent: { estimatedNumberOfRequests: ONE } } },
       label: CUSTOM_LABEL,
       onLog: (message) => { logMessages.push(message); },
@@ -147,11 +147,11 @@ describe('MultiModelRateLimiter - logging', () => {
 });
 
 describe('MultiModelRateLimiter - waitForAnyModelCapacity', () => {
-  let limiter: MultiModelRateLimiterInstance | undefined = undefined;
+  let limiter: LLMRateLimiterInstance | undefined = undefined;
   afterEach(() => { limiter?.stop(); limiter = undefined; });
 
   it('should wait for capacity when all models are exhausted', async () => {
-    limiter = createMultiModelRateLimiter({
+    limiter = createLLMRateLimiter({
       models: {
         'gpt-4': { requestsPerMinute: RPM_LIMIT_LOW, resourcesPerEvent: { estimatedNumberOfRequests: ONE } },
         'gpt-3.5': { requestsPerMinute: RPM_LIMIT_LOW, resourcesPerEvent: { estimatedNumberOfRequests: ONE } },

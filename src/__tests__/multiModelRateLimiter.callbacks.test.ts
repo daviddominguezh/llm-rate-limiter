@@ -1,8 +1,8 @@
 import { setTimeout as setTimeoutAsync } from 'node:timers/promises';
 
-import { createMultiModelRateLimiter } from '../multiModelRateLimiter.js';
+import { createLLMRateLimiter } from '../multiModelRateLimiter.js';
 
-import type { JobCallbackContext, MultiModelRateLimiterInstance, UsageEntryWithCost } from '../multiModelTypes.js';
+import type { JobCallbackContext, LLMRateLimiterInstance, UsageEntryWithCost } from '../multiModelTypes.js';
 import { createMockJobResult, createMockUsage, DEFAULT_PRICING, DELAY_MS_LONG, DELAY_MS_SHORT, generateJobId, MOCK_INPUT_TOKENS, MOCK_OUTPUT_TOKENS, ONE, RPM_LIMIT_HIGH, TWO, ZERO } from './multiModelRateLimiter.helpers.js';
 
 const MODEL_CONFIG = { requestsPerMinute: RPM_LIMIT_HIGH, resourcesPerEvent: { estimatedNumberOfRequests: ONE }, pricing: DEFAULT_PRICING };
@@ -10,11 +10,11 @@ const MODEL_CONFIG = { requestsPerMinute: RPM_LIMIT_HIGH, resourcesPerEvent: { e
 const getUsageAt = (ctx: JobCallbackContext | undefined, index: number): UsageEntryWithCost | undefined => ctx?.usage[index];
 
 describe('MultiModelRateLimiter - onComplete callback basic', () => {
-  let limiter: MultiModelRateLimiterInstance | undefined = undefined;
+  let limiter: LLMRateLimiterInstance | undefined = undefined;
   afterEach(() => { limiter?.stop(); limiter = undefined; });
 
   it('should call onComplete with proper jobId and usage when job resolves', async () => {
-    limiter = createMultiModelRateLimiter({
+    limiter = createLLMRateLimiter({
       models: { 'model-a': MODEL_CONFIG },
     });
     let capturedCtx: JobCallbackContext | undefined = undefined;
@@ -34,7 +34,7 @@ describe('MultiModelRateLimiter - onComplete callback basic', () => {
   });
 
   it('should include totalCost in onComplete callback', async () => {
-    limiter = createMultiModelRateLimiter({
+    limiter = createLLMRateLimiter({
       models: { 'model-a': MODEL_CONFIG },
     });
     let capturedCtx: JobCallbackContext | undefined = undefined;
@@ -49,11 +49,11 @@ describe('MultiModelRateLimiter - onComplete callback basic', () => {
 });
 
 describe('MultiModelRateLimiter - onComplete callback skipping', () => {
-  let limiter: MultiModelRateLimiterInstance | undefined = undefined;
+  let limiter: LLMRateLimiterInstance | undefined = undefined;
   afterEach(() => { limiter?.stop(); limiter = undefined; });
 
   it('should call onComplete with usage only for the model that processed when skipping', async () => {
-    limiter = createMultiModelRateLimiter({
+    limiter = createLLMRateLimiter({
       models: {
         'model-a': { maxConcurrentRequests: ONE, pricing: DEFAULT_PRICING },
         'model-b': { maxConcurrentRequests: ONE, pricing: DEFAULT_PRICING },
@@ -92,11 +92,11 @@ describe('MultiModelRateLimiter - onComplete callback skipping', () => {
 });
 
 describe('MultiModelRateLimiter - onError callback basic', () => {
-  let limiter: MultiModelRateLimiterInstance | undefined = undefined;
+  let limiter: LLMRateLimiterInstance | undefined = undefined;
   afterEach(() => { limiter?.stop(); limiter = undefined; });
 
   it('should call onError with proper jobId and usage when job rejects without delegation', async () => {
-    limiter = createMultiModelRateLimiter({
+    limiter = createLLMRateLimiter({
       models: { 'model-a': MODEL_CONFIG },
     });
     let capturedCtx: JobCallbackContext | undefined = undefined;
@@ -113,7 +113,7 @@ describe('MultiModelRateLimiter - onError callback basic', () => {
   });
 
   it('should include totalCost in onError callback', async () => {
-    limiter = createMultiModelRateLimiter({
+    limiter = createLLMRateLimiter({
       models: { 'model-a': MODEL_CONFIG },
     });
     let capturedCtx: JobCallbackContext | undefined = undefined;
@@ -127,11 +127,11 @@ describe('MultiModelRateLimiter - onError callback basic', () => {
 });
 
 describe('MultiModelRateLimiter - onError callback delegation', () => {
-  let limiter: MultiModelRateLimiterInstance | undefined = undefined;
+  let limiter: LLMRateLimiterInstance | undefined = undefined;
   afterEach(() => { limiter?.stop(); limiter = undefined; });
 
   it('should call onError with usage for models exhausted via delegation', async () => {
-    limiter = createMultiModelRateLimiter({
+    limiter = createLLMRateLimiter({
       models: {
         'model-a': MODEL_CONFIG,
         'model-b': MODEL_CONFIG,
@@ -153,11 +153,11 @@ describe('MultiModelRateLimiter - onError callback delegation', () => {
 });
 
 describe('MultiModelRateLimiter - callback with delegation models', () => {
-  let limiter: MultiModelRateLimiterInstance | undefined = undefined;
+  let limiter: LLMRateLimiterInstance | undefined = undefined;
   afterEach(() => { limiter?.stop(); limiter = undefined; });
 
   it('should call onComplete with usage from all attempted models after delegation', async () => {
-    limiter = createMultiModelRateLimiter({
+    limiter = createLLMRateLimiter({
       models: {
         'model-a': MODEL_CONFIG,
         'model-b': MODEL_CONFIG,
@@ -184,11 +184,11 @@ describe('MultiModelRateLimiter - callback with delegation models', () => {
 });
 
 describe('MultiModelRateLimiter - callback with delegation cost', () => {
-  let limiter: MultiModelRateLimiterInstance | undefined = undefined;
+  let limiter: LLMRateLimiterInstance | undefined = undefined;
   afterEach(() => { limiter?.stop(); limiter = undefined; });
 
   it('should accumulate totalCost from all attempted models', async () => {
-    limiter = createMultiModelRateLimiter({
+    limiter = createLLMRateLimiter({
       models: {
         'model-a': MODEL_CONFIG,
         'model-b': MODEL_CONFIG,

@@ -28,9 +28,9 @@ export interface TokenUsage {
 }
 
 /**
- * Result type for LLM jobs - must include usage and requestCount.
+ * Result type for internal LLM jobs - must include usage and requestCount.
  */
-export interface LLMJobResult {
+export interface InternalJobResult {
   /** Actual number of LLM API calls made by this job */
   requestCount: number;
 
@@ -128,9 +128,9 @@ export type HasAnyResourceLimit<T> = T extends { memory: MemoryLimitConfig }
 // =============================================================================
 
 /**
- * Base configuration for the LLM rate limiter (without resourcesPerEvent).
+ * Base configuration for the internal rate limiter (without resourcesPerEvent).
  */
-export interface LLMRateLimiterConfigBase {
+export interface InternalLimiterConfigBase {
   /** Memory-based limits configuration (optional) */
   memory?: MemoryLimitConfig;
   /** Maximum requests per minute (optional) */
@@ -163,16 +163,16 @@ export interface LLMRateLimiterConfigBase {
  * - If any limit (memory, RPM, RPD, TPM, TPD) is set, resourcesPerEvent is required
  * - The specific fields in resourcesPerEvent depend on which limits are configured
  */
-export type ValidatedConfig<T extends LLMRateLimiterConfigBase> = T &
+export type InternalValidatedConfig<T extends InternalLimiterConfigBase> = T &
   (HasAnyResourceLimit<T> extends true
     ? { resourcesPerEvent: InferResourcesPerEvent<T> }
     : { resourcesPerEvent?: BaseResourcesPerEvent });
 
 /**
- * Configuration for the LLM rate limiter.
- * Use ValidatedConfig<T> for strict compile-time checking.
+ * Configuration for the internal rate limiter.
+ * Use InternalValidatedConfig<T> for strict compile-time checking.
  */
-export type LLMRateLimiterConfig = LLMRateLimiterConfigBase & {
+export type InternalLimiterConfig = InternalLimiterConfigBase & {
   resourcesPerEvent?: BaseResourcesPerEvent;
 };
 
@@ -181,9 +181,9 @@ export type LLMRateLimiterConfig = LLMRateLimiterConfigBase & {
 // =============================================================================
 
 /**
- * Statistics returned by getStats().
+ * Statistics returned by getStats() for internal limiter.
  */
-export interface LLMRateLimiterStats {
+export interface InternalLimiterStats {
   memory?: {
     activeKB: number;
     maxCapacityKB: number;
@@ -227,15 +227,15 @@ export interface LLMRateLimiterStats {
 // =============================================================================
 
 /**
- * Rate limiter instance returned by createLLMRateLimiter().
+ * Internal rate limiter instance returned by internal createLLMRateLimiter().
  */
-export interface LLMRateLimiterInstance {
+export interface InternalLimiterInstance {
   /** Queue a job - job must return object with usage and requestCount properties */
-  queueJob: <T extends LLMJobResult>(job: () => Promise<T> | T) => Promise<T>;
+  queueJob: <T extends InternalJobResult>(job: () => Promise<T> | T) => Promise<T>;
   /** Stop all intervals (for cleanup) */
   stop: () => void;
   /** Check if all limits have capacity (non-blocking) */
   hasCapacity: () => boolean;
   /** Get current statistics */
-  getStats: () => LLMRateLimiterStats;
+  getStats: () => InternalLimiterStats;
 }

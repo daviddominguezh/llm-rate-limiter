@@ -1,17 +1,17 @@
-/** Multi-Model LLM Rate Limiter with per-model limits and automatic fallback. */
+/** LLM Rate Limiter with per-model limits and automatic fallback. */
 import { getAvailableMemoryKB } from '@globalUtils/memoryUtils.js';
 import { buildModelLimiterConfig, getEffectiveOrder, validateMultiModelConfig } from '@globalUtils/multiModelHelpers.js';
 import { Semaphore } from '@globalUtils/semaphore.js';
-import { createLLMRateLimiter } from './rateLimiter.js';
-import type { LLMJobResult, LLMRateLimiterConfig, LLMRateLimiterInstance, LLMRateLimiterStats } from './types.js';
-import type { ArgsWithoutModelId, JobCallbackContext, JobUsage, ModelsConfig, MultiModelJobResult,
-  MultiModelRateLimiterConfig, MultiModelRateLimiterInstance, MultiModelRateLimiterStats,
-  QueueJobOptions, UsageEntry, ValidatedMultiModelConfig } from './multiModelTypes.js';
+import { createInternalLimiter } from './rateLimiter.js';
+import type { InternalJobResult, InternalLimiterConfig, InternalLimiterInstance, InternalLimiterStats } from './types.js';
+import type { ArgsWithoutModelId, JobCallbackContext, JobUsage, LLMJobResult, LLMRateLimiterConfig,
+  LLMRateLimiterInstance, LLMRateLimiterStats, ModelsConfig,
+  QueueJobOptions, UsageEntry, ValidatedLLMRateLimiterConfig } from './multiModelTypes.js';
 
 /** Internal context for job execution with delegation support */
-interface JobExecutionContext<T extends LLMJobResult, Args extends ArgsWithoutModelId> {
+interface JobExecutionContext<T extends InternalJobResult, Args extends ArgsWithoutModelId> {
   jobId: string; job: QueueJobOptions<T, Args>['job']; args: Args | undefined; triedModels: Set<string>;
-  usage: JobUsage; onComplete: ((result: MultiModelJobResult<T>, context: JobCallbackContext) => void) | undefined;
+  usage: JobUsage; onComplete: ((result: LLMJobResult<T>, context: JobCallbackContext) => void) | undefined;
   onError: ((error: Error, context: JobCallbackContext) => void) | undefined;
 }
 
@@ -34,26 +34,24 @@ function buildJobArgs<Args extends ArgsWithoutModelId>(modelId: string, args: Ar
 }
 /** Calculate total cost from usage array */
 const calculateTotalCost = (usage: JobUsage): number => usage.reduce((total, entry) => total + entry.cost, ZERO);
-
-
 const ZERO = 0;
 const TOKENS_PER_MILLION = 1_000_000;
 const DEFAULT_POLL_INTERVAL_MS = 100;
 const DEFAULT_FREE_MEMORY_RATIO = 0.8;
 const DEFAULT_MIN_CAPACITY = 0;
 const DEFAULT_RECALCULATION_INTERVAL_MS = 1000;
-const DEFAULT_LABEL = 'MultiModelRateLimiter';
+const DEFAULT_LABEL = 'LLMRateLimiter';
 
-class MultiModelRateLimiter implements MultiModelRateLimiterInstance {
-  private readonly config: MultiModelRateLimiterConfig;
+class LLMRateLimiter implements LLMRateLimiterInstance {
+  private readonly config: LLMRateLimiterConfig;
   private readonly label: string;
   private readonly order: readonly string[];
-  private readonly modelLimiters: Map<string, LLMRateLimiterInstance>;
+  private readonly modelLimiters: Map<string, InternalLimiterInstance>;
   private memorySemaphore: Semaphore | null = null;
   private memoryRecalculationIntervalId: NodeJS.Timeout | null = null;
   private readonly estimatedUsedMemoryKB: number;
 
-  constructor(config: MultiModelRateLimiterConfig) {
+  constructor(config: LLMRateLimiterConfig) {
     validateMultiModelConfig(config);
     this.config = config;
     this.label = config.label ?? DEFAULT_LABEL;
@@ -111,13 +109,13 @@ class MultiModelRateLimiter implements MultiModelRateLimiterInstance {
 
   private initializeModelLimiters(): void {
     for (const [modelId, modelConfig] of Object.entries(this.config.models)) {
-      const limiterConfig = buildModelLimiterConfig(modelId, modelConfig as LLMRateLimiterConfig, this.label, this.config.onLog);
-      const limiter = createLLMRateLimiter(limiterConfig);
+      const limiterConfig = buildModelLimiterConfig(modelId, modelConfig as InternalLimiterConfig, this.label, this.config.onLog);
+      const limiter = createInternalLimiter(limiterConfig);
       this.modelLimiters.set(modelId, limiter);
     }
   }
 
-  private getModelLimiter(modelId: string): LLMRateLimiterInstance {
+  private getModelLimiter(modelId: string): InternalLimiterInstance {
     const limiter = this.modelLimiters.get(modelId);
     if (limiter === undefined) { throw new Error(`Unknown model: ${modelId}`); }
     return limiter;
@@ -190,9 +188,9 @@ class MultiModelRateLimiter implements MultiModelRateLimiterInstance {
     if (this.memorySemaphore !== null && mem > ZERO) { this.memorySemaphore.release(mem); }
   }
 
-  async queueJob<T extends LLMJobResult, Args extends ArgsWithoutModelId = ArgsWithoutModelId>(
+  async queueJob<T extends InternalJobResult, Args extends ArgsWithoutModelId = ArgsWithoutModelId>(
     options: QueueJobOptions<T, Args>
-  ): Promise<MultiModelJobResult<T>> {
+  ): Promise<LLMJobResult<T>> {
     const ctx: JobExecutionContext<T, Args> = {
       jobId: options.jobId,
       job: options.job,
@@ -205,9 +203,9 @@ class MultiModelRateLimiter implements MultiModelRateLimiterInstance {
     return await this.executeJobWithDelegation(ctx);
   }
 
-  private async executeJobWithDelegation<T extends LLMJobResult, Args extends ArgsWithoutModelId>(
+  private async executeJobWithDelegation<T extends InternalJobResult, Args extends ArgsWithoutModelId>(
     ctx: JobExecutionContext<T, Args>
-  ): Promise<MultiModelJobResult<T>> {
+  ): Promise<LLMJobResult<T>> {
     const selectedModel = this.getAvailableModelExcluding(ctx.triedModels) ?? await this.waitForAnyModelCapacityExcluding(ctx.triedModels);
     ctx.triedModels.add(selectedModel);
     await this.acquireMemory(selectedModel);
@@ -223,10 +221,10 @@ class MultiModelRateLimiter implements MultiModelRateLimiterInstance {
     }
   }
 
-  private async executeJobOnModel<T extends LLMJobResult, Args extends ArgsWithoutModelId>(
+  private async executeJobOnModel<T extends InternalJobResult, Args extends ArgsWithoutModelId>(
     ctx: JobExecutionContext<T, Args>,
     modelId: string
-  ): Promise<MultiModelJobResult<T>> {
+  ): Promise<LLMJobResult<T>> {
     const limiter = this.getModelLimiter(modelId);
     let callbackCalled = false;
     let shouldDelegate = false;
@@ -258,15 +256,15 @@ class MultiModelRateLimiter implements MultiModelRateLimiterInstance {
     return finalResult;
   }
 
-  private async handleDelegation<T extends LLMJobResult, Args extends ArgsWithoutModelId>(
+  private async handleDelegation<T extends InternalJobResult, Args extends ArgsWithoutModelId>(
     ctx: JobExecutionContext<T, Args>
-  ): Promise<MultiModelJobResult<T>> {
+  ): Promise<LLMJobResult<T>> {
     const nextModel = this.getAvailableModelExcluding(ctx.triedModels);
     if (nextModel === null) { ctx.triedModels.clear(); }
     return await this.executeJobWithDelegation(ctx);
   }
 
-  async queueJobForModel<T extends LLMJobResult>(modelId: string, job: () => Promise<T> | T): Promise<T> {
+  async queueJobForModel<T extends InternalJobResult>(modelId: string, job: () => Promise<T> | T): Promise<T> {
     const limiter = this.getModelLimiter(modelId);
     await this.acquireMemory(modelId);
     try {
@@ -276,19 +274,21 @@ class MultiModelRateLimiter implements MultiModelRateLimiterInstance {
     }
   }
 
-  getStats(): MultiModelRateLimiterStats {
-    const modelStats: Record<string, LLMRateLimiterStats> = {};
-    for (const [modelId, limiter] of this.modelLimiters) { modelStats[modelId] = limiter.getStats(); }
-    const stats: MultiModelRateLimiterStats = { models: modelStats };
-    if (this.memorySemaphore !== null) {
-      const { inUse, max, available } = this.memorySemaphore.getStats();
-      stats.memory = { activeKB: inUse, maxCapacityKB: max, availableKB: available, systemAvailableKB: Math.round(getAvailableMemoryKB()) };
-    }
-    return stats;
+  private getMemoryStats(): InternalLimiterStats['memory'] | undefined {
+    if (this.memorySemaphore === null) return undefined;
+    const { inUse, max, available } = this.memorySemaphore.getStats();
+    return { activeKB: inUse, maxCapacityKB: max, availableKB: available, systemAvailableKB: Math.round(getAvailableMemoryKB()) };
   }
 
-  getModelStats(modelId: string): LLMRateLimiterStats {
-    return this.getModelLimiter(modelId).getStats();
+  getStats(): LLMRateLimiterStats {
+    const modelStats: Record<string, InternalLimiterStats> = {};
+    for (const [modelId, limiter] of this.modelLimiters) { modelStats[modelId] = limiter.getStats(); }
+    return { models: modelStats, memory: this.getMemoryStats() };
+  }
+
+  getModelStats(modelId: string): InternalLimiterStats {
+    const mem = this.getMemoryStats();
+    return mem === undefined ? this.getModelLimiter(modelId).getStats() : { ...this.getModelLimiter(modelId).getStats(), memory: mem };
   }
 
   stop(): void {
@@ -301,7 +301,7 @@ class MultiModelRateLimiter implements MultiModelRateLimiterInstance {
   }
 }
 
-/** Create a new Multi-Model Rate Limiter. Order is optional for single model, required for multiple. */
-export const createMultiModelRateLimiter = <T extends ModelsConfig>(
-  config: ValidatedMultiModelConfig<T>
-): MultiModelRateLimiterInstance => new MultiModelRateLimiter(config as MultiModelRateLimiterConfig);
+/** Create a new LLM Rate Limiter. Order is optional for single model, required for multiple. */
+export const createLLMRateLimiter = <T extends ModelsConfig>(
+  config: ValidatedLLMRateLimiterConfig<T>
+): LLMRateLimiterInstance => new LLMRateLimiter(config as LLMRateLimiterConfig);

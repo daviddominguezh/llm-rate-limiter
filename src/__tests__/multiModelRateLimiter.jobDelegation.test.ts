@@ -1,16 +1,16 @@
-import { createMultiModelRateLimiter } from '../multiModelRateLimiter.js';
+import { createLLMRateLimiter } from '../multiModelRateLimiter.js';
 
-import type { MultiModelRateLimiterInstance } from '../multiModelTypes.js';
+import type { LLMRateLimiterInstance } from '../multiModelTypes.js';
 import { createMockJobResult, createMockUsage, DEFAULT_PRICING, generateJobId, ONE, RPM_LIMIT_HIGH, THREE, ZERO } from './multiModelRateLimiter.helpers.js';
 
 const MODEL_CONFIG = { requestsPerMinute: RPM_LIMIT_HIGH, resourcesPerEvent: { estimatedNumberOfRequests: ONE }, pricing: DEFAULT_PRICING };
 
 describe('MultiModelRateLimiter - job delegation basic', () => {
-  let limiter: MultiModelRateLimiterInstance | undefined = undefined;
+  let limiter: LLMRateLimiterInstance | undefined = undefined;
   afterEach(() => { limiter?.stop(); limiter = undefined; });
 
   it('should delegate to next model when job calls reject with delegate true', async () => {
-    limiter = createMultiModelRateLimiter({
+    limiter = createLLMRateLimiter({
       models: {
         'model-a': MODEL_CONFIG,
         'model-b': MODEL_CONFIG,
@@ -34,11 +34,11 @@ describe('MultiModelRateLimiter - job delegation basic', () => {
 });
 
 describe('MultiModelRateLimiter - job delegation chain 3 models', () => {
-  let limiter: MultiModelRateLimiterInstance | undefined = undefined;
+  let limiter: LLMRateLimiterInstance | undefined = undefined;
   afterEach(() => { limiter?.stop(); limiter = undefined; });
 
   it('should delegate through 3 models until one succeeds', async () => {
-    limiter = createMultiModelRateLimiter({
+    limiter = createLLMRateLimiter({
       models: {
         'model-a': MODEL_CONFIG,
         'model-b': MODEL_CONFIG,
@@ -63,11 +63,11 @@ describe('MultiModelRateLimiter - job delegation chain 3 models', () => {
 });
 
 describe('MultiModelRateLimiter - job delegation chain 4 models', () => {
-  let limiter: MultiModelRateLimiterInstance | undefined = undefined;
+  let limiter: LLMRateLimiterInstance | undefined = undefined;
   afterEach(() => { limiter?.stop(); limiter = undefined; });
 
   it('should delegate through 4 models until one succeeds', async () => {
-    limiter = createMultiModelRateLimiter({
+    limiter = createLLMRateLimiter({
       models: {
         'model-a': MODEL_CONFIG,
         'model-b': MODEL_CONFIG,
@@ -93,11 +93,11 @@ describe('MultiModelRateLimiter - job delegation chain 4 models', () => {
 });
 
 describe('MultiModelRateLimiter - job delegation retry', () => {
-  let limiter: MultiModelRateLimiterInstance | undefined = undefined;
+  let limiter: LLMRateLimiterInstance | undefined = undefined;
   afterEach(() => { limiter?.stop(); limiter = undefined; });
 
   it('should retry from first model when all models delegate', async () => {
-    limiter = createMultiModelRateLimiter({
+    limiter = createLLMRateLimiter({
       models: {
         'model-a': MODEL_CONFIG,
         'model-b': MODEL_CONFIG,

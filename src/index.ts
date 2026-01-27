@@ -15,6 +15,7 @@ export type {
   JobCallbackContext,
   JobRejectOptions,
   JobUsage,
+  ModelPricing,
   ModelRateLimitConfig,
   ModelsConfig,
   MultiModelJob,
@@ -24,5 +25,6 @@ export type {
   MultiModelRateLimiterStats,
   QueueJobOptions,
   UsageEntry,
+  UsageEntryWithCost,
   ValidatedMultiModelConfig,
 } from './multiModelTypes.js';

@@ -32,9 +32,12 @@ function buildJobArgs<Args extends ArgsWithoutModelId>(modelId: string, args: Ar
   }
   return { modelId, ...args };
 }
+/** Calculate total cost from usage array */
+const calculateTotalCost = (usage: JobUsage): number => usage.reduce((total, entry) => total + entry.cost, ZERO);
 
 
 const ZERO = 0;
+const TOKENS_PER_MILLION = 1_000_000;
 const DEFAULT_POLL_INTERVAL_MS = 100;
 const DEFAULT_FREE_MEMORY_RATIO = 0.8;
 const DEFAULT_MIN_CAPACITY = 0;
@@ -126,6 +129,16 @@ class MultiModelRateLimiter implements MultiModelRateLimiterInstance {
     return models[modelId]?.resourcesPerEvent?.estimatedUsedMemoryKB ?? ZERO;
   }
 
+  private calculateCost(modelId: string, usage: UsageEntry): number {
+    const p = this.config.models[modelId]?.pricing;
+    if (p === undefined) { return ZERO; }
+    return ((usage.inputTokens * p.input) + (usage.cachedTokens * p.cached) + (usage.outputTokens * p.output)) / TOKENS_PER_MILLION;
+  }
+
+  private addUsageWithCost(ctx: { usage: JobUsage }, modelId: string, usage: UsageEntry): void {
+    ctx.usage.push({ ...usage, cost: this.calculateCost(modelId, usage) });
+  }
+
   private hasMemoryCapacity(modelId: string): boolean {
     if (this.memorySemaphore === null) { return true; }
     return this.memorySemaphore.getAvailablePermits() >= this.getEstimatedMemoryForModel(modelId);
@@ -203,7 +216,8 @@ class MultiModelRateLimiter implements MultiModelRateLimiterInstance {
     } catch (error) {
       this.releaseMemory(selectedModel);
       if (isDelegationError(error)) { return await this.handleDelegation(ctx); }
-      const callbackContext: JobCallbackContext = { jobId: ctx.jobId, usage: ctx.usage };
+      const totalCost = calculateTotalCost(ctx.usage);
+      const callbackContext: JobCallbackContext = { jobId: ctx.jobId, totalCost, usage: ctx.usage };
       if (ctx.onError !== undefined) { ctx.onError(error instanceof Error ? error : new Error(String(error)), callbackContext); }
       throw error;
     }
@@ -219,11 +233,11 @@ class MultiModelRateLimiter implements MultiModelRateLimiterInstance {
     let rejectedWithoutDelegation = false;
     const handleResolve = (usage: UsageEntry): void => {
       callbackCalled = true;
-      ctx.usage.push(usage);
+      this.addUsageWithCost(ctx, modelId, usage);
     };
     const handleReject = (usage: UsageEntry, opts?: { delegate?: boolean }): void => {
       callbackCalled = true;
-      ctx.usage.push(usage);
+      this.addUsageWithCost(ctx, modelId, usage);
       shouldDelegate = opts?.delegate !== false;
       if (!shouldDelegate) { rejectedWithoutDelegation = true; }
     };
@@ -238,7 +252,8 @@ class MultiModelRateLimiter implements MultiModelRateLimiterInstance {
     });
     this.releaseMemory(modelId);
     const finalResult = { ...result, modelUsed: modelId };
-    const callbackContext: JobCallbackContext = { jobId: ctx.jobId, usage: ctx.usage };
+    const totalCost = calculateTotalCost(ctx.usage);
+    const callbackContext: JobCallbackContext = { jobId: ctx.jobId, totalCost, usage: ctx.usage };
     if (ctx.onComplete !== undefined) { ctx.onComplete(finalResult, callbackContext); }
     return finalResult;
   }

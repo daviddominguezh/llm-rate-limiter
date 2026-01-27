@@ -3,7 +3,7 @@ import { setTimeout as setTimeoutAsync } from 'node:timers/promises';
 import { createMultiModelRateLimiter } from '../multiModelRateLimiter.js';
 
 import type { MultiModelRateLimiterInstance } from '../multiModelTypes.js';
-import { createJobOptions, createMockJobResult, DELAY_MS_SHORT, ONE, RPM_LIMIT_HIGH, RPM_LIMIT_LOW, simpleJob } from './multiModelRateLimiter.helpers.js';
+import { createJobOptions, createMockJobResult, DEFAULT_PRICING, DELAY_MS_SHORT, ONE, RPM_LIMIT_HIGH, RPM_LIMIT_LOW, simpleJob } from './multiModelRateLimiter.helpers.js';
 
 describe('MultiModelRateLimiter - single model', () => {
   let limiter: MultiModelRateLimiterInstance | undefined = undefined;
@@ -11,7 +11,7 @@ describe('MultiModelRateLimiter - single model', () => {
 
   it('should create limiter with single model (order optional)', () => {
     limiter = createMultiModelRateLimiter({
-      models: { 'gpt-4': { requestsPerMinute: RPM_LIMIT_HIGH, resourcesPerEvent: { estimatedNumberOfRequests: ONE } } },
+      models: { 'gpt-4': { requestsPerMinute: RPM_LIMIT_HIGH, resourcesPerEvent: { estimatedNumberOfRequests: ONE }, pricing: DEFAULT_PRICING } },
     });
     expect(limiter).toBeDefined();
     expect(limiter.hasCapacity()).toBe(true);
@@ -19,7 +19,7 @@ describe('MultiModelRateLimiter - single model', () => {
 
   it('should execute job on single model', async () => {
     limiter = createMultiModelRateLimiter({
-      models: { 'gpt-4': { requestsPerMinute: RPM_LIMIT_HIGH, resourcesPerEvent: { estimatedNumberOfRequests: ONE } } },
+      models: { 'gpt-4': { requestsPerMinute: RPM_LIMIT_HIGH, resourcesPerEvent: { estimatedNumberOfRequests: ONE }, pricing: DEFAULT_PRICING } },
     });
     const result = await limiter.queueJob(createJobOptions(({ modelId }) => {
       expect(modelId).toBe('gpt-4');
@@ -31,7 +31,7 @@ describe('MultiModelRateLimiter - single model', () => {
 
   it('should return correct stats for single model', async () => {
     limiter = createMultiModelRateLimiter({
-      models: { 'gpt-4': { requestsPerMinute: RPM_LIMIT_HIGH, resourcesPerEvent: { estimatedNumberOfRequests: ONE } } },
+      models: { 'gpt-4': { requestsPerMinute: RPM_LIMIT_HIGH, resourcesPerEvent: { estimatedNumberOfRequests: ONE }, pricing: DEFAULT_PRICING } },
     });
     await limiter.queueJob(simpleJob(createMockJobResult('job-1')));
     const { models } = limiter.getStats();
@@ -48,8 +48,8 @@ describe('MultiModelRateLimiter - multiple models create', () => {
   it('should create limiter with multiple models (order required)', () => {
     limiter = createMultiModelRateLimiter({
       models: {
-        'gpt-4': { requestsPerMinute: RPM_LIMIT_HIGH, resourcesPerEvent: { estimatedNumberOfRequests: ONE } },
-        'gpt-3.5': { requestsPerMinute: RPM_LIMIT_HIGH, resourcesPerEvent: { estimatedNumberOfRequests: ONE } },
+        'gpt-4': { requestsPerMinute: RPM_LIMIT_HIGH, resourcesPerEvent: { estimatedNumberOfRequests: ONE }, pricing: DEFAULT_PRICING },
+        'gpt-3.5': { requestsPerMinute: RPM_LIMIT_HIGH, resourcesPerEvent: { estimatedNumberOfRequests: ONE }, pricing: DEFAULT_PRICING },
       },
       order: ['gpt-4', 'gpt-3.5'],
     });
@@ -65,8 +65,8 @@ describe('MultiModelRateLimiter - multiple models execute', () => {
   it('should execute job on first model in order', async () => {
     limiter = createMultiModelRateLimiter({
       models: {
-        'gpt-4': { requestsPerMinute: RPM_LIMIT_HIGH, resourcesPerEvent: { estimatedNumberOfRequests: ONE } },
-        'gpt-3.5': { requestsPerMinute: RPM_LIMIT_HIGH, resourcesPerEvent: { estimatedNumberOfRequests: ONE } },
+        'gpt-4': { requestsPerMinute: RPM_LIMIT_HIGH, resourcesPerEvent: { estimatedNumberOfRequests: ONE }, pricing: DEFAULT_PRICING },
+        'gpt-3.5': { requestsPerMinute: RPM_LIMIT_HIGH, resourcesPerEvent: { estimatedNumberOfRequests: ONE }, pricing: DEFAULT_PRICING },
       },
       order: ['gpt-4', 'gpt-3.5'],
     });
@@ -80,8 +80,8 @@ describe('MultiModelRateLimiter - multiple models execute', () => {
   it('should return correct stats for multiple models', () => {
     limiter = createMultiModelRateLimiter({
       models: {
-        'gpt-4': { requestsPerMinute: RPM_LIMIT_HIGH, resourcesPerEvent: { estimatedNumberOfRequests: ONE } },
-        'gpt-3.5': { requestsPerMinute: RPM_LIMIT_HIGH, resourcesPerEvent: { estimatedNumberOfRequests: ONE } },
+        'gpt-4': { requestsPerMinute: RPM_LIMIT_HIGH, resourcesPerEvent: { estimatedNumberOfRequests: ONE }, pricing: DEFAULT_PRICING },
+        'gpt-3.5': { requestsPerMinute: RPM_LIMIT_HIGH, resourcesPerEvent: { estimatedNumberOfRequests: ONE }, pricing: DEFAULT_PRICING },
       },
       order: ['gpt-4', 'gpt-3.5'],
     });
@@ -98,9 +98,9 @@ describe('MultiModelRateLimiter - order array', () => {
   it('should respect custom order priority', async () => {
     limiter = createMultiModelRateLimiter({
       models: {
-        'gpt-4': { requestsPerMinute: RPM_LIMIT_HIGH, resourcesPerEvent: { estimatedNumberOfRequests: ONE } },
-        'gpt-3.5': { requestsPerMinute: RPM_LIMIT_HIGH, resourcesPerEvent: { estimatedNumberOfRequests: ONE } },
-        'claude': { requestsPerMinute: RPM_LIMIT_HIGH, resourcesPerEvent: { estimatedNumberOfRequests: ONE } },
+        'gpt-4': { requestsPerMinute: RPM_LIMIT_HIGH, resourcesPerEvent: { estimatedNumberOfRequests: ONE }, pricing: DEFAULT_PRICING },
+        'gpt-3.5': { requestsPerMinute: RPM_LIMIT_HIGH, resourcesPerEvent: { estimatedNumberOfRequests: ONE }, pricing: DEFAULT_PRICING },
+        'claude': { requestsPerMinute: RPM_LIMIT_HIGH, resourcesPerEvent: { estimatedNumberOfRequests: ONE }, pricing: DEFAULT_PRICING },
       },
       order: ['claude', 'gpt-3.5', 'gpt-4'],
     });
@@ -111,9 +111,9 @@ describe('MultiModelRateLimiter - order array', () => {
   it('should work with partial order (only some models)', async () => {
     limiter = createMultiModelRateLimiter({
       models: {
-        'gpt-4': { requestsPerMinute: RPM_LIMIT_LOW, resourcesPerEvent: { estimatedNumberOfRequests: ONE } },
-        'gpt-3.5': { requestsPerMinute: RPM_LIMIT_HIGH, resourcesPerEvent: { estimatedNumberOfRequests: ONE } },
-        'claude': { requestsPerMinute: RPM_LIMIT_HIGH, resourcesPerEvent: { estimatedNumberOfRequests: ONE } },
+        'gpt-4': { requestsPerMinute: RPM_LIMIT_LOW, resourcesPerEvent: { estimatedNumberOfRequests: ONE }, pricing: DEFAULT_PRICING },
+        'gpt-3.5': { requestsPerMinute: RPM_LIMIT_HIGH, resourcesPerEvent: { estimatedNumberOfRequests: ONE }, pricing: DEFAULT_PRICING },
+        'claude': { requestsPerMinute: RPM_LIMIT_HIGH, resourcesPerEvent: { estimatedNumberOfRequests: ONE }, pricing: DEFAULT_PRICING },
       },
       order: ['gpt-4', 'gpt-3.5'],
     });
@@ -129,7 +129,7 @@ describe('MultiModelRateLimiter - async job', () => {
 
   it('should execute async jobs correctly', async () => {
     limiter = createMultiModelRateLimiter({
-      models: { 'gpt-4': { requestsPerMinute: RPM_LIMIT_HIGH, resourcesPerEvent: { estimatedNumberOfRequests: ONE } } },
+      models: { 'gpt-4': { requestsPerMinute: RPM_LIMIT_HIGH, resourcesPerEvent: { estimatedNumberOfRequests: ONE }, pricing: DEFAULT_PRICING } },
     });
     const result = await limiter.queueJob(createJobOptions(async ({ modelId }) => {
       await setTimeoutAsync(DELAY_MS_SHORT);
@@ -146,7 +146,7 @@ describe('MultiModelRateLimiter - no limits configured', () => {
   afterEach(() => { limiter?.stop(); limiter = undefined; });
 
   it('should work with models that have no limits', async () => {
-    limiter = createMultiModelRateLimiter({ models: { 'gpt-4': {}, 'gpt-3.5': {} }, order: ['gpt-4', 'gpt-3.5'] });
+    limiter = createMultiModelRateLimiter({ models: { 'gpt-4': { pricing: DEFAULT_PRICING }, 'gpt-3.5': { pricing: DEFAULT_PRICING } }, order: ['gpt-4', 'gpt-3.5'] });
     const result = await limiter.queueJob(simpleJob(createMockJobResult('no-limit-job')));
     expect(result.modelUsed).toBe('gpt-4');
     expect(result.text).toBe('no-limit-job');
@@ -157,8 +157,8 @@ describe('MultiModelRateLimiter - stop', () => {
   it('should stop all model limiters', async () => {
     const limiter = createMultiModelRateLimiter({
       models: {
-        'gpt-4': { requestsPerMinute: RPM_LIMIT_HIGH, resourcesPerEvent: { estimatedNumberOfRequests: ONE } },
-        'gpt-3.5': { requestsPerMinute: RPM_LIMIT_HIGH, resourcesPerEvent: { estimatedNumberOfRequests: ONE } },
+        'gpt-4': { requestsPerMinute: RPM_LIMIT_HIGH, resourcesPerEvent: { estimatedNumberOfRequests: ONE }, pricing: DEFAULT_PRICING },
+        'gpt-3.5': { requestsPerMinute: RPM_LIMIT_HIGH, resourcesPerEvent: { estimatedNumberOfRequests: ONE }, pricing: DEFAULT_PRICING },
       },
       order: ['gpt-4', 'gpt-3.5'],
     });
@@ -174,8 +174,8 @@ describe('MultiModelRateLimiter - use correct model ID in job callback', () => {
   it('should use correct model ID in job callback', async () => {
     limiter = createMultiModelRateLimiter({
       models: {
-        'gpt-4': { requestsPerMinute: RPM_LIMIT_LOW, resourcesPerEvent: { estimatedNumberOfRequests: ONE } },
-        'gpt-3.5': { requestsPerMinute: RPM_LIMIT_HIGH, resourcesPerEvent: { estimatedNumberOfRequests: ONE } },
+        'gpt-4': { requestsPerMinute: RPM_LIMIT_LOW, resourcesPerEvent: { estimatedNumberOfRequests: ONE }, pricing: DEFAULT_PRICING },
+        'gpt-3.5': { requestsPerMinute: RPM_LIMIT_HIGH, resourcesPerEvent: { estimatedNumberOfRequests: ONE }, pricing: DEFAULT_PRICING },
       },
       order: ['gpt-4', 'gpt-3.5'],
     });

@@ -23,6 +23,18 @@ import type {
 // =============================================================================
 
 /**
+ * Pricing configuration for a model (all prices in USD per million tokens).
+ */
+export interface ModelPricing {
+  /** Price per million input tokens (USD) */
+  input: number;
+  /** Price per million cached tokens (USD) */
+  cached: number;
+  /** Price per million output tokens (USD) */
+  output: number;
+}
+
+/**
  * Rate limit configuration for a single model.
  * All limits are optional - only defined limits are enforced.
  */
@@ -39,6 +51,8 @@ export interface ModelRateLimitConfig {
   maxConcurrentRequests?: number;
   /** Estimated resources per event for this model */
   resourcesPerEvent?: BaseResourcesPerEvent;
+  /** Pricing for cost calculation (USD per million tokens) */
+  pricing: ModelPricing;
 }
 
 /**
@@ -132,7 +146,7 @@ export interface MultiModelRateLimiterConfig {
 // =============================================================================
 
 /**
- * Usage entry for a single model attempt.
+ * Usage entry for a single model attempt (provided by the job to resolve/reject).
  * Each model that processes the job (even if it fails) should report its token usage.
  */
 export interface UsageEntry {
@@ -147,10 +161,18 @@ export interface UsageEntry {
 }
 
 /**
- * Accumulated usage from all model attempts during job execution.
- * Contains one entry per model that actually processed the job.
+ * Usage entry with calculated cost (returned in callbacks).
  */
-export type JobUsage = UsageEntry[];
+export interface UsageEntryWithCost extends UsageEntry {
+  /** Calculated cost in USD based on model pricing */
+  cost: number;
+}
+
+/**
+ * Accumulated usage from all model attempts during job execution.
+ * Contains one entry per model that actually processed the job, with calculated costs.
+ */
+export type JobUsage = UsageEntryWithCost[];
 
 /**
  * Options for job rejection callback.
@@ -190,7 +212,9 @@ export type MultiModelJob<T extends LLMJobResult, Args extends ArgsWithoutModelI
 export interface JobCallbackContext {
   /** Unique identifier for this job */
   jobId: string;
-  /** Accumulated usage from all model attempts */
+  /** Total cost across all model attempts (USD) */
+  totalCost: number;
+  /** Accumulated usage from all model attempts with individual costs */
   usage: JobUsage;
 }
 

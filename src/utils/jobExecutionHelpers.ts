@@ -4,6 +4,7 @@
 import type {
   ArgsWithoutModelId,
   JobArgs,
+  JobCallbackContext,
   JobUsage,
   ModelRateLimitConfig,
   ModelsConfig,
@@ -54,6 +55,13 @@ export function buildJobArgs<Args extends ArgsWithoutModelId>(
 /** Calculate total cost from usage array */
 export const calculateTotalCost = (usage: JobUsage): number =>
   usage.reduce((total, entry) => total + entry.cost, ZERO);
+
+/** Build error callback context */
+export const buildErrorCallbackContext = (jobId: string, usage: JobUsage): JobCallbackContext => ({
+  jobId,
+  totalCost: calculateTotalCost(usage),
+  usage,
+});
 
 /** Calculate the maximum estimated value across all models for a given resource property */
 export const calculateMaxEstimatedResource = (

@@ -47,48 +47,53 @@ const getEstimatedMemory = (config: LLMRateLimiterConfig, modelId: string): numb
   config.models[modelId]?.resourcesPerEvent?.estimatedUsedMemoryKB ?? ZERO;
 
 /** Create hasCapacity function */
-const createHasCapacity = (
-  semaphore: Semaphore,
-  config: LLMRateLimiterConfig
-): MemoryManagerInstance['hasCapacity'] => (modelId) =>
-  semaphore.getAvailablePermits() >= getEstimatedMemory(config, modelId);
+const createHasCapacity =
+  (semaphore: Semaphore, config: LLMRateLimiterConfig): MemoryManagerInstance['hasCapacity'] =>
+  (modelId) =>
+    semaphore.getAvailablePermits() >= getEstimatedMemory(config, modelId);
 
 /** Create acquire function */
-const createAcquire = (
-  semaphore: Semaphore,
-  config: LLMRateLimiterConfig,
-  onAvailabilityChange?: (reason: AvailabilityChangeReason) => void
-): MemoryManagerInstance['acquire'] => async (modelId) => {
-  const mem = getEstimatedMemory(config, modelId);
-  if (mem > ZERO) {
-    await semaphore.acquire(mem);
-    onAvailabilityChange?.('memory');
-  }
-};
+const createAcquire =
+  (
+    semaphore: Semaphore,
+    config: LLMRateLimiterConfig,
+    onAvailabilityChange?: (reason: AvailabilityChangeReason) => void
+  ): MemoryManagerInstance['acquire'] =>
+  async (modelId) => {
+    const mem = getEstimatedMemory(config, modelId);
+    if (mem > ZERO) {
+      await semaphore.acquire(mem);
+      onAvailabilityChange?.('memory');
+    }
+  };
 
 /** Create release function */
-const createRelease = (
-  semaphore: Semaphore,
-  config: LLMRateLimiterConfig,
-  onAvailabilityChange?: (reason: AvailabilityChangeReason) => void
-): MemoryManagerInstance['release'] => (modelId) => {
-  const mem = getEstimatedMemory(config, modelId);
-  if (mem > ZERO) {
-    semaphore.release(mem);
-    onAvailabilityChange?.('memory');
-  }
-};
+const createRelease =
+  (
+    semaphore: Semaphore,
+    config: LLMRateLimiterConfig,
+    onAvailabilityChange?: (reason: AvailabilityChangeReason) => void
+  ): MemoryManagerInstance['release'] =>
+  (modelId) => {
+    const mem = getEstimatedMemory(config, modelId);
+    if (mem > ZERO) {
+      semaphore.release(mem);
+      onAvailabilityChange?.('memory');
+    }
+  };
 
 /** Create getStats function */
-const createGetStats = (semaphore: Semaphore): MemoryManagerInstance['getStats'] => () => {
-  const { inUse, max, available } = semaphore.getStats();
-  return {
-    activeKB: inUse,
-    maxCapacityKB: max,
-    availableKB: available,
-    systemAvailableKB: Math.round(getAvailableMemoryKB()),
+const createGetStats =
+  (semaphore: Semaphore): MemoryManagerInstance['getStats'] =>
+  () => {
+    const { inUse, max, available } = semaphore.getStats();
+    return {
+      activeKB: inUse,
+      maxCapacityKB: max,
+      availableKB: available,
+      systemAvailableKB: Math.round(getAvailableMemoryKB()),
+    };
   };
-};
 
 /** Create a memory manager instance */
 export const createMemoryManager = (managerConfig: MemoryManagerConfig): MemoryManagerInstance | null => {
@@ -114,6 +119,8 @@ export const createMemoryManager = (managerConfig: MemoryManagerConfig): MemoryM
     acquire: createAcquire(semaphore, config, onAvailabilityChange),
     release: createRelease(semaphore, config, onAvailabilityChange),
     getStats: createGetStats(semaphore),
-    stop: (): void => { clearInterval(intervalId); },
+    stop: (): void => {
+      clearInterval(intervalId);
+    },
   };
 };

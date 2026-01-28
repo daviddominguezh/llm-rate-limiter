@@ -10,7 +10,7 @@ import type {
   UsageEntry,
 } from '../multiModelTypes.js';
 import type { InternalJobResult, InternalLimiterInstance } from '../types.js';
-import { buildJobArgs, calculateTotalCost, DelegationError } from './jobExecutionHelpers.js';
+import { DelegationError, buildJobArgs, calculateTotalCost } from './jobExecutionHelpers.js';
 
 /** Mutable state for job execution callbacks */
 export interface JobExecutionState {
@@ -38,30 +38,34 @@ export interface ModelJobContext<T extends InternalJobResult, Args extends ArgsW
 }
 
 /** Create resolve handler for job execution */
-const createResolveHandler = (
-  state: JobExecutionState,
-  ctx: { usage: JobUsage },
-  modelId: string,
-  addUsageWithCost: (ctx: { usage: JobUsage }, modelId: string, usage: UsageEntry) => void
-): ((usage: UsageEntry) => void) => (usage) => {
-  state.callbackCalled = true; // eslint-disable-line no-param-reassign -- Mutable state object pattern
-  addUsageWithCost(ctx, modelId, usage);
-};
+const createResolveHandler =
+  (
+    state: JobExecutionState,
+    ctx: { usage: JobUsage },
+    modelId: string,
+    addUsageWithCost: (ctx: { usage: JobUsage }, modelId: string, usage: UsageEntry) => void
+  ): ((usage: UsageEntry) => void) =>
+  (usage) => {
+    state.callbackCalled = true; // eslint-disable-line no-param-reassign -- Mutable state object pattern
+    addUsageWithCost(ctx, modelId, usage);
+  };
 
 /** Create reject handler for job execution */
-const createRejectHandler = (
-  state: JobExecutionState,
-  ctx: { usage: JobUsage },
-  modelId: string,
-  addUsageWithCost: (ctx: { usage: JobUsage }, modelId: string, usage: UsageEntry) => void
-): ((usage: UsageEntry, opts?: { delegate?: boolean }) => void) => (usage, opts) => {
-  state.callbackCalled = true; // eslint-disable-line no-param-reassign -- Mutable state object pattern
-  addUsageWithCost(ctx, modelId, usage);
-  state.shouldDelegate = opts?.delegate !== false; // eslint-disable-line no-param-reassign -- Mutable state object pattern
-  if (!state.shouldDelegate) {
-    state.rejectedWithoutDelegation = true; // eslint-disable-line no-param-reassign -- Mutable state object pattern
-  }
-};
+const createRejectHandler =
+  (
+    state: JobExecutionState,
+    ctx: { usage: JobUsage },
+    modelId: string,
+    addUsageWithCost: (ctx: { usage: JobUsage }, modelId: string, usage: UsageEntry) => void
+  ): ((usage: UsageEntry, opts?: { delegate?: boolean }) => void) =>
+  (usage, opts) => {
+    state.callbackCalled = true; // eslint-disable-line no-param-reassign -- Mutable state object pattern
+    addUsageWithCost(ctx, modelId, usage);
+    state.shouldDelegate = opts?.delegate !== false; // eslint-disable-line no-param-reassign -- Mutable state object pattern
+    if (!state.shouldDelegate) {
+      state.rejectedWithoutDelegation = true; // eslint-disable-line no-param-reassign -- Mutable state object pattern
+    }
+  };
 
 /** Validate job callback was called and handle delegation */
 const validateJobExecution = (state: JobExecutionState): void => {
@@ -98,8 +102,15 @@ export const buildFinalResult = <T extends InternalJobResult, Args extends ArgsW
 export const executeJobWithCallbacks = async <T extends InternalJobResult, Args extends ArgsWithoutModelId>(
   jobContext: ModelJobContext<T, Args>
 ): Promise<LLMJobResult<T>> => {
-  const { ctx, modelId, limiter, addUsageWithCost, emitAvailabilityChange, emitJobAdjustment, releaseResources } =
-    jobContext;
+  const {
+    ctx,
+    modelId,
+    limiter,
+    addUsageWithCost,
+    emitAvailabilityChange,
+    emitJobAdjustment,
+    releaseResources,
+  } = jobContext;
 
   const state = createJobExecutionState();
   const handleResolve = createResolveHandler(state, ctx, modelId, addUsageWithCost);

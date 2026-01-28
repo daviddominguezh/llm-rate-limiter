@@ -124,12 +124,14 @@ export class AvailabilityTracker {
 
     // Apply distributed allocation constraints (use min of local and distributed)
     const { distributedAllocation } = this;
-    const tokensPerMinute = distributedAllocation !== null && localTPM !== null
-      ? Math.min(localTPM, distributedAllocation.tokensPerMinute)
-      : localTPM;
-    const requestsPerMinute = distributedAllocation !== null && localRPM !== null
-      ? Math.min(localRPM, distributedAllocation.requestsPerMinute)
-      : localRPM;
+    const tokensPerMinute =
+      distributedAllocation !== null && localTPM !== null
+        ? Math.min(localTPM, distributedAllocation.tokensPerMinute)
+        : localTPM;
+    const requestsPerMinute =
+      distributedAllocation !== null && localRPM !== null
+        ? Math.min(localRPM, distributedAllocation.requestsPerMinute)
+        : localRPM;
 
     const partialAvailability = {
       tokensPerMinute,
@@ -144,9 +146,8 @@ export class AvailabilityTracker {
     const localSlots = calculateSlots({ ...partialAvailability, slots: ZERO }, this.estimated);
 
     // Apply distributed slot allocation (use min of local and distributed)
-    const slots = distributedAllocation === null
-      ? localSlots
-      : Math.min(localSlots, distributedAllocation.slots);
+    const slots =
+      distributedAllocation === null ? localSlots : Math.min(localSlots, distributedAllocation.slots);
 
     return { slots, ...partialAvailability };
   }
@@ -168,9 +169,7 @@ export class AvailabilityTracker {
     }
 
     const reason =
-      previousAvailability === null
-        ? hintReason
-        : determineReason(previousAvailability, currentAvailability);
+      previousAvailability === null ? hintReason : determineReason(previousAvailability, currentAvailability);
     this.previousAvailability = currentAvailability;
     this.callback(currentAvailability, reason, undefined);
   }

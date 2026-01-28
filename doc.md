@@ -275,3 +275,44 @@ Please, create dummy back-end that help us test the acquire/release methods, BUT
 Finally, let's please implement a load test. This test must create several rate-limiters with a dummy but complete back-end (it must change the availability with the pub/sub), etc., and hundreds/thousands of jobs. The test must check that no individual instance exceeds the limits, BUT it must also check that in total, the limit is never excedeed in addition across instances, even under high loads. This test must exceed the total tokens per minute, so we check that, after 1 minute passes, the instances retry the jobs. Since this test will probably be big, please create several test files and utils for it, so our code is organized.
 
 ---
+
+Great, now, question:
+Imagine this scenario:
+- There are 0 jobs, this is the very first time the rate-limiter will be used.
+- The rate-limiter has a maximum of 100 concurrent requests (let's assume that's the bottleneck)
+
+Then:
+- Instance A initiates rate-limiter: gets 100 slots
+- Instance B initiates rate-limiter: gets 100 slots
+
+As soon as either A or B calls the acquire method, the implemented back-end should trigger an event that will inform the other instances the availability changed, so:
+- Instance A acquires, then: instance A gets 99 slots, triggers event, instance B receives event, now availability for B is 99 slots.
+
+Is this right? Is this how it would actually work? 
+
+---
+
+Thank you. If that's the case, we have an issue. Turns out that the idea of the 'slots' is to inform the instance how many jobs such instance can process. For the example I provided earlier, in theory both instance A and B could process 100 jobs, BUT, if instance A processes 100 jobs, then instance B should not be able to process any. The issue is that, in a distributed system, where the jobs are fetched from, let's say, an external message queue, having both A and B thinking they have 100 slots each, would imply that A fetches 100 jobs from the queue and B too, meaning 200 jobs in total, which would be twice the capacity. 
+
+---
+
+Besides this:
+1. Instance A starts → local config says 100 → A fetches 100 jobs
+2. Instance B starts → local config says 100 → B fetches 100 jobs
+3. 200 jobs fetched, only 100 can be processed      
+4. Backend.acquire() rejects 100 of them (too late, already fetched)
+
+This is also an issue:
+1. Instance A starts, subscribes to backend
+2. Backend tells A: "100 slots available globally"
+3. A's onAvailableSlotsChange(100) fires → A fetches 100 jobs from queue
+4. Instance B starts, subscribes to backend
+5. Backend tells B: "0 slots available globally" (A has them all)
+6. B's onAvailableSlotsChange(0) fires → B fetches 0 jobs from queue
+
+That is an issue because, in a distributed system, we would expect the load to be distributed evenly across all instances. In our example, the proper flow would be that, at the beginning, A gets all slots (minimum of distributed slots and local slots), but, as soon as B starts the rate-limiter, the available slots (the availability data stored in the distributed system) should be evenly assigned between A and B, meaning that if A had 50 and there were other 50 available, then B should get those 50, but, if there were only 60 available and A had 50, then B should get 30 and A should shrink to 30. Nevertheless, since A could possibly be already processing 50, we should decrease it gradually, and, in the same way, we should increase B gradually.
+
+In general, we should always divide the total slots evenly in the number of instances connected to our distributed back-end. Nevertheless, since not all back-ends connect at the same time (auto-scale groups, crashed, etc.), we must nivelate the load (availability) of each instance, but this leveling must be gradual, because there could be already running jobs that we do not want to block/stale, and also, we cannot under any circumpstance exceed the total capacity of the external resource (llm).
+
+---
+

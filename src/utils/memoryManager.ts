@@ -46,32 +46,74 @@ const calculateCapacity = (config: LLMRateLimiterConfig): number => {
 const getEstimatedMemory = (config: LLMRateLimiterConfig, modelId: string): number =>
   config.models[modelId]?.resourcesPerEvent?.estimatedUsedMemoryKB ?? ZERO;
 
+/** Create hasCapacity function */
+const createHasCapacity = (
+  semaphore: Semaphore,
+  config: LLMRateLimiterConfig
+): MemoryManagerInstance['hasCapacity'] => (modelId) =>
+  semaphore.getAvailablePermits() >= getEstimatedMemory(config, modelId);
+
+/** Create acquire function */
+const createAcquire = (
+  semaphore: Semaphore,
+  config: LLMRateLimiterConfig,
+  onAvailabilityChange?: (reason: AvailabilityChangeReason) => void
+): MemoryManagerInstance['acquire'] => async (modelId) => {
+  const mem = getEstimatedMemory(config, modelId);
+  if (mem > ZERO) {
+    await semaphore.acquire(mem);
+    onAvailabilityChange?.('memory');
+  }
+};
+
+/** Create release function */
+const createRelease = (
+  semaphore: Semaphore,
+  config: LLMRateLimiterConfig,
+  onAvailabilityChange?: (reason: AvailabilityChangeReason) => void
+): MemoryManagerInstance['release'] => (modelId) => {
+  const mem = getEstimatedMemory(config, modelId);
+  if (mem > ZERO) {
+    semaphore.release(mem);
+    onAvailabilityChange?.('memory');
+  }
+};
+
+/** Create getStats function */
+const createGetStats = (semaphore: Semaphore): MemoryManagerInstance['getStats'] => () => {
+  const { inUse, max, available } = semaphore.getStats();
+  return {
+    activeKB: inUse,
+    maxCapacityKB: max,
+    availableKB: available,
+    systemAvailableKB: Math.round(getAvailableMemoryKB()),
+  };
+};
+
 /** Create a memory manager instance */
 export const createMemoryManager = (managerConfig: MemoryManagerConfig): MemoryManagerInstance | null => {
   const { config, label, estimatedUsedMemoryKB, onLog, onAvailabilityChange } = managerConfig;
-  if (config.memory === undefined) { return null; }
+  if (config.memory === undefined) {
+    return null;
+  }
   if (estimatedUsedMemoryKB === ZERO) {
-    throw new Error('resourcesPerEvent.estimatedUsedMemoryKB is required in at least one model when memory limits are configured');
+    throw new Error(
+      'resourcesPerEvent.estimatedUsedMemoryKB is required in at least one model when memory limits are configured'
+    );
   }
   const semaphore = new Semaphore(calculateCapacity(config), `${label}/Memory`, onLog);
   const intervalId = setInterval(() => {
     const newCapacity = calculateCapacity(config);
-    if (newCapacity !== semaphore.getStats().max) { semaphore.resize(newCapacity); onAvailabilityChange?.('memory'); }
+    if (newCapacity !== semaphore.getStats().max) {
+      semaphore.resize(newCapacity);
+      onAvailabilityChange?.('memory');
+    }
   }, config.memory.recalculationIntervalMs ?? DEFAULT_RECALCULATION_INTERVAL_MS);
   return {
-    hasCapacity: (modelId: string): boolean => semaphore.getAvailablePermits() >= getEstimatedMemory(config, modelId),
-    acquire: async (modelId: string): Promise<void> => {
-      const mem = getEstimatedMemory(config, modelId);
-      if (mem > ZERO) { await semaphore.acquire(mem); onAvailabilityChange?.('memory'); }
-    },
-    release: (modelId: string): void => {
-      const mem = getEstimatedMemory(config, modelId);
-      if (mem > ZERO) { semaphore.release(mem); onAvailabilityChange?.('memory'); }
-    },
-    getStats: (): InternalLimiterStats['memory'] => {
-      const { inUse, max, available } = semaphore.getStats();
-      return { activeKB: inUse, maxCapacityKB: max, availableKB: available, systemAvailableKB: Math.round(getAvailableMemoryKB()) };
-    },
+    hasCapacity: createHasCapacity(semaphore, config),
+    acquire: createAcquire(semaphore, config, onAvailabilityChange),
+    release: createRelease(semaphore, config, onAvailabilityChange),
+    getStats: createGetStats(semaphore),
     stop: (): void => { clearInterval(intervalId); },
   };
 };

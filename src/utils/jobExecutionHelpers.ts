@@ -26,10 +26,7 @@ export const isDelegationError = (error: unknown): error is DelegationError =>
  * Build job arguments for when args is undefined.
  * Returns { modelId } typed as a base job args object.
  */
-export function buildJobArgs(
-  modelId: string,
-  args: undefined
-): { modelId: string } & Record<string, unknown>;
+export function buildJobArgs(modelId: string, args: undefined): { modelId: string } & Record<string, unknown>;
 /**
  * Build job arguments by merging modelId with user-provided args.
  * When args is provided, merges them with modelId.

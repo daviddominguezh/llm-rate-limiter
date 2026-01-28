@@ -1,11 +1,41 @@
 /** LLM Rate Limiter with per-model limits and automatic fallback. */
 import { AvailabilityTracker } from '@globalUtils/availabilityTracker.js';
-import { DelegationError, buildJobArgs, calculateMaxEstimatedResource, calculateTotalCost, isDelegationError, waitForModelCapacity } from '@globalUtils/jobExecutionHelpers.js';
+import {
+  calculateMaxEstimatedResource,
+  calculateTotalCost,
+  isDelegationError,
+  waitForModelCapacity,
+} from '@globalUtils/jobExecutionHelpers.js';
+import { executeJobWithCallbacks } from '@globalUtils/jobExecutor.js';
 import { type MemoryManagerInstance, createMemoryManager } from '@globalUtils/memoryManager.js';
 import { buildModelLimiterConfig, getEffectiveOrder, validateMultiModelConfig } from '@globalUtils/multiModelHelpers.js';
-import type { AllocationInfo, ArgsWithoutModelId, Availability, AvailabilityChangeReason, BackendConfig, BackendEstimatedResources, DistributedAvailability, DistributedBackendConfig, JobCallbackContext, JobExecutionContext, JobUsage, LLMJobResult, LLMRateLimiterConfig, LLMRateLimiterInstance, LLMRateLimiterStats, ModelsConfig, QueueJobOptions, RelativeAvailabilityAdjustment, Unsubscribe, UsageEntry, ValidatedLLMRateLimiterConfig } from './multiModelTypes.js';
+
+import type {
+  AllocationInfo,
+  ArgsWithoutModelId,
+  Availability,
+  AvailabilityChangeReason,
+  BackendConfig,
+  BackendEstimatedResources,
+  DistributedAvailability,
+  DistributedBackendConfig,
+  JobCallbackContext,
+  JobExecutionContext,
+  JobUsage,
+  LLMJobResult,
+  LLMRateLimiterConfig,
+  LLMRateLimiterInstance,
+  LLMRateLimiterStats,
+  ModelsConfig,
+  QueueJobOptions,
+  RelativeAvailabilityAdjustment,
+  Unsubscribe,
+  UsageEntry,
+  ValidatedLLMRateLimiterConfig,
+} from './multiModelTypes.js';
 import { createInternalLimiter } from './rateLimiter.js';
 import type { InternalJobResult, InternalLimiterConfig, InternalLimiterInstance, InternalLimiterStats } from './types.js';
+
 const ZERO = 0;
 const TOKENS_PER_MILLION = 1_000_000;
 const DEFAULT_POLL_INTERVAL_MS = 100;
@@ -15,8 +45,9 @@ const INSTANCE_ID_START = 2;
 const INSTANCE_ID_END = 11;
 
 /** Check if the backend is V2 (has register method) */
-const isV2Backend = (backend: BackendConfig | DistributedBackendConfig): backend is DistributedBackendConfig =>
-  'register' in backend && typeof backend.register === 'function';
+const isV2Backend = (
+  backend: BackendConfig | DistributedBackendConfig
+): backend is DistributedBackendConfig => 'register' in backend && typeof backend.register === 'function';
 
 class LLMRateLimiter implements LLMRateLimiterInstance {
   private readonly config: LLMRateLimiterConfig;
@@ -40,44 +71,24 @@ class LLMRateLimiter implements LLMRateLimiterInstance {
     this.instanceId = `inst-${Date.now()}-${Math.random().toString(INSTANCE_ID_RADIX).slice(INSTANCE_ID_START, INSTANCE_ID_END)}`;
     const { models, backend } = config;
     this.backend = backend;
-    const estimatedUsedMemoryKB = calculateMaxEstimatedResource(
-      models,
-      (m) => m.resourcesPerEvent?.estimatedUsedMemoryKB
-    );
-    this.estimatedUsedTokens = calculateMaxEstimatedResource(
-      models,
-      (m) => m.resourcesPerEvent?.estimatedUsedTokens
-    );
-    this.estimatedNumberOfRequests = calculateMaxEstimatedResource(
-      models,
-      (m) => m.resourcesPerEvent?.estimatedNumberOfRequests
-    );
+    const estimatedUsedMemoryKB = calculateMaxEstimatedResource(models, (m) => m.resourcesPerEvent?.estimatedUsedMemoryKB);
+    this.estimatedUsedTokens = calculateMaxEstimatedResource(models, (m) => m.resourcesPerEvent?.estimatedUsedTokens);
+    this.estimatedNumberOfRequests = calculateMaxEstimatedResource(models, (m) => m.resourcesPerEvent?.estimatedNumberOfRequests);
     this.memoryManager = createMemoryManager({
-      config,
-      label: this.label,
-      estimatedUsedMemoryKB,
-      onLog: config.onLog,
-      onAvailabilityChange: (r) => {
-        this.emitAvailabilityChange(r);
-      },
+      config, label: this.label, estimatedUsedMemoryKB, onLog: config.onLog,
+      onAvailabilityChange: (r) => { this.emitAvailabilityChange(r); },
     });
     this.initializeModelLimiters();
     this.availabilityTracker = this.initializeAvailabilityTracker(estimatedUsedMemoryKB);
     this.log('Initialized', { models: this.order });
   }
+
   private log(message: string, data?: Record<string, unknown>): void {
     if (this.config.onLog !== undefined) { this.config.onLog(`${this.label}| ${message}`, data); }
   }
 
-  /** Get the unique instance ID for this rate limiter */
-  getInstanceId(): string {
-    return this.instanceId;
-  }
+  getInstanceId(): string { return this.instanceId; }
 
-  /**
-   * Start the rate limiter and register with V2 distributed backend if configured.
-   * For V1 backends or no backend, this is a no-op.
-   */
   async start(): Promise<void> {
     if (this.backend === undefined || !isV2Backend(this.backend)) { return; }
     const allocation = await this.backend.register(this.instanceId);
@@ -98,12 +109,8 @@ class LLMRateLimiter implements LLMRateLimiterInstance {
     return tracker;
   }
 
-  private emitAvailabilityChange(reason: AvailabilityChangeReason): void {
-    this.availabilityTracker?.checkAndEmit(reason);
-  }
-  private emitAdjustment(adjustment: RelativeAvailabilityAdjustment): void {
-    this.availabilityTracker?.emitAdjustment(adjustment);
-  }
+  private emitAvailabilityChange(reason: AvailabilityChangeReason): void { this.availabilityTracker?.checkAndEmit(reason); }
+  private emitAdjustment(adjustment: RelativeAvailabilityAdjustment): void { this.availabilityTracker?.emitAdjustment(adjustment); }
 
   private emitJobAdjustment(modelId: string, result: InternalJobResult): void {
     if (this.availabilityTracker === null) { return; }
@@ -116,12 +123,7 @@ class LLMRateLimiter implements LLMRateLimiterInstance {
 
   private initializeModelLimiters(): void {
     for (const [modelId, modelConfig] of Object.entries(this.config.models)) {
-      const limiterConfig = buildModelLimiterConfig(
-        modelId,
-        modelConfig as InternalLimiterConfig,
-        this.label,
-        this.config.onLog
-      );
+      const limiterConfig = buildModelLimiterConfig(modelId, modelConfig as InternalLimiterConfig, this.label, this.config.onLog);
       this.modelLimiters.set(modelId, createInternalLimiter(limiterConfig));
     }
   }
@@ -150,32 +152,24 @@ class LLMRateLimiter implements LLMRateLimiterInstance {
   private async acquireBackend(modelId: string, jobId: string): Promise<boolean> {
     if (this.backend === undefined) { return true; }
     const baseContext = { modelId, jobId, estimated: this.getEstimatedResourcesForBackend(modelId) };
-    if (isV2Backend(this.backend)) {
-      return await this.backend.acquire({ ...baseContext, instanceId: this.instanceId });
-    }
+    if (isV2Backend(this.backend)) { return await this.backend.acquire({ ...baseContext, instanceId: this.instanceId }); }
     return await this.backend.acquire(baseContext);
   }
+
   private releaseBackend(modelId: string, jobId: string, actual: { requests: number; tokens: number }): void {
     if (this.backend === undefined) { return; }
     const baseContext = { modelId, jobId, estimated: this.getEstimatedResourcesForBackend(modelId), actual };
-    if (isV2Backend(this.backend)) {
-      this.backend.release({ ...baseContext, instanceId: this.instanceId }).catch(() => { /* User handles errors */ });
-      return;
-    }
+    if (isV2Backend(this.backend)) { this.backend.release({ ...baseContext, instanceId: this.instanceId }).catch(() => { /* User handles errors */ }); return; }
     this.backend.release(baseContext).catch(() => { /* User handles errors */ });
   }
 
-  hasCapacity(): boolean {
-    return this.getAvailableModel() !== null;
-  }
+  hasCapacity(): boolean { return this.getAvailableModel() !== null; }
   hasCapacityForModel(modelId: string): boolean {
     const hasLimiterCapacity = this.getModelLimiter(modelId).hasCapacity();
     const hasMemCapacity = this.memoryManager === null || this.memoryManager.hasCapacity(modelId);
     return hasLimiterCapacity && hasMemCapacity;
   }
-  getAvailableModel(): string | null {
-    return this.order.find((m) => this.hasCapacityForModel(m)) ?? null;
-  }
+  getAvailableModel(): string | null { return this.order.find((m) => this.hasCapacityForModel(m)) ?? null; }
   private getAvailableModelExcluding(excludeModels: ReadonlySet<string>): string | null {
     return this.order.find((m) => !excludeModels.has(m) && this.hasCapacityForModel(m)) ?? null;
   }
@@ -194,52 +188,30 @@ class LLMRateLimiter implements LLMRateLimiterInstance {
     try { return await this.executeJobOnModel(ctx, selectedModel); }
     catch (error) { return await this.handleExecutionError(ctx, selectedModel, error); }
   }
+
   private async handleBackendRejection<T extends InternalJobResult, Args extends ArgsWithoutModelId>(ctx: JobExecutionContext<T, Args>, modelId: string): Promise<LLMJobResult<T>> {
     this.memoryManager?.release(modelId);
     if (ctx.triedModels.size >= this.order.length) { throw new Error('All models rejected by backend'); }
     return await this.executeJobWithDelegation(ctx);
   }
+
   private async handleExecutionError<T extends InternalJobResult, Args extends ArgsWithoutModelId>(ctx: JobExecutionContext<T, Args>, modelId: string, error: unknown): Promise<LLMJobResult<T>> {
     this.memoryManager?.release(modelId);
     this.releaseBackend(modelId, ctx.jobId, { requests: ZERO, tokens: ZERO });
     if (isDelegationError(error)) { return await this.handleDelegation(ctx); }
     const errorObj = error instanceof Error ? error : new Error(String(error));
-    if (ctx.onError !== undefined) {
-      const cbCtx: JobCallbackContext = { jobId: ctx.jobId, totalCost: calculateTotalCost(ctx.usage), usage: ctx.usage };
-      ctx.onError(errorObj, cbCtx);
-    }
+    if (ctx.onError !== undefined) { const cbCtx: JobCallbackContext = { jobId: ctx.jobId, totalCost: calculateTotalCost(ctx.usage), usage: ctx.usage }; ctx.onError(errorObj, cbCtx); }
     throw errorObj;
   }
 
-  private async executeJobOnModel<T extends InternalJobResult, Args extends ArgsWithoutModelId>(
-    ctx: JobExecutionContext<T, Args>, modelId: string
-  ): Promise<LLMJobResult<T>> {
-    const limiter = this.getModelLimiter(modelId);
-    let callbackCalled = false;
-    let shouldDelegate = false;
-    let rejectedWithoutDelegation = false;
-    const handleResolve = (usage: UsageEntry): void => { callbackCalled = true; this.addUsageWithCost(ctx, modelId, usage); };
-    const handleReject = (usage: UsageEntry, opts?: { delegate?: boolean }): void => {
-      callbackCalled = true; this.addUsageWithCost(ctx, modelId, usage);
-      shouldDelegate = opts?.delegate !== false;
-      if (!shouldDelegate) { rejectedWithoutDelegation = true; }
-    };
-    this.emitAvailabilityChange('tokensMinute');
-    const result = await limiter.queueJob(async () => {
-      const jobArgs = buildJobArgs<Args>(modelId, ctx.args);
-      const jobResult = await ctx.job(jobArgs, handleResolve, handleReject);
-      if (!callbackCalled) { throw new Error('Job must call resolve() or reject()'); }
-      if (rejectedWithoutDelegation) { throw new Error('Job rejected without delegation'); }
-      if (shouldDelegate) { throw new DelegationError(); }
-      return jobResult;
+  private async executeJobOnModel<T extends InternalJobResult, Args extends ArgsWithoutModelId>(ctx: JobExecutionContext<T, Args>, modelId: string): Promise<LLMJobResult<T>> {
+    return await executeJobWithCallbacks({
+      ctx, modelId, limiter: this.getModelLimiter(modelId),
+      addUsageWithCost: (c, m, u) => { this.addUsageWithCost(c, m, u); },
+      emitAvailabilityChange: () => { this.emitAvailabilityChange('tokensMinute'); },
+      emitJobAdjustment: (m, r) => { this.emitJobAdjustment(m, r); },
+      releaseResources: (result) => { this.memoryManager?.release(modelId); this.releaseBackend(modelId, ctx.jobId, { requests: result.requestCount, tokens: result.usage.input + result.usage.output }); },
     });
-    this.emitJobAdjustment(modelId, result);
-    this.memoryManager?.release(modelId);
-    this.releaseBackend(modelId, ctx.jobId, { requests: result.requestCount, tokens: result.usage.input + result.usage.output });
-    const finalResult = { ...result, modelUsed: modelId };
-    const callbackContext: JobCallbackContext = { jobId: ctx.jobId, totalCost: calculateTotalCost(ctx.usage), usage: ctx.usage };
-    if (ctx.onComplete !== undefined) { ctx.onComplete(finalResult, callbackContext); }
-    return finalResult;
   }
 
   private async handleDelegation<T extends InternalJobResult, Args extends ArgsWithoutModelId>(ctx: JobExecutionContext<T, Args>): Promise<LLMJobResult<T>> {
@@ -261,9 +233,7 @@ class LLMRateLimiter implements LLMRateLimiterInstance {
 
   getModelStats(modelId: string): InternalLimiterStats {
     const mem = this.memoryManager?.getStats();
-    return mem === undefined
-      ? this.getModelLimiter(modelId).getStats()
-      : { ...this.getModelLimiter(modelId).getStats(), memory: mem };
+    return mem === undefined ? this.getModelLimiter(modelId).getStats() : { ...this.getModelLimiter(modelId).getStats(), memory: mem };
   }
 
   setDistributedAvailability(availability: DistributedAvailability): void {
@@ -275,9 +245,7 @@ class LLMRateLimiter implements LLMRateLimiterInstance {
   stop(): void {
     this.backendUnsubscribe?.();
     this.backendUnsubscribe = null;
-    if (this.backend !== undefined && isV2Backend(this.backend)) {
-      this.backend.unregister(this.instanceId).catch(() => { /* User handles errors */ });
-    }
+    if (this.backend !== undefined && isV2Backend(this.backend)) { this.backend.unregister(this.instanceId).catch(() => { /* User handles errors */ }); }
     this.memoryManager?.stop();
     for (const limiter of this.modelLimiters.values()) { limiter.stop(); }
     this.log('Stopped');
@@ -285,6 +253,4 @@ class LLMRateLimiter implements LLMRateLimiterInstance {
 }
 
 /** Create a new LLM Rate Limiter. Order is optional for single model, required for multiple. */
-export const createLLMRateLimiter = <T extends ModelsConfig>(
-  config: ValidatedLLMRateLimiterConfig<T>
-): LLMRateLimiterInstance => new LLMRateLimiter(config as LLMRateLimiterConfig);
+export const createLLMRateLimiter = <T extends ModelsConfig>(config: ValidatedLLMRateLimiterConfig<T>): LLMRateLimiterInstance => new LLMRateLimiter(config as LLMRateLimiterConfig);

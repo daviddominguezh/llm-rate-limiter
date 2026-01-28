@@ -2,6 +2,7 @@ import { setTimeout as setTimeoutAsync } from 'node:timers/promises';
 
 import { createLLMRateLimiter } from '../multiModelRateLimiter.js';
 import type { LLMRateLimiterInstance } from '../multiModelTypes.js';
+import { resetSharedMemoryState } from '../utils/memoryManager.js';
 import {
   DEFAULT_PRICING,
   DELAY_MS_SHORT,
@@ -12,6 +13,11 @@ import {
   createMockJobResult,
   simpleJob,
 } from './multiModelRateLimiter.helpers.js';
+
+// Reset shared memory state before each test to ensure isolation
+beforeEach(() => {
+  resetSharedMemoryState();
+});
 
 const MEMORY_KB = 1000;
 const LARGE_MEMORY_KB = 2000;
@@ -223,3 +229,4 @@ describe('MultiModelRateLimiter - waitForAnyModelCapacity', () => {
     await job3Promise.catch(noop);
   });
 });
+

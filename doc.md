@@ -316,3 +316,8 @@ In general, we should always divide the total slots evenly in the number of inst
 
 ---
 
+Great, thank you. Now, one thing. The memory manager should be a singleton that is shared across all instances of the rate limiter (only in the same instance). It does not make sense that if there are two rate-limiter in the same server they manage memory separately, since the memory is the same
+
+---
+
+

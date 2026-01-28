@@ -162,6 +162,50 @@ describe('availabilityTracker - all change reasons', () => {
   });
 });
 
+describe('availabilityTracker - distributed allocation', () => {
+  it('should return null when no distributed allocation is set', () => {
+    const tracker = new AvailabilityTracker({
+      callback: undefined,
+      getStats: () => ({ models: { default: {} } }),
+      estimatedResources: { estimatedUsedTokens: ZERO, estimatedNumberOfRequests: ZERO, estimatedUsedMemoryKB: ZERO },
+    });
+    expect(tracker.getDistributedAllocation()).toBeNull();
+  });
+  it('should return the distributed allocation after setDistributedAllocation', () => {
+    const tracker = new AvailabilityTracker({
+      callback: undefined,
+      getStats: () => ({ models: { default: {} } }),
+      estimatedResources: { estimatedUsedTokens: TEN, estimatedNumberOfRequests: ONE, estimatedUsedMemoryKB: ZERO },
+    });
+    const allocation = { slots: FIFTY, tokensPerMinute: THOUSAND, requestsPerMinute: HUNDRED };
+    tracker.setDistributedAllocation(allocation);
+    expect(tracker.getDistributedAllocation()).toEqual(allocation);
+  });
+});
+
+describe('multiModelRateLimiter - V1 backend start', () => {
+  it('should be no-op when calling start with no backend', async () => {
+    const limiter = createLLMRateLimiter({
+      models: { default: { requestsPerMinute: TEN, resourcesPerEvent: { estimatedNumberOfRequests: ONE }, pricing: { input: ZERO, cached: ZERO, output: ZERO } } },
+    });
+    await limiter.start();
+    expect(limiter.getInstanceId()).toBeDefined();
+    limiter.stop();
+  });
+  it('should be no-op when calling start with V1 backend', async () => {
+    const limiter = createLLMRateLimiter({
+      models: { default: { requestsPerMinute: TEN, resourcesPerEvent: { estimatedNumberOfRequests: ONE }, pricing: { input: ZERO, cached: ZERO, output: ZERO } } },
+      backend: {
+        acquire: async () => await Promise.resolve(true),
+        release: async () => { await Promise.resolve(); },
+      },
+    });
+    await limiter.start();
+    expect(limiter.getInstanceId()).toBeDefined();
+    limiter.stop();
+  });
+});
+
 describe('jobExecutionHelpers and memoryManager branches', () => {
   it('should merge modelId with provided args', () => {
     const args = { prompt: 'test', temperature: RATIO_HALF };

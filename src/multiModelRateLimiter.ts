@@ -3,13 +3,20 @@ import { AvailabilityTracker } from '@globalUtils/availabilityTracker.js';
 import { DelegationError, buildJobArgs, calculateMaxEstimatedResource, calculateTotalCost, isDelegationError, waitForModelCapacity } from '@globalUtils/jobExecutionHelpers.js';
 import { type MemoryManagerInstance, createMemoryManager } from '@globalUtils/memoryManager.js';
 import { buildModelLimiterConfig, getEffectiveOrder, validateMultiModelConfig } from '@globalUtils/multiModelHelpers.js';
-import type { ArgsWithoutModelId, Availability, AvailabilityChangeReason, BackendConfig, BackendEstimatedResources, DistributedAvailability, JobCallbackContext, JobExecutionContext, JobUsage, LLMJobResult, LLMRateLimiterConfig, LLMRateLimiterInstance, LLMRateLimiterStats, ModelsConfig, QueueJobOptions, RelativeAvailabilityAdjustment, UsageEntry, ValidatedLLMRateLimiterConfig } from './multiModelTypes.js';
+import type { AllocationInfo, ArgsWithoutModelId, Availability, AvailabilityChangeReason, BackendConfig, BackendEstimatedResources, DistributedAvailability, DistributedBackendConfig, JobCallbackContext, JobExecutionContext, JobUsage, LLMJobResult, LLMRateLimiterConfig, LLMRateLimiterInstance, LLMRateLimiterStats, ModelsConfig, QueueJobOptions, RelativeAvailabilityAdjustment, Unsubscribe, UsageEntry, ValidatedLLMRateLimiterConfig } from './multiModelTypes.js';
 import { createInternalLimiter } from './rateLimiter.js';
 import type { InternalJobResult, InternalLimiterConfig, InternalLimiterInstance, InternalLimiterStats } from './types.js';
 const ZERO = 0;
 const TOKENS_PER_MILLION = 1_000_000;
 const DEFAULT_POLL_INTERVAL_MS = 100;
 const DEFAULT_LABEL = 'LLMRateLimiter';
+const INSTANCE_ID_RADIX = 36;
+const INSTANCE_ID_START = 2;
+const INSTANCE_ID_END = 11;
+
+/** Check if the backend is V2 (has register method) */
+const isV2Backend = (backend: BackendConfig | DistributedBackendConfig): backend is DistributedBackendConfig =>
+  'register' in backend && typeof backend.register === 'function';
 
 class LLMRateLimiter implements LLMRateLimiterInstance {
   private readonly config: LLMRateLimiterConfig;
@@ -20,7 +27,9 @@ class LLMRateLimiter implements LLMRateLimiterInstance {
   private readonly estimatedUsedTokens: number;
   private readonly estimatedNumberOfRequests: number;
   private readonly availabilityTracker: AvailabilityTracker | null;
-  private readonly backend: BackendConfig | undefined;
+  private readonly backend: BackendConfig | DistributedBackendConfig | undefined;
+  private readonly instanceId: string;
+  private backendUnsubscribe: Unsubscribe | null = null;
 
   constructor(config: LLMRateLimiterConfig) {
     validateMultiModelConfig(config);
@@ -28,6 +37,7 @@ class LLMRateLimiter implements LLMRateLimiterInstance {
     this.label = config.label ?? DEFAULT_LABEL;
     this.order = getEffectiveOrder(config);
     this.modelLimiters = new Map();
+    this.instanceId = `inst-${Date.now()}-${Math.random().toString(INSTANCE_ID_RADIX).slice(INSTANCE_ID_START, INSTANCE_ID_END)}`;
     const { models, backend } = config;
     this.backend = backend;
     const estimatedUsedMemoryKB = calculateMaxEstimatedResource(
@@ -58,6 +68,26 @@ class LLMRateLimiter implements LLMRateLimiterInstance {
   private log(message: string, data?: Record<string, unknown>): void {
     if (this.config.onLog !== undefined) { this.config.onLog(`${this.label}| ${message}`, data); }
   }
+
+  /** Get the unique instance ID for this rate limiter */
+  getInstanceId(): string {
+    return this.instanceId;
+  }
+
+  /**
+   * Start the rate limiter and register with V2 distributed backend if configured.
+   * For V1 backends or no backend, this is a no-op.
+   */
+  async start(): Promise<void> {
+    if (this.backend === undefined || !isV2Backend(this.backend)) { return; }
+    const allocation = await this.backend.register(this.instanceId);
+    this.availabilityTracker?.setDistributedAllocation(allocation);
+    this.backendUnsubscribe = this.backend.subscribe(this.instanceId, (alloc: AllocationInfo) => {
+      this.availabilityTracker?.setDistributedAllocation(alloc);
+    });
+    this.log('Registered with V2 backend', { instanceId: this.instanceId, slots: allocation.slots });
+  }
+
   private initializeAvailabilityTracker(estimatedUsedMemoryKB: number): AvailabilityTracker | null {
     if (this.config.onAvailableSlotsChange === undefined) { return null; }
     const tracker = new AvailabilityTracker({
@@ -119,11 +149,20 @@ class LLMRateLimiter implements LLMRateLimiterInstance {
 
   private async acquireBackend(modelId: string, jobId: string): Promise<boolean> {
     if (this.backend === undefined) { return true; }
-    return await this.backend.acquire({ modelId, jobId, estimated: this.getEstimatedResourcesForBackend(modelId) });
+    const baseContext = { modelId, jobId, estimated: this.getEstimatedResourcesForBackend(modelId) };
+    if (isV2Backend(this.backend)) {
+      return await this.backend.acquire({ ...baseContext, instanceId: this.instanceId });
+    }
+    return await this.backend.acquire(baseContext);
   }
   private releaseBackend(modelId: string, jobId: string, actual: { requests: number; tokens: number }): void {
     if (this.backend === undefined) { return; }
-    this.backend.release({ modelId, jobId, estimated: this.getEstimatedResourcesForBackend(modelId), actual }).catch(() => { /* User handles errors */ });
+    const baseContext = { modelId, jobId, estimated: this.getEstimatedResourcesForBackend(modelId), actual };
+    if (isV2Backend(this.backend)) {
+      this.backend.release({ ...baseContext, instanceId: this.instanceId }).catch(() => { /* User handles errors */ });
+      return;
+    }
+    this.backend.release(baseContext).catch(() => { /* User handles errors */ });
   }
 
   hasCapacity(): boolean {
@@ -234,6 +273,11 @@ class LLMRateLimiter implements LLMRateLimiterInstance {
   }
 
   stop(): void {
+    this.backendUnsubscribe?.();
+    this.backendUnsubscribe = null;
+    if (this.backend !== undefined && isV2Backend(this.backend)) {
+      this.backend.unregister(this.instanceId).catch(() => { /* User handles errors */ });
+    }
     this.memoryManager?.stop();
     for (const limiter of this.modelLimiters.values()) { limiter.stop(); }
     this.log('Stopped');

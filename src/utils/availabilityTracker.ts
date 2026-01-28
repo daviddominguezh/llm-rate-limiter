@@ -2,6 +2,7 @@
  * Tracks availability changes and emits callbacks when slots change.
  */
 import type {
+  AllocationInfo,
   Availability,
   AvailabilityChangeReason,
   LLMRateLimiterStats,
@@ -88,6 +89,7 @@ export class AvailabilityTracker {
   private readonly callback: OnAvailableSlotsChange | undefined;
   private readonly getStats: () => LLMRateLimiterStats;
   private readonly estimated: EstimatedResources;
+  private distributedAllocation: AllocationInfo | null = null;
 
   constructor(config: AvailabilityTrackerConfig) {
     const { callback, getStats, estimatedResources } = config;
@@ -96,24 +98,56 @@ export class AvailabilityTracker {
     this.estimated = estimatedResources;
   }
 
-  /** Calculate current availability from stats */
+  /**
+   * Set the distributed allocation for this instance.
+   * Called when the V2 backend pushes an allocation update.
+   */
+  setDistributedAllocation(allocation: AllocationInfo): void {
+    this.distributedAllocation = allocation;
+    this.checkAndEmit('distributed');
+  }
+
+  /** Get the current distributed allocation (for testing/inspection) */
+  getDistributedAllocation(): AllocationInfo | null {
+    return this.distributedAllocation;
+  }
+
+  /** Calculate current availability from stats, respecting distributed allocation */
   calculateAvailability(): Availability {
     const { models, memory } = this.getStats();
-    const tokensPerMinute = getMinRemaining(models, (s) => s.tokensPerMinute?.remaining);
-    const tokensPerDay = getMinRemaining(models, (s) => s.tokensPerDay?.remaining);
-    const requestsPerMinute = getMinRemaining(models, (s) => s.requestsPerMinute?.remaining);
-    const requestsPerDay = getMinRemaining(models, (s) => s.requestsPerDay?.remaining);
+    const localTPM = getMinRemaining(models, (s) => s.tokensPerMinute?.remaining);
+    const localTPD = getMinRemaining(models, (s) => s.tokensPerDay?.remaining);
+    const localRPM = getMinRemaining(models, (s) => s.requestsPerMinute?.remaining);
+    const localRPD = getMinRemaining(models, (s) => s.requestsPerDay?.remaining);
     const concurrentRequests = getMinRemaining(models, (s) => s.concurrency?.available);
     const memoryKB = memory?.availableKB ?? null;
+
+    // Apply distributed allocation constraints (use min of local and distributed)
+    const { distributedAllocation } = this;
+    const tokensPerMinute = distributedAllocation !== null && localTPM !== null
+      ? Math.min(localTPM, distributedAllocation.tokensPerMinute)
+      : localTPM;
+    const requestsPerMinute = distributedAllocation !== null && localRPM !== null
+      ? Math.min(localRPM, distributedAllocation.requestsPerMinute)
+      : localRPM;
+
     const partialAvailability = {
       tokensPerMinute,
-      tokensPerDay,
+      tokensPerDay: localTPD,
       requestsPerMinute,
-      requestsPerDay,
+      requestsPerDay: localRPD,
       concurrentRequests,
       memoryKB,
     };
-    const slots = calculateSlots({ ...partialAvailability, slots: ZERO }, this.estimated);
+
+    // Calculate local slots
+    const localSlots = calculateSlots({ ...partialAvailability, slots: ZERO }, this.estimated);
+
+    // Apply distributed slot allocation (use min of local and distributed)
+    const slots = distributedAllocation === null
+      ? localSlots
+      : Math.min(localSlots, distributedAllocation.slots);
+
     return { slots, ...partialAvailability };
   }
 

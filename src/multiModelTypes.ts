@@ -107,8 +107,8 @@ export interface LLMRateLimiterConfigBase<T extends ModelsConfig> {
   onLog?: LogFn;
   /** Callback triggered when available slots change */
   onAvailableSlotsChange?: OnAvailableSlotsChange;
-  /** Backend for distributed rate limiting coordination */
-  backend?: BackendConfig;
+  /** Backend for distributed rate limiting (V1 simple or V2 fair distribution) */
+  backend?: BackendConfig | DistributedBackendConfig;
 }
 
 // =============================================================================
@@ -140,7 +140,8 @@ export interface LLMRateLimiterConfig {
   label?: string;
   onLog?: LogFn;
   onAvailableSlotsChange?: OnAvailableSlotsChange;
-  backend?: BackendConfig;
+  /** Backend for distributed rate limiting (V1 simple or V2 fair distribution) */
+  backend?: BackendConfig | DistributedBackendConfig;
 }
 
 // =============================================================================
@@ -373,7 +374,7 @@ export interface BackendReleaseContext {
   actual: BackendActualResources;
 }
 
-/** Backend configuration for distributed rate limiting */
+/** Backend configuration for distributed rate limiting (V1 - simple acquire/release) */
 export interface BackendConfig {
   /**
    * Called before executing a job to acquire distributed capacity.
@@ -385,6 +386,75 @@ export interface BackendConfig {
    * Errors are silently caught - user handles error logging in their implementation.
    */
   release: (context: BackendReleaseContext) => Promise<void>;
+}
+
+// =============================================================================
+// Backend V2 (Fair Distribution) Types
+// =============================================================================
+
+/** Allocation info for a specific instance from the distributed backend */
+export interface AllocationInfo {
+  /** Slots allocated to THIS instance (how many more jobs to fetch) */
+  slots: number;
+  /** Tokens per minute allocated to THIS instance */
+  tokensPerMinute: number;
+  /** Requests per minute allocated to THIS instance */
+  requestsPerMinute: number;
+}
+
+/** Callback for allocation updates from distributed backend */
+export type AllocationCallback = (allocation: AllocationInfo) => void;
+
+/** Unsubscribe function returned by subscribe */
+export type Unsubscribe = () => void;
+
+/** Context passed to V2 backend.acquire callback (includes instanceId) */
+export interface BackendAcquireContextV2 extends BackendAcquireContext {
+  /** The instance making the acquire request */
+  instanceId: string;
+}
+
+/** Context passed to V2 backend.release callback (includes instanceId) */
+export interface BackendReleaseContextV2 extends BackendReleaseContext {
+  /** The instance making the release request */
+  instanceId: string;
+}
+
+/**
+ * Backend configuration for distributed rate limiting with fair distribution (V2).
+ * Provides instance registration and allocation-based slot distribution.
+ */
+export interface DistributedBackendConfig {
+  /**
+   * Register this instance with the backend.
+   * Called when the rate limiter starts.
+   * @returns Initial allocation for this instance
+   */
+  register: (instanceId: string) => Promise<AllocationInfo>;
+
+  /**
+   * Unregister this instance from the backend.
+   * Called when the rate limiter stops.
+   */
+  unregister: (instanceId: string) => Promise<void>;
+
+  /**
+   * Called before executing a job to acquire a slot from this instance's allocation.
+   * Return true to proceed, false to reject (no capacity in allocation).
+   */
+  acquire: (context: BackendAcquireContextV2) => Promise<boolean>;
+
+  /**
+   * Called after job completes to release capacity and trigger reallocation.
+   */
+  release: (context: BackendReleaseContextV2) => Promise<void>;
+
+  /**
+   * Subscribe to allocation updates for this instance.
+   * Callback is called immediately with current allocation, then on each update.
+   * @returns Unsubscribe function
+   */
+  subscribe: (instanceId: string, callback: AllocationCallback) => Unsubscribe;
 }
 
 /** Availability from distributed backend (memory and concurrency are local-only) */
@@ -489,9 +559,21 @@ export interface LLMRateLimiterInstance {
   getModelStats: (modelId: string) => InternalLimiterStats;
 
   /**
-   * Stop all intervals for cleanup.
+   * Start the rate limiter and register with V2 distributed backend if configured.
+   * For V1 backends or no backend, this is a no-op.
+   * Must be called before queueing jobs when using V2 backend.
+   */
+  start: () => Promise<void>;
+
+  /**
+   * Stop all intervals and unregister from V2 distributed backend if configured.
    */
   stop: () => void;
+
+  /**
+   * Get the unique instance ID for this rate limiter (for distributed coordination).
+   */
+  getInstanceId: () => string;
 
   /**
    * Push distributed availability from external backend (e.g., Redis pub/sub).

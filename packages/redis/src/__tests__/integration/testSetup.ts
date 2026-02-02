@@ -15,6 +15,15 @@ export const TOTAL_CAPACITY = 100;
 export const TOKENS_PER_MINUTE = 10000;
 export const REQUESTS_PER_MINUTE = 1000;
 export const REDIS_PORT = 6379;
+
+/** Get Redis connection options from REDIS_URL env var or default to localhost */
+const getRedisOptions = (): string | { host: string; port: number } => {
+  const redisUrl = process.env.REDIS_URL;
+  if (redisUrl !== undefined && redisUrl !== '') {
+    return redisUrl;
+  }
+  return { host: 'localhost', port: REDIS_PORT };
+};
 export const SMALL_CAPACITY = 2;
 export const SMALL_CAPACITY_TEN = 10;
 export const SMALL_CAPACITY_FIVE = 5;
@@ -56,9 +65,15 @@ export const releaseCtx = (instanceId: string, jobId = 'test-job'): BackendRelea
   actual: { tokens: ESTIMATED_TOKENS, requests: ESTIMATED_REQUESTS },
 });
 
+/** Default keepalive for test connections */
+const TEST_KEEPALIVE_MS = 30000;
+
 /** Check if Redis is available */
 export const checkRedisAvailable = async (): Promise<boolean> => {
-  const testRedis = new Redis({ host: 'localhost', port: REDIS_PORT, lazyConnect: true });
+  const options = getRedisOptions();
+  const testRedis = typeof options === 'string'
+    ? new Redis(options, { lazyConnect: true, keepAlive: TEST_KEEPALIVE_MS })
+    : new Redis({ ...options, lazyConnect: true, keepAlive: TEST_KEEPALIVE_MS });
   try {
     await testRedis.connect();
     await testRedis.ping();
@@ -96,7 +111,11 @@ export const setupBeforeAll = async (stateRef: TestState): Promise<void> => {
   const available = await checkRedisAvailable();
   Object.assign(stateRef, { redisAvailable: available });
   if (available) {
-    Object.assign(stateRef, { redis: new Redis({ host: 'localhost', port: REDIS_PORT }) });
+    const options = getRedisOptions();
+    const redis = typeof options === 'string'
+      ? new Redis(options, { keepAlive: TEST_KEEPALIVE_MS })
+      : new Redis({ ...options, keepAlive: TEST_KEEPALIVE_MS });
+    Object.assign(stateRef, { redis });
   }
 };
 

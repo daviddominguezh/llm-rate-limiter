@@ -38,7 +38,7 @@ import type {
   RedisBackendInstance,
   RedisBackendStats,
 } from './types.js';
-import { isRedisClient, toRedisOptions } from './types.js';
+import { isRedisClient, subscriberOptions, toRedisOptions } from './types.js';
 
 /** No-op function for ignored promise rejections */
 const ignoreError = (): void => {
@@ -131,7 +131,7 @@ class RedisBackendImpl {
   constructor(redisConfig: RedisBackendConfig) {
     this.ownClient = !isRedisClient(redisConfig.redis);
     this.redis = isRedisClient(redisConfig.redis) ? redisConfig.redis : new RedisClient(toRedisOptions(redisConfig.redis));
-    this.subscriber = this.redis.duplicate();
+    this.subscriber = this.redis.duplicate(subscriberOptions);
     this.keys = buildKeys(redisConfig.keyPrefix ?? DEFAULT_KEY_PREFIX);
     this.config = {
       totalCapacity: redisConfig.totalCapacity,
@@ -140,7 +140,19 @@ class RedisBackendImpl {
       heartbeatIntervalMs: redisConfig.heartbeatIntervalMs ?? DEFAULT_HEARTBEAT_INTERVAL_MS,
       instanceTimeoutMs: redisConfig.instanceTimeoutMs ?? DEFAULT_INSTANCE_TIMEOUT_MS,
     };
+    this.setupSubscriberReconnection();
     this.startCleanupInterval();
+  }
+
+  private setupSubscriberReconnection(): void {
+    this.subscriber.on('error', ignoreError);
+    this.subscriber.on('reconnecting', ignoreError);
+    this.subscriber.on('ready', () => {
+      // Resubscribe after reconnection if we were subscribed
+      if (this.subscriberActive && this.subscriptions.size > ZERO) {
+        this.subscriber.subscribe(this.keys.channel).catch(ignoreError);
+      }
+    });
   }
 
   private startCleanupInterval(): void {
@@ -168,9 +180,29 @@ class RedisBackendImpl {
 
   private async setupSubscriber(): Promise<void> {
     if (this.subscriberActive) return;
-    await this.subscriber.subscribe(this.keys.channel);
-    this.subscriberActive = true;
-    this.subscriber.on('message', this.handleMessage.bind(this));
+    try {
+      // Wait for subscriber to be ready if not connected yet
+      if (this.subscriber.status !== 'ready' && this.subscriber.status !== 'connect') {
+        await new Promise<void>((resolve, reject) => {
+          const onReady = (): void => {
+            this.subscriber.off('error', onError);
+            resolve();
+          };
+          const onError = (err: Error): void => {
+            this.subscriber.off('ready', onReady);
+            reject(err);
+          };
+          this.subscriber.once('ready', onReady);
+          this.subscriber.once('error', onError);
+        });
+      }
+      await this.subscriber.subscribe(this.keys.channel);
+      this.subscriberActive = true;
+      this.subscriber.on('message', this.handleMessage.bind(this));
+    } catch {
+      // Subscription failed - system continues without real-time updates
+      // Allocations will still be fetched on register/acquire operations
+    }
   }
 
   private handleMessage(_channel: string, message: string): void {

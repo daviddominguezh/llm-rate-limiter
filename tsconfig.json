@@ -5,6 +5,7 @@
     "lib": ["ES2024"],
     "module": "NodeNext",
     "moduleResolution": "NodeNext",
+    "isolatedModules": true,
     "strict": true,
     "noUncheckedIndexedAccess": true,
     "esModuleInterop": true,
@@ -13,9 +14,6 @@
     "resolveJsonModule": true,
     "types": ["node", "jest"]
   },
-  "references": [
-    { "path": "./packages/core" },
-    { "path": "./packages/redis" }
-  ],
+  "references": [{ "path": "./packages/core" }, { "path": "./packages/redis" }],
   "files": []
 }

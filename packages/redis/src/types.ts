@@ -110,6 +110,9 @@ export interface AllocationData {
 export const isRedisClient = (redis: Redis | RedisConnectionOptions): redis is Redis =>
   'get' in redis;
 
+/** Default keepalive interval for Redis connections (30 seconds) */
+const DEFAULT_KEEPALIVE_MS = 30000;
+
 /**
  * Convert RedisConnectionOptions to ioredis RedisOptions.
  */
@@ -119,4 +122,20 @@ export const toRedisOptions = (opts: RedisConnectionOptions): RedisOptions => ({
   password: opts.password,
   db: opts.db,
   tls: opts.tls === true ? {} : undefined,
+  keepAlive: DEFAULT_KEEPALIVE_MS,
 });
+
+/**
+ * Options optimized for subscriber connections (pub/sub).
+ * Includes aggressive reconnection and keepalive settings.
+ */
+export const subscriberOptions: Partial<RedisOptions> = {
+  keepAlive: DEFAULT_KEEPALIVE_MS,
+  retryStrategy: (times: number): number => {
+    // Exponential backoff: 100ms, 200ms, 400ms... up to 30s
+    const MAX_RETRY_DELAY_MS = 30000;
+    const BASE_DELAY_MS = 100;
+    const delay = Math.min(BASE_DELAY_MS * Math.pow(2, times - 1), MAX_RETRY_DELAY_MS);
+    return delay;
+  },
+};

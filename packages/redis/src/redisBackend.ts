@@ -17,10 +17,6 @@ import {
   DEFAULT_HEARTBEAT_INTERVAL_MS,
   DEFAULT_INSTANCE_TIMEOUT_MS,
   DEFAULT_KEY_PREFIX,
-  KEY_SUFFIX_ALLOCATIONS,
-  KEY_SUFFIX_CHANNEL,
-  KEY_SUFFIX_CONFIG,
-  KEY_SUFFIX_INSTANCES,
   SUCCESS_RESULT,
   ZERO,
 } from './constants.js';
@@ -33,59 +29,17 @@ import {
   RELEASE_SCRIPT,
   UNREGISTER_SCRIPT,
 } from './luaScripts.js';
-import type { AllocationData, RedisBackendConfig, RedisBackendInstance, RedisBackendStats } from './types.js';
+import type { BackendOperationConfig, RedisKeys } from './redisHelpers.js';
+import { buildKeys, evalScript } from './redisHelpers.js';
+import { RedisJobTypeOps } from './redisJobTypeOps.js';
+import { ignoreError, isParsedMessage, isRedisBackendStats, parseAllocation } from './redisTypeGuards.js';
+import type {
+  RedisBackendConfig,
+  RedisBackendInstance,
+  RedisBackendStats,
+  RedisJobTypeStats,
+} from './types.js';
 import { isRedisClient, subscriberOptions, toRedisOptions } from './types.js';
-
-const ignoreError = (): void => {
-  /* fire-and-forget */
-};
-const isObject = (d: unknown): d is Record<string, unknown> => typeof d === 'object' && d !== null;
-const isAllocationData = (d: unknown): d is AllocationData =>
-  isObject(d) && 'slots' in d && typeof d.slots === 'number';
-const isParsedMessage = (d: unknown): d is { instanceId: string; allocation: string } =>
-  isObject(d) && 'instanceId' in d && typeof d.instanceId === 'string';
-const isRedisBackendStats = (d: unknown): d is RedisBackendStats => isObject(d) && 'totalInstances' in d;
-const defaultAlloc: AllocationInfo = { slots: ZERO, tokensPerMinute: ZERO, requestsPerMinute: ZERO };
-const parseAllocation = (json: string | null): AllocationInfo => {
-  /* istanbul ignore if -- Defensive: allocation data should exist */
-  if (json === null) return defaultAlloc;
-  const parsed: unknown = JSON.parse(json);
-  /* istanbul ignore if -- Defensive: Lua script returns valid allocation */
-  if (!isAllocationData(parsed)) return defaultAlloc;
-  return {
-    slots: parsed.slots,
-    tokensPerMinute: parsed.tokensPerMinute,
-    requestsPerMinute: parsed.requestsPerMinute,
-  };
-};
-const evalScript = async (
-  redis: RedisType,
-  script: string,
-  keys: string[],
-  args: string[]
-): Promise<string> => {
-  const result: unknown = await redis.eval(script, keys.length, ...keys, ...args);
-  return typeof result === 'string' ? result : '';
-};
-interface RedisKeys {
-  instances: string;
-  allocations: string;
-  config: string;
-  channel: string;
-}
-const buildKeys = (prefix: string): RedisKeys => ({
-  instances: `${prefix}${KEY_SUFFIX_INSTANCES}`,
-  allocations: `${prefix}${KEY_SUFFIX_ALLOCATIONS}`,
-  config: `${prefix}${KEY_SUFFIX_CONFIG}`,
-  channel: `${prefix}${KEY_SUFFIX_CHANNEL}`,
-});
-interface BackendOperationConfig {
-  totalCapacity: number;
-  tokensPerMinute: number;
-  requestsPerMinute: number;
-  heartbeatIntervalMs: number;
-  instanceTimeoutMs: number;
-}
 
 /** Internal backend implementation class */
 class RedisBackendImpl {
@@ -99,6 +53,7 @@ class RedisBackendImpl {
   private heartbeatInterval: NodeJS.Timeout | null = null;
   private cleanupInterval: NodeJS.Timeout | null = null;
   private subscriberActive = false;
+  private readonly jobTypeOps: RedisJobTypeOps;
 
   constructor(redisConfig: RedisBackendConfig) {
     this.ownClient = !isRedisClient(redisConfig.redis);
@@ -114,9 +69,16 @@ class RedisBackendImpl {
       requestsPerMinute: redisConfig.requestsPerMinute ?? ZERO,
       heartbeatIntervalMs: redisConfig.heartbeatIntervalMs ?? DEFAULT_HEARTBEAT_INTERVAL_MS,
       instanceTimeoutMs: redisConfig.instanceTimeoutMs ?? DEFAULT_INSTANCE_TIMEOUT_MS,
+      resourcesPerJob: redisConfig.resourcesPerJob,
     };
     this.setupSubscriberReconnection();
     this.startCleanupInterval();
+    this.jobTypeOps = new RedisJobTypeOps(
+      this.redis,
+      this.keys,
+      redisConfig.resourcesPerJob,
+      redisConfig.totalCapacity
+    );
   }
 
   private setupSubscriberReconnection(): void {
@@ -290,6 +252,16 @@ class RedisBackendImpl {
     return parsed;
   };
 
+  readonly acquireJobType = async (instanceId: string, jobTypeId: string): Promise<boolean> =>
+    await this.jobTypeOps.acquire(instanceId, jobTypeId);
+
+  readonly releaseJobType = async (instanceId: string, jobTypeId: string): Promise<void> => {
+    await this.jobTypeOps.release(instanceId, jobTypeId);
+  };
+
+  readonly getJobTypeStats = async (): Promise<RedisJobTypeStats | undefined> =>
+    await this.jobTypeOps.getStats();
+
   getBackendConfig(): DistributedBackendConfig {
     return {
       register: this.register,
@@ -301,17 +273,15 @@ class RedisBackendImpl {
   }
 }
 
-/**
- * Create a Redis distributed backend instance.
- *
- * @param config - Redis backend configuration
- * @returns The backend instance
- */
+/** Create a Redis distributed backend instance. */
 export const createRedisBackend = (config: RedisBackendConfig): RedisBackendInstance => {
   const impl = new RedisBackendImpl(config);
   return {
     getBackendConfig: () => impl.getBackendConfig(),
     stop: impl.stop,
     getStats: impl.getStats,
+    getJobTypeStats: impl.getJobTypeStats,
+    acquireJobType: impl.acquireJobType,
+    releaseJobType: impl.releaseJobType,
   };
 };

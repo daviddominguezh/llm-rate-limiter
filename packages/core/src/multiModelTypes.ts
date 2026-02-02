@@ -9,6 +9,7 @@
  *    - Order array can only contain model IDs that have limits defined
  *    - Order is optional for single model, required for multiple models
  */
+import type { JobTypeStats, RatioAdjustmentConfig, ResourcesPerJob } from './jobTypeTypes.js';
 import type {
   BaseResourcesPerEvent,
   InternalJobResult,
@@ -92,7 +93,10 @@ export type HasMultipleModels<T extends ModelsConfig> = IsSingleModel<T> extends
 /**
  * Base configuration for rate limiter (without order).
  */
-export interface LLMRateLimiterConfigBase<T extends ModelsConfig> {
+export interface LLMRateLimiterConfigBase<
+  T extends ModelsConfig,
+  J extends ResourcesPerJob = ResourcesPerJob,
+> {
   /** Map of model ID to its rate limit configuration */
   models: T;
   /** Memory-based limits configuration (shared across all models) */
@@ -109,6 +113,18 @@ export interface LLMRateLimiterConfigBase<T extends ModelsConfig> {
   onAvailableSlotsChange?: OnAvailableSlotsChange;
   /** Backend for distributed rate limiting (V1 simple or V2 fair distribution) */
   backend?: BackendConfig | DistributedBackendConfig;
+  /**
+   * Job type configurations with per-type resource estimates and capacity ratios.
+   * When specified, enables job type-based capacity allocation.
+   * Each job type can have different resource estimates (tokens, requests, memory).
+   * Ratios determine how total capacity is divided among job types.
+   */
+  resourcesPerJob?: J;
+  /**
+   * Configuration for dynamic ratio adjustment algorithm.
+   * Only applies when resourcesPerJob is defined.
+   */
+  ratioAdjustmentConfig?: RatioAdjustmentConfig;
 }
 
 // =============================================================================
@@ -121,8 +137,12 @@ export interface LLMRateLimiterConfigBase<T extends ModelsConfig> {
  * - If only one model is defined, `order` is optional
  * - If multiple models are defined, `order` is REQUIRED
  * - The `order` array can only contain model IDs that are defined in `models`
+ * - If `resourcesPerJob` is defined, `jobType` in queueJob becomes type-safe
  */
-export type ValidatedLLMRateLimiterConfig<T extends ModelsConfig> = LLMRateLimiterConfigBase<T> &
+export type ValidatedLLMRateLimiterConfig<
+  T extends ModelsConfig,
+  J extends ResourcesPerJob = ResourcesPerJob,
+> = LLMRateLimiterConfigBase<T, J> &
   (HasMultipleModels<T> extends true
     ? { order: ReadonlyArray<ModelIds<T>> }
     : { order?: ReadonlyArray<ModelIds<T>> });
@@ -142,6 +162,10 @@ export interface LLMRateLimiterConfig {
   onAvailableSlotsChange?: OnAvailableSlotsChange;
   /** Backend for distributed rate limiting (V1 simple or V2 fair distribution) */
   backend?: BackendConfig | DistributedBackendConfig;
+  /** Job type configurations with per-type resource estimates and capacity ratios */
+  resourcesPerJob?: ResourcesPerJob;
+  /** Configuration for dynamic ratio adjustment algorithm */
+  ratioAdjustmentConfig?: RatioAdjustmentConfig;
 }
 
 // =============================================================================
@@ -228,9 +252,16 @@ export interface JobCallbackContext {
 export interface QueueJobOptions<
   T extends InternalJobResult,
   Args extends ArgsWithoutModelId = ArgsWithoutModelId,
+  JobType extends string = string,
 > {
   /** Unique identifier for this job (for traceability) */
   jobId: string;
+  /**
+   * Job type for capacity allocation.
+   * Must match a key in resourcesPerJob configuration.
+   * When resourcesPerJob is configured, this determines which capacity pool the job uses.
+   */
+  jobType?: JobType;
   /** Job function that receives args with modelId, and resolve/reject callbacks */
   job: LLMJob<T, Args>;
   /** User-defined args passed to job (modelId is injected automatically) */
@@ -270,6 +301,8 @@ export interface LLMRateLimiterStats {
     availableKB: number;
     systemAvailableKB: number;
   };
+  /** Job type stats (present when resourcesPerJob is configured) */
+  jobTypes?: JobTypeStats;
 }
 
 // =============================================================================
@@ -358,6 +391,8 @@ export interface BackendAcquireContext {
   modelId: string;
   /** Job identifier (may be undefined for direct model calls) */
   jobId: string | undefined;
+  /** Job type for capacity allocation (undefined if not using job types) */
+  jobType?: string;
   /** Estimated resources for this job */
   estimated: BackendEstimatedResources;
 }
@@ -368,6 +403,8 @@ export interface BackendReleaseContext {
   modelId: string;
   /** Job identifier (may be undefined for direct model calls) */
   jobId: string | undefined;
+  /** Job type for capacity allocation (undefined if not using job types) */
+  jobType?: string;
   /** Estimated resources that were reserved */
   estimated: BackendEstimatedResources;
   /** Actual resources used (zero if job failed before execution) */
@@ -480,6 +517,8 @@ export interface DistributedAvailability {
  */
 export interface JobExecutionContext<T extends InternalJobResult, Args extends ArgsWithoutModelId> {
   jobId: string;
+  /** Job type for capacity allocation (undefined if not using job types) */
+  jobType: string | undefined;
   job: QueueJobOptions<T, Args>['job'];
   args: Args | undefined;
   triedModels: Set<string>;
@@ -494,8 +533,10 @@ export interface JobExecutionContext<T extends InternalJobResult, Args extends A
 
 /**
  * Rate limiter instance returned by createLLMRateLimiter().
+ *
+ * @typeParam JobType - Union type of valid job type IDs (from resourcesPerJob keys)
  */
-export interface LLMRateLimiterInstance {
+export interface LLMRateLimiterInstance<JobType extends string = string> {
   /**
    * Queue a job with automatic model selection, delegation support, and callbacks.
    *
@@ -508,7 +549,7 @@ export interface LLMRateLimiterInstance {
    * @returns Promise resolving to job result with modelUsed property
    */
   queueJob: <T extends InternalJobResult, Args extends ArgsWithoutModelId = ArgsWithoutModelId>(
-    options: QueueJobOptions<T, Args>
+    options: QueueJobOptions<T, Args, JobType>
   ) => Promise<LLMJobResult<T>>;
 
   /**
@@ -582,4 +623,22 @@ export interface LLMRateLimiterInstance {
    * @param availability - Current availability from distributed backend
    */
   setDistributedAvailability: (availability: DistributedAvailability) => void;
+
+  /**
+   * Check if a specific job type has capacity (non-blocking).
+   * Only applicable when resourcesPerJob is configured.
+   *
+   * @param jobType - The job type to check
+   * @returns true if the job type has capacity, false otherwise
+   * @returns true if resourcesPerJob is not configured (backward compatible)
+   */
+  hasCapacityForJobType: (jobType: JobType) => boolean;
+
+  /**
+   * Get job type statistics.
+   * Only applicable when resourcesPerJob is configured.
+   *
+   * @returns Job type stats, or undefined if resourcesPerJob is not configured
+   */
+  getJobTypeStats: () => JobTypeStats | undefined;
 }

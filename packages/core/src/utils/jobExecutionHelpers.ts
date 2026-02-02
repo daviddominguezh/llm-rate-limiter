@@ -94,3 +94,20 @@ export const waitForModelCapacity = async (
   checkCapacity();
   return await promise;
 };
+
+/** Wait for job type capacity to become available */
+export const waitForJobTypeCapacity = async (
+  hasCapacity: () => boolean,
+  pollIntervalMs: number
+): Promise<unknown> => {
+  const { promise, resolve } = Promise.withResolvers<unknown>();
+  const checkCapacity = (): void => {
+    if (hasCapacity()) {
+      resolve(undefined);
+      return;
+    }
+    setTimeout(checkCapacity, pollIntervalMs);
+  };
+  checkCapacity();
+  return await promise;
+};

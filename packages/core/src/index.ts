@@ -4,6 +4,19 @@ export { createLLMRateLimiter } from './multiModelRateLimiter.js';
 // Keep generic types from types.ts
 export type { TokenUsage, MemoryLimitConfig } from './types.js';
 
+// Job type types
+export type {
+  JobTypeIds,
+  JobTypeLoadMetrics,
+  JobTypeRatioConfig,
+  JobTypeResourceConfig,
+  JobTypeState,
+  JobTypeStats,
+  RatioAdjustmentConfig,
+  ResourcesPerJob,
+} from './jobTypeTypes.js';
+export { DEFAULT_RATIO_ADJUSTMENT_CONFIG } from './jobTypeTypes.js';
+
 // Public types from multiModelTypes.ts
 export type {
   ArgsWithoutModelId,

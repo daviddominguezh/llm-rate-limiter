@@ -34,15 +34,22 @@ export interface BackendOperationContext {
   instanceId: string;
   modelId: string;
   jobId: string;
+  /** Job type for capacity allocation (undefined if not using job types) */
+  jobType?: string;
 }
 
 /** Acquire backend slot */
 export const acquireBackend = async (ctx: BackendOperationContext): Promise<boolean> => {
-  const { backend, models, instanceId, modelId, jobId } = ctx;
+  const { backend, models, instanceId, modelId, jobId, jobType } = ctx;
   if (backend === undefined) {
     return true;
   }
-  const baseContext = { modelId, jobId, estimated: getEstimatedResourcesForBackend(models, modelId) };
+  const baseContext = {
+    modelId,
+    jobId,
+    jobType,
+    estimated: getEstimatedResourcesForBackend(models, modelId),
+  };
   if (isV2Backend(backend)) {
     return await backend.acquire({ ...baseContext, instanceId });
   }
@@ -54,11 +61,17 @@ export const releaseBackend = (
   ctx: BackendOperationContext,
   actual: { requests: number; tokens: number }
 ): void => {
-  const { backend, models, instanceId, modelId, jobId } = ctx;
+  const { backend, models, instanceId, modelId, jobId, jobType } = ctx;
   if (backend === undefined) {
     return;
   }
-  const baseContext = { modelId, jobId, estimated: getEstimatedResourcesForBackend(models, modelId), actual };
+  const baseContext = {
+    modelId,
+    jobId,
+    jobType,
+    estimated: getEstimatedResourcesForBackend(models, modelId),
+    actual,
+  };
   if (isV2Backend(backend)) {
     backend.release({ ...baseContext, instanceId }).catch(() => {
       /* User handles errors */

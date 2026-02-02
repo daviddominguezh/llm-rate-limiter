@@ -11,6 +11,11 @@ export const KEY_SUFFIX_ALLOCATIONS = 'allocations';
 export const KEY_SUFFIX_CONFIG = 'config';
 export const KEY_SUFFIX_CHANNEL = 'channel:allocations';
 
+/** Key suffixes for job type data structures */
+export const KEY_SUFFIX_JOB_TYPES = 'jobtypes';
+export const KEY_SUFFIX_JOB_TYPE_INSTANCES = 'jobtypes:instances';
+export const KEY_SUFFIX_JOB_TYPE_CHANNEL = 'channel:jobtypes';
+
 /** Default heartbeat interval in milliseconds */
 export const DEFAULT_HEARTBEAT_INTERVAL_MS = 5000;
 

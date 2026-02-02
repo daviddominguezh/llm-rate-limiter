@@ -1,7 +1,11 @@
 /**
  * Shared test setup and helpers for Redis integration tests.
  */
-import type { BackendAcquireContextV2, BackendReleaseContextV2 } from '@llm-rate-limiter/core';
+import type {
+  BackendAcquireContextV2,
+  BackendReleaseContextV2,
+  ResourcesPerJob,
+} from '@llm-rate-limiter/core';
 import { Redis } from 'ioredis';
 import { setTimeout as setTimeoutAsync } from 'node:timers/promises';
 
@@ -146,6 +150,7 @@ export interface BackendOptions {
   capacity?: number;
   tokensPerMinute?: number;
   requestsPerMinute?: number;
+  resourcesPerJob?: ResourcesPerJob;
 }
 
 /** Function type for creating Redis backends */
@@ -166,5 +171,6 @@ export const createTestBackend = (
     tokensPerMinute: options.tokensPerMinute,
     requestsPerMinute: options.requestsPerMinute,
     keyPrefix: stateRef.testPrefix,
+    resourcesPerJob: options.resourcesPerJob,
   });
 };

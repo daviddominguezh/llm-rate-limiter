@@ -320,4 +320,73 @@ Great, thank you. Now, one thing. The memory manager should be a singleton that 
 
 ---
 
+Now, we must extend the rate limiter
+Currently, we only allow one estimation of the job resources, like:
+```
+const limiter = createLLMRateLimiter({
+  models: {
+    default: {
+      // Current fields
+      ...,
+      resourcesPerEvent: {
+        estimatedNumberOfRequests: X,
+        estimatedUsedTokens: Y,
+        estimatedUsedMemoryKB: Z
+      },
+    },
+  },
+});
+```
+
+But this is wrong for several reasons.
+1. We do not need to define this PER model, but 1 in general, because the job is the same regardless of the model
+2. The current config only allows 1 type of job, because the 'resourcesPerEvent' is defined only once, therefore, all the events should be similar, but in the real world, we can have jobs that consume 20000 tokens (for instance, generate a summary of a PDF) but also creating a recipe, which would consume only 500 tokens. The thing is, for both cases, we would be using the same LLM, meaning we have the same SHARED resources. Because of this, we should extend how our rate-limiter works. Basically, we need to allow the user to create job types and then, specify which job type a job has. It should be type-safe (on compile time), like the 'models' property. Something like this:
+
+```
+const limiter = createLLMRateLimiter({
+  // Current fields
+  ...,
+  resourcesPerJob: {
+    'jobType1': {
+      estimatedNumberOfRequests: X,
+      estimatedUsedTokens: Y,
+      estimatedUsedMemoryKB: Z,
+      ratio?: {
+        initialValue?: N, // number from 0 to 1
+        flexible?: true // we can adjust this dynamically, defaults to true
+      }
+    },
+    'jobType2': ...
+  }
+});
+
+limiter.queueJob({ jobId: '...', jobType: 'jobType1', job: createSimpleJob(TEN), ... })
+```
+
+Then, internally, we should use that specific estimation.
+By implementing this, we must also also change how the availableSlots work, because we could have X slots for job type A, but Y slots for job type B.
+Nevertheless, this brings a new issue: X + Y would exceed the total limit. That's where the ratio property comes in, basically, we must divide the resources between the jobTypes based on the ratio (ratio.initialValue). The sum of all ratios.initialValue for all job types must always be 1, if not, we must throw an error during initialization. The ratio parameter is optional, if the user does not provide it, then we assume an even distribution (2 jobs, then 0.5 ratio for each, 4 then 0.25 for each, and so on). If the user provides a initialValue for some jobs but not for others, then we must allocate the initialValue for the provided ones, and evenly distribute the remaining availability between the jobs with no initialValue (for example, 4 job types, the first two have initialValue of 0.3, then we must allocate 0.6 for those two, we have 0.4 free and other two job types, so each would receive 0.2). We also must support 'flexible' boolean, that, if not provided must be true. This 'flexible' parameter allows us to change the ratio based on the availability, so, under no stress at all, it should be the initialValue provided (or even, if not provided), but, under load, we must adjust it dynamically, so the job type with most usage has a boost. If one job type has flexible as false, but the other jobs have it as true, then we cannot increase or decrease that specific job, only the other ones.
+
+For increasing/decreasing the ratio, we must have a logic similar to this (but please, feel free to suggest alternatives if you are aware of a production-grade, standard way of doing this):
+1. We check the "load" of each jobType, meaning, a percentage of usage of total availability
+2. We adjust the ratio so we try to even the load (keep in mind that we can have jobs with 0% load)
+
+Example:
+2 Job Types:
+1. A: had 100 available slots initially, currently has 50 running jobs. Ratio = 0.5
+2. B: had 10 available slots initially, currently has 8 running jobs. Ratio = 0.5
+
+(Let's assume ratio was not defined, therefore, it was 0.5 for each)
+The available slots are different because job type B is more expensive than job type A, so it has fewer slots.
+
+Then, for job type A the current load is 50% (100 slots initially - 50 of current usage = 50 free (relative to the ratio)). For job type B, it would be 80%.
+
+Then, our dynamic allocation of ratio should decrease the job type A ratio and increase job type B's, so now the load of A should be equal to the load of B.
+
+Please, keep in mind that this must work for the distributed back-end. Therefore, the ratios should be shared across instances, not local. Because of this, besides extending the core library, we must extend our Redis implementation so it also supports it.
+
+Finally, this must co-exist with the current implementation, so the current tests keep working. This means, do not delete the current implementation, but extend the API.
+
+---
+
 

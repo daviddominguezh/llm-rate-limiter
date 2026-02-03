@@ -17,4 +17,6 @@ export default {
   },
   testMatch: ['**/__tests__/**/*.test.ts'],
   testTimeout: 120000,
+  // Run tests serially - E2E tests share infrastructure (rate limiter instances, Redis)
+  maxWorkers: 1,
 };

@@ -34,6 +34,11 @@ const BUDGET_REQUESTS = 5;
 const WEATHER_TOKENS = 1000;
 const WEATHER_REQUESTS = 1;
 
+// Escalation test: short maxWaitMS on primary model to trigger escalation
+const ESCALATION_TEST_TOKENS = 10000;
+const ESCALATION_TEST_REQUESTS = 1;
+const ESCALATION_TEST_MAX_WAIT_MS = 2000; // 2 seconds - short timeout to trigger escalation
+
 export const ESCALATION_ORDER = ['openai/gpt-5.2', 'xai/grok-4.1-fast', 'deepinfra/gpt-oss-20b'] as const;
 
 export const MODELS = {
@@ -92,5 +97,13 @@ export const RESOURCE_ESTIMATIONS: ResourceEstimationsPerJob = {
   WeatherForecast: {
     estimatedUsedTokens: WEATHER_TOKENS,
     estimatedNumberOfRequests: WEATHER_REQUESTS,
+  },
+  // Job type with short maxWaitMS on primary model - used to test escalation behavior
+  escalationTest: {
+    estimatedUsedTokens: ESCALATION_TEST_TOKENS,
+    estimatedNumberOfRequests: ESCALATION_TEST_REQUESTS,
+    maxWaitMS: {
+      'openai/gpt-5.2': ESCALATION_TEST_MAX_WAIT_MS,
+    },
   },
 };

@@ -27,6 +27,11 @@ export interface SuiteConfig {
   waitTimeoutMs?: number;
   /** Whether to save the test data to a file (default: true) */
   saveToFile?: boolean;
+  /**
+   * Distribution ratio for the proxy (e.g., "26:25" for 26 jobs to first instance, 25 to second).
+   * If not set, uses equal distribution.
+   */
+  proxyRatio?: string;
 }
 
 /** Get the directory of this module */
@@ -42,6 +47,26 @@ const getOutputPath = (suiteName: string): string => {
 
 /** Delay to allow distributed allocation to propagate after instance registration */
 const ALLOCATION_PROPAGATION_DELAY_MS = 500;
+
+/** Reset proxy job counts */
+const resetProxy = async (proxyUrl: string): Promise<void> => {
+  const response = await fetch(`${proxyUrl}/proxy/reset`, { method: 'POST' });
+  if (!response.ok) {
+    throw new Error(`Failed to reset proxy: ${response.statusText}`);
+  }
+};
+
+/** Set proxy distribution ratio */
+const setProxyRatio = async (proxyUrl: string, ratio: string): Promise<void> => {
+  const response = await fetch(`${proxyUrl}/proxy/ratio`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ ratio }),
+  });
+  if (!response.ok) {
+    throw new Error(`Failed to set proxy ratio: ${response.statusText}`);
+  }
+};
 
 /** Reset all server instances */
 const resetAllInstances = async (instanceUrls: string[]): Promise<void> => {
@@ -69,12 +94,19 @@ export const runSuite = async (config: SuiteConfig): Promise<TestData> => {
     jobs,
     waitTimeoutMs = DEFAULT_WAIT_TIMEOUT_MS,
     saveToFile = true,
+    proxyRatio,
   } = config;
 
-  // 1. Reset all instances (cleanRedis: true on first only)
+  // 1. Reset proxy and optionally set distribution ratio
+  await resetProxy(proxyUrl);
+  if (proxyRatio !== undefined) {
+    await setProxyRatio(proxyUrl, proxyRatio);
+  }
+
+  // 2. Reset all instances (cleanRedis: true on first only)
   await resetAllInstances(instanceUrls);
 
-  // 2. Create StateAggregator + TestDataCollector
+  // 3. Create StateAggregator + TestDataCollector
   const aggregator = new StateAggregator(instanceUrls);
   const collector = new TestDataCollector(instanceUrls, {
     onJobEvent: (event) => {
@@ -90,42 +122,42 @@ export const runSuite = async (config: SuiteConfig): Promise<TestData> => {
     },
   });
 
-  // 3. Start SSE listeners
+  // 4. Start SSE listeners
   await collector.startEventListeners();
 
-  // 4. Take initial snapshot
+  // 5. Take initial snapshot
   const initialStates = await aggregator.fetchState();
   collector.addSnapshot('initial', initialStates);
 
-  // 5. Send all jobs
+  // 6. Send all jobs
   for (const job of jobs) {
     collector.recordJobSent(job.jobId, job.jobType, proxyUrl);
     await sendJob(proxyUrl, job);
   }
 
-  // 6. Take post-send snapshot
+  // 7. Take post-send snapshot
   await sleep(SLEEP_AFTER_SEND_MS);
   const afterSendStates = await aggregator.fetchState();
   collector.addSnapshot('after-sending-jobs', afterSendStates);
 
-  // 7. Wait for jobs to complete
+  // 8. Wait for jobs to complete
   try {
     await aggregator.waitForNoActiveJobs({ timeoutMs: waitTimeoutMs });
   } catch {
     // Timeout is not fatal - we still want to collect the data
   }
 
-  // 8. Take final snapshot
+  // 9. Take final snapshot
   const finalStates = await aggregator.fetchState();
   collector.addSnapshot('final', finalStates);
 
-  // 9. Stop listeners
+  // 10. Stop listeners
   collector.stopEventListeners();
 
-  // 10. Get the collected data
+  // 11. Get the collected data
   const data = collector.getData();
 
-  // 11. Optionally save to file
+  // 12. Optionally save to file
   if (saveToFile) {
     const filePath = getOutputPath(suiteName);
     await mkdir(dirname(filePath), { recursive: true });

@@ -27,6 +27,7 @@ describe('Rate Limit Queuing', () => {
       instanceUrls: INSTANCE_URLS,
       jobs,
       waitTimeoutMs: WAIT_TIMEOUT_MS,
+      proxyRatio: '1:1',
     });
   }, BEFORE_ALL_TIMEOUT_MS);
 

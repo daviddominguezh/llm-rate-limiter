@@ -90,27 +90,28 @@ describe('Job Types - Invariant: Internal State Matches External', () => {
 });
 
 describe('Job Types - Invariant: Atomic Acquire', () => {
-  it('should ensure acquire() is atomic under concurrent access', async () => {
+  it('should ensure acquire() queues waiters and processes them in order', async () => {
     const manager = createTestManager({ typeA: { ratio: ONE } }, ONE);
-    const results: boolean[] = [];
+    const completionOrder: number[] = [];
 
     try {
-      // Race 10 concurrent acquires on single slot
-      const acquirePromises = Array.from({ length: TEN }, async () => {
-        // Small random delay to create race condition
-        await new Promise((r) => setTimeout(r, Math.random() * FIVE));
-        return manager.acquire('typeA');
-      });
+      // Start 5 concurrent acquires on single slot
+      const acquirePromises = Array.from({ length: FIVE }, (_, index) =>
+        manager.acquire('typeA').then(() => {
+          completionOrder.push(index);
+          // Release the slot so the next waiter can proceed
+          manager.release('typeA');
+        })
+      );
 
-      const acquired = await Promise.all(acquirePromises);
-      results.push(...acquired);
+      // Wait for all to complete
+      await Promise.all(acquirePromises);
 
-      // Exactly 1 should succeed
-      const successCount = results.filter((r) => r).length;
-      expect(successCount).toBe(ONE);
+      // All 5 should have completed
+      expect(completionOrder.length).toBe(FIVE);
 
-      // inFlight should be exactly 1
-      expect(manager.getState('typeA')?.inFlight).toBe(ONE);
+      // inFlight should be 0 after all releases
+      expect(manager.getState('typeA')?.inFlight).toBe(ZERO);
     } finally {
       manager.stop();
     }

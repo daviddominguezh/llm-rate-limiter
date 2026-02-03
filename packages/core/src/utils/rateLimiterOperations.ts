@@ -203,32 +203,16 @@ export interface AcquireJobTypeSlotParams {
   manager: JobTypeManager | null;
   resourcesConfig: ResourceEstimationsPerJob | undefined;
   jobType: string;
-  pollIntervalMs: number;
-  waitForCapacity: (hasCapacity: () => boolean, pollMs: number) => Promise<unknown>;
 }
-
-/** Try to acquire slot with retry on race condition. */
-const tryAcquireWithRetry = async (
-  manager: JobTypeManager,
-  jobType: string,
-  pollIntervalMs: number,
-  waitForCapacity: (hasCapacity: () => boolean, pollMs: number) => Promise<unknown>
-): Promise<boolean> => {
-  await waitForCapacity(() => manager.hasCapacity(jobType), pollIntervalMs);
-  if (manager.acquire(jobType)) {
-    return true;
-  }
-  // Slot was acquired by another concurrent job, retry
-  return await tryAcquireWithRetry(manager, jobType, pollIntervalMs, waitForCapacity);
-};
 
 /** Acquire job type slot if applicable. Returns true if slot was acquired. */
 export const acquireJobTypeSlot = async (params: AcquireJobTypeSlotParams): Promise<boolean> => {
-  const { manager, resourcesConfig, jobType, pollIntervalMs, waitForCapacity } = params;
+  const { manager, resourcesConfig, jobType } = params;
   if (manager === null || resourcesConfig === undefined) {
     return false;
   }
-  return await tryAcquireWithRetry(manager, jobType, pollIntervalMs, waitForCapacity);
+  await manager.acquire(jobType);
+  return true;
 };
 
 const INSTANCE_ID_RADIX = 36;

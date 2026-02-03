@@ -40,6 +40,11 @@ export interface JobTypeManagerConfig {
   onLog?: LogFn;
 }
 
+/** Waiter in the queue for a job type slot */
+interface QueuedWaiter {
+  resolve: () => void;
+}
+
 /**
  * Interface for the JobTypeManager.
  */
@@ -47,7 +52,7 @@ export interface JobTypeManager {
   getState: (jobTypeId: string) => JobTypeState | undefined;
   getAllStates: () => Record<string, JobTypeState>;
   hasCapacity: (jobTypeId: string) => boolean;
-  acquire: (jobTypeId: string) => boolean;
+  acquire: (jobTypeId: string) => Promise<void>;
   release: (jobTypeId: string) => void;
   setTotalCapacity: (totalSlots: number) => void;
   getTotalCapacity: () => number;
@@ -73,6 +78,7 @@ class JobTypeManagerImpl implements JobTypeManager {
   private readonly states: Map<string, JobTypeState>;
   private readonly config: Required<RatioAdjustmentConfig>;
   private readonly log: (message: string, data?: Record<string, unknown>) => void;
+  private readonly waitQueues: Map<string, QueuedWaiter[]>;
   private totalCapacity: number = ZERO;
   private lastAdjustmentTime: number | null = null;
   private releasesSinceAdjustment: number = ZERO;
@@ -88,6 +94,7 @@ class JobTypeManagerImpl implements JobTypeManager {
     this.config = mergeRatioConfig(ratioAdjustmentConfig);
     this.log = onLog === undefined ? createNoOpLogger() : createPrefixedLogger(label, onLog);
     this.states = createInitialStates(resourceEstimationsPerJob, calculated.ratios);
+    this.waitQueues = new Map(Array.from(this.states.keys()).map((id) => [id, []]));
 
     this.log('JobTypeManager initialized', {
       jobTypes: Array.from(this.states.keys()),
@@ -122,14 +129,33 @@ class JobTypeManagerImpl implements JobTypeManager {
     return state !== undefined && state.inFlight < state.allocatedSlots;
   }
 
-  acquire(jobTypeId: string): boolean {
+  async acquire(jobTypeId: string): Promise<void> {
     const state = this.states.get(jobTypeId);
-    if (state === undefined || state.inFlight >= state.allocatedSlots) {
-      return false;
+    if (state === undefined) {
+      throw new Error(`Unknown job type: ${jobTypeId}`);
     }
-    state.inFlight += ONE;
-    this.log('Acquired slot', { jobTypeId, inFlight: state.inFlight, allocatedSlots: state.allocatedSlots });
-    return true;
+
+    const queue = this.waitQueues.get(jobTypeId);
+    if (queue === undefined) {
+      throw new Error(`No wait queue for job type: ${jobTypeId}`);
+    }
+
+    // If capacity available and no one waiting, acquire immediately
+    if (state.inFlight < state.allocatedSlots && queue.length === ZERO) {
+      state.inFlight += ONE;
+      this.log('Acquired slot', {
+        jobTypeId,
+        inFlight: state.inFlight,
+        allocatedSlots: state.allocatedSlots,
+      });
+      return;
+    }
+
+    // Otherwise, wait in queue
+    const { promise, resolve } = Promise.withResolvers<void>();
+    queue.push({ resolve });
+    this.log('Waiting for slot', { jobTypeId, queueLength: queue.length });
+    await promise;
   }
 
   release(jobTypeId: string): void {
@@ -137,9 +163,30 @@ class JobTypeManagerImpl implements JobTypeManager {
     if (state === undefined || state.inFlight <= ZERO) {
       return;
     }
-    state.inFlight -= ONE;
+
+    const queue = this.waitQueues.get(jobTypeId);
+    const nextWaiter = queue?.[ZERO];
+
+    if (nextWaiter !== undefined && state.inFlight <= state.allocatedSlots) {
+      // Transfer slot directly to next waiter (don't decrement inFlight)
+      queue?.shift();
+      this.log('Transferred slot to waiter', {
+        jobTypeId,
+        inFlight: state.inFlight,
+        queueLength: queue?.length,
+      });
+      nextWaiter.resolve();
+    } else {
+      // No waiter, just release the slot
+      state.inFlight -= ONE;
+      this.log('Released slot', {
+        jobTypeId,
+        inFlight: state.inFlight,
+        allocatedSlots: state.allocatedSlots,
+      });
+    }
+
     this.releasesSinceAdjustment += ONE;
-    this.log('Released slot', { jobTypeId, inFlight: state.inFlight, allocatedSlots: state.allocatedSlots });
     this.maybeAdjustOnRelease();
   }
 

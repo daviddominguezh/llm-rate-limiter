@@ -53,6 +53,7 @@ class RedisBackendImpl {
   private heartbeatInterval: NodeJS.Timeout | null = null;
   private cleanupInterval: NodeJS.Timeout | null = null;
   private subscriberActive = false;
+  private setupSubscriberPromise: Promise<void> | null = null;
   private readonly jobTypeOps: RedisJobTypeOps;
   private stopPromise: Promise<void> | null = null;
 
@@ -120,6 +121,15 @@ class RedisBackendImpl {
 
   private async setupSubscriber(): Promise<void> {
     if (this.subscriberActive) return;
+    if (this.setupSubscriberPromise !== null) {
+      await this.setupSubscriberPromise;
+      return;
+    }
+    this.setupSubscriberPromise = this.performSetupSubscriber();
+    await this.setupSubscriberPromise;
+  }
+
+  private async performSetupSubscriber(): Promise<void> {
     try {
       if (this.subscriber.status !== 'ready' && this.subscriber.status !== 'connect') {
         await once(this.subscriber, 'ready');

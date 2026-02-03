@@ -94,12 +94,12 @@ describe('Job Types Error Handling - Delayed Throw', () => {
 });
 
 describe('Job Types Error Handling - Double Release', () => {
-  it('should handle double release gracefully without negative inFlight', () => {
+  it('should handle double release gracefully without negative inFlight', async () => {
     const manager = createTestManager({ typeA: { ratio: ONE } }, TEN);
 
     try {
       // Acquire a slot
-      expect(manager.acquire('typeA')).toBe(true);
+      await manager.acquire('typeA');
       expect(manager.getState('typeA')?.inFlight).toBe(ONE);
 
       // Release once - should succeed
@@ -122,7 +122,7 @@ describe('Job Types Error Handling - Double Release', () => {
 });
 
 describe('Job Types Error Handling - Release Without Acquire', () => {
-  it('should handle release without prior acquire', () => {
+  it('should handle release without prior acquire', async () => {
     const manager = createTestManager({ typeA: { ratio: ONE } }, TEN);
 
     try {
@@ -140,7 +140,7 @@ describe('Job Types Error Handling - Release Without Acquire', () => {
       expect(manager.getState('typeA')?.inFlight).toBe(ZERO);
 
       // After all those releases, acquire should still work normally
-      expect(manager.acquire('typeA')).toBe(true);
+      await manager.acquire('typeA');
       expect(manager.getState('typeA')?.inFlight).toBe(ONE);
     } finally {
       manager.stop();

@@ -96,9 +96,8 @@ describe('Job Types Ratio Algorithm - Zero Slot Receivers', () => {
       // tinyType should have 0 slots initially
       expect(manager.getState('tinyType')?.allocatedSlots).toBe(ZERO);
 
-      // Make tinyType "want" more capacity by simulating it's being blocked
-      // Since it has 0 slots, any acquire would fail
-      expect(manager.acquire('tinyType')).toBe(false);
+      // Since it has 0 slots, hasCapacity should return false
+      expect(manager.hasCapacity('tinyType')).toBe(false);
 
       // Adjust ratios
       manager.adjustRatios();

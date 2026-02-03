@@ -37,8 +37,7 @@ describe('Job Types Capacity - Zero Capacity', () => {
       // With zero capacity, no slots should be allocated
       expect(manager.getState('typeA')?.allocatedSlots).toBe(ZERO);
 
-      // Acquire should fail
-      expect(manager.acquire('typeA')).toBe(false);
+      // hasCapacity should return false (acquire would wait indefinitely)
       expect(manager.hasCapacity('typeA')).toBe(false);
 
       // inFlight should stay at zero
@@ -90,13 +89,13 @@ describe('Job Types Capacity - Capacity Reduction Mid-Execution', () => {
   });
 });
 
-const acquireMultiple = (
+const acquireMultiple = async (
   manager: ReturnType<typeof createTestManager>,
   jobType: string,
   count: number
-): void => {
+): Promise<void> => {
   for (let i = ZERO; i < count; i += ONE) {
-    manager.acquire(jobType);
+    await manager.acquire(jobType);
   }
 };
 
@@ -111,12 +110,12 @@ const releaseMultiple = (
 };
 
 describe('Job Types Capacity - Capacity Reduction Below inFlight', () => {
-  it('should handle capacity reduction below current inFlight', () => {
+  it('should handle capacity reduction below current inFlight', async () => {
     const manager = createTestManager({ typeA: { ratio: ONE } }, TEN);
 
     try {
       // Acquire 5 slots
-      acquireMultiple(manager, 'typeA', FIVE);
+      await acquireMultiple(manager, 'typeA', FIVE);
       expect(manager.getState('typeA')?.inFlight).toBe(FIVE);
 
       // Reduce capacity to 2 (less than current inFlight)
@@ -130,7 +129,6 @@ describe('Job Types Capacity - Capacity Reduction Below inFlight', () => {
       expect(state?.allocatedSlots).toBeLessThanOrEqual(TWO);
 
       // No new acquires should succeed since inFlight > allocatedSlots
-      expect(manager.acquire('typeA')).toBe(false);
       expect(manager.hasCapacity('typeA')).toBe(false);
 
       // Release slots until we're below capacity
@@ -139,7 +137,8 @@ describe('Job Types Capacity - Capacity Reduction Below inFlight', () => {
 
       // Now we should be able to acquire again
       expect(manager.hasCapacity('typeA')).toBe(true);
-      expect(manager.acquire('typeA')).toBe(true);
+      await manager.acquire('typeA');
+      expect(manager.getState('typeA')?.inFlight).toBe(ONE);
     } finally {
       manager.stop();
     }
@@ -165,14 +164,14 @@ describe('Job Types Capacity - Very Small Ratios', () => {
       // Main type should get most slots
       expect(mainState?.allocatedSlots).toBe(TEN - ONE); // 9 slots
 
-      // Tiny type cannot acquire
-      expect(manager.acquire('tinyType')).toBe(false);
+      // Tiny type has no capacity
+      expect(manager.hasCapacity('tinyType')).toBe(false);
     } finally {
       manager.stop();
     }
   });
 
-  it('should allocate proportional slots with multiple types', () => {
+  it('should allocate proportional slots with multiple types', async () => {
     // With ratio 0.1 and 0.9 and capacity 100
     // 0.1 * 100 = 10, 0.9 * 100 = 90
     const manager = createTestManager(
@@ -186,7 +185,8 @@ describe('Job Types Capacity - Very Small Ratios', () => {
 
       expect(smallState?.allocatedSlots).toBe(TEN);
       expect(largeState?.allocatedSlots).toBe(HUNDRED - TEN); // 90 slots
-      expect(manager.acquire('smallType')).toBe(true);
+      await manager.acquire('smallType');
+      expect(manager.getState('smallType')?.inFlight).toBe(ONE);
     } finally {
       manager.stop();
     }
@@ -194,7 +194,7 @@ describe('Job Types Capacity - Very Small Ratios', () => {
 });
 
 describe('Job Types Capacity - All Types at Capacity', () => {
-  it('should handle all job types at capacity simultaneously', () => {
+  it('should handle all job types at capacity simultaneously', async () => {
     const manager = createTestManager({ typeA: { ratio: RATIO_HALF }, typeB: { ratio: RATIO_HALF } }, TEN);
     const checker = createInvariantChecker(manager);
 
@@ -208,11 +208,13 @@ describe('Job Types Capacity - All Types at Capacity', () => {
       let acquiredA = ZERO;
       let acquiredB = ZERO;
 
-      while (manager.acquire('typeA')) {
+      while (manager.hasCapacity('typeA')) {
+        await manager.acquire('typeA');
         acquiredA += ONE;
         checker.check();
       }
-      while (manager.acquire('typeB')) {
+      while (manager.hasCapacity('typeB')) {
+        await manager.acquire('typeB');
         acquiredB += ONE;
         checker.check();
       }
@@ -233,7 +235,7 @@ describe('Job Types Capacity - All Types at Capacity', () => {
 });
 
 describe('Job Types Capacity - Single Slot Contention', () => {
-  it('should handle single slot contention correctly', () => {
+  it('should handle single slot contention correctly', async () => {
     // Only one slot available for each type
     const manager = createTestManager({ typeA: { ratio: RATIO_HALF }, typeB: { ratio: RATIO_HALF } }, TWO);
     const checker = createInvariantChecker(manager);
@@ -244,17 +246,16 @@ describe('Job Types Capacity - Single Slot Contention', () => {
       expect(manager.getState('typeB')?.allocatedSlots).toBe(ONE);
 
       // Acquire typeA's slot
-      expect(manager.acquire('typeA')).toBe(true);
+      await manager.acquire('typeA');
       checker.check();
 
       // typeA should have no more capacity
       expect(manager.hasCapacity('typeA')).toBe(false);
-      expect(manager.acquire('typeA')).toBe(false);
       checker.check();
 
       // typeB should still have capacity
       expect(manager.hasCapacity('typeB')).toBe(true);
-      expect(manager.acquire('typeB')).toBe(true);
+      await manager.acquire('typeB');
       checker.check();
 
       // Now both are at capacity
@@ -333,7 +334,7 @@ describe('Job Types Capacity - Fractional Slot Allocation', () => {
 });
 
 describe('Job Types Capacity - Capacity Increase', () => {
-  it('should handle capacity increase correctly', () => {
+  it('should handle capacity increase correctly', async () => {
     const manager = createTestManager({ typeA: { ratio: ONE } }, FIVE);
 
     try {
@@ -341,7 +342,7 @@ describe('Job Types Capacity - Capacity Increase', () => {
       expect(manager.getState('typeA')?.allocatedSlots).toBe(FIVE);
 
       // Acquire all slots
-      acquireMultiple(manager, 'typeA', FIVE);
+      await acquireMultiple(manager, 'typeA', FIVE);
       expect(manager.hasCapacity('typeA')).toBe(false);
 
       // Increase capacity
@@ -352,7 +353,7 @@ describe('Job Types Capacity - Capacity Increase', () => {
 
       // And should be able to acquire more
       expect(manager.hasCapacity('typeA')).toBe(true);
-      acquireMultiple(manager, 'typeA', FIVE);
+      await acquireMultiple(manager, 'typeA', FIVE);
 
       // Now all 10 slots used
       expect(manager.getState('typeA')?.inFlight).toBe(TEN);

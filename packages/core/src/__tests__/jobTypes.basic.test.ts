@@ -134,34 +134,34 @@ describe('JobTypeManager - initialization', () => {
 });
 
 describe('JobTypeManager - acquire and release', () => {
-  it('should acquire and release slots', () => {
+  it('should acquire and release slots', async () => {
     const manager = createJobTypeManager({
       resourceEstimationsPerJob: { job1: { estimatedUsedTokens: HUNDRED } },
       label: 'test',
     });
     manager.setTotalCapacity(TEN);
     expect(manager.hasCapacity('job1')).toBe(true);
-    expect(manager.acquire('job1')).toBe(true);
+    await manager.acquire('job1');
     expect(manager.getState('job1')?.inFlight).toBe(ONE);
     manager.release('job1');
     expect(manager.getState('job1')?.inFlight).toBe(ZERO);
     manager.stop();
   });
 
-  it('should return undefined for unknown job type', () => {
+  it('should return undefined for unknown job type', async () => {
     const manager = createJobTypeManager({
       resourceEstimationsPerJob: { job1: { estimatedUsedTokens: HUNDRED } },
       label: 'test',
     });
     expect(manager.getState('unknown')).toBeUndefined();
     expect(manager.hasCapacity('unknown')).toBe(false);
-    expect(manager.acquire('unknown')).toBe(false);
+    await expect(manager.acquire('unknown')).rejects.toThrow('Unknown job type: unknown');
     manager.stop();
   });
 });
 
 describe('JobTypeManager - capacity limits', () => {
-  it('should respect allocated slots', () => {
+  it('should respect allocated slots', async () => {
     const manager = createJobTypeManager({
       resourceEstimationsPerJob: {
         job1: { estimatedUsedTokens: HUNDRED, ratio: { initialValue: RATIO_05 } },
@@ -172,8 +172,8 @@ describe('JobTypeManager - capacity limits', () => {
     manager.setTotalCapacity(TWO);
     expect(manager.getState('job1')?.allocatedSlots).toBe(ONE);
     expect(manager.getState('job2')?.allocatedSlots).toBe(ONE);
-    expect(manager.acquire('job1')).toBe(true);
-    expect(manager.acquire('job1')).toBe(false);
+    await manager.acquire('job1');
+    // After acquiring the only slot, hasCapacity should return false
     expect(manager.hasCapacity('job1')).toBe(false);
     expect(manager.hasCapacity('job2')).toBe(true);
     manager.stop();

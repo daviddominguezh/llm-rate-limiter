@@ -30,7 +30,6 @@ import {
 import {
   buildErrorCallbackContext,
   isDelegationError,
-  waitForJobTypeCapacity,
   waitForModelCapacity,
 } from './utils/jobExecutionHelpers.js';
 import { executeJobWithCallbacks } from './utils/jobExecutor.js';
@@ -185,8 +184,6 @@ class LLMRateLimiter implements LLMRateLimiterInstance {
       manager,
       resourcesConfig: cfg,
       jobType,
-      pollIntervalMs: DEFAULT_POLL_INTERVAL_MS,
-      waitForCapacity: waitForJobTypeCapacity,
     });
     const ctx: JobExecutionContext<T, Args> = {
       jobId: options.jobId,

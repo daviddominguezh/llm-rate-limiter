@@ -21,6 +21,7 @@ const ONE = 1;
 const FIVE = 5;
 const TEN = 10;
 const HUNDRED = 100;
+const DEFAULT_TIMEOUT = 30000;
 
 const SINGLE_TYPE_CONFIG = {
   typeA: { estimatedUsedTokens: HUNDRED, ratio: { initialValue: ONE } },
@@ -144,50 +145,54 @@ describe('Redis Distributed Failures - Multiple Stop Calls', () => {
 });
 
 describe('Redis Distributed Failures - Slot Release And Reacquire', () => {
-  it('should allow new instance to acquire slots released by first instance', async () => {
-    if (!state.redisAvailable) return;
+  it(
+    'should allow new instance to acquire slots released by first instance',
+    async () => {
+      if (!state.redisAvailable) return;
 
-    const backend1 = createTestBackend(state, createRedisBackend, {
-      capacity: SMALL_CAPACITY_TEN,
-      resourceEstimationsPerJob: SINGLE_TYPE_CONFIG,
-    });
-    const backend2 = createTestBackend(state, createRedisBackend, {
-      capacity: SMALL_CAPACITY_TEN,
-      resourceEstimationsPerJob: SINGLE_TYPE_CONFIG,
-    });
+      const backend1 = createTestBackend(state, createRedisBackend, {
+        capacity: SMALL_CAPACITY_TEN,
+        resourceEstimationsPerJob: SINGLE_TYPE_CONFIG,
+      });
+      const backend2 = createTestBackend(state, createRedisBackend, {
+        capacity: SMALL_CAPACITY_TEN,
+        resourceEstimationsPerJob: SINGLE_TYPE_CONFIG,
+      });
 
-    try {
-      // Instance 1 acquires all slots
-      await acquireSlots(backend1, 'inst1', 'typeA', TEN);
+      try {
+        // Instance 1 acquires all slots
+        await acquireSlots(backend1, 'inst1', 'typeA', TEN);
 
-      // Verify all slots used
-      const statsBefore = await backend1.getJobTypeStats();
-      expect(statsBefore?.jobTypes.typeA?.totalInFlight).toBe(TEN);
+        // Verify all slots used
+        const statsBefore = await backend1.getJobTypeStats();
+        expect(statsBefore?.jobTypes.typeA?.totalInFlight).toBe(TEN);
 
-      // Instance 2 cannot acquire (all slots taken)
-      expect(await backend2.acquireJobType('inst2', 'typeA')).toBe(false);
+        // Instance 2 cannot acquire (all slots taken)
+        expect(await backend2.acquireJobType('inst2', 'typeA')).toBe(false);
 
-      // Instance 1 releases some slots
-      await releaseSlots(backend1, 'inst1', 'typeA', FIVE);
+        // Instance 1 releases some slots
+        await releaseSlots(backend1, 'inst1', 'typeA', FIVE);
 
-      // Verify stats show 5 in-flight (remaining from inst1)
-      const statsAfterRelease = await backend1.getJobTypeStats();
-      expect(statsAfterRelease?.jobTypes.typeA?.totalInFlight).toBe(FIVE);
+        // Verify stats show 5 in-flight (remaining from inst1)
+        const statsAfterRelease = await backend1.getJobTypeStats();
+        expect(statsAfterRelease?.jobTypes.typeA?.totalInFlight).toBe(FIVE);
 
-      // Now instance 2 should be able to acquire the released slots
-      const acquired = await acquireSlots(backend2, 'inst2', 'typeA', TEN);
+        // Now instance 2 should be able to acquire the released slots
+        const acquired = await acquireSlots(backend2, 'inst2', 'typeA', TEN);
 
-      // Should acquire exactly 5 (the released ones)
-      expect(acquired).toBe(FIVE);
+        // Should acquire exactly 5 (the released ones)
+        expect(acquired).toBe(FIVE);
 
-      // Total should now be 10
-      const finalStats = await backend2.getJobTypeStats();
-      expect(finalStats?.jobTypes.typeA?.totalInFlight).toBe(TEN);
-    } finally {
-      await backend1.stop();
-      await backend2.stop();
-    }
-  });
+        // Total should now be 10
+        const finalStats = await backend2.getJobTypeStats();
+        expect(finalStats?.jobTypes.typeA?.totalInFlight).toBe(TEN);
+      } finally {
+        await backend1.stop();
+        await backend2.stop();
+      }
+    },
+    DEFAULT_TIMEOUT
+  );
 });
 
 describe('Redis Distributed Failures - Concurrent Operations During Disconnect', () => {

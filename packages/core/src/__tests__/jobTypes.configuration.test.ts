@@ -55,14 +55,14 @@ describe('Job Types Configuration - Ratio Boundaries', () => {
       // Normal type should get most capacity
       expect(normalState?.allocatedSlots).toBe(TEN - ONE); // 9 slots
 
-      // Tiny ratio type cannot acquire
-      expect(manager.acquire('tinyRatio')).toBe(false);
+      // Tiny ratio type cannot acquire (has no capacity)
+      expect(manager.hasCapacity('tinyRatio')).toBe(false);
     } finally {
       manager.stop();
     }
   });
 
-  it('should handle ratio exactly 1.0 (100% allocation)', () => {
+  it('should handle ratio exactly 1.0 (100% allocation)', async () => {
     const manager = createTestManager({ singleType: { ratio: ONE } }, TEN);
 
     try {
@@ -74,9 +74,10 @@ describe('Job Types Configuration - Ratio Boundaries', () => {
 
       // Should be able to acquire all slots
       for (let i = ZERO; i < TEN; i++) {
-        expect(manager.acquire('singleType')).toBe(true);
+        await manager.acquire('singleType');
       }
-      expect(manager.acquire('singleType')).toBe(false); // No more capacity
+      // No more capacity after acquiring all slots
+      expect(manager.hasCapacity('singleType')).toBe(false);
     } finally {
       manager.stop();
     }
@@ -84,7 +85,7 @@ describe('Job Types Configuration - Ratio Boundaries', () => {
 });
 
 describe('Job Types Configuration - Large Capacity', () => {
-  it('should handle extremely high capacity without overflow', () => {
+  it('should handle extremely high capacity without overflow', async () => {
     const manager = createTestManager({ typeA: { ratio: ONE } }, MILLION);
 
     try {
@@ -93,7 +94,7 @@ describe('Job Types Configuration - Large Capacity', () => {
 
       // Should be able to acquire many slots
       for (let i = ZERO; i < HUNDRED; i++) {
-        expect(manager.acquire('typeA')).toBe(true);
+        await manager.acquire('typeA');
       }
       expect(manager.getState('typeA')?.inFlight).toBe(HUNDRED);
     } finally {

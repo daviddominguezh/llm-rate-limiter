@@ -90,8 +90,7 @@ const createJobsForAllTypes = (
   return promises;
 };
 
-// TODO: Investigate why this test hangs - may be a race condition with concurrent job type acquisition
-describe.skip('Job Types - 5 Types Load', () => {
+describe('Job Types - 5 Types Load', () => {
   it(
     'should handle 5 job types under load',
     async () => {

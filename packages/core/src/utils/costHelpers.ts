@@ -1,6 +1,7 @@
 /**
  * Cost calculation helpers for the LLM Rate Limiter.
  */
+import type { ResourcesPerJob } from '../jobTypeTypes.js';
 import type {
   Availability,
   DistributedAvailability,
@@ -40,11 +41,12 @@ export const addUsageWithCost = (
 
 /** Calculate job adjustment for availability tracking */
 export const calculateJobAdjustment = (
-  models: Record<string, ModelRateLimitConfig>,
-  modelId: string,
+  resourcesPerJob: ResourcesPerJob | undefined,
+  jobType: string | undefined,
   result: InternalJobResult
 ): RelativeAvailabilityAdjustment | null => {
-  const resources = models[modelId]?.resourcesPerEvent;
+  const resources =
+    resourcesPerJob !== undefined && jobType !== undefined ? resourcesPerJob[jobType] : undefined;
   const tokenDiff = result.usage.input + result.usage.output - (resources?.estimatedUsedTokens ?? ZERO);
   const requestDiff = result.requestCount - (resources?.estimatedNumberOfRequests ?? ZERO);
   if (tokenDiff === ZERO && requestDiff === ZERO) {

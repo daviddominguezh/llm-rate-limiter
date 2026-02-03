@@ -1,6 +1,8 @@
 /**
  * Helper operations for the rate limiter.
  */
+import type { BackendFactoryInstance, DistributedBackendFactory } from '../backendFactoryTypes.js';
+import { isDistributedBackendFactory } from '../backendFactoryTypes.js';
 import type { JobTypeStats, RatioAdjustmentConfig, ResourcesPerJob } from '../jobTypeTypes.js';
 import type {
   AllocationInfo,
@@ -89,7 +91,7 @@ export const getJobTypeKeysFromConfig = (
 /** Build backend context params. */
 export interface BuildBackendContextParams {
   backend: BackendConfig | DistributedBackendConfig | undefined;
-  models: ModelsConfig;
+  resourcesPerJob: ResourcesPerJob | undefined;
   instanceId: string;
   modelId: string;
   jobId: string;
@@ -99,7 +101,7 @@ export interface BuildBackendContextParams {
 /** Build backend operation context. */
 export const buildBackendContext = (params: BuildBackendContextParams): BackendOperationContext => ({
   backend: params.backend,
-  models: params.models,
+  resourcesPerJob: params.resourcesPerJob,
   instanceId: params.instanceId,
   modelId: params.modelId,
   jobId: params.jobId,
@@ -145,6 +147,42 @@ export const unregisterFromBackend = (
       /* ignore */
     });
   }
+};
+
+/** Result of initializing a backend factory. */
+export interface FactoryInitResult {
+  factoryInstance: BackendFactoryInstance | null;
+  resolvedBackend: BackendConfig | DistributedBackendConfig | undefined;
+}
+
+/**
+ * Initialize backend factory if provided, or return the backend directly.
+ */
+export const initializeBackendFactory = async (
+  backendOrFactory: BackendConfig | DistributedBackendConfig | DistributedBackendFactory | undefined,
+  models: ModelsConfig,
+  resourcesPerJob: ResourcesPerJob | undefined,
+  order: readonly string[] | undefined
+): Promise<FactoryInitResult> => {
+  if (!isDistributedBackendFactory(backendOrFactory)) {
+    return { factoryInstance: null, resolvedBackend: backendOrFactory };
+  }
+
+  const factoryInstance = await backendOrFactory.initialize({ models, resourcesPerJob, order });
+  const resolvedBackend = factoryInstance.getBackendConfig();
+  return { factoryInstance, resolvedBackend };
+};
+
+/**
+ * Stop factory instance if present.
+ */
+export const stopBackendFactory = (factoryInstance: BackendFactoryInstance | null): null => {
+  if (factoryInstance !== null) {
+    factoryInstance.stop().catch(() => {
+      // Ignore stop errors
+    });
+  }
+  return null;
 };
 
 /**

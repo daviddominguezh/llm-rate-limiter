@@ -156,14 +156,13 @@ export interface InternalLimiterConfigBase {
 // =============================================================================
 
 /**
- * Validated configuration type that enforces resourcesPerEvent requirements at compile time.
- *
- * - If any limit (memory, RPM, RPD, TPM, TPD) is set, resourcesPerEvent is required
- * - The specific fields in resourcesPerEvent depend on which limits are configured
+ * Validated configuration type for the internal rate limiter.
+ * Resource estimates (requests, tokens) are now at the job type level (resourcesPerJob),
+ * so resourcesPerEvent is only required for memory limits at the internal limiter level.
  */
 export type InternalValidatedConfig<T extends InternalLimiterConfigBase> = T &
-  (HasAnyResourceLimit<T> extends true
-    ? { resourcesPerEvent: InferResourcesPerEvent<T> }
+  (T extends { memory: MemoryLimitConfig }
+    ? { resourcesPerEvent: MemoryResources & Partial<RequestResources> & Partial<TokenResources> }
     : { resourcesPerEvent?: BaseResourcesPerEvent });
 
 /**

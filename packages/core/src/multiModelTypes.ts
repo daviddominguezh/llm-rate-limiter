@@ -9,14 +9,9 @@
  *    - Order array can only contain model IDs that have limits defined
  *    - Order is optional for single model, required for multiple models
  */
+import type { DistributedBackendFactory } from './backendFactoryTypes.js';
 import type { JobTypeStats, RatioAdjustmentConfig, ResourcesPerJob } from './jobTypeTypes.js';
-import type {
-  BaseResourcesPerEvent,
-  InternalJobResult,
-  InternalLimiterStats,
-  LogFn,
-  MemoryLimitConfig,
-} from './types.js';
+import type { InternalJobResult, InternalLimiterStats, LogFn, MemoryLimitConfig } from './types.js';
 
 // =============================================================================
 // Model Configuration Types
@@ -49,8 +44,6 @@ export interface ModelRateLimitConfig {
   tokensPerDay?: number;
   /** Maximum concurrent requests for this model (optional) */
   maxConcurrentRequests?: number;
-  /** Estimated resources per event for this model */
-  resourcesPerEvent?: BaseResourcesPerEvent;
   /** Pricing for cost calculation (USD per million tokens) */
   pricing: ModelPricing;
 }
@@ -111,18 +104,28 @@ export interface LLMRateLimiterConfigBase<
   onLog?: LogFn;
   /** Callback triggered when available slots change */
   onAvailableSlotsChange?: OnAvailableSlotsChange;
-  /** Backend for distributed rate limiting (V1 simple or V2 fair distribution) */
-  backend?: BackendConfig | DistributedBackendConfig;
+  /**
+   * Backend for distributed rate limiting.
+   * - V1 BackendConfig: Simple acquire/release callbacks
+   * - V2 DistributedBackendConfig: Fair distribution with registration
+   * - V2 DistributedBackendFactory: Factory that receives rate limiter config (no duplication)
+   */
+  backend?: BackendConfig | DistributedBackendConfig | DistributedBackendFactory;
   /**
    * Job type configurations with per-type resource estimates and capacity ratios.
    * When specified, enables job type-based capacity allocation.
    * Each job type can have different resource estimates (tokens, requests, memory).
    * Ratios determine how total capacity is divided among job types.
+   * @alias estimates
    */
   resourcesPerJob?: J;
   /**
+   * Alias for resourcesPerJob - job type configurations with resource estimates.
+   */
+  estimates?: J;
+  /**
    * Configuration for dynamic ratio adjustment algorithm.
-   * Only applies when resourcesPerJob is defined.
+   * Only applies when resourcesPerJob/estimates is defined.
    */
   ratioAdjustmentConfig?: RatioAdjustmentConfig;
 }
@@ -134,18 +137,18 @@ export interface LLMRateLimiterConfigBase<
 /**
  * Validated configuration that enforces order requirements at compile time.
  *
- * - If only one model is defined, `order` is optional
- * - If multiple models are defined, `order` is REQUIRED
- * - The `order` array can only contain model IDs that are defined in `models`
- * - If `resourcesPerJob` is defined, `jobType` in queueJob becomes type-safe
+ * - If only one model is defined, `order`/`escalationOrder` is optional
+ * - If multiple models are defined, `order` or `escalationOrder` is REQUIRED
+ * - The order array can only contain model IDs that are defined in `models`
+ * - If `resourcesPerJob`/`estimates` is defined, `jobType` in queueJob becomes type-safe
  */
 export type ValidatedLLMRateLimiterConfig<
   T extends ModelsConfig,
   J extends ResourcesPerJob = ResourcesPerJob,
 > = LLMRateLimiterConfigBase<T, J> &
   (HasMultipleModels<T> extends true
-    ? { order: ReadonlyArray<ModelIds<T>> }
-    : { order?: ReadonlyArray<ModelIds<T>> });
+    ? { order: ReadonlyArray<ModelIds<T>> } | { escalationOrder: ReadonlyArray<ModelIds<T>> }
+    : { order?: ReadonlyArray<ModelIds<T>>; escalationOrder?: ReadonlyArray<ModelIds<T>> });
 
 /**
  * Loose configuration type for internal use.
@@ -153,17 +156,22 @@ export type ValidatedLLMRateLimiterConfig<
  */
 export interface LLMRateLimiterConfig {
   models: ModelsConfig;
+  /** Model priority order (first model is preferred) */
   order?: readonly string[];
+  /** Alias for order - model escalation priority */
+  escalationOrder?: readonly string[];
   memory?: MemoryLimitConfig;
   minCapacity?: number;
   maxCapacity?: number;
   label?: string;
   onLog?: LogFn;
   onAvailableSlotsChange?: OnAvailableSlotsChange;
-  /** Backend for distributed rate limiting (V1 simple or V2 fair distribution) */
-  backend?: BackendConfig | DistributedBackendConfig;
+  /** Backend for distributed rate limiting (V1, V2, or factory) */
+  backend?: BackendConfig | DistributedBackendConfig | DistributedBackendFactory;
   /** Job type configurations with per-type resource estimates and capacity ratios */
   resourcesPerJob?: ResourcesPerJob;
+  /** Alias for resourcesPerJob */
+  estimates?: ResourcesPerJob;
   /** Configuration for dynamic ratio adjustment algorithm */
   ratioAdjustmentConfig?: RatioAdjustmentConfig;
 }
@@ -493,6 +501,14 @@ export interface DistributedBackendConfig {
    */
   subscribe: (instanceId: string, callback: AllocationCallback) => Unsubscribe;
 }
+
+// Re-export backend factory types from dedicated module
+export type {
+  BackendFactoryInitConfig,
+  BackendFactoryInstance,
+  DistributedBackendFactory,
+} from './backendFactoryTypes.js';
+export { isDistributedBackendFactory } from './backendFactoryTypes.js';
 
 /** Availability from distributed backend (memory and concurrency are local-only) */
 export interface DistributedAvailability {

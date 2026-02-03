@@ -1,11 +1,11 @@
 /**
  * Backend helper functions for the LLM Rate Limiter.
  */
+import type { ResourcesPerJob } from '../jobTypeTypes.js';
 import type {
   BackendConfig,
   BackendEstimatedResources,
   DistributedBackendConfig,
-  ModelRateLimitConfig,
 } from '../multiModelTypes.js';
 
 const ZERO = 0;
@@ -15,12 +15,15 @@ export const isV2Backend = (
   backend: BackendConfig | DistributedBackendConfig
 ): backend is DistributedBackendConfig => 'register' in backend && typeof backend.register === 'function';
 
-/** Get estimated resources for backend from model config */
+/** Get estimated resources for backend from resourcesPerJob config */
 export const getEstimatedResourcesForBackend = (
-  models: Record<string, ModelRateLimitConfig>,
-  modelId: string
+  resourcesPerJob: ResourcesPerJob | undefined,
+  jobType: string | undefined
 ): BackendEstimatedResources => {
-  const resources = models[modelId]?.resourcesPerEvent;
+  if (resourcesPerJob === undefined || jobType === undefined) {
+    return { requests: ZERO, tokens: ZERO };
+  }
+  const resources = resourcesPerJob[jobType];
   return {
     requests: resources?.estimatedNumberOfRequests ?? ZERO,
     tokens: resources?.estimatedUsedTokens ?? ZERO,
@@ -30,7 +33,7 @@ export const getEstimatedResourcesForBackend = (
 /** Backend operation context */
 export interface BackendOperationContext {
   backend: BackendConfig | DistributedBackendConfig | undefined;
-  models: Record<string, ModelRateLimitConfig>;
+  resourcesPerJob: ResourcesPerJob | undefined;
   instanceId: string;
   modelId: string;
   jobId: string;
@@ -40,7 +43,7 @@ export interface BackendOperationContext {
 
 /** Acquire backend slot */
 export const acquireBackend = async (ctx: BackendOperationContext): Promise<boolean> => {
-  const { backend, models, instanceId, modelId, jobId, jobType } = ctx;
+  const { backend, resourcesPerJob, instanceId, modelId, jobId, jobType } = ctx;
   if (backend === undefined) {
     return true;
   }
@@ -48,7 +51,7 @@ export const acquireBackend = async (ctx: BackendOperationContext): Promise<bool
     modelId,
     jobId,
     jobType,
-    estimated: getEstimatedResourcesForBackend(models, modelId),
+    estimated: getEstimatedResourcesForBackend(resourcesPerJob, jobType),
   };
   if (isV2Backend(backend)) {
     return await backend.acquire({ ...baseContext, instanceId });
@@ -61,7 +64,7 @@ export const releaseBackend = (
   ctx: BackendOperationContext,
   actual: { requests: number; tokens: number }
 ): void => {
-  const { backend, models, instanceId, modelId, jobId, jobType } = ctx;
+  const { backend, resourcesPerJob, instanceId, modelId, jobId, jobType } = ctx;
   if (backend === undefined) {
     return;
   }
@@ -69,7 +72,7 @@ export const releaseBackend = (
     modelId,
     jobId,
     jobType,
-    estimated: getEstimatedResourcesForBackend(models, modelId),
+    estimated: getEstimatedResourcesForBackend(resourcesPerJob, jobType),
     actual,
   };
   if (isV2Backend(backend)) {

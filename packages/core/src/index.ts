@@ -55,4 +55,9 @@ export type {
   AllocationCallback,
   Unsubscribe,
   DistributedAvailability,
+  // Backend factory types (V2 - clean API)
+  DistributedBackendFactory,
+  BackendFactoryInitConfig,
+  BackendFactoryInstance,
 } from './multiModelTypes.js';
+export { isDistributedBackendFactory } from './multiModelTypes.js';

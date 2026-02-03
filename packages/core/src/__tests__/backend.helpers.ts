@@ -15,17 +15,11 @@ export const HALF = 0.5;
 
 export const createDefaultConfig = (): ModelRateLimitConfig => ({
   requestsPerMinute: TEN,
-  resourcesPerEvent: { estimatedNumberOfRequests: ONE, estimatedUsedTokens: HUNDRED },
   pricing: { input: ZERO, cached: ZERO, output: ZERO },
 });
 
 export const createConfigWithMemory = (): ModelRateLimitConfig => ({
   requestsPerMinute: TEN,
-  resourcesPerEvent: {
-    estimatedNumberOfRequests: ONE,
-    estimatedUsedTokens: HUNDRED,
-    estimatedUsedMemoryKB: ONE,
-  },
   pricing: { input: ZERO, cached: ZERO, output: ZERO },
 });
 
@@ -92,14 +86,12 @@ export const createSimpleJob =
 /** Creates a model config with only requests per minute */
 export const createRequestOnlyConfig = (requests: number): ModelRateLimitConfig => ({
   requestsPerMinute: requests,
-  resourcesPerEvent: { estimatedNumberOfRequests: ONE },
   pricing: { input: ZERO, cached: ZERO, output: ZERO },
 });
 
 /** Creates a model config with only tokens per minute */
-export const createTokenOnlyConfig = (tokens: number, estimatedTokens: number): ModelRateLimitConfig => ({
+export const createTokenOnlyConfig = (tokens: number, _estimatedTokens: number): ModelRateLimitConfig => ({
   tokensPerMinute: tokens,
-  resourcesPerEvent: { estimatedUsedTokens: estimatedTokens },
   pricing: { input: ZERO, cached: ZERO, output: ZERO },
 });
 

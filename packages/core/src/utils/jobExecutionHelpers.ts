@@ -1,14 +1,7 @@
 /**
  * Helper utilities for job execution in the multi-model rate limiter.
  */
-import type {
-  ArgsWithoutModelId,
-  JobArgs,
-  JobCallbackContext,
-  JobUsage,
-  ModelRateLimitConfig,
-  ModelsConfig,
-} from '../multiModelTypes.js';
+import type { ArgsWithoutModelId, JobArgs, JobCallbackContext, JobUsage } from '../multiModelTypes.js';
 
 const ZERO = 0;
 
@@ -63,14 +56,14 @@ export const buildErrorCallbackContext = (jobId: string, usage: JobUsage): JobCa
   usage,
 });
 
-/** Calculate the maximum estimated value across all models for a given resource property */
-export const calculateMaxEstimatedResource = (
-  models: ModelsConfig,
-  getter: (config: ModelRateLimitConfig) => number | undefined
+/** Calculate the maximum estimated value across all items for a given resource property */
+export const calculateMaxEstimatedResource = <T>(
+  items: Record<string, T>,
+  getter: (item: T) => number | undefined
 ): number => {
   let max = ZERO;
-  for (const modelConfig of Object.values(models)) {
-    const estimated = getter(modelConfig) ?? ZERO;
+  for (const item of Object.values(items)) {
+    const estimated = getter(item) ?? ZERO;
     max = Math.max(max, estimated);
   }
   return max;

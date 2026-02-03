@@ -273,7 +273,7 @@ class RedisBackendImpl {
   }
 }
 
-/** Create a Redis distributed backend instance. */
+/** Create a Redis distributed backend instance (legacy API with explicit config). */
 export const createRedisBackend = (config: RedisBackendConfig): RedisBackendInstance => {
   const impl = new RedisBackendImpl(config);
   return {

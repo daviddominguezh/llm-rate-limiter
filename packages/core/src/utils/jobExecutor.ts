@@ -33,7 +33,7 @@ export interface ModelJobContext<T extends InternalJobResult, Args extends ArgsW
   limiter: InternalLimiterInstance;
   addUsageWithCost: (ctx: { usage: JobUsage }, modelId: string, usage: UsageEntry) => void;
   emitAvailabilityChange: () => void;
-  emitJobAdjustment: (modelId: string, result: InternalJobResult) => void;
+  emitJobAdjustment: (jobType: string | undefined, result: InternalJobResult) => void;
   releaseResources: (result: InternalJobResult) => void;
 }
 
@@ -137,7 +137,7 @@ export const executeJobWithCallbacks = async <T extends InternalJobResult, Args 
     return jobResult;
   });
 
-  emitJobAdjustment(modelId, result);
+  emitJobAdjustment(ctx.jobType, result);
   releaseResources(result);
   return buildFinalResult(result, modelId, ctx);
 };

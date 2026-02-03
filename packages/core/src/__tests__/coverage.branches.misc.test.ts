@@ -9,20 +9,14 @@ import { HUNDRED, ONE, RATIO_HALF, TEN, THOUSAND, ZERO } from './coverage.branch
 
 describe('rateLimiter - daily counter refunds', () => {
   it('should refund to daily counters', async () => {
-    const limiter1 = createInternalLimiter({
-      requestsPerDay: HUNDRED,
-      resourcesPerEvent: { estimatedNumberOfRequests: TEN },
-    });
+    const limiter1 = createInternalLimiter({ requestsPerDay: HUNDRED });
     await limiter1.queueJob(() => ({
       requestCount: ONE,
       usage: { input: ZERO, output: ZERO, cached: ZERO },
     }));
     expect(limiter1.getStats().requestsPerDay?.current).toBe(ONE);
     limiter1.stop();
-    const limiter2 = createInternalLimiter({
-      tokensPerDay: THOUSAND,
-      resourcesPerEvent: { estimatedUsedTokens: HUNDRED },
-    });
+    const limiter2 = createInternalLimiter({ tokensPerDay: THOUSAND });
     await limiter2.queueJob(() => ({ requestCount: ONE, usage: { input: TEN, output: TEN, cached: ZERO } }));
     expect(limiter2.getStats().tokensPerDay?.current).toBe(TEN + TEN);
     limiter2.stop();
@@ -40,13 +34,7 @@ describe('rateLimiter - default freeMemoryRatio', () => {
 describe('multiModelRateLimiter - V1 backend start', () => {
   it('should be no-op when calling start with no backend', async () => {
     const limiter = createLLMRateLimiter({
-      models: {
-        default: {
-          requestsPerMinute: TEN,
-          resourcesPerEvent: { estimatedNumberOfRequests: ONE },
-          pricing: { input: ZERO, cached: ZERO, output: ZERO },
-        },
-      },
+      models: { default: { requestsPerMinute: TEN, pricing: { input: ZERO, cached: ZERO, output: ZERO } } },
     });
     await limiter.start();
     expect(limiter.getInstanceId()).toBeDefined();
@@ -55,13 +43,7 @@ describe('multiModelRateLimiter - V1 backend start', () => {
 
   it('should be no-op when calling start with V1 backend', async () => {
     const limiter = createLLMRateLimiter({
-      models: {
-        default: {
-          requestsPerMinute: TEN,
-          resourcesPerEvent: { estimatedNumberOfRequests: ONE },
-          pricing: { input: ZERO, cached: ZERO, output: ZERO },
-        },
-      },
+      models: { default: { requestsPerMinute: TEN, pricing: { input: ZERO, cached: ZERO, output: ZERO } } },
       backend: {
         acquire: async () => await Promise.resolve(true),
         release: async () => {
@@ -88,12 +70,7 @@ describe('memoryManager - configuration branches', () => {
   it('should use default freeMemoryRatio when not specified', () => {
     const manager = createMemoryManager({
       config: {
-        models: {
-          default: {
-            pricing: { input: ONE, output: ONE, cached: ONE },
-            resourcesPerEvent: { estimatedUsedMemoryKB: TEN },
-          },
-        },
+        models: { default: { pricing: { input: ONE, output: ONE, cached: ONE } } },
         memory: {},
       },
       label: 'test',
@@ -104,14 +81,11 @@ describe('memoryManager - configuration branches', () => {
     manager?.stop();
   });
 
-  it('should handle model without estimatedUsedMemoryKB', () => {
+  it('should handle models without memory estimation', () => {
     const manager = createMemoryManager({
       config: {
         models: {
-          withMemory: {
-            pricing: { input: ONE, output: ONE, cached: ONE },
-            resourcesPerEvent: { estimatedUsedMemoryKB: TEN },
-          },
+          withMemory: { pricing: { input: ONE, output: ONE, cached: ONE } },
           withoutMemory: { pricing: { input: ONE, output: ONE, cached: ONE } },
         },
         memory: {},

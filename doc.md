@@ -389,4 +389,50 @@ Finally, this must co-exist with the current implementation, so the current test
 
 ---
 
+Now, let's please create an e2e tests.
+These tests are supposed to verify the optimal functionality of the whole library during a stress situation for the rate-limiter using a real Redis back-end.
+
+Remember: this test must be as real as possible.
+
+We must create different instances of the rate-limiter with the exact same config (as if it were a distributed system). This config should have several models defined, and several job types with different resource estimations, ratios, and configurations for flexible property.
+
+Create 5 instances. The config for all the instances must be:
+1. Job types:
+  - Summary: 10000 tokens per job, 1 req per job, ratio 0.3, flexible=true
+  - VacationPlanning: 2000 tokens per job, 3 reqs per job, ratio 0.4, flexible=false
+  - ImageCreation: 5000 tokens per job, 1 req per job, no ratio defined, flexible=true 
+  - BudgetCalculation: 3000 tokens per job, 5 reqs per job, no ratio defined, flexible=true
+  - WeatherForecast: 1000 tokens per job, 1 req per job, no ratio defined, flexible=true
+2. Models:
+  - ModelA: req/min: 500, tokens/min: 1000000
+  - ModelB: req/min: 500, tokens/min: 1000000
+  - ModelC: req/min: 100, tokens/min: 500000
+3. Jobs: must have a random duration between 5 and 30 seconds. Create 15000 jobs.
+4. Traffic burst: we must queue the jobs in a random way through time, with spikes, constant rates and also valleys, simulating real traffic. You MUST NOT take into account the capacity of the rate-limiter to queue jobs, we should just queue them, one after another.
+
+The last 3 job types should have an initial ratio of 0.1 each because we did not define a ratio for them, but the first 2 jobs use 0.7, so there are 0.3 available for the 3, and the current logic SHOULD automatically distribute the remaining availabiliy (0.3) between the number of job types without ratio defined (3), meaning 0.1 for each. Also test this, please.
+
+You must generate the random data/jobs before the test, and save them in a json file that will work as a "configuration file". We want to do it like this in order to have an e2e test that is always the same, so we can precalculate what the results should be.
+
+These are the things you must test:
+1. Maximum capacity is never exceeded.
+2. The flexible ratios are adjusted dynamically, BUT the not flexible ratios are always kept.
+3. When one model reaches its limit, it automatically scalates to the next one, and so on.
+4. When all models are at maximum capacity, the rate-limiter starts rejecting.
+5. After the rate-limiter was at full capacity, when the clock marks a new minute, it should immediatly resolve if we queue the previously rejected jobs again, because there should be capacity, since it is a new minute.
+6. When the one instance acquires slots, all the other instances availability decrease.
+7. When the dynamic ratios change, they change for all instances.
+
+Please, plan how to implement these e2e tests. Use this Redis: 'REDIS_URL="rediss://default:blabla@precise-25046.upstash.io:6379"'
+
+The first thing you have to do, is to generate the job data file.
+
+After that, create a function to process the job data and, given the configuration I mentioned, predict when and what results we should see (rejections, scalation to next model, change in ratios, change in availability, etc.).
+
+Test this function separately (using npx). Then, inside the e2e test files, call this function to get the expected output of the tests, and then, compare the actual behavior of the rate-limiter vs your calculated predictions (from the function).
+
+You must generate the data and the script to calculate the results BEFORE writing the tests. Then, you write the tests and compare the real behavior vs the predicted one.
+
+---
+
 

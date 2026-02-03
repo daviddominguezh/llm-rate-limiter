@@ -29,10 +29,9 @@ const STRESS_TEST_TIMEOUT = 30_000;
 
 type InstanceArray = Array<{ limiter: LLMRateLimiterInstance; unsubscribe: () => void }>;
 
-const createModelConfig = (estimatedTokens: number, estimatedRequests: number): ModelRateLimitConfig => ({
+const createModelConfig = (_estimatedTokens: number, _estimatedRequests: number): ModelRateLimitConfig => ({
   requestsPerMinute: THOUSAND,
   tokensPerMinute: THOUSAND * TEN,
-  resourcesPerEvent: { estimatedNumberOfRequests: estimatedRequests, estimatedUsedTokens: estimatedTokens },
   pricing: { input: ZERO, cached: ZERO, output: ZERO },
 });
 

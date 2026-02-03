@@ -2,8 +2,11 @@
  * Constants for the Redis distributed backend.
  */
 
-/** Default key prefix for all Redis keys */
+/** Default key prefix for all Redis keys (legacy API) */
 export const DEFAULT_KEY_PREFIX = 'llm-rl:';
+
+/** Default key prefix for all Redis keys (new factory API) */
+export const DEFAULT_FACTORY_KEY_PREFIX = 'llm-rate-limiter:';
 
 /** Key suffixes for Redis data structures */
 export const KEY_SUFFIX_INSTANCES = 'instances';

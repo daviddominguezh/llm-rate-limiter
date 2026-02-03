@@ -30,13 +30,7 @@ describe('multiModelRateLimiter - non-Error string throw', () => {
 
   it('should convert string thrown value to Error object', async () => {
     limiter = createLLMRateLimiter({
-      models: {
-        default: {
-          requestsPerMinute: TEN,
-          resourcesPerEvent: { estimatedNumberOfRequests: ONE },
-          pricing: ZERO_PRICING,
-        },
-      },
+      models: { default: { requestsPerMinute: TEN, pricing: ZERO_PRICING } },
     });
     const errors: Error[] = [];
     const jobPromise = limiter.queueJob({
@@ -64,13 +58,7 @@ describe('multiModelRateLimiter - non-Error number throw', () => {
 
   it('should convert number thrown value to Error object', async () => {
     limiter = createLLMRateLimiter({
-      models: {
-        default: {
-          requestsPerMinute: TEN,
-          resourcesPerEvent: { estimatedNumberOfRequests: ONE },
-          pricing: ZERO_PRICING,
-        },
-      },
+      models: { default: { requestsPerMinute: TEN, pricing: ZERO_PRICING } },
     });
     const THROWN_NUMBER = 42;
     const jobPromise = limiter.queueJob({
@@ -94,11 +82,7 @@ describe('rateLimiter - TPM exhausted branch', () => {
   });
 
   it('should wait for TPM reset when TPM exhausted but RPM has capacity', async () => {
-    const limiter = createInternalLimiter({
-      requestsPerMinute: HUNDRED,
-      tokensPerMinute: TEN,
-      resourcesPerEvent: { estimatedNumberOfRequests: ONE, estimatedUsedTokens: TEN },
-    });
+    const limiter = createInternalLimiter({ requestsPerMinute: HUNDRED, tokensPerMinute: TEN });
     await limiter.queueJob(() => ({ requestCount: ONE, usage: { input: TEN, output: ZERO, cached: ZERO } }));
     expect(limiter.hasCapacity()).toBe(false);
     expect(limiter.getStats().requestsPerMinute?.remaining).toBeGreaterThan(ZERO);
@@ -115,11 +99,7 @@ describe('rateLimiter - TPM exhausted branch', () => {
 
 describe('rateLimiter - TPD exhausted branch', () => {
   it('should detect TPD exhausted state', async () => {
-    const limiter = createInternalLimiter({
-      requestsPerDay: HUNDRED,
-      tokensPerDay: TEN,
-      resourcesPerEvent: { estimatedNumberOfRequests: ONE, estimatedUsedTokens: TEN },
-    });
+    const limiter = createInternalLimiter({ requestsPerDay: HUNDRED, tokensPerDay: TEN });
     await limiter.queueJob(() => ({ requestCount: ONE, usage: { input: TEN, output: ZERO, cached: ZERO } }));
     expect(limiter.hasCapacity()).toBe(false);
     expect(limiter.getStats().requestsPerDay?.remaining).toBeGreaterThan(ZERO);
@@ -128,18 +108,24 @@ describe('rateLimiter - TPD exhausted branch', () => {
 });
 
 describe('backendHelpers - getEstimatedResourcesForBackend edge cases', () => {
-  it('should return zeros when model has no resourcesPerEvent', () => {
-    const models = { default: { pricing: ZERO_PRICING } };
-    const result = getEstimatedResourcesForBackend(models, 'default');
+  it('should return zeros when resourcesPerJob is undefined', () => {
+    const result = getEstimatedResourcesForBackend(undefined, 'default');
     expect(result.requests).toBe(ZERO);
     expect(result.tokens).toBe(ZERO);
   });
 
-  it('should return zeros when model does not exist', () => {
-    const models = { default: { pricing: ZERO_PRICING } };
-    const result = getEstimatedResourcesForBackend(models, 'nonexistent');
+  it('should return zeros when jobType is undefined', () => {
+    const resourcesPerJob = { default: { estimatedNumberOfRequests: ONE, estimatedUsedTokens: TEN } };
+    const result = getEstimatedResourcesForBackend(resourcesPerJob, undefined);
     expect(result.requests).toBe(ZERO);
     expect(result.tokens).toBe(ZERO);
+  });
+
+  it('should return values when both resourcesPerJob and jobType are defined', () => {
+    const resourcesPerJob = { default: { estimatedNumberOfRequests: ONE, estimatedUsedTokens: TEN } };
+    const result = getEstimatedResourcesForBackend(resourcesPerJob, 'default');
+    expect(result.requests).toBe(ONE);
+    expect(result.tokens).toBe(TEN);
   });
 });
 
@@ -153,10 +139,15 @@ describe('backendHelpers - releaseBackend V1 call', () => {
         await Promise.resolve();
       },
     };
-    const models = {
-      default: { resourcesPerEvent: { estimatedNumberOfRequests: ONE }, pricing: ZERO_PRICING },
+    const resourcesPerJob = { default: { estimatedNumberOfRequests: ONE } };
+    const ctx = {
+      backend: v1Backend,
+      resourcesPerJob,
+      instanceId: 'test',
+      modelId: 'default',
+      jobId: 'job',
+      jobType: 'default',
     };
-    const ctx = { backend: v1Backend, models, instanceId: 'test', modelId: 'default', jobId: 'job' };
     releaseBackend(ctx, { requests: ONE, tokens: TEN });
     await setTimeoutAsync(SHORT_DELAY);
     expect(releaseCalls).toHaveLength(ONE);
@@ -171,10 +162,15 @@ describe('backendHelpers - releaseBackend V1 error', () => {
         await Promise.reject(new Error('release error'));
       },
     };
-    const models = {
-      default: { resourcesPerEvent: { estimatedNumberOfRequests: ONE }, pricing: ZERO_PRICING },
+    const resourcesPerJob = { default: { estimatedNumberOfRequests: ONE } };
+    const ctx = {
+      backend: v1Backend,
+      resourcesPerJob,
+      instanceId: 'test',
+      modelId: 'default',
+      jobId: 'job',
+      jobType: 'default',
     };
-    const ctx = { backend: v1Backend, models, instanceId: 'test', modelId: 'default', jobId: 'job' };
     expect(() => {
       releaseBackend(ctx, { requests: ONE, tokens: TEN });
     }).not.toThrow();
@@ -185,13 +181,8 @@ describe('backendHelpers - releaseBackend V1 error', () => {
 describe('memoryManager - resetSharedMemoryState exists', () => {
   it('should reset shared state when it exists', () => {
     const limiter = createLLMRateLimiter({
-      models: {
-        default: {
-          requestsPerMinute: TEN,
-          resourcesPerEvent: { estimatedNumberOfRequests: ONE, estimatedUsedMemoryKB: ONE },
-          pricing: ZERO_PRICING,
-        },
-      },
+      models: { default: { requestsPerMinute: TEN, pricing: ZERO_PRICING } },
+      resourcesPerJob: { default: { estimatedUsedMemoryKB: ONE } },
       memory: { freeMemoryRatio: RATIO_HALF },
     });
     resetSharedMemoryState();
@@ -212,13 +203,8 @@ describe('memoryManager - releaseSharedState null check', () => {
   it('should handle stop when sharedState already null', () => {
     resetSharedMemoryState();
     const limiter = createLLMRateLimiter({
-      models: {
-        default: {
-          requestsPerMinute: TEN,
-          resourcesPerEvent: { estimatedNumberOfRequests: ONE, estimatedUsedMemoryKB: ONE },
-          pricing: ZERO_PRICING,
-        },
-      },
+      models: { default: { requestsPerMinute: TEN, pricing: ZERO_PRICING } },
+      resourcesPerJob: { default: { estimatedUsedMemoryKB: ONE } },
       memory: { freeMemoryRatio: RATIO_HALF },
     });
     resetSharedMemoryState();

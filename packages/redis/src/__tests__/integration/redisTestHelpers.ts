@@ -15,10 +15,9 @@ const TEN = 10;
 const THOUSAND = 1000;
 
 /** Default model config for tests */
-export const createModelConfig = (estimatedTokens: number = TEN): ModelRateLimitConfig => ({
+export const createModelConfig = (_estimatedTokens: number = TEN): ModelRateLimitConfig => ({
   requestsPerMinute: THOUSAND,
   tokensPerMinute: THOUSAND * TEN,
-  resourcesPerEvent: { estimatedNumberOfRequests: ONE, estimatedUsedTokens: estimatedTokens },
   pricing: { input: ZERO, cached: ZERO, output: ZERO },
 });
 

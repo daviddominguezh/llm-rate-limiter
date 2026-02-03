@@ -1,4 +1,5 @@
 /** Helper functions for LLM Rate Limiter. */
+import type { ResourcesPerJob } from '../jobTypeTypes.js';
 import type { LLMRateLimiterConfig, ModelsConfig } from '../multiModelTypes.js';
 import type { InternalLimiterConfig } from '../types.js';
 
@@ -13,21 +14,31 @@ const validateOrderArray = (order: readonly string[], models: ModelsConfig): voi
   }
 };
 
+/** Get order from config (supports both 'order' and 'escalationOrder' aliases) */
+const getOrderFromConfig = (config: LLMRateLimiterConfig): readonly string[] | undefined =>
+  config.order ?? config.escalationOrder;
+
 export const validateMultiModelConfig = (config: LLMRateLimiterConfig): void => {
   const modelIds = Object.keys(config.models);
   if (modelIds.length === ZERO) {
     throw new Error('At least one model must be configured in models');
   }
-  if (config.order !== undefined) {
-    validateOrderArray(config.order, config.models);
+  const order = getOrderFromConfig(config);
+  if (order !== undefined) {
+    validateOrderArray(order, config.models);
   }
-  if (modelIds.length > ONE && config.order === undefined) {
-    throw new Error('order is required when multiple models are configured');
+  if (modelIds.length > ONE && order === undefined) {
+    throw new Error('order (or escalationOrder) is required when multiple models are configured');
   }
 };
 
+/** Get effective order (supports both 'order' and 'escalationOrder' aliases) */
 export const getEffectiveOrder = (config: LLMRateLimiterConfig): readonly string[] =>
-  config.order ?? Object.keys(config.models);
+  getOrderFromConfig(config) ?? Object.keys(config.models);
+
+/** Get resourcesPerJob (supports both 'resourcesPerJob' and 'estimates' aliases) */
+export const getEffectiveResourcesPerJob = (config: LLMRateLimiterConfig): ResourcesPerJob | undefined =>
+  config.resourcesPerJob ?? config.estimates;
 
 export const buildModelLimiterConfig = (
   modelId: string,
@@ -40,7 +51,6 @@ export const buildModelLimiterConfig = (
   tokensPerMinute: modelConfig.tokensPerMinute,
   tokensPerDay: modelConfig.tokensPerDay,
   maxConcurrentRequests: modelConfig.maxConcurrentRequests,
-  resourcesPerEvent: modelConfig.resourcesPerEvent,
   label: `${parentLabel}/${modelId}`,
   onLog,
 });

@@ -91,10 +91,9 @@ export const createTestTracker = (): TestTracker => {
   return tracker;
 };
 
-export const createModelConfig = (estimatedTokens: number): ModelRateLimitConfig => ({
+export const createModelConfig = (_estimatedTokens: number): ModelRateLimitConfig => ({
   requestsPerMinute: HUNDRED,
   tokensPerMinute: HUNDRED * TEN,
-  resourcesPerEvent: { estimatedNumberOfRequests: ONE, estimatedUsedTokens: estimatedTokens },
   pricing: { input: ZERO, cached: ZERO, output: ZERO },
 });
 

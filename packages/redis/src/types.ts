@@ -1,8 +1,63 @@
 /**
  * Type definitions for the Redis distributed backend.
  */
-import type { DistributedBackendConfig, ResourcesPerJob } from '@llm-rate-limiter/core';
+import type { DistributedBackendConfig, ModelRateLimitConfig, ResourcesPerJob } from '@llm-rate-limiter/core';
 import type { Redis, RedisOptions } from 'ioredis';
+
+// =============================================================================
+// Factory Types (New Clean API)
+// =============================================================================
+
+/**
+ * User-facing configuration for createRedisBackend.
+ * Minimal config - no duplication with rate limiter config.
+ */
+export interface RedisBackendUserConfig {
+  /** Redis connection URL (e.g., 'redis://localhost:6379' or 'rediss://...') */
+  url: string;
+  /** Key prefix for Redis keys (default: 'llm-rate-limiter:') */
+  keyPrefix?: string;
+  /** Heartbeat interval in ms (default: 5000) */
+  heartbeatIntervalMs?: number;
+  /** Instance timeout in ms (default: 15000) - instances not seen for this long are cleaned up */
+  instanceTimeoutMs?: number;
+}
+
+/**
+ * Configuration passed from rate limiter to Redis backend during initialization.
+ * Contains all model and job type configuration.
+ */
+export interface RedisBackendInitConfig {
+  /** Map of model ID to its rate limit configuration */
+  models: Record<string, ModelRateLimitConfig>;
+  /** Job type configurations with per-type resource estimates and capacity ratios */
+  resourcesPerJob?: ResourcesPerJob;
+  /** Model priority order */
+  order?: readonly string[];
+}
+
+/**
+ * Factory returned by createRedisBackend (new clean API).
+ * Rate limiter calls initialize() with its config to create the actual backend.
+ */
+export interface RedisBackendFactory {
+  /**
+   * Initialize the Redis backend with rate limiter configuration.
+   * Called automatically by the rate limiter during start().
+   */
+  initialize: (config: RedisBackendInitConfig) => Promise<RedisBackendInstance>;
+
+  /**
+   * Check if backend has been initialized.
+   */
+  isInitialized: () => boolean;
+
+  /**
+   * Get the initialized backend instance.
+   * Throws if not yet initialized.
+   */
+  getInstance: () => RedisBackendInstance;
+}
 
 /**
  * Redis connection options when not providing an existing client.
@@ -139,6 +194,26 @@ export interface RedisJobTypeStats {
  * Checks for presence of 'get' method which exists on Redis but not on connection options.
  */
 export const isRedisClient = (redis: Redis | RedisConnectionOptions): redis is Redis => 'get' in redis;
+
+/**
+ * Type guard for checking if a backend config is a RedisBackendFactory.
+ * Checks for presence of 'initialize' method which only exists on factory.
+ */
+/** Helper type for type guard */
+interface HasInitialize {
+  initialize: unknown;
+}
+
+export const isRedisBackendFactory = (backend: unknown): backend is RedisBackendFactory => {
+  if (backend === null || typeof backend !== 'object') {
+    return false;
+  }
+  if (!('initialize' in backend)) {
+    return false;
+  }
+  const { initialize } = backend as HasInitialize;
+  return typeof initialize === 'function';
+};
 
 /** Default keepalive interval for Redis connections (30 seconds) */
 const DEFAULT_KEEPALIVE_MS = 30000;

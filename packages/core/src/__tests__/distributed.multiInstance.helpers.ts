@@ -17,12 +17,11 @@ export const MS_PER_MINUTE_PLUS_ONE = 60_001;
 export type InstanceArray = Array<{ limiter: LLMRateLimiterInstance; unsubscribe: () => void }>;
 
 export const createModelConfig = (
-  estimatedTokens: number,
-  estimatedRequests: number
+  _estimatedTokens: number,
+  _estimatedRequests: number
 ): ModelRateLimitConfig => ({
   requestsPerMinute: HUNDRED,
   tokensPerMinute: HUNDRED * TEN,
-  resourcesPerEvent: { estimatedNumberOfRequests: estimatedRequests, estimatedUsedTokens: estimatedTokens },
   pricing: { input: ZERO, cached: ZERO, output: ZERO },
 });
 

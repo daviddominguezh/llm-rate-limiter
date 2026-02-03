@@ -130,21 +130,9 @@ const getBlockingLimitPart = (limiter: LimiterType): Partial<ModelRateLimitConfi
 
 // Helper to build model config for given limiters with high limits (non-blocking)
 const buildModelConfig = (limiters: LimiterType[]): ModelRateLimitConfig => {
-  const hasMemory = limiters.includes('memory');
-  const hasRequest = limiters.includes('rpm') || limiters.includes('rpd');
-  const hasToken = limiters.includes('tpm') || limiters.includes('tpd');
-
   const limiterParts = limiters.map((l) => getHighLimitPart(l));
   const merged = limiterParts.reduce<Partial<ModelRateLimitConfig>>((acc, part) => ({ ...acc, ...part }), {});
-
-  const resources = {
-    ...(hasMemory ? { estimatedUsedMemoryKB: ESTIMATED_MEMORY_KB } : {}),
-    ...(hasRequest ? { estimatedNumberOfRequests: DEFAULT_REQUEST_COUNT } : {}),
-    ...(hasToken ? { estimatedUsedTokens: MOCK_TOTAL_TOKENS } : {}),
-  };
-
-  const base: ModelRateLimitConfig = { ...merged, pricing: ZERO_PRICING };
-  return hasMemory || hasRequest || hasToken ? { ...base, resourcesPerEvent: resources } : base;
+  return { ...merged, pricing: ZERO_PRICING };
 };
 
 // Helper to build config for given limiters with high limits (non-blocking)

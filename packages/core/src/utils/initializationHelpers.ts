@@ -1,6 +1,7 @@
 /**
  * Initialization helpers for the LLM Rate Limiter.
  */
+import type { ResourcesPerJob } from '../jobTypeTypes.js';
 import type { LLMRateLimiterConfig, LLMRateLimiterStats, ModelRateLimitConfig } from '../multiModelTypes.js';
 import { createInternalLimiter } from '../rateLimiter.js';
 import type {
@@ -11,7 +12,7 @@ import type {
 } from '../types.js';
 import { AvailabilityTracker } from './availabilityTracker.js';
 import { calculateMaxEstimatedResource } from './jobExecutionHelpers.js';
-import { buildModelLimiterConfig } from './multiModelHelpers.js';
+import { buildModelLimiterConfig, getEffectiveResourcesPerJob } from './multiModelHelpers.js';
 
 /** Estimated resources configuration */
 export interface EstimatedResources {
@@ -20,20 +21,22 @@ export interface EstimatedResources {
   estimatedNumberOfRequests: number;
 }
 
-/** Calculate all estimated resources from models config */
+/** Calculate all estimated resources from resourcesPerJob config */
 export const calculateEstimatedResources = (
-  models: Record<string, ModelRateLimitConfig>
-): EstimatedResources => ({
-  estimatedUsedMemoryKB: calculateMaxEstimatedResource(
-    models,
-    (m) => m.resourcesPerEvent?.estimatedUsedMemoryKB
-  ),
-  estimatedUsedTokens: calculateMaxEstimatedResource(models, (m) => m.resourcesPerEvent?.estimatedUsedTokens),
-  estimatedNumberOfRequests: calculateMaxEstimatedResource(
-    models,
-    (m) => m.resourcesPerEvent?.estimatedNumberOfRequests
-  ),
-});
+  resourcesPerJob: ResourcesPerJob | undefined
+): EstimatedResources => {
+  if (resourcesPerJob === undefined) {
+    return { estimatedUsedMemoryKB: 0, estimatedUsedTokens: 0, estimatedNumberOfRequests: 0 };
+  }
+  return {
+    estimatedUsedMemoryKB: calculateMaxEstimatedResource(resourcesPerJob, (j) => j.estimatedUsedMemoryKB),
+    estimatedUsedTokens: calculateMaxEstimatedResource(resourcesPerJob, (j) => j.estimatedUsedTokens),
+    estimatedNumberOfRequests: calculateMaxEstimatedResource(
+      resourcesPerJob,
+      (j) => j.estimatedNumberOfRequests
+    ),
+  };
+};
 
 /** Create availability tracker if callback is configured */
 export const createAvailabilityTracker = (

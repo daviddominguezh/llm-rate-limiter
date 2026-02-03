@@ -46,10 +46,9 @@ export interface JobConfig {
   getDelay: () => number;
 }
 
-export const createModelConfig = (estimatedTokens: number): ModelRateLimitConfig => ({
+export const createModelConfig = (_estimatedTokens: number): ModelRateLimitConfig => ({
   requestsPerMinute: TEN_THOUSAND,
   tokensPerMinute: TEN_THOUSAND * TEN,
-  resourcesPerEvent: { estimatedNumberOfRequests: ONE, estimatedUsedTokens: estimatedTokens },
   pricing: { input: ZERO, cached: ZERO, output: ZERO },
 });
 

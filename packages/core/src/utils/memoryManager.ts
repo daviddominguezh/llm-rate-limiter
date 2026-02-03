@@ -51,17 +51,14 @@ const calculateCapacity = (
   minCapacity: number | undefined,
   maxCapacity: number | undefined
 ): number => {
-  const calculated = Math.floor(getAvailableMemoryKB() * freeMemoryRatio);
+  const availableKB = getAvailableMemoryKB();
+  const calculated = Math.floor(availableKB * freeMemoryRatio);
   let clamped = Math.max(minCapacity ?? DEFAULT_MIN_CAPACITY, calculated);
   if (maxCapacity !== undefined) {
     clamped = Math.min(clamped, maxCapacity);
   }
   return clamped;
 };
-
-/** Get estimated memory for a specific model */
-const getEstimatedMemory = (config: LLMRateLimiterConfig, modelId: string): number =>
-  config.models[modelId]?.resourcesPerEvent?.estimatedUsedMemoryKB ?? ZERO;
 
 /** Initialize or get the shared memory state */
 const getOrCreateSharedState = (
@@ -127,21 +124,20 @@ const releaseSharedState = (callback?: (reason: AvailabilityChangeReason) => voi
 
 /** Create hasCapacity function */
 const createHasCapacity =
-  (state: SharedMemoryState, config: LLMRateLimiterConfig): MemoryManagerInstance['hasCapacity'] =>
-  (modelId) =>
-    state.semaphore.getAvailablePermits() >= getEstimatedMemory(config, modelId);
+  (state: SharedMemoryState, estimatedMemoryKB: number): MemoryManagerInstance['hasCapacity'] =>
+  (_modelId) =>
+    state.semaphore.getAvailablePermits() >= estimatedMemoryKB;
 
 /** Create acquire function */
 const createAcquire =
   (
     state: SharedMemoryState,
-    config: LLMRateLimiterConfig,
+    estimatedMemoryKB: number,
     onAvailabilityChange?: (reason: AvailabilityChangeReason) => void
   ): MemoryManagerInstance['acquire'] =>
-  async (modelId) => {
-    const mem = getEstimatedMemory(config, modelId);
-    if (mem > ZERO) {
-      await state.semaphore.acquire(mem);
+  async (_modelId) => {
+    if (estimatedMemoryKB > ZERO) {
+      await state.semaphore.acquire(estimatedMemoryKB);
       onAvailabilityChange?.(MEMORY_REASON);
     }
   };
@@ -150,13 +146,12 @@ const createAcquire =
 const createRelease =
   (
     state: SharedMemoryState,
-    config: LLMRateLimiterConfig,
+    estimatedMemoryKB: number,
     onAvailabilityChange?: (reason: AvailabilityChangeReason) => void
   ): MemoryManagerInstance['release'] =>
-  (modelId) => {
-    const mem = getEstimatedMemory(config, modelId);
-    if (mem > ZERO) {
-      state.semaphore.release(mem);
+  (_modelId) => {
+    if (estimatedMemoryKB > ZERO) {
+      state.semaphore.release(estimatedMemoryKB);
       onAvailabilityChange?.(MEMORY_REASON);
     }
   };
@@ -182,7 +177,7 @@ export const createMemoryManager = (managerConfig: MemoryManagerConfig): MemoryM
   }
   if (estimatedUsedMemoryKB === ZERO) {
     throw new Error(
-      'resourcesPerEvent.estimatedUsedMemoryKB is required in at least one model when memory limits are configured'
+      'resourcesPerJob.estimatedUsedMemoryKB is required in at least one job type when memory limits are configured'
     );
   }
 
@@ -194,9 +189,9 @@ export const createMemoryManager = (managerConfig: MemoryManagerConfig): MemoryM
   }
 
   return {
-    hasCapacity: createHasCapacity(state, config),
-    acquire: createAcquire(state, config, onAvailabilityChange),
-    release: createRelease(state, config, onAvailabilityChange),
+    hasCapacity: createHasCapacity(state, estimatedUsedMemoryKB),
+    acquire: createAcquire(state, estimatedUsedMemoryKB, onAvailabilityChange),
+    release: createRelease(state, estimatedUsedMemoryKB, onAvailabilityChange),
     getStats: createGetStats(state),
     stop: (): void => {
       releaseSharedState(onAvailabilityChange);

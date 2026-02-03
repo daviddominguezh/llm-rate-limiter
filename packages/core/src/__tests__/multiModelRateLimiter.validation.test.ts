@@ -1,6 +1,6 @@
 import { createLLMRateLimiter } from '../multiModelRateLimiter.js';
 import type { LLMRateLimiterConfig } from '../multiModelTypes.js';
-import { DEFAULT_PRICING, ONE, RPM_LIMIT_HIGH } from './multiModelRateLimiter.helpers.js';
+import { DEFAULT_PRICING, RPM_LIMIT_HIGH } from './multiModelRateLimiter.helpers.js';
 
 describe('MultiModelRateLimiter - validation empty models', () => {
   it('should throw error for empty models', () => {
@@ -17,7 +17,6 @@ describe('MultiModelRateLimiter - validation undefined model in order', () => {
       models: {
         'gpt-4': {
           requestsPerMinute: RPM_LIMIT_HIGH,
-          resourcesPerEvent: { estimatedNumberOfRequests: ONE },
           pricing: DEFAULT_PRICING,
         },
       },
@@ -35,18 +34,16 @@ describe('MultiModelRateLimiter - validation missing order', () => {
       models: {
         'gpt-4': {
           requestsPerMinute: RPM_LIMIT_HIGH,
-          resourcesPerEvent: { estimatedNumberOfRequests: ONE },
           pricing: DEFAULT_PRICING,
         },
         'gpt-3.5': {
           requestsPerMinute: RPM_LIMIT_HIGH,
-          resourcesPerEvent: { estimatedNumberOfRequests: ONE },
           pricing: DEFAULT_PRICING,
         },
       },
     };
     expect(() => createLLMRateLimiter(invalidConfig)).toThrow(
-      'order is required when multiple models are configured'
+      'order (or escalationOrder) is required when multiple models are configured'
     );
   });
 });

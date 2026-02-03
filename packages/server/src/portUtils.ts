@@ -1,8 +1,5 @@
-/**
- * Utility functions for port availability checking.
- */
-import { createServer, type Server } from 'node:net';
 import { once } from 'node:events';
+import { type Server, createServer } from 'node:net';
 
 const attemptListen = async (server: Server, port: number): Promise<boolean> => {
   try {
@@ -16,22 +13,11 @@ const attemptListen = async (server: Server, port: number): Promise<boolean> => 
   }
 };
 
-/**
- * Check if a port is available.
- * @param port - The port number to check
- * @returns Promise resolving to true if port is available, false otherwise
- */
 export const isPortAvailable = async (port: number): Promise<boolean> => {
   const server = createServer();
   return await attemptListen(server, port);
 };
 
-/**
- * Find an available port from the given list.
- * @param ports - Array of ports to try in order
- * @returns Promise resolving to the first available port
- * @throws Error if no ports are available
- */
 export const findAvailablePort = async (ports: number[]): Promise<number> => {
   const results = await Promise.all(
     ports.map(async (port) => ({

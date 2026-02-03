@@ -1,7 +1,7 @@
-/**
- * Validation utilities for request bodies.
- */
-import type { QueueJobRequestBody } from './types.js';
+import type { ZodError } from 'zod';
+
+import { FIRST_INDEX } from './constants.js';
+import { type QueueJobRequestBody, queueJobRequestSchema } from './schemas.js';
 
 interface ValidationResult {
   valid: true;
@@ -15,59 +15,27 @@ interface ValidationError {
 
 type ValidateQueueJobResult = ValidationResult | ValidationError;
 
-const isRecord = (value: unknown): value is Record<string, unknown> =>
-  typeof value === 'object' && value !== null;
-
-const getString = (obj: Record<string, unknown>, key: string): string | undefined => {
-  const { [key]: value } = obj;
-  return typeof value === 'string' ? value : undefined;
+const formatZodError = (error: ZodError): string => {
+  const { issues } = error;
+  const [firstIssue] = issues;
+  if (firstIssue === undefined) return 'Validation failed';
+  const { path, message } = firstIssue;
+  const field = path.join('.');
+  return field.length > FIRST_INDEX ? `${field}: ${message}` : message;
 };
 
-const isObjectValue = (value: unknown): value is Record<string, unknown> =>
-  typeof value === 'object' && value !== null;
-
-const getObject = (obj: Record<string, unknown>, key: string): Record<string, unknown> | undefined => {
-  const { [key]: value } = obj;
-  return isObjectValue(value) ? value : undefined;
-};
-
-/**
- * Validate the queue-job request body.
- */
 export const validateQueueJobRequest = (body: unknown): ValidateQueueJobResult => {
-  if (!isRecord(body)) {
-    return {
-      valid: false,
-      error: 'Request body must be an object',
-    };
-  }
+  const result = queueJobRequestSchema.safeParse(body);
 
-  const jobId = getString(body, 'jobId');
-  if (jobId === undefined) {
+  if (!result.success) {
     return {
       valid: false,
-      error: 'jobId must be a string',
-    };
-  }
-
-  const jobType = getString(body, 'jobType');
-  if (jobType === undefined) {
-    return {
-      valid: false,
-      error: 'jobType must be a string',
-    };
-  }
-
-  const payload = getObject(body, 'payload');
-  if (payload === undefined) {
-    return {
-      valid: false,
-      error: 'payload must be an object',
+      error: formatZodError(result.error),
     };
   }
 
   return {
     valid: true,
-    data: { jobId, jobType, payload },
+    data: result.data,
   };
 };

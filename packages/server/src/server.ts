@@ -1,14 +1,21 @@
-/**
- * Express server setup.
- */
-import type { Express } from 'express';
+import type { Server } from 'node:http';
+import { promisify } from 'node:util';
 
-import { DEFAULT_FALLBACK_PORT, DEFAULT_PRIMARY_PORT, DEFAULT_REDIS_URL } from './constants.js';
+import express, { type Express } from 'express';
+
+import { env } from './env.js';
 import { logger } from './logger.js';
 import { findAvailablePort } from './portUtils.js';
 import { type ServerRateLimiter, createRateLimiterInstance } from './rateLimiterSetup.js';
 import { createRoutes } from './routes.js';
 import type { ServerConfig } from './types.js';
+
+interface CloseServerParams {
+  server: Server;
+  rateLimiter: ServerRateLimiter;
+}
+
+type ServerCloseCallback = (err?: Error) => void;
 
 interface ServerInstance {
   app: Express;
@@ -17,14 +24,11 @@ interface ServerInstance {
   close: () => Promise<void>;
 }
 
-/**
- * Create and start the Express server.
- */
 export const createServer = async (config: ServerConfig = {}): Promise<ServerInstance> => {
   const {
-    primaryPort = DEFAULT_PRIMARY_PORT,
-    fallbackPort = DEFAULT_FALLBACK_PORT,
-    redisUrl = DEFAULT_REDIS_URL,
+    primaryPort = env.port,
+    fallbackPort = env.fallbackPort,
+    redisUrl = env.redisUrl,
   } = config;
 
   const port = await findAvailablePort([primaryPort, fallbackPort]);

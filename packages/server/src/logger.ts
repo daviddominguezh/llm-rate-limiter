@@ -1,15 +1,9 @@
-/**
- * Winston logger configuration for the server.
- */
 import { existsSync, mkdirSync } from 'node:fs';
-
 import winston from 'winston';
 
 import { EMPTY_LENGTH, LOG_DIR, LOG_FILE_COMBINED, LOG_FILE_ERROR } from './constants.js';
 
-if (!existsSync(LOG_DIR)) {
-  mkdirSync(LOG_DIR, { recursive: true });
-}
+if (!existsSync(LOG_DIR)) mkdirSync(LOG_DIR, { recursive: true });
 
 const { format } = winston;
 const { combine, timestamp, printf, colorize } = format;

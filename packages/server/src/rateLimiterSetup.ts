@@ -1,6 +1,3 @@
-/**
- * Rate limiter setup and configuration.
- */
 import { type LLMRateLimiterInstance, createLLMRateLimiter } from '@llm-rate-limiter/core';
 import { createRedisBackend } from '@llm-rate-limiter/redis';
 
@@ -38,9 +35,6 @@ const resourceEstimationsPerJob = {
   },
 };
 
-/**
- * Create and configure the rate limiter with Redis backend.
- */
 export const createRateLimiterInstance = (redisUrl: string): LLMRateLimiterInstance<'default'> => {
   const limiter = createLLMRateLimiter({
     models,
@@ -52,7 +46,4 @@ export const createRateLimiterInstance = (redisUrl: string): LLMRateLimiterInsta
   return limiter;
 };
 
-/**
- * Type for the rate limiter instance used by the server.
- */
 export type ServerRateLimiter = LLMRateLimiterInstance<'default'>;

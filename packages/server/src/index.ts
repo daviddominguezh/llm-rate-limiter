@@ -1,3 +1,5 @@
+import 'dotenv/config';
+
 import { EXIT_FAILURE, EXIT_SUCCESS } from './constants.js';
 import { logger } from './logger.js';
 import { createServer } from './server.js';

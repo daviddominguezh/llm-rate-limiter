@@ -1,7 +1,3 @@
-/**
- * Constants for the server package.
- */
-
 export const DEFAULT_PRIMARY_PORT = 3000;
 export const DEFAULT_FALLBACK_PORT = 3001;
 export const DEFAULT_REDIS_URL = 'redis://localhost:6379';
@@ -34,6 +30,8 @@ export const EXIT_FAILURE = 1;
 export const ZERO_CACHED_TOKENS = 0;
 
 export const EMPTY_LENGTH = 0;
+export const MIN_STRING_LENGTH = 1;
+export const FIRST_INDEX = 0;
 
 export const LOG_DIR = 'logs';
 export const LOG_FILE_COMBINED = 'logs/combined.log';

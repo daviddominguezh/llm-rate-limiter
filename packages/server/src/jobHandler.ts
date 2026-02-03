@@ -1,6 +1,3 @@
-/**
- * Job processing handler.
- */
 import type { JobResult } from '@llm-rate-limiter/core';
 
 import {
@@ -36,9 +33,6 @@ interface JobErrorParams {
   totalCost: number;
 }
 
-/**
- * Process a job and return the result.
- */
 export const processJob = (params: ProcessJobParams): JobResult<JobData> => {
   const { jobId, jobType, payload, modelId } = params;
 
@@ -53,17 +47,11 @@ export const processJob = (params: ProcessJobParams): JobResult<JobData> => {
   };
 };
 
-/**
- * Handle job completion.
- */
 export const handleJobComplete = (params: JobCompletionParams): void => {
   const { jobId, modelUsed, totalCost } = params;
   logger.info(`Job ${jobId} completed`, { modelUsed, totalCost });
 };
 
-/**
- * Handle job error.
- */
 export const handleJobError = (params: JobErrorParams): void => {
   const { jobId, error, totalCost } = params;
   logger.error(`Job ${jobId} failed`, { error: error.message, totalCost });

@@ -1,28 +1,30 @@
 {
-  "name": "llm-rate-limiter-monorepo",
-  "version": "1.0.0",
+  "name": "llm-rate-limiter",
+  "version": "0.0.1",
   "private": true,
   "description": "LLM Rate Limiter monorepo",
   "type": "module",
   "workspaces": [
-    "packages/*"
+    "packages/*",
+    "packages/e2e/*"
   ],
   "scripts": {
+    "typecheck": "tsc -b",
+    "lint": "npx eslint . --ext .ts",
+    "format": "npx prettier --write \"**/*.{js,ts,json}\"",
+    "check": "npm run format && npm run lint && npm run typecheck",
     "build": "npm run build --workspaces",
     "build:core": "npm run build -w @llm-rate-limiter/core",
     "build:redis": "npm run build -w @llm-rate-limiter/redis",
-    "check": "npm run format && npm run lint && npm run typecheck",
-    "format": "npx prettier --write \"**/*.{js,ts,json}\"",
-    "lint": "npx eslint . --ext .ts",
-    "lint:fix": "npx eslint . --ext .ts --fix",
-    "typecheck": "tsc -b",
     "test": "npm run test --workspaces --if-present",
     "test:core": "npm run test -w @llm-rate-limiter/core",
     "test:redis": "npm run test -w @llm-rate-limiter/redis",
     "test:redis-e2e": "npm run test:e2e -w @llm-rate-limiter/redis",
-    "build:server": "npm run build -w @llm-rate-limiter/server",
-    "start:server": "npm run start -w @llm-rate-limiter/server",
-    "dev:server": "npm run dev -w @llm-rate-limiter/server"
+    "e2e:proxy": "npm run dev -w @llm-rate-limiter/e2e-server",
+    "e2e:instance1": "PORT=3001 npm run dev -w @llm-rate-limiter/e2e-server-instance",
+    "e2e:instance2": "PORT=3002 npm run dev -w @llm-rate-limiter/e2e-server-instance",
+    "e2e:setup": "npm run e2e:instance1 & npm run e2e:instance2 & npm run e2e:proxy",
+    "e2e:test": "npm run dev -w @llm-rate-limiter/e2e-test-runner"
   },
   "devDependencies": {
     "@eslint/js": "^9.28.0",

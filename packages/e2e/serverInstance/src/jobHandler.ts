@@ -33,10 +33,20 @@ interface JobErrorParams {
   totalCost: number;
 }
 
-export const processJob = (params: ProcessJobParams): JobResult<JobData> => {
+/** Sleep for a given number of milliseconds */
+const sleep = (ms: number): Promise<void> => new Promise((resolve) => setTimeout(resolve, ms));
+
+export const processJob = async (params: ProcessJobParams): Promise<JobResult<JobData>> => {
   const { jobId, jobType, payload, modelId } = params;
 
   logger.info(`Processing job ${jobId}`, { modelId, jobType, payload });
+
+  // If durationMs is specified in payload, simulate processing time
+  const durationMs = typeof payload.durationMs === 'number' ? payload.durationMs : 0;
+  if (durationMs > 0) {
+    logger.info(`Job ${jobId} simulating ${durationMs}ms processing time`);
+    await sleep(durationMs);
+  }
 
   return {
     inputTokens: MOCK_INPUT_TOKENS,

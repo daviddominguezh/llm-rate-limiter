@@ -1,0 +1,6454 @@
+{
+  "metadata": {
+    "startTime": 1770141739597,
+    "endTime": 1770141739939,
+    "durationMs": 342,
+    "instances": {
+      "http://localhost:3001": "inst-1770141739591-66ufxgbcc",
+      "http://localhost:3002": "inst-1770141739595-orm0010sr"
+    }
+  },
+  "jobs": {
+    "capacity-plus-one-test-1770141739576-0": {
+      "jobId": "capacity-plus-one-test-1770141739576-0",
+      "jobType": "summary",
+      "sentAt": 1770141739700,
+      "instanceId": "inst-1770141739595-orm0010sr",
+      "events": [
+        {
+          "type": "queued",
+          "timestamp": 1770141739701
+        },
+        {
+          "type": "started",
+          "timestamp": 1770141739701,
+          "modelId": "openai/gpt-5.2"
+        },
+        {
+          "type": "completed",
+          "timestamp": 1770141739701,
+          "cost": 0.000875
+        }
+      ],
+      "status": "completed",
+      "modelUsed": "openai/gpt-5.2",
+      "totalCost": 0.000875,
+      "queueDurationMs": 0,
+      "processingDurationMs": 0,
+      "totalDurationMs": 0
+    },
+    "capacity-plus-one-test-1770141739576-1": {
+      "jobId": "capacity-plus-one-test-1770141739576-1",
+      "jobType": "summary",
+      "sentAt": 1770141739701,
+      "instanceId": "inst-1770141739595-orm0010sr",
+      "events": [
+        {
+          "type": "queued",
+          "timestamp": 1770141739702
+        },
+        {
+          "type": "started",
+          "timestamp": 1770141739702,
+          "modelId": "openai/gpt-5.2"
+        },
+        {
+          "type": "completed",
+          "timestamp": 1770141739702,
+          "cost": 0.000875
+        }
+      ],
+      "status": "completed",
+      "modelUsed": "openai/gpt-5.2",
+      "totalCost": 0.000875,
+      "queueDurationMs": 0,
+      "processingDurationMs": 0,
+      "totalDurationMs": 0
+    },
+    "capacity-plus-one-test-1770141739576-2": {
+      "jobId": "capacity-plus-one-test-1770141739576-2",
+      "jobType": "summary",
+      "sentAt": 1770141739702,
+      "instanceId": "inst-1770141739595-orm0010sr",
+      "events": [
+        {
+          "type": "queued",
+          "timestamp": 1770141739703
+        },
+        {
+          "type": "started",
+          "timestamp": 1770141739703,
+          "modelId": "openai/gpt-5.2"
+        },
+        {
+          "type": "completed",
+          "timestamp": 1770141739703,
+          "cost": 0.000875
+        }
+      ],
+      "status": "completed",
+      "modelUsed": "openai/gpt-5.2",
+      "totalCost": 0.000875,
+      "queueDurationMs": 0,
+      "processingDurationMs": 0,
+      "totalDurationMs": 0
+    },
+    "capacity-plus-one-test-1770141739576-3": {
+      "jobId": "capacity-plus-one-test-1770141739576-3",
+      "jobType": "summary",
+      "sentAt": 1770141739703,
+      "instanceId": "inst-1770141739591-66ufxgbcc",
+      "events": [
+        {
+          "type": "queued",
+          "timestamp": 1770141739704
+        },
+        {
+          "type": "started",
+          "timestamp": 1770141739704,
+          "modelId": "openai/gpt-5.2"
+        },
+        {
+          "type": "completed",
+          "timestamp": 1770141739704,
+          "cost": 0.000875
+        }
+      ],
+      "status": "completed",
+      "modelUsed": "openai/gpt-5.2",
+      "totalCost": 0.000875,
+      "queueDurationMs": 0,
+      "processingDurationMs": 0,
+      "totalDurationMs": 0
+    },
+    "capacity-plus-one-test-1770141739576-4": {
+      "jobId": "capacity-plus-one-test-1770141739576-4",
+      "jobType": "summary",
+      "sentAt": 1770141739704,
+      "instanceId": "inst-1770141739591-66ufxgbcc",
+      "events": [
+        {
+          "type": "queued",
+          "timestamp": 1770141739705
+        },
+        {
+          "type": "started",
+          "timestamp": 1770141739705,
+          "modelId": "openai/gpt-5.2"
+        },
+        {
+          "type": "completed",
+          "timestamp": 1770141739705,
+          "cost": 0.000875
+        }
+      ],
+      "status": "completed",
+      "modelUsed": "openai/gpt-5.2",
+      "totalCost": 0.000875,
+      "queueDurationMs": 0,
+      "processingDurationMs": 0,
+      "totalDurationMs": 0
+    },
+    "capacity-plus-one-test-1770141739576-5": {
+      "jobId": "capacity-plus-one-test-1770141739576-5",
+      "jobType": "summary",
+      "sentAt": 1770141739705,
+      "instanceId": "inst-1770141739595-orm0010sr",
+      "events": [
+        {
+          "type": "queued",
+          "timestamp": 1770141739705
+        },
+        {
+          "type": "started",
+          "timestamp": 1770141739705,
+          "modelId": "openai/gpt-5.2"
+        },
+        {
+          "type": "completed",
+          "timestamp": 1770141739705,
+          "cost": 0.000875
+        }
+      ],
+      "status": "completed",
+      "modelUsed": "openai/gpt-5.2",
+      "totalCost": 0.000875,
+      "queueDurationMs": 0,
+      "processingDurationMs": 0,
+      "totalDurationMs": 0
+    },
+    "capacity-plus-one-test-1770141739576-6": {
+      "jobId": "capacity-plus-one-test-1770141739576-6",
+      "jobType": "summary",
+      "sentAt": 1770141739705,
+      "instanceId": "inst-1770141739591-66ufxgbcc",
+      "events": [
+        {
+          "type": "queued",
+          "timestamp": 1770141739706
+        },
+        {
+          "type": "started",
+          "timestamp": 1770141739706,
+          "modelId": "openai/gpt-5.2"
+        },
+        {
+          "type": "completed",
+          "timestamp": 1770141739706,
+          "cost": 0.000875
+        }
+      ],
+      "status": "completed",
+      "modelUsed": "openai/gpt-5.2",
+      "totalCost": 0.000875,
+      "queueDurationMs": 0,
+      "processingDurationMs": 0,
+      "totalDurationMs": 0
+    },
+    "capacity-plus-one-test-1770141739576-7": {
+      "jobId": "capacity-plus-one-test-1770141739576-7",
+      "jobType": "summary",
+      "sentAt": 1770141739706,
+      "instanceId": "inst-1770141739591-66ufxgbcc",
+      "events": [
+        {
+          "type": "queued",
+          "timestamp": 1770141739706
+        },
+        {
+          "type": "started",
+          "timestamp": 1770141739707,
+          "modelId": "openai/gpt-5.2"
+        },
+        {
+          "type": "completed",
+          "timestamp": 1770141739707,
+          "cost": 0.000875
+        }
+      ],
+      "status": "completed",
+      "modelUsed": "openai/gpt-5.2",
+      "totalCost": 0.000875,
+      "queueDurationMs": 1,
+      "processingDurationMs": 0,
+      "totalDurationMs": 1
+    },
+    "capacity-plus-one-test-1770141739576-8": {
+      "jobId": "capacity-plus-one-test-1770141739576-8",
+      "jobType": "summary",
+      "sentAt": 1770141739707,
+      "instanceId": "inst-1770141739595-orm0010sr",
+      "events": [
+        {
+          "type": "queued",
+          "timestamp": 1770141739707
+        },
+        {
+          "type": "started",
+          "timestamp": 1770141739707,
+          "modelId": "openai/gpt-5.2"
+        },
+        {
+          "type": "completed",
+          "timestamp": 1770141739707,
+          "cost": 0.000875
+        }
+      ],
+      "status": "completed",
+      "modelUsed": "openai/gpt-5.2",
+      "totalCost": 0.000875,
+      "queueDurationMs": 0,
+      "processingDurationMs": 0,
+      "totalDurationMs": 0
+    },
+    "capacity-plus-one-test-1770141739576-9": {
+      "jobId": "capacity-plus-one-test-1770141739576-9",
+      "jobType": "summary",
+      "sentAt": 1770141739707,
+      "instanceId": "inst-1770141739591-66ufxgbcc",
+      "events": [
+        {
+          "type": "queued",
+          "timestamp": 1770141739708
+        },
+        {
+          "type": "started",
+          "timestamp": 1770141739708,
+          "modelId": "openai/gpt-5.2"
+        },
+        {
+          "type": "completed",
+          "timestamp": 1770141739708,
+          "cost": 0.000875
+        }
+      ],
+      "status": "completed",
+      "modelUsed": "openai/gpt-5.2",
+      "totalCost": 0.000875,
+      "queueDurationMs": 0,
+      "processingDurationMs": 0,
+      "totalDurationMs": 0
+    },
+    "capacity-plus-one-test-1770141739576-10": {
+      "jobId": "capacity-plus-one-test-1770141739576-10",
+      "jobType": "summary",
+      "sentAt": 1770141739708,
+      "instanceId": "inst-1770141739595-orm0010sr",
+      "events": [
+        {
+          "type": "queued",
+          "timestamp": 1770141739708
+        },
+        {
+          "type": "started",
+          "timestamp": 1770141739708,
+          "modelId": "openai/gpt-5.2"
+        },
+        {
+          "type": "completed",
+          "timestamp": 1770141739709,
+          "cost": 0.000875
+        }
+      ],
+      "status": "completed",
+      "modelUsed": "openai/gpt-5.2",
+      "totalCost": 0.000875,
+      "queueDurationMs": 0,
+      "processingDurationMs": 1,
+      "totalDurationMs": 1
+    },
+    "capacity-plus-one-test-1770141739576-11": {
+      "jobId": "capacity-plus-one-test-1770141739576-11",
+      "jobType": "summary",
+      "sentAt": 1770141739709,
+      "instanceId": "inst-1770141739595-orm0010sr",
+      "events": [
+        {
+          "type": "queued",
+          "timestamp": 1770141739709
+        },
+        {
+          "type": "started",
+          "timestamp": 1770141739709,
+          "modelId": "openai/gpt-5.2"
+        },
+        {
+          "type": "completed",
+          "timestamp": 1770141739709,
+          "cost": 0.000875
+        }
+      ],
+      "status": "completed",
+      "modelUsed": "openai/gpt-5.2",
+      "totalCost": 0.000875,
+      "queueDurationMs": 0,
+      "processingDurationMs": 0,
+      "totalDurationMs": 0
+    },
+    "capacity-plus-one-test-1770141739576-12": {
+      "jobId": "capacity-plus-one-test-1770141739576-12",
+      "jobType": "summary",
+      "sentAt": 1770141739709,
+      "instanceId": "inst-1770141739595-orm0010sr",
+      "events": [
+        {
+          "type": "queued",
+          "timestamp": 1770141739709
+        },
+        {
+          "type": "started",
+          "timestamp": 1770141739710,
+          "modelId": "openai/gpt-5.2"
+        },
+        {
+          "type": "completed",
+          "timestamp": 1770141739710,
+          "cost": 0.000875
+        }
+      ],
+      "status": "completed",
+      "modelUsed": "openai/gpt-5.2",
+      "totalCost": 0.000875,
+      "queueDurationMs": 1,
+      "processingDurationMs": 0,
+      "totalDurationMs": 1
+    },
+    "capacity-plus-one-test-1770141739576-13": {
+      "jobId": "capacity-plus-one-test-1770141739576-13",
+      "jobType": "summary",
+      "sentAt": 1770141739710,
+      "instanceId": "inst-1770141739591-66ufxgbcc",
+      "events": [
+        {
+          "type": "queued",
+          "timestamp": 1770141739710
+        },
+        {
+          "type": "started",
+          "timestamp": 1770141739710,
+          "modelId": "openai/gpt-5.2"
+        },
+        {
+          "type": "completed",
+          "timestamp": 1770141739710,
+          "cost": 0.000875
+        }
+      ],
+      "status": "completed",
+      "modelUsed": "openai/gpt-5.2",
+      "totalCost": 0.000875,
+      "queueDurationMs": 0,
+      "processingDurationMs": 0,
+      "totalDurationMs": 0
+    },
+    "capacity-plus-one-test-1770141739576-14": {
+      "jobId": "capacity-plus-one-test-1770141739576-14",
+      "jobType": "summary",
+      "sentAt": 1770141739710,
+      "instanceId": "inst-1770141739595-orm0010sr",
+      "events": [
+        {
+          "type": "queued",
+          "timestamp": 1770141739711
+        },
+        {
+          "type": "started",
+          "timestamp": 1770141739711,
+          "modelId": "openai/gpt-5.2"
+        },
+        {
+          "type": "completed",
+          "timestamp": 1770141739711,
+          "cost": 0.000875
+        }
+      ],
+      "status": "completed",
+      "modelUsed": "openai/gpt-5.2",
+      "totalCost": 0.000875,
+      "queueDurationMs": 0,
+      "processingDurationMs": 0,
+      "totalDurationMs": 0
+    },
+    "capacity-plus-one-test-1770141739576-15": {
+      "jobId": "capacity-plus-one-test-1770141739576-15",
+      "jobType": "summary",
+      "sentAt": 1770141739711,
+      "instanceId": "inst-1770141739591-66ufxgbcc",
+      "events": [
+        {
+          "type": "queued",
+          "timestamp": 1770141739711
+        },
+        {
+          "type": "started",
+          "timestamp": 1770141739711,
+          "modelId": "openai/gpt-5.2"
+        },
+        {
+          "type": "completed",
+          "timestamp": 1770141739711,
+          "cost": 0.000875
+        }
+      ],
+      "status": "completed",
+      "modelUsed": "openai/gpt-5.2",
+      "totalCost": 0.000875,
+      "queueDurationMs": 0,
+      "processingDurationMs": 0,
+      "totalDurationMs": 0
+    },
+    "capacity-plus-one-test-1770141739576-16": {
+      "jobId": "capacity-plus-one-test-1770141739576-16",
+      "jobType": "summary",
+      "sentAt": 1770141739711,
+      "instanceId": "inst-1770141739591-66ufxgbcc",
+      "events": [
+        {
+          "type": "queued",
+          "timestamp": 1770141739712
+        },
+        {
+          "type": "started",
+          "timestamp": 1770141739712,
+          "modelId": "openai/gpt-5.2"
+        },
+        {
+          "type": "completed",
+          "timestamp": 1770141739712,
+          "cost": 0.000875
+        }
+      ],
+      "status": "completed",
+      "modelUsed": "openai/gpt-5.2",
+      "totalCost": 0.000875,
+      "queueDurationMs": 0,
+      "processingDurationMs": 0,
+      "totalDurationMs": 0
+    },
+    "capacity-plus-one-test-1770141739576-17": {
+      "jobId": "capacity-plus-one-test-1770141739576-17",
+      "jobType": "summary",
+      "sentAt": 1770141739712,
+      "instanceId": "inst-1770141739591-66ufxgbcc",
+      "events": [
+        {
+          "type": "queued",
+          "timestamp": 1770141739712
+        },
+        {
+          "type": "started",
+          "timestamp": 1770141739713,
+          "modelId": "openai/gpt-5.2"
+        },
+        {
+          "type": "completed",
+          "timestamp": 1770141739713,
+          "cost": 0.000875
+        }
+      ],
+      "status": "completed",
+      "modelUsed": "openai/gpt-5.2",
+      "totalCost": 0.000875,
+      "queueDurationMs": 1,
+      "processingDurationMs": 0,
+      "totalDurationMs": 1
+    },
+    "capacity-plus-one-test-1770141739576-18": {
+      "jobId": "capacity-plus-one-test-1770141739576-18",
+      "jobType": "summary",
+      "sentAt": 1770141739712,
+      "instanceId": "inst-1770141739595-orm0010sr",
+      "events": [
+        {
+          "type": "queued",
+          "timestamp": 1770141739713
+        },
+        {
+          "type": "started",
+          "timestamp": 1770141739713,
+          "modelId": "openai/gpt-5.2"
+        },
+        {
+          "type": "completed",
+          "timestamp": 1770141739713,
+          "cost": 0.000875
+        }
+      ],
+      "status": "completed",
+      "modelUsed": "openai/gpt-5.2",
+      "totalCost": 0.000875,
+      "queueDurationMs": 0,
+      "processingDurationMs": 0,
+      "totalDurationMs": 0
+    },
+    "capacity-plus-one-test-1770141739576-19": {
+      "jobId": "capacity-plus-one-test-1770141739576-19",
+      "jobType": "summary",
+      "sentAt": 1770141739713,
+      "instanceId": "inst-1770141739591-66ufxgbcc",
+      "events": [
+        {
+          "type": "queued",
+          "timestamp": 1770141739713
+        },
+        {
+          "type": "started",
+          "timestamp": 1770141739713,
+          "modelId": "openai/gpt-5.2"
+        },
+        {
+          "type": "completed",
+          "timestamp": 1770141739713,
+          "cost": 0.000875
+        }
+      ],
+      "status": "completed",
+      "modelUsed": "openai/gpt-5.2",
+      "totalCost": 0.000875,
+      "queueDurationMs": 0,
+      "processingDurationMs": 0,
+      "totalDurationMs": 0
+    },
+    "capacity-plus-one-test-1770141739576-20": {
+      "jobId": "capacity-plus-one-test-1770141739576-20",
+      "jobType": "summary",
+      "sentAt": 1770141739714,
+      "instanceId": "inst-1770141739595-orm0010sr",
+      "events": [
+        {
+          "type": "queued",
+          "timestamp": 1770141739714
+        },
+        {
+          "type": "started",
+          "timestamp": 1770141739714,
+          "modelId": "openai/gpt-5.2"
+        },
+        {
+          "type": "completed",
+          "timestamp": 1770141739714,
+          "cost": 0.000875
+        }
+      ],
+      "status": "completed",
+      "modelUsed": "openai/gpt-5.2",
+      "totalCost": 0.000875,
+      "queueDurationMs": 0,
+      "processingDurationMs": 0,
+      "totalDurationMs": 0
+    },
+    "capacity-plus-one-test-1770141739576-21": {
+      "jobId": "capacity-plus-one-test-1770141739576-21",
+      "jobType": "summary",
+      "sentAt": 1770141739714,
+      "instanceId": "inst-1770141739591-66ufxgbcc",
+      "events": [
+        {
+          "type": "queued",
+          "timestamp": 1770141739715
+        },
+        {
+          "type": "started",
+          "timestamp": 1770141739715,
+          "modelId": "openai/gpt-5.2"
+        },
+        {
+          "type": "completed",
+          "timestamp": 1770141739715,
+          "cost": 0.000875
+        }
+      ],
+      "status": "completed",
+      "modelUsed": "openai/gpt-5.2",
+      "totalCost": 0.000875,
+      "queueDurationMs": 0,
+      "processingDurationMs": 0,
+      "totalDurationMs": 0
+    },
+    "capacity-plus-one-test-1770141739576-22": {
+      "jobId": "capacity-plus-one-test-1770141739576-22",
+      "jobType": "summary",
+      "sentAt": 1770141739715,
+      "instanceId": "inst-1770141739591-66ufxgbcc",
+      "events": [
+        {
+          "type": "queued",
+          "timestamp": 1770141739715
+        },
+        {
+          "type": "started",
+          "timestamp": 1770141739716,
+          "modelId": "openai/gpt-5.2"
+        },
+        {
+          "type": "completed",
+          "timestamp": 1770141739716,
+          "cost": 0.000875
+        }
+      ],
+      "status": "completed",
+      "modelUsed": "openai/gpt-5.2",
+      "totalCost": 0.000875,
+      "queueDurationMs": 1,
+      "processingDurationMs": 0,
+      "totalDurationMs": 1
+    },
+    "capacity-plus-one-test-1770141739576-23": {
+      "jobId": "capacity-plus-one-test-1770141739576-23",
+      "jobType": "summary",
+      "sentAt": 1770141739716,
+      "instanceId": "inst-1770141739595-orm0010sr",
+      "events": [
+        {
+          "type": "queued",
+          "timestamp": 1770141739716
+        },
+        {
+          "type": "started",
+          "timestamp": 1770141739716,
+          "modelId": "openai/gpt-5.2"
+        },
+        {
+          "type": "completed",
+          "timestamp": 1770141739716,
+          "cost": 0.000875
+        }
+      ],
+      "status": "completed",
+      "modelUsed": "openai/gpt-5.2",
+      "totalCost": 0.000875,
+      "queueDurationMs": 0,
+      "processingDurationMs": 0,
+      "totalDurationMs": 0
+    },
+    "capacity-plus-one-test-1770141739576-24": {
+      "jobId": "capacity-plus-one-test-1770141739576-24",
+      "jobType": "summary",
+      "sentAt": 1770141739716,
+      "instanceId": "inst-1770141739595-orm0010sr",
+      "events": [
+        {
+          "type": "queued",
+          "timestamp": 1770141739716
+        },
+        {
+          "type": "started",
+          "timestamp": 1770141739717,
+          "modelId": "openai/gpt-5.2"
+        },
+        {
+          "type": "completed",
+          "timestamp": 1770141739717,
+          "cost": 0.000875
+        }
+      ],
+      "status": "completed",
+      "modelUsed": "openai/gpt-5.2",
+      "totalCost": 0.000875,
+      "queueDurationMs": 1,
+      "processingDurationMs": 0,
+      "totalDurationMs": 1
+    },
+    "capacity-plus-one-test-1770141739576-25": {
+      "jobId": "capacity-plus-one-test-1770141739576-25",
+      "jobType": "summary",
+      "sentAt": 1770141739717,
+      "instanceId": "inst-1770141739591-66ufxgbcc",
+      "events": [
+        {
+          "type": "queued",
+          "timestamp": 1770141739717
+        },
+        {
+          "type": "started",
+          "timestamp": 1770141739717,
+          "modelId": "openai/gpt-5.2"
+        },
+        {
+          "type": "completed",
+          "timestamp": 1770141739717,
+          "cost": 0.000875
+        }
+      ],
+      "status": "completed",
+      "modelUsed": "openai/gpt-5.2",
+      "totalCost": 0.000875,
+      "queueDurationMs": 0,
+      "processingDurationMs": 0,
+      "totalDurationMs": 0
+    },
+    "capacity-plus-one-test-1770141739576-26": {
+      "jobId": "capacity-plus-one-test-1770141739576-26",
+      "jobType": "summary",
+      "sentAt": 1770141739717,
+      "instanceId": "inst-1770141739591-66ufxgbcc",
+      "events": [
+        {
+          "type": "queued",
+          "timestamp": 1770141739718
+        },
+        {
+          "type": "started",
+          "timestamp": 1770141739718,
+          "modelId": "openai/gpt-5.2"
+        },
+        {
+          "type": "completed",
+          "timestamp": 1770141739718,
+          "cost": 0.000875
+        }
+      ],
+      "status": "completed",
+      "modelUsed": "openai/gpt-5.2",
+      "totalCost": 0.000875,
+      "queueDurationMs": 0,
+      "processingDurationMs": 0,
+      "totalDurationMs": 0
+    },
+    "capacity-plus-one-test-1770141739576-27": {
+      "jobId": "capacity-plus-one-test-1770141739576-27",
+      "jobType": "summary",
+      "sentAt": 1770141739718,
+      "instanceId": "inst-1770141739591-66ufxgbcc",
+      "events": [
+        {
+          "type": "queued",
+          "timestamp": 1770141739718
+        },
+        {
+          "type": "started",
+          "timestamp": 1770141739720,
+          "modelId": "openai/gpt-5.2"
+        },
+        {
+          "type": "completed",
+          "timestamp": 1770141739720,
+          "cost": 0.000875
+        }
+      ],
+      "status": "completed",
+      "modelUsed": "openai/gpt-5.2",
+      "totalCost": 0.000875,
+      "queueDurationMs": 2,
+      "processingDurationMs": 0,
+      "totalDurationMs": 2
+    },
+    "capacity-plus-one-test-1770141739576-28": {
+      "jobId": "capacity-plus-one-test-1770141739576-28",
+      "jobType": "summary",
+      "sentAt": 1770141739719,
+      "instanceId": "inst-1770141739595-orm0010sr",
+      "events": [
+        {
+          "type": "queued",
+          "timestamp": 1770141739720
+        },
+        {
+          "type": "started",
+          "timestamp": 1770141739721,
+          "modelId": "openai/gpt-5.2"
+        },
+        {
+          "type": "completed",
+          "timestamp": 1770141739721,
+          "cost": 0.000875
+        }
+      ],
+      "status": "completed",
+      "modelUsed": "openai/gpt-5.2",
+      "totalCost": 0.000875,
+      "queueDurationMs": 1,
+      "processingDurationMs": 0,
+      "totalDurationMs": 1
+    },
+    "capacity-plus-one-test-1770141739576-29": {
+      "jobId": "capacity-plus-one-test-1770141739576-29",
+      "jobType": "summary",
+      "sentAt": 1770141739720,
+      "instanceId": "inst-1770141739595-orm0010sr",
+      "events": [
+        {
+          "type": "queued",
+          "timestamp": 1770141739721
+        },
+        {
+          "type": "started",
+          "timestamp": 1770141739722,
+          "modelId": "openai/gpt-5.2"
+        },
+        {
+          "type": "completed",
+          "timestamp": 1770141739722,
+          "cost": 0.000875
+        }
+      ],
+      "status": "completed",
+      "modelUsed": "openai/gpt-5.2",
+      "totalCost": 0.000875,
+      "queueDurationMs": 1,
+      "processingDurationMs": 0,
+      "totalDurationMs": 1
+    },
+    "capacity-plus-one-test-1770141739576-30": {
+      "jobId": "capacity-plus-one-test-1770141739576-30",
+      "jobType": "summary",
+      "sentAt": 1770141739722,
+      "instanceId": "inst-1770141739591-66ufxgbcc",
+      "events": [
+        {
+          "type": "queued",
+          "timestamp": 1770141739722
+        },
+        {
+          "type": "started",
+          "timestamp": 1770141739722,
+          "modelId": "openai/gpt-5.2"
+        },
+        {
+          "type": "completed",
+          "timestamp": 1770141739722,
+          "cost": 0.000875
+        }
+      ],
+      "status": "completed",
+      "modelUsed": "openai/gpt-5.2",
+      "totalCost": 0.000875,
+      "queueDurationMs": 0,
+      "processingDurationMs": 0,
+      "totalDurationMs": 0
+    },
+    "capacity-plus-one-test-1770141739576-31": {
+      "jobId": "capacity-plus-one-test-1770141739576-31",
+      "jobType": "summary",
+      "sentAt": 1770141739722,
+      "instanceId": "inst-1770141739591-66ufxgbcc",
+      "events": [
+        {
+          "type": "queued",
+          "timestamp": 1770141739723
+        },
+        {
+          "type": "started",
+          "timestamp": 1770141739723,
+          "modelId": "openai/gpt-5.2"
+        },
+        {
+          "type": "completed",
+          "timestamp": 1770141739723,
+          "cost": 0.000875
+        }
+      ],
+      "status": "completed",
+      "modelUsed": "openai/gpt-5.2",
+      "totalCost": 0.000875,
+      "queueDurationMs": 0,
+      "processingDurationMs": 0,
+      "totalDurationMs": 0
+    },
+    "capacity-plus-one-test-1770141739576-32": {
+      "jobId": "capacity-plus-one-test-1770141739576-32",
+      "jobType": "summary",
+      "sentAt": 1770141739723,
+      "instanceId": "inst-1770141739595-orm0010sr",
+      "events": [
+        {
+          "type": "queued",
+          "timestamp": 1770141739723
+        },
+        {
+          "type": "started",
+          "timestamp": 1770141739723,
+          "modelId": "openai/gpt-5.2"
+        },
+        {
+          "type": "completed",
+          "timestamp": 1770141739723,
+          "cost": 0.000875
+        }
+      ],
+      "status": "completed",
+      "modelUsed": "openai/gpt-5.2",
+      "totalCost": 0.000875,
+      "queueDurationMs": 0,
+      "processingDurationMs": 0,
+      "totalDurationMs": 0
+    },
+    "capacity-plus-one-test-1770141739576-33": {
+      "jobId": "capacity-plus-one-test-1770141739576-33",
+      "jobType": "summary",
+      "sentAt": 1770141739723,
+      "instanceId": "inst-1770141739595-orm0010sr",
+      "events": [
+        {
+          "type": "queued",
+          "timestamp": 1770141739724
+        },
+        {
+          "type": "started",
+          "timestamp": 1770141739724,
+          "modelId": "openai/gpt-5.2"
+        },
+        {
+          "type": "completed",
+          "timestamp": 1770141739724,
+          "cost": 0.000875
+        }
+      ],
+      "status": "completed",
+      "modelUsed": "openai/gpt-5.2",
+      "totalCost": 0.000875,
+      "queueDurationMs": 0,
+      "processingDurationMs": 0,
+      "totalDurationMs": 0
+    },
+    "capacity-plus-one-test-1770141739576-34": {
+      "jobId": "capacity-plus-one-test-1770141739576-34",
+      "jobType": "summary",
+      "sentAt": 1770141739724,
+      "instanceId": "inst-1770141739595-orm0010sr",
+      "events": [
+        {
+          "type": "queued",
+          "timestamp": 1770141739724
+        },
+        {
+          "type": "started",
+          "timestamp": 1770141739724,
+          "modelId": "openai/gpt-5.2"
+        },
+        {
+          "type": "completed",
+          "timestamp": 1770141739724,
+          "cost": 0.000875
+        }
+      ],
+      "status": "completed",
+      "modelUsed": "openai/gpt-5.2",
+      "totalCost": 0.000875,
+      "queueDurationMs": 0,
+      "processingDurationMs": 0,
+      "totalDurationMs": 0
+    },
+    "capacity-plus-one-test-1770141739576-35": {
+      "jobId": "capacity-plus-one-test-1770141739576-35",
+      "jobType": "summary",
+      "sentAt": 1770141739724,
+      "instanceId": "inst-1770141739591-66ufxgbcc",
+      "events": [
+        {
+          "type": "queued",
+          "timestamp": 1770141739725
+        },
+        {
+          "type": "started",
+          "timestamp": 1770141739725,
+          "modelId": "openai/gpt-5.2"
+        },
+        {
+          "type": "completed",
+          "timestamp": 1770141739725,
+          "cost": 0.000875
+        }
+      ],
+      "status": "completed",
+      "modelUsed": "openai/gpt-5.2",
+      "totalCost": 0.000875,
+      "queueDurationMs": 0,
+      "processingDurationMs": 0,
+      "totalDurationMs": 0
+    },
+    "capacity-plus-one-test-1770141739576-36": {
+      "jobId": "capacity-plus-one-test-1770141739576-36",
+      "jobType": "summary",
+      "sentAt": 1770141739725,
+      "instanceId": "inst-1770141739591-66ufxgbcc",
+      "events": [
+        {
+          "type": "queued",
+          "timestamp": 1770141739725
+        },
+        {
+          "type": "started",
+          "timestamp": 1770141739725,
+          "modelId": "openai/gpt-5.2"
+        },
+        {
+          "type": "completed",
+          "timestamp": 1770141739725,
+          "cost": 0.000875
+        }
+      ],
+      "status": "completed",
+      "modelUsed": "openai/gpt-5.2",
+      "totalCost": 0.000875,
+      "queueDurationMs": 0,
+      "processingDurationMs": 0,
+      "totalDurationMs": 0
+    },
+    "capacity-plus-one-test-1770141739576-37": {
+      "jobId": "capacity-plus-one-test-1770141739576-37",
+      "jobType": "summary",
+      "sentAt": 1770141739725,
+      "instanceId": "inst-1770141739595-orm0010sr",
+      "events": [
+        {
+          "type": "queued",
+          "timestamp": 1770141739726
+        },
+        {
+          "type": "started",
+          "timestamp": 1770141739726,
+          "modelId": "openai/gpt-5.2"
+        },
+        {
+          "type": "completed",
+          "timestamp": 1770141739726,
+          "cost": 0.000875
+        }
+      ],
+      "status": "completed",
+      "modelUsed": "openai/gpt-5.2",
+      "totalCost": 0.000875,
+      "queueDurationMs": 0,
+      "processingDurationMs": 0,
+      "totalDurationMs": 0
+    },
+    "capacity-plus-one-test-1770141739576-38": {
+      "jobId": "capacity-plus-one-test-1770141739576-38",
+      "jobType": "summary",
+      "sentAt": 1770141739726,
+      "instanceId": "inst-1770141739595-orm0010sr",
+      "events": [
+        {
+          "type": "queued",
+          "timestamp": 1770141739726
+        },
+        {
+          "type": "started",
+          "timestamp": 1770141739727,
+          "modelId": "openai/gpt-5.2"
+        },
+        {
+          "type": "completed",
+          "timestamp": 1770141739727,
+          "cost": 0.000875
+        }
+      ],
+      "status": "completed",
+      "modelUsed": "openai/gpt-5.2",
+      "totalCost": 0.000875,
+      "queueDurationMs": 1,
+      "processingDurationMs": 0,
+      "totalDurationMs": 1
+    },
+    "capacity-plus-one-test-1770141739576-39": {
+      "jobId": "capacity-plus-one-test-1770141739576-39",
+      "jobType": "summary",
+      "sentAt": 1770141739727,
+      "instanceId": "inst-1770141739591-66ufxgbcc",
+      "events": [
+        {
+          "type": "queued",
+          "timestamp": 1770141739727
+        },
+        {
+          "type": "started",
+          "timestamp": 1770141739727,
+          "modelId": "openai/gpt-5.2"
+        },
+        {
+          "type": "completed",
+          "timestamp": 1770141739727,
+          "cost": 0.000875
+        }
+      ],
+      "status": "completed",
+      "modelUsed": "openai/gpt-5.2",
+      "totalCost": 0.000875,
+      "queueDurationMs": 0,
+      "processingDurationMs": 0,
+      "totalDurationMs": 0
+    },
+    "capacity-plus-one-test-1770141739576-40": {
+      "jobId": "capacity-plus-one-test-1770141739576-40",
+      "jobType": "summary",
+      "sentAt": 1770141739727,
+      "instanceId": "inst-1770141739591-66ufxgbcc",
+      "events": [
+        {
+          "type": "queued",
+          "timestamp": 1770141739727
+        },
+        {
+          "type": "started",
+          "timestamp": 1770141739728,
+          "modelId": "openai/gpt-5.2"
+        },
+        {
+          "type": "completed",
+          "timestamp": 1770141739728,
+          "cost": 0.000875
+        }
+      ],
+      "status": "completed",
+      "modelUsed": "openai/gpt-5.2",
+      "totalCost": 0.000875,
+      "queueDurationMs": 1,
+      "processingDurationMs": 0,
+      "totalDurationMs": 1
+    },
+    "capacity-plus-one-test-1770141739576-41": {
+      "jobId": "capacity-plus-one-test-1770141739576-41",
+      "jobType": "summary",
+      "sentAt": 1770141739728,
+      "instanceId": "inst-1770141739595-orm0010sr",
+      "events": [
+        {
+          "type": "queued",
+          "timestamp": 1770141739728
+        },
+        {
+          "type": "started",
+          "timestamp": 1770141739728,
+          "modelId": "openai/gpt-5.2"
+        },
+        {
+          "type": "completed",
+          "timestamp": 1770141739728,
+          "cost": 0.000875
+        }
+      ],
+      "status": "completed",
+      "modelUsed": "openai/gpt-5.2",
+      "totalCost": 0.000875,
+      "queueDurationMs": 0,
+      "processingDurationMs": 0,
+      "totalDurationMs": 0
+    },
+    "capacity-plus-one-test-1770141739576-42": {
+      "jobId": "capacity-plus-one-test-1770141739576-42",
+      "jobType": "summary",
+      "sentAt": 1770141739728,
+      "instanceId": "inst-1770141739595-orm0010sr",
+      "events": [
+        {
+          "type": "queued",
+          "timestamp": 1770141739729
+        },
+        {
+          "type": "started",
+          "timestamp": 1770141739729,
+          "modelId": "openai/gpt-5.2"
+        },
+        {
+          "type": "completed",
+          "timestamp": 1770141739729,
+          "cost": 0.000875
+        }
+      ],
+      "status": "completed",
+      "modelUsed": "openai/gpt-5.2",
+      "totalCost": 0.000875,
+      "queueDurationMs": 0,
+      "processingDurationMs": 0,
+      "totalDurationMs": 0
+    },
+    "capacity-plus-one-test-1770141739576-43": {
+      "jobId": "capacity-plus-one-test-1770141739576-43",
+      "jobType": "summary",
+      "sentAt": 1770141739729,
+      "instanceId": "inst-1770141739591-66ufxgbcc",
+      "events": [
+        {
+          "type": "queued",
+          "timestamp": 1770141739729
+        },
+        {
+          "type": "started",
+          "timestamp": 1770141739729,
+          "modelId": "openai/gpt-5.2"
+        },
+        {
+          "type": "completed",
+          "timestamp": 1770141739729,
+          "cost": 0.000875
+        }
+      ],
+      "status": "completed",
+      "modelUsed": "openai/gpt-5.2",
+      "totalCost": 0.000875,
+      "queueDurationMs": 0,
+      "processingDurationMs": 0,
+      "totalDurationMs": 0
+    },
+    "capacity-plus-one-test-1770141739576-44": {
+      "jobId": "capacity-plus-one-test-1770141739576-44",
+      "jobType": "summary",
+      "sentAt": 1770141739729,
+      "instanceId": "inst-1770141739591-66ufxgbcc",
+      "events": [
+        {
+          "type": "queued",
+          "timestamp": 1770141739729
+        },
+        {
+          "type": "started",
+          "timestamp": 1770141739730,
+          "modelId": "openai/gpt-5.2"
+        },
+        {
+          "type": "completed",
+          "timestamp": 1770141739730,
+          "cost": 0.000875
+        }
+      ],
+      "status": "completed",
+      "modelUsed": "openai/gpt-5.2",
+      "totalCost": 0.000875,
+      "queueDurationMs": 1,
+      "processingDurationMs": 0,
+      "totalDurationMs": 1
+    },
+    "capacity-plus-one-test-1770141739576-45": {
+      "jobId": "capacity-plus-one-test-1770141739576-45",
+      "jobType": "summary",
+      "sentAt": 1770141739730,
+      "instanceId": "inst-1770141739595-orm0010sr",
+      "events": [
+        {
+          "type": "queued",
+          "timestamp": 1770141739730
+        },
+        {
+          "type": "started",
+          "timestamp": 1770141739730,
+          "modelId": "openai/gpt-5.2"
+        },
+        {
+          "type": "completed",
+          "timestamp": 1770141739730,
+          "cost": 0.000875
+        }
+      ],
+      "status": "completed",
+      "modelUsed": "openai/gpt-5.2",
+      "totalCost": 0.000875,
+      "queueDurationMs": 0,
+      "processingDurationMs": 0,
+      "totalDurationMs": 0
+    },
+    "capacity-plus-one-test-1770141739576-46": {
+      "jobId": "capacity-plus-one-test-1770141739576-46",
+      "jobType": "summary",
+      "sentAt": 1770141739730,
+      "instanceId": "inst-1770141739591-66ufxgbcc",
+      "events": [
+        {
+          "type": "queued",
+          "timestamp": 1770141739730
+        },
+        {
+          "type": "started",
+          "timestamp": 1770141739731,
+          "modelId": "openai/gpt-5.2"
+        },
+        {
+          "type": "completed",
+          "timestamp": 1770141739731,
+          "cost": 0.000875
+        }
+      ],
+      "status": "completed",
+      "modelUsed": "openai/gpt-5.2",
+      "totalCost": 0.000875,
+      "queueDurationMs": 1,
+      "processingDurationMs": 0,
+      "totalDurationMs": 1
+    },
+    "capacity-plus-one-test-1770141739576-47": {
+      "jobId": "capacity-plus-one-test-1770141739576-47",
+      "jobType": "summary",
+      "sentAt": 1770141739731,
+      "instanceId": "inst-1770141739595-orm0010sr",
+      "events": [
+        {
+          "type": "queued",
+          "timestamp": 1770141739731
+        },
+        {
+          "type": "started",
+          "timestamp": 1770141739731,
+          "modelId": "openai/gpt-5.2"
+        },
+        {
+          "type": "completed",
+          "timestamp": 1770141739732,
+          "cost": 0.000875
+        }
+      ],
+      "status": "completed",
+      "modelUsed": "openai/gpt-5.2",
+      "totalCost": 0.000875,
+      "queueDurationMs": 0,
+      "processingDurationMs": 1,
+      "totalDurationMs": 1
+    },
+    "capacity-plus-one-test-1770141739576-48": {
+      "jobId": "capacity-plus-one-test-1770141739576-48",
+      "jobType": "summary",
+      "sentAt": 1770141739732,
+      "instanceId": "inst-1770141739591-66ufxgbcc",
+      "events": [
+        {
+          "type": "queued",
+          "timestamp": 1770141739732
+        },
+        {
+          "type": "started",
+          "timestamp": 1770141739733,
+          "modelId": "openai/gpt-5.2"
+        },
+        {
+          "type": "completed",
+          "timestamp": 1770141739733,
+          "cost": 0.000875
+        }
+      ],
+      "status": "completed",
+      "modelUsed": "openai/gpt-5.2",
+      "totalCost": 0.000875,
+      "queueDurationMs": 1,
+      "processingDurationMs": 0,
+      "totalDurationMs": 1
+    },
+    "capacity-plus-one-test-1770141739576-49": {
+      "jobId": "capacity-plus-one-test-1770141739576-49",
+      "jobType": "summary",
+      "sentAt": 1770141739732,
+      "instanceId": "inst-1770141739595-orm0010sr",
+      "events": [
+        {
+          "type": "queued",
+          "timestamp": 1770141739732
+        },
+        {
+          "type": "started",
+          "timestamp": 1770141739733,
+          "modelId": "openai/gpt-5.2"
+        },
+        {
+          "type": "completed",
+          "timestamp": 1770141739733,
+          "cost": 0.000875
+        }
+      ],
+      "status": "completed",
+      "modelUsed": "openai/gpt-5.2",
+      "totalCost": 0.000875,
+      "queueDurationMs": 1,
+      "processingDurationMs": 0,
+      "totalDurationMs": 1
+    },
+    "capacity-plus-one-test-1770141739576-50": {
+      "jobId": "capacity-plus-one-test-1770141739576-50",
+      "jobType": "summary",
+      "sentAt": 1770141739733,
+      "instanceId": "inst-1770141739595-orm0010sr",
+      "events": [
+        {
+          "type": "queued",
+          "timestamp": 1770141739733
+        },
+        {
+          "type": "started",
+          "timestamp": 1770141739734,
+          "modelId": "openai/gpt-5.2"
+        },
+        {
+          "type": "completed",
+          "timestamp": 1770141739734,
+          "cost": 0.000875
+        }
+      ],
+      "status": "completed",
+      "modelUsed": "openai/gpt-5.2",
+      "totalCost": 0.000875,
+      "queueDurationMs": 1,
+      "processingDurationMs": 0,
+      "totalDurationMs": 1
+    }
+  },
+  "timeline": [
+    {
+      "t": 1770141739597,
+      "event": "connected",
+      "instanceId": "inst-1770141739595-orm0010sr"
+    },
+    {
+      "t": 1770141739598,
+      "event": "connected",
+      "instanceId": "inst-1770141739591-66ufxgbcc"
+    },
+    {
+      "t": 1770141739701,
+      "event": "job:queued",
+      "instanceId": "inst-1770141739595-orm0010sr",
+      "jobId": "capacity-plus-one-test-1770141739576-0",
+      "jobType": "summary"
+    },
+    {
+      "t": 1770141739701,
+      "event": "job:started",
+      "instanceId": "inst-1770141739595-orm0010sr",
+      "jobId": "capacity-plus-one-test-1770141739576-0",
+      "jobType": "summary",
+      "modelId": "openai/gpt-5.2"
+    },
+    {
+      "t": 1770141739701,
+      "event": "job:completed",
+      "instanceId": "inst-1770141739595-orm0010sr",
+      "jobId": "capacity-plus-one-test-1770141739576-0",
+      "jobType": "summary",
+      "modelId": "openai/gpt-5.2",
+      "data": {
+        "cost": 0.000875,
+        "durationMs": 0
+      }
+    },
+    {
+      "t": 1770141739702,
+      "event": "job:queued",
+      "instanceId": "inst-1770141739595-orm0010sr",
+      "jobId": "capacity-plus-one-test-1770141739576-1",
+      "jobType": "summary"
+    },
+    {
+      "t": 1770141739702,
+      "event": "job:started",
+      "instanceId": "inst-1770141739595-orm0010sr",
+      "jobId": "capacity-plus-one-test-1770141739576-1",
+      "jobType": "summary",
+      "modelId": "openai/gpt-5.2"
+    },
+    {
+      "t": 1770141739702,
+      "event": "job:completed",
+      "instanceId": "inst-1770141739595-orm0010sr",
+      "jobId": "capacity-plus-one-test-1770141739576-1",
+      "jobType": "summary",
+      "modelId": "openai/gpt-5.2",
+      "data": {
+        "cost": 0.000875,
+        "durationMs": 0
+      }
+    },
+    {
+      "t": 1770141739703,
+      "event": "job:queued",
+      "instanceId": "inst-1770141739595-orm0010sr",
+      "jobId": "capacity-plus-one-test-1770141739576-2",
+      "jobType": "summary"
+    },
+    {
+      "t": 1770141739703,
+      "event": "job:started",
+      "instanceId": "inst-1770141739595-orm0010sr",
+      "jobId": "capacity-plus-one-test-1770141739576-2",
+      "jobType": "summary",
+      "modelId": "openai/gpt-5.2"
+    },
+    {
+      "t": 1770141739703,
+      "event": "job:completed",
+      "instanceId": "inst-1770141739595-orm0010sr",
+      "jobId": "capacity-plus-one-test-1770141739576-2",
+      "jobType": "summary",
+      "modelId": "openai/gpt-5.2",
+      "data": {
+        "cost": 0.000875,
+        "durationMs": 0
+      }
+    },
+    {
+      "t": 1770141739704,
+      "event": "job:queued",
+      "instanceId": "inst-1770141739591-66ufxgbcc",
+      "jobId": "capacity-plus-one-test-1770141739576-3",
+      "jobType": "summary"
+    },
+    {
+      "t": 1770141739704,
+      "event": "job:started",
+      "instanceId": "inst-1770141739591-66ufxgbcc",
+      "jobId": "capacity-plus-one-test-1770141739576-3",
+      "jobType": "summary",
+      "modelId": "openai/gpt-5.2"
+    },
+    {
+      "t": 1770141739704,
+      "event": "job:completed",
+      "instanceId": "inst-1770141739591-66ufxgbcc",
+      "jobId": "capacity-plus-one-test-1770141739576-3",
+      "jobType": "summary",
+      "modelId": "openai/gpt-5.2",
+      "data": {
+        "cost": 0.000875,
+        "durationMs": 0
+      }
+    },
+    {
+      "t": 1770141739705,
+      "event": "job:queued",
+      "instanceId": "inst-1770141739591-66ufxgbcc",
+      "jobId": "capacity-plus-one-test-1770141739576-4",
+      "jobType": "summary"
+    },
+    {
+      "t": 1770141739705,
+      "event": "job:started",
+      "instanceId": "inst-1770141739591-66ufxgbcc",
+      "jobId": "capacity-plus-one-test-1770141739576-4",
+      "jobType": "summary",
+      "modelId": "openai/gpt-5.2"
+    },
+    {
+      "t": 1770141739705,
+      "event": "job:completed",
+      "instanceId": "inst-1770141739591-66ufxgbcc",
+      "jobId": "capacity-plus-one-test-1770141739576-4",
+      "jobType": "summary",
+      "modelId": "openai/gpt-5.2",
+      "data": {
+        "cost": 0.000875,
+        "durationMs": 0
+      }
+    },
+    {
+      "t": 1770141739705,
+      "event": "job:queued",
+      "instanceId": "inst-1770141739595-orm0010sr",
+      "jobId": "capacity-plus-one-test-1770141739576-5",
+      "jobType": "summary"
+    },
+    {
+      "t": 1770141739705,
+      "event": "job:started",
+      "instanceId": "inst-1770141739595-orm0010sr",
+      "jobId": "capacity-plus-one-test-1770141739576-5",
+      "jobType": "summary",
+      "modelId": "openai/gpt-5.2"
+    },
+    {
+      "t": 1770141739705,
+      "event": "job:completed",
+      "instanceId": "inst-1770141739595-orm0010sr",
+      "jobId": "capacity-plus-one-test-1770141739576-5",
+      "jobType": "summary",
+      "modelId": "openai/gpt-5.2",
+      "data": {
+        "cost": 0.000875,
+        "durationMs": 0
+      }
+    },
+    {
+      "t": 1770141739706,
+      "event": "job:queued",
+      "instanceId": "inst-1770141739591-66ufxgbcc",
+      "jobId": "capacity-plus-one-test-1770141739576-6",
+      "jobType": "summary"
+    },
+    {
+      "t": 1770141739706,
+      "event": "job:started",
+      "instanceId": "inst-1770141739591-66ufxgbcc",
+      "jobId": "capacity-plus-one-test-1770141739576-6",
+      "jobType": "summary",
+      "modelId": "openai/gpt-5.2"
+    },
+    {
+      "t": 1770141739706,
+      "event": "job:completed",
+      "instanceId": "inst-1770141739591-66ufxgbcc",
+      "jobId": "capacity-plus-one-test-1770141739576-6",
+      "jobType": "summary",
+      "modelId": "openai/gpt-5.2",
+      "data": {
+        "cost": 0.000875,
+        "durationMs": 0
+      }
+    },
+    {
+      "t": 1770141739706,
+      "event": "job:queued",
+      "instanceId": "inst-1770141739591-66ufxgbcc",
+      "jobId": "capacity-plus-one-test-1770141739576-7",
+      "jobType": "summary"
+    },
+    {
+      "t": 1770141739707,
+      "event": "job:started",
+      "instanceId": "inst-1770141739591-66ufxgbcc",
+      "jobId": "capacity-plus-one-test-1770141739576-7",
+      "jobType": "summary",
+      "modelId": "openai/gpt-5.2"
+    },
+    {
+      "t": 1770141739707,
+      "event": "job:completed",
+      "instanceId": "inst-1770141739591-66ufxgbcc",
+      "jobId": "capacity-plus-one-test-1770141739576-7",
+      "jobType": "summary",
+      "modelId": "openai/gpt-5.2",
+      "data": {
+        "cost": 0.000875,
+        "durationMs": 1
+      }
+    },
+    {
+      "t": 1770141739707,
+      "event": "job:queued",
+      "instanceId": "inst-1770141739595-orm0010sr",
+      "jobId": "capacity-plus-one-test-1770141739576-8",
+      "jobType": "summary"
+    },
+    {
+      "t": 1770141739707,
+      "event": "job:started",
+      "instanceId": "inst-1770141739595-orm0010sr",
+      "jobId": "capacity-plus-one-test-1770141739576-8",
+      "jobType": "summary",
+      "modelId": "openai/gpt-5.2"
+    },
+    {
+      "t": 1770141739707,
+      "event": "job:completed",
+      "instanceId": "inst-1770141739595-orm0010sr",
+      "jobId": "capacity-plus-one-test-1770141739576-8",
+      "jobType": "summary",
+      "modelId": "openai/gpt-5.2",
+      "data": {
+        "cost": 0.000875,
+        "durationMs": 0
+      }
+    },
+    {
+      "t": 1770141739708,
+      "event": "job:queued",
+      "instanceId": "inst-1770141739591-66ufxgbcc",
+      "jobId": "capacity-plus-one-test-1770141739576-9",
+      "jobType": "summary"
+    },
+    {
+      "t": 1770141739708,
+      "event": "job:started",
+      "instanceId": "inst-1770141739591-66ufxgbcc",
+      "jobId": "capacity-plus-one-test-1770141739576-9",
+      "jobType": "summary",
+      "modelId": "openai/gpt-5.2"
+    },
+    {
+      "t": 1770141739708,
+      "event": "job:completed",
+      "instanceId": "inst-1770141739591-66ufxgbcc",
+      "jobId": "capacity-plus-one-test-1770141739576-9",
+      "jobType": "summary",
+      "modelId": "openai/gpt-5.2",
+      "data": {
+        "cost": 0.000875,
+        "durationMs": 0
+      }
+    },
+    {
+      "t": 1770141739708,
+      "event": "job:queued",
+      "instanceId": "inst-1770141739595-orm0010sr",
+      "jobId": "capacity-plus-one-test-1770141739576-10",
+      "jobType": "summary"
+    },
+    {
+      "t": 1770141739708,
+      "event": "job:started",
+      "instanceId": "inst-1770141739595-orm0010sr",
+      "jobId": "capacity-plus-one-test-1770141739576-10",
+      "jobType": "summary",
+      "modelId": "openai/gpt-5.2"
+    },
+    {
+      "t": 1770141739709,
+      "event": "job:completed",
+      "instanceId": "inst-1770141739595-orm0010sr",
+      "jobId": "capacity-plus-one-test-1770141739576-10",
+      "jobType": "summary",
+      "modelId": "openai/gpt-5.2",
+      "data": {
+        "cost": 0.000875,
+        "durationMs": 1
+      }
+    },
+    {
+      "t": 1770141739709,
+      "event": "job:queued",
+      "instanceId": "inst-1770141739595-orm0010sr",
+      "jobId": "capacity-plus-one-test-1770141739576-11",
+      "jobType": "summary"
+    },
+    {
+      "t": 1770141739709,
+      "event": "job:started",
+      "instanceId": "inst-1770141739595-orm0010sr",
+      "jobId": "capacity-plus-one-test-1770141739576-11",
+      "jobType": "summary",
+      "modelId": "openai/gpt-5.2"
+    },
+    {
+      "t": 1770141739709,
+      "event": "job:completed",
+      "instanceId": "inst-1770141739595-orm0010sr",
+      "jobId": "capacity-plus-one-test-1770141739576-11",
+      "jobType": "summary",
+      "modelId": "openai/gpt-5.2",
+      "data": {
+        "cost": 0.000875,
+        "durationMs": 0
+      }
+    },
+    {
+      "t": 1770141739709,
+      "event": "job:queued",
+      "instanceId": "inst-1770141739595-orm0010sr",
+      "jobId": "capacity-plus-one-test-1770141739576-12",
+      "jobType": "summary"
+    },
+    {
+      "t": 1770141739710,
+      "event": "job:started",
+      "instanceId": "inst-1770141739595-orm0010sr",
+      "jobId": "capacity-plus-one-test-1770141739576-12",
+      "jobType": "summary",
+      "modelId": "openai/gpt-5.2"
+    },
+    {
+      "t": 1770141739710,
+      "event": "job:completed",
+      "instanceId": "inst-1770141739595-orm0010sr",
+      "jobId": "capacity-plus-one-test-1770141739576-12",
+      "jobType": "summary",
+      "modelId": "openai/gpt-5.2",
+      "data": {
+        "cost": 0.000875,
+        "durationMs": 1
+      }
+    },
+    {
+      "t": 1770141739710,
+      "event": "job:queued",
+      "instanceId": "inst-1770141739591-66ufxgbcc",
+      "jobId": "capacity-plus-one-test-1770141739576-13",
+      "jobType": "summary"
+    },
+    {
+      "t": 1770141739710,
+      "event": "job:started",
+      "instanceId": "inst-1770141739591-66ufxgbcc",
+      "jobId": "capacity-plus-one-test-1770141739576-13",
+      "jobType": "summary",
+      "modelId": "openai/gpt-5.2"
+    },
+    {
+      "t": 1770141739710,
+      "event": "job:completed",
+      "instanceId": "inst-1770141739591-66ufxgbcc",
+      "jobId": "capacity-plus-one-test-1770141739576-13",
+      "jobType": "summary",
+      "modelId": "openai/gpt-5.2",
+      "data": {
+        "cost": 0.000875,
+        "durationMs": 0
+      }
+    },
+    {
+      "t": 1770141739711,
+      "event": "job:queued",
+      "instanceId": "inst-1770141739595-orm0010sr",
+      "jobId": "capacity-plus-one-test-1770141739576-14",
+      "jobType": "summary"
+    },
+    {
+      "t": 1770141739711,
+      "event": "job:started",
+      "instanceId": "inst-1770141739595-orm0010sr",
+      "jobId": "capacity-plus-one-test-1770141739576-14",
+      "jobType": "summary",
+      "modelId": "openai/gpt-5.2"
+    },
+    {
+      "t": 1770141739711,
+      "event": "job:completed",
+      "instanceId": "inst-1770141739595-orm0010sr",
+      "jobId": "capacity-plus-one-test-1770141739576-14",
+      "jobType": "summary",
+      "modelId": "openai/gpt-5.2",
+      "data": {
+        "cost": 0.000875,
+        "durationMs": 0
+      }
+    },
+    {
+      "t": 1770141739711,
+      "event": "job:queued",
+      "instanceId": "inst-1770141739591-66ufxgbcc",
+      "jobId": "capacity-plus-one-test-1770141739576-15",
+      "jobType": "summary"
+    },
+    {
+      "t": 1770141739711,
+      "event": "job:started",
+      "instanceId": "inst-1770141739591-66ufxgbcc",
+      "jobId": "capacity-plus-one-test-1770141739576-15",
+      "jobType": "summary",
+      "modelId": "openai/gpt-5.2"
+    },
+    {
+      "t": 1770141739711,
+      "event": "job:completed",
+      "instanceId": "inst-1770141739591-66ufxgbcc",
+      "jobId": "capacity-plus-one-test-1770141739576-15",
+      "jobType": "summary",
+      "modelId": "openai/gpt-5.2",
+      "data": {
+        "cost": 0.000875,
+        "durationMs": 0
+      }
+    },
+    {
+      "t": 1770141739712,
+      "event": "job:queued",
+      "instanceId": "inst-1770141739591-66ufxgbcc",
+      "jobId": "capacity-plus-one-test-1770141739576-16",
+      "jobType": "summary"
+    },
+    {
+      "t": 1770141739712,
+      "event": "job:started",
+      "instanceId": "inst-1770141739591-66ufxgbcc",
+      "jobId": "capacity-plus-one-test-1770141739576-16",
+      "jobType": "summary",
+      "modelId": "openai/gpt-5.2"
+    },
+    {
+      "t": 1770141739712,
+      "event": "job:completed",
+      "instanceId": "inst-1770141739591-66ufxgbcc",
+      "jobId": "capacity-plus-one-test-1770141739576-16",
+      "jobType": "summary",
+      "modelId": "openai/gpt-5.2",
+      "data": {
+        "cost": 0.000875,
+        "durationMs": 0
+      }
+    },
+    {
+      "t": 1770141739712,
+      "event": "job:queued",
+      "instanceId": "inst-1770141739591-66ufxgbcc",
+      "jobId": "capacity-plus-one-test-1770141739576-17",
+      "jobType": "summary"
+    },
+    {
+      "t": 1770141739713,
+      "event": "job:started",
+      "instanceId": "inst-1770141739591-66ufxgbcc",
+      "jobId": "capacity-plus-one-test-1770141739576-17",
+      "jobType": "summary",
+      "modelId": "openai/gpt-5.2"
+    },
+    {
+      "t": 1770141739713,
+      "event": "job:completed",
+      "instanceId": "inst-1770141739591-66ufxgbcc",
+      "jobId": "capacity-plus-one-test-1770141739576-17",
+      "jobType": "summary",
+      "modelId": "openai/gpt-5.2",
+      "data": {
+        "cost": 0.000875,
+        "durationMs": 1
+      }
+    },
+    {
+      "t": 1770141739713,
+      "event": "job:queued",
+      "instanceId": "inst-1770141739595-orm0010sr",
+      "jobId": "capacity-plus-one-test-1770141739576-18",
+      "jobType": "summary"
+    },
+    {
+      "t": 1770141739713,
+      "event": "job:started",
+      "instanceId": "inst-1770141739595-orm0010sr",
+      "jobId": "capacity-plus-one-test-1770141739576-18",
+      "jobType": "summary",
+      "modelId": "openai/gpt-5.2"
+    },
+    {
+      "t": 1770141739713,
+      "event": "job:completed",
+      "instanceId": "inst-1770141739595-orm0010sr",
+      "jobId": "capacity-plus-one-test-1770141739576-18",
+      "jobType": "summary",
+      "modelId": "openai/gpt-5.2",
+      "data": {
+        "cost": 0.000875,
+        "durationMs": 0
+      }
+    },
+    {
+      "t": 1770141739713,
+      "event": "job:queued",
+      "instanceId": "inst-1770141739591-66ufxgbcc",
+      "jobId": "capacity-plus-one-test-1770141739576-19",
+      "jobType": "summary"
+    },
+    {
+      "t": 1770141739713,
+      "event": "job:started",
+      "instanceId": "inst-1770141739591-66ufxgbcc",
+      "jobId": "capacity-plus-one-test-1770141739576-19",
+      "jobType": "summary",
+      "modelId": "openai/gpt-5.2"
+    },
+    {
+      "t": 1770141739713,
+      "event": "job:completed",
+      "instanceId": "inst-1770141739591-66ufxgbcc",
+      "jobId": "capacity-plus-one-test-1770141739576-19",
+      "jobType": "summary",
+      "modelId": "openai/gpt-5.2",
+      "data": {
+        "cost": 0.000875,
+        "durationMs": 0
+      }
+    },
+    {
+      "t": 1770141739714,
+      "event": "job:queued",
+      "instanceId": "inst-1770141739595-orm0010sr",
+      "jobId": "capacity-plus-one-test-1770141739576-20",
+      "jobType": "summary"
+    },
+    {
+      "t": 1770141739714,
+      "event": "job:started",
+      "instanceId": "inst-1770141739595-orm0010sr",
+      "jobId": "capacity-plus-one-test-1770141739576-20",
+      "jobType": "summary",
+      "modelId": "openai/gpt-5.2"
+    },
+    {
+      "t": 1770141739714,
+      "event": "job:completed",
+      "instanceId": "inst-1770141739595-orm0010sr",
+      "jobId": "capacity-plus-one-test-1770141739576-20",
+      "jobType": "summary",
+      "modelId": "openai/gpt-5.2",
+      "data": {
+        "cost": 0.000875,
+        "durationMs": 0
+      }
+    },
+    {
+      "t": 1770141739715,
+      "event": "job:queued",
+      "instanceId": "inst-1770141739591-66ufxgbcc",
+      "jobId": "capacity-plus-one-test-1770141739576-21",
+      "jobType": "summary"
+    },
+    {
+      "t": 1770141739715,
+      "event": "job:started",
+      "instanceId": "inst-1770141739591-66ufxgbcc",
+      "jobId": "capacity-plus-one-test-1770141739576-21",
+      "jobType": "summary",
+      "modelId": "openai/gpt-5.2"
+    },
+    {
+      "t": 1770141739715,
+      "event": "job:completed",
+      "instanceId": "inst-1770141739591-66ufxgbcc",
+      "jobId": "capacity-plus-one-test-1770141739576-21",
+      "jobType": "summary",
+      "modelId": "openai/gpt-5.2",
+      "data": {
+        "cost": 0.000875,
+        "durationMs": 0
+      }
+    },
+    {
+      "t": 1770141739715,
+      "event": "job:queued",
+      "instanceId": "inst-1770141739591-66ufxgbcc",
+      "jobId": "capacity-plus-one-test-1770141739576-22",
+      "jobType": "summary"
+    },
+    {
+      "t": 1770141739716,
+      "event": "job:started",
+      "instanceId": "inst-1770141739591-66ufxgbcc",
+      "jobId": "capacity-plus-one-test-1770141739576-22",
+      "jobType": "summary",
+      "modelId": "openai/gpt-5.2"
+    },
+    {
+      "t": 1770141739716,
+      "event": "job:completed",
+      "instanceId": "inst-1770141739591-66ufxgbcc",
+      "jobId": "capacity-plus-one-test-1770141739576-22",
+      "jobType": "summary",
+      "modelId": "openai/gpt-5.2",
+      "data": {
+        "cost": 0.000875,
+        "durationMs": 1
+      }
+    },
+    {
+      "t": 1770141739716,
+      "event": "job:queued",
+      "instanceId": "inst-1770141739595-orm0010sr",
+      "jobId": "capacity-plus-one-test-1770141739576-23",
+      "jobType": "summary"
+    },
+    {
+      "t": 1770141739716,
+      "event": "job:started",
+      "instanceId": "inst-1770141739595-orm0010sr",
+      "jobId": "capacity-plus-one-test-1770141739576-23",
+      "jobType": "summary",
+      "modelId": "openai/gpt-5.2"
+    },
+    {
+      "t": 1770141739716,
+      "event": "job:completed",
+      "instanceId": "inst-1770141739595-orm0010sr",
+      "jobId": "capacity-plus-one-test-1770141739576-23",
+      "jobType": "summary",
+      "modelId": "openai/gpt-5.2",
+      "data": {
+        "cost": 0.000875,
+        "durationMs": 0
+      }
+    },
+    {
+      "t": 1770141739716,
+      "event": "job:queued",
+      "instanceId": "inst-1770141739595-orm0010sr",
+      "jobId": "capacity-plus-one-test-1770141739576-24",
+      "jobType": "summary"
+    },
+    {
+      "t": 1770141739717,
+      "event": "job:started",
+      "instanceId": "inst-1770141739595-orm0010sr",
+      "jobId": "capacity-plus-one-test-1770141739576-24",
+      "jobType": "summary",
+      "modelId": "openai/gpt-5.2"
+    },
+    {
+      "t": 1770141739717,
+      "event": "job:completed",
+      "instanceId": "inst-1770141739595-orm0010sr",
+      "jobId": "capacity-plus-one-test-1770141739576-24",
+      "jobType": "summary",
+      "modelId": "openai/gpt-5.2",
+      "data": {
+        "cost": 0.000875,
+        "durationMs": 1
+      }
+    },
+    {
+      "t": 1770141739717,
+      "event": "job:queued",
+      "instanceId": "inst-1770141739591-66ufxgbcc",
+      "jobId": "capacity-plus-one-test-1770141739576-25",
+      "jobType": "summary"
+    },
+    {
+      "t": 1770141739717,
+      "event": "job:started",
+      "instanceId": "inst-1770141739591-66ufxgbcc",
+      "jobId": "capacity-plus-one-test-1770141739576-25",
+      "jobType": "summary",
+      "modelId": "openai/gpt-5.2"
+    },
+    {
+      "t": 1770141739717,
+      "event": "job:completed",
+      "instanceId": "inst-1770141739591-66ufxgbcc",
+      "jobId": "capacity-plus-one-test-1770141739576-25",
+      "jobType": "summary",
+      "modelId": "openai/gpt-5.2",
+      "data": {
+        "cost": 0.000875,
+        "durationMs": 0
+      }
+    },
+    {
+      "t": 1770141739718,
+      "event": "job:queued",
+      "instanceId": "inst-1770141739591-66ufxgbcc",
+      "jobId": "capacity-plus-one-test-1770141739576-26",
+      "jobType": "summary"
+    },
+    {
+      "t": 1770141739718,
+      "event": "job:started",
+      "instanceId": "inst-1770141739591-66ufxgbcc",
+      "jobId": "capacity-plus-one-test-1770141739576-26",
+      "jobType": "summary",
+      "modelId": "openai/gpt-5.2"
+    },
+    {
+      "t": 1770141739718,
+      "event": "job:completed",
+      "instanceId": "inst-1770141739591-66ufxgbcc",
+      "jobId": "capacity-plus-one-test-1770141739576-26",
+      "jobType": "summary",
+      "modelId": "openai/gpt-5.2",
+      "data": {
+        "cost": 0.000875,
+        "durationMs": 0
+      }
+    },
+    {
+      "t": 1770141739718,
+      "event": "job:queued",
+      "instanceId": "inst-1770141739591-66ufxgbcc",
+      "jobId": "capacity-plus-one-test-1770141739576-27",
+      "jobType": "summary"
+    },
+    {
+      "t": 1770141739720,
+      "event": "job:started",
+      "instanceId": "inst-1770141739591-66ufxgbcc",
+      "jobId": "capacity-plus-one-test-1770141739576-27",
+      "jobType": "summary",
+      "modelId": "openai/gpt-5.2"
+    },
+    {
+      "t": 1770141739720,
+      "event": "job:completed",
+      "instanceId": "inst-1770141739591-66ufxgbcc",
+      "jobId": "capacity-plus-one-test-1770141739576-27",
+      "jobType": "summary",
+      "modelId": "openai/gpt-5.2",
+      "data": {
+        "cost": 0.000875,
+        "durationMs": 2
+      }
+    },
+    {
+      "t": 1770141739720,
+      "event": "job:queued",
+      "instanceId": "inst-1770141739595-orm0010sr",
+      "jobId": "capacity-plus-one-test-1770141739576-28",
+      "jobType": "summary"
+    },
+    {
+      "t": 1770141739721,
+      "event": "job:started",
+      "instanceId": "inst-1770141739595-orm0010sr",
+      "jobId": "capacity-plus-one-test-1770141739576-28",
+      "jobType": "summary",
+      "modelId": "openai/gpt-5.2"
+    },
+    {
+      "t": 1770141739721,
+      "event": "job:completed",
+      "instanceId": "inst-1770141739595-orm0010sr",
+      "jobId": "capacity-plus-one-test-1770141739576-28",
+      "jobType": "summary",
+      "modelId": "openai/gpt-5.2",
+      "data": {
+        "cost": 0.000875,
+        "durationMs": 1
+      }
+    },
+    {
+      "t": 1770141739721,
+      "event": "job:queued",
+      "instanceId": "inst-1770141739595-orm0010sr",
+      "jobId": "capacity-plus-one-test-1770141739576-29",
+      "jobType": "summary"
+    },
+    {
+      "t": 1770141739722,
+      "event": "job:started",
+      "instanceId": "inst-1770141739595-orm0010sr",
+      "jobId": "capacity-plus-one-test-1770141739576-29",
+      "jobType": "summary",
+      "modelId": "openai/gpt-5.2"
+    },
+    {
+      "t": 1770141739722,
+      "event": "job:completed",
+      "instanceId": "inst-1770141739595-orm0010sr",
+      "jobId": "capacity-plus-one-test-1770141739576-29",
+      "jobType": "summary",
+      "modelId": "openai/gpt-5.2",
+      "data": {
+        "cost": 0.000875,
+        "durationMs": 1
+      }
+    },
+    {
+      "t": 1770141739722,
+      "event": "job:queued",
+      "instanceId": "inst-1770141739591-66ufxgbcc",
+      "jobId": "capacity-plus-one-test-1770141739576-30",
+      "jobType": "summary"
+    },
+    {
+      "t": 1770141739722,
+      "event": "job:started",
+      "instanceId": "inst-1770141739591-66ufxgbcc",
+      "jobId": "capacity-plus-one-test-1770141739576-30",
+      "jobType": "summary",
+      "modelId": "openai/gpt-5.2"
+    },
+    {
+      "t": 1770141739722,
+      "event": "job:completed",
+      "instanceId": "inst-1770141739591-66ufxgbcc",
+      "jobId": "capacity-plus-one-test-1770141739576-30",
+      "jobType": "summary",
+      "modelId": "openai/gpt-5.2",
+      "data": {
+        "cost": 0.000875,
+        "durationMs": 0
+      }
+    },
+    {
+      "t": 1770141739723,
+      "event": "job:queued",
+      "instanceId": "inst-1770141739591-66ufxgbcc",
+      "jobId": "capacity-plus-one-test-1770141739576-31",
+      "jobType": "summary"
+    },
+    {
+      "t": 1770141739723,
+      "event": "job:started",
+      "instanceId": "inst-1770141739591-66ufxgbcc",
+      "jobId": "capacity-plus-one-test-1770141739576-31",
+      "jobType": "summary",
+      "modelId": "openai/gpt-5.2"
+    },
+    {
+      "t": 1770141739723,
+      "event": "job:completed",
+      "instanceId": "inst-1770141739591-66ufxgbcc",
+      "jobId": "capacity-plus-one-test-1770141739576-31",
+      "jobType": "summary",
+      "modelId": "openai/gpt-5.2",
+      "data": {
+        "cost": 0.000875,
+        "durationMs": 0
+      }
+    },
+    {
+      "t": 1770141739723,
+      "event": "job:queued",
+      "instanceId": "inst-1770141739595-orm0010sr",
+      "jobId": "capacity-plus-one-test-1770141739576-32",
+      "jobType": "summary"
+    },
+    {
+      "t": 1770141739723,
+      "event": "job:started",
+      "instanceId": "inst-1770141739595-orm0010sr",
+      "jobId": "capacity-plus-one-test-1770141739576-32",
+      "jobType": "summary",
+      "modelId": "openai/gpt-5.2"
+    },
+    {
+      "t": 1770141739723,
+      "event": "job:completed",
+      "instanceId": "inst-1770141739595-orm0010sr",
+      "jobId": "capacity-plus-one-test-1770141739576-32",
+      "jobType": "summary",
+      "modelId": "openai/gpt-5.2",
+      "data": {
+        "cost": 0.000875,
+        "durationMs": 0
+      }
+    },
+    {
+      "t": 1770141739724,
+      "event": "job:queued",
+      "instanceId": "inst-1770141739595-orm0010sr",
+      "jobId": "capacity-plus-one-test-1770141739576-33",
+      "jobType": "summary"
+    },
+    {
+      "t": 1770141739724,
+      "event": "job:started",
+      "instanceId": "inst-1770141739595-orm0010sr",
+      "jobId": "capacity-plus-one-test-1770141739576-33",
+      "jobType": "summary",
+      "modelId": "openai/gpt-5.2"
+    },
+    {
+      "t": 1770141739724,
+      "event": "job:completed",
+      "instanceId": "inst-1770141739595-orm0010sr",
+      "jobId": "capacity-plus-one-test-1770141739576-33",
+      "jobType": "summary",
+      "modelId": "openai/gpt-5.2",
+      "data": {
+        "cost": 0.000875,
+        "durationMs": 0
+      }
+    },
+    {
+      "t": 1770141739724,
+      "event": "job:queued",
+      "instanceId": "inst-1770141739595-orm0010sr",
+      "jobId": "capacity-plus-one-test-1770141739576-34",
+      "jobType": "summary"
+    },
+    {
+      "t": 1770141739724,
+      "event": "job:started",
+      "instanceId": "inst-1770141739595-orm0010sr",
+      "jobId": "capacity-plus-one-test-1770141739576-34",
+      "jobType": "summary",
+      "modelId": "openai/gpt-5.2"
+    },
+    {
+      "t": 1770141739724,
+      "event": "job:completed",
+      "instanceId": "inst-1770141739595-orm0010sr",
+      "jobId": "capacity-plus-one-test-1770141739576-34",
+      "jobType": "summary",
+      "modelId": "openai/gpt-5.2",
+      "data": {
+        "cost": 0.000875,
+        "durationMs": 0
+      }
+    },
+    {
+      "t": 1770141739725,
+      "event": "job:queued",
+      "instanceId": "inst-1770141739591-66ufxgbcc",
+      "jobId": "capacity-plus-one-test-1770141739576-35",
+      "jobType": "summary"
+    },
+    {
+      "t": 1770141739725,
+      "event": "job:started",
+      "instanceId": "inst-1770141739591-66ufxgbcc",
+      "jobId": "capacity-plus-one-test-1770141739576-35",
+      "jobType": "summary",
+      "modelId": "openai/gpt-5.2"
+    },
+    {
+      "t": 1770141739725,
+      "event": "job:completed",
+      "instanceId": "inst-1770141739591-66ufxgbcc",
+      "jobId": "capacity-plus-one-test-1770141739576-35",
+      "jobType": "summary",
+      "modelId": "openai/gpt-5.2",
+      "data": {
+        "cost": 0.000875,
+        "durationMs": 0
+      }
+    },
+    {
+      "t": 1770141739725,
+      "event": "job:queued",
+      "instanceId": "inst-1770141739591-66ufxgbcc",
+      "jobId": "capacity-plus-one-test-1770141739576-36",
+      "jobType": "summary"
+    },
+    {
+      "t": 1770141739725,
+      "event": "job:started",
+      "instanceId": "inst-1770141739591-66ufxgbcc",
+      "jobId": "capacity-plus-one-test-1770141739576-36",
+      "jobType": "summary",
+      "modelId": "openai/gpt-5.2"
+    },
+    {
+      "t": 1770141739725,
+      "event": "job:completed",
+      "instanceId": "inst-1770141739591-66ufxgbcc",
+      "jobId": "capacity-plus-one-test-1770141739576-36",
+      "jobType": "summary",
+      "modelId": "openai/gpt-5.2",
+      "data": {
+        "cost": 0.000875,
+        "durationMs": 0
+      }
+    },
+    {
+      "t": 1770141739726,
+      "event": "job:queued",
+      "instanceId": "inst-1770141739595-orm0010sr",
+      "jobId": "capacity-plus-one-test-1770141739576-37",
+      "jobType": "summary"
+    },
+    {
+      "t": 1770141739726,
+      "event": "job:started",
+      "instanceId": "inst-1770141739595-orm0010sr",
+      "jobId": "capacity-plus-one-test-1770141739576-37",
+      "jobType": "summary",
+      "modelId": "openai/gpt-5.2"
+    },
+    {
+      "t": 1770141739726,
+      "event": "job:completed",
+      "instanceId": "inst-1770141739595-orm0010sr",
+      "jobId": "capacity-plus-one-test-1770141739576-37",
+      "jobType": "summary",
+      "modelId": "openai/gpt-5.2",
+      "data": {
+        "cost": 0.000875,
+        "durationMs": 0
+      }
+    },
+    {
+      "t": 1770141739726,
+      "event": "job:queued",
+      "instanceId": "inst-1770141739595-orm0010sr",
+      "jobId": "capacity-plus-one-test-1770141739576-38",
+      "jobType": "summary"
+    },
+    {
+      "t": 1770141739727,
+      "event": "job:started",
+      "instanceId": "inst-1770141739595-orm0010sr",
+      "jobId": "capacity-plus-one-test-1770141739576-38",
+      "jobType": "summary",
+      "modelId": "openai/gpt-5.2"
+    },
+    {
+      "t": 1770141739727,
+      "event": "job:completed",
+      "instanceId": "inst-1770141739595-orm0010sr",
+      "jobId": "capacity-plus-one-test-1770141739576-38",
+      "jobType": "summary",
+      "modelId": "openai/gpt-5.2",
+      "data": {
+        "cost": 0.000875,
+        "durationMs": 1
+      }
+    },
+    {
+      "t": 1770141739727,
+      "event": "job:queued",
+      "instanceId": "inst-1770141739591-66ufxgbcc",
+      "jobId": "capacity-plus-one-test-1770141739576-39",
+      "jobType": "summary"
+    },
+    {
+      "t": 1770141739727,
+      "event": "job:started",
+      "instanceId": "inst-1770141739591-66ufxgbcc",
+      "jobId": "capacity-plus-one-test-1770141739576-39",
+      "jobType": "summary",
+      "modelId": "openai/gpt-5.2"
+    },
+    {
+      "t": 1770141739727,
+      "event": "job:completed",
+      "instanceId": "inst-1770141739591-66ufxgbcc",
+      "jobId": "capacity-plus-one-test-1770141739576-39",
+      "jobType": "summary",
+      "modelId": "openai/gpt-5.2",
+      "data": {
+        "cost": 0.000875,
+        "durationMs": 0
+      }
+    },
+    {
+      "t": 1770141739727,
+      "event": "job:queued",
+      "instanceId": "inst-1770141739591-66ufxgbcc",
+      "jobId": "capacity-plus-one-test-1770141739576-40",
+      "jobType": "summary"
+    },
+    {
+      "t": 1770141739728,
+      "event": "job:started",
+      "instanceId": "inst-1770141739591-66ufxgbcc",
+      "jobId": "capacity-plus-one-test-1770141739576-40",
+      "jobType": "summary",
+      "modelId": "openai/gpt-5.2"
+    },
+    {
+      "t": 1770141739728,
+      "event": "job:completed",
+      "instanceId": "inst-1770141739591-66ufxgbcc",
+      "jobId": "capacity-plus-one-test-1770141739576-40",
+      "jobType": "summary",
+      "modelId": "openai/gpt-5.2",
+      "data": {
+        "cost": 0.000875,
+        "durationMs": 1
+      }
+    },
+    {
+      "t": 1770141739728,
+      "event": "job:queued",
+      "instanceId": "inst-1770141739595-orm0010sr",
+      "jobId": "capacity-plus-one-test-1770141739576-41",
+      "jobType": "summary"
+    },
+    {
+      "t": 1770141739728,
+      "event": "job:started",
+      "instanceId": "inst-1770141739595-orm0010sr",
+      "jobId": "capacity-plus-one-test-1770141739576-41",
+      "jobType": "summary",
+      "modelId": "openai/gpt-5.2"
+    },
+    {
+      "t": 1770141739728,
+      "event": "job:completed",
+      "instanceId": "inst-1770141739595-orm0010sr",
+      "jobId": "capacity-plus-one-test-1770141739576-41",
+      "jobType": "summary",
+      "modelId": "openai/gpt-5.2",
+      "data": {
+        "cost": 0.000875,
+        "durationMs": 0
+      }
+    },
+    {
+      "t": 1770141739729,
+      "event": "job:queued",
+      "instanceId": "inst-1770141739595-orm0010sr",
+      "jobId": "capacity-plus-one-test-1770141739576-42",
+      "jobType": "summary"
+    },
+    {
+      "t": 1770141739729,
+      "event": "job:started",
+      "instanceId": "inst-1770141739595-orm0010sr",
+      "jobId": "capacity-plus-one-test-1770141739576-42",
+      "jobType": "summary",
+      "modelId": "openai/gpt-5.2"
+    },
+    {
+      "t": 1770141739729,
+      "event": "job:completed",
+      "instanceId": "inst-1770141739595-orm0010sr",
+      "jobId": "capacity-plus-one-test-1770141739576-42",
+      "jobType": "summary",
+      "modelId": "openai/gpt-5.2",
+      "data": {
+        "cost": 0.000875,
+        "durationMs": 0
+      }
+    },
+    {
+      "t": 1770141739729,
+      "event": "job:queued",
+      "instanceId": "inst-1770141739591-66ufxgbcc",
+      "jobId": "capacity-plus-one-test-1770141739576-43",
+      "jobType": "summary"
+    },
+    {
+      "t": 1770141739729,
+      "event": "job:started",
+      "instanceId": "inst-1770141739591-66ufxgbcc",
+      "jobId": "capacity-plus-one-test-1770141739576-43",
+      "jobType": "summary",
+      "modelId": "openai/gpt-5.2"
+    },
+    {
+      "t": 1770141739729,
+      "event": "job:completed",
+      "instanceId": "inst-1770141739591-66ufxgbcc",
+      "jobId": "capacity-plus-one-test-1770141739576-43",
+      "jobType": "summary",
+      "modelId": "openai/gpt-5.2",
+      "data": {
+        "cost": 0.000875,
+        "durationMs": 0
+      }
+    },
+    {
+      "t": 1770141739729,
+      "event": "job:queued",
+      "instanceId": "inst-1770141739591-66ufxgbcc",
+      "jobId": "capacity-plus-one-test-1770141739576-44",
+      "jobType": "summary"
+    },
+    {
+      "t": 1770141739730,
+      "event": "job:started",
+      "instanceId": "inst-1770141739591-66ufxgbcc",
+      "jobId": "capacity-plus-one-test-1770141739576-44",
+      "jobType": "summary",
+      "modelId": "openai/gpt-5.2"
+    },
+    {
+      "t": 1770141739730,
+      "event": "job:completed",
+      "instanceId": "inst-1770141739591-66ufxgbcc",
+      "jobId": "capacity-plus-one-test-1770141739576-44",
+      "jobType": "summary",
+      "modelId": "openai/gpt-5.2",
+      "data": {
+        "cost": 0.000875,
+        "durationMs": 1
+      }
+    },
+    {
+      "t": 1770141739730,
+      "event": "job:queued",
+      "instanceId": "inst-1770141739595-orm0010sr",
+      "jobId": "capacity-plus-one-test-1770141739576-45",
+      "jobType": "summary"
+    },
+    {
+      "t": 1770141739730,
+      "event": "job:started",
+      "instanceId": "inst-1770141739595-orm0010sr",
+      "jobId": "capacity-plus-one-test-1770141739576-45",
+      "jobType": "summary",
+      "modelId": "openai/gpt-5.2"
+    },
+    {
+      "t": 1770141739730,
+      "event": "job:completed",
+      "instanceId": "inst-1770141739595-orm0010sr",
+      "jobId": "capacity-plus-one-test-1770141739576-45",
+      "jobType": "summary",
+      "modelId": "openai/gpt-5.2",
+      "data": {
+        "cost": 0.000875,
+        "durationMs": 0
+      }
+    },
+    {
+      "t": 1770141739730,
+      "event": "job:queued",
+      "instanceId": "inst-1770141739591-66ufxgbcc",
+      "jobId": "capacity-plus-one-test-1770141739576-46",
+      "jobType": "summary"
+    },
+    {
+      "t": 1770141739731,
+      "event": "job:started",
+      "instanceId": "inst-1770141739591-66ufxgbcc",
+      "jobId": "capacity-plus-one-test-1770141739576-46",
+      "jobType": "summary",
+      "modelId": "openai/gpt-5.2"
+    },
+    {
+      "t": 1770141739731,
+      "event": "job:completed",
+      "instanceId": "inst-1770141739591-66ufxgbcc",
+      "jobId": "capacity-plus-one-test-1770141739576-46",
+      "jobType": "summary",
+      "modelId": "openai/gpt-5.2",
+      "data": {
+        "cost": 0.000875,
+        "durationMs": 1
+      }
+    },
+    {
+      "t": 1770141739731,
+      "event": "job:queued",
+      "instanceId": "inst-1770141739595-orm0010sr",
+      "jobId": "capacity-plus-one-test-1770141739576-47",
+      "jobType": "summary"
+    },
+    {
+      "t": 1770141739731,
+      "event": "job:started",
+      "instanceId": "inst-1770141739595-orm0010sr",
+      "jobId": "capacity-plus-one-test-1770141739576-47",
+      "jobType": "summary",
+      "modelId": "openai/gpt-5.2"
+    },
+    {
+      "t": 1770141739732,
+      "event": "job:completed",
+      "instanceId": "inst-1770141739595-orm0010sr",
+      "jobId": "capacity-plus-one-test-1770141739576-47",
+      "jobType": "summary",
+      "modelId": "openai/gpt-5.2",
+      "data": {
+        "cost": 0.000875,
+        "durationMs": 1
+      }
+    },
+    {
+      "t": 1770141739732,
+      "event": "job:queued",
+      "instanceId": "inst-1770141739591-66ufxgbcc",
+      "jobId": "capacity-plus-one-test-1770141739576-48",
+      "jobType": "summary"
+    },
+    {
+      "t": 1770141739732,
+      "event": "job:queued",
+      "instanceId": "inst-1770141739595-orm0010sr",
+      "jobId": "capacity-plus-one-test-1770141739576-49",
+      "jobType": "summary"
+    },
+    {
+      "t": 1770141739733,
+      "event": "job:started",
+      "instanceId": "inst-1770141739595-orm0010sr",
+      "jobId": "capacity-plus-one-test-1770141739576-49",
+      "jobType": "summary",
+      "modelId": "openai/gpt-5.2"
+    },
+    {
+      "t": 1770141739733,
+      "event": "job:completed",
+      "instanceId": "inst-1770141739595-orm0010sr",
+      "jobId": "capacity-plus-one-test-1770141739576-49",
+      "jobType": "summary",
+      "modelId": "openai/gpt-5.2",
+      "data": {
+        "cost": 0.000875,
+        "durationMs": 1
+      }
+    },
+    {
+      "t": 1770141739733,
+      "event": "job:started",
+      "instanceId": "inst-1770141739591-66ufxgbcc",
+      "jobId": "capacity-plus-one-test-1770141739576-48",
+      "jobType": "summary",
+      "modelId": "openai/gpt-5.2"
+    },
+    {
+      "t": 1770141739733,
+      "event": "job:completed",
+      "instanceId": "inst-1770141739591-66ufxgbcc",
+      "jobId": "capacity-plus-one-test-1770141739576-48",
+      "jobType": "summary",
+      "modelId": "openai/gpt-5.2",
+      "data": {
+        "cost": 0.000875,
+        "durationMs": 1
+      }
+    },
+    {
+      "t": 1770141739733,
+      "event": "job:queued",
+      "instanceId": "inst-1770141739595-orm0010sr",
+      "jobId": "capacity-plus-one-test-1770141739576-50",
+      "jobType": "summary"
+    },
+    {
+      "t": 1770141739734,
+      "event": "job:started",
+      "instanceId": "inst-1770141739595-orm0010sr",
+      "jobId": "capacity-plus-one-test-1770141739576-50",
+      "jobType": "summary",
+      "modelId": "openai/gpt-5.2"
+    },
+    {
+      "t": 1770141739734,
+      "event": "job:completed",
+      "instanceId": "inst-1770141739595-orm0010sr",
+      "jobId": "capacity-plus-one-test-1770141739576-50",
+      "jobType": "summary",
+      "modelId": "openai/gpt-5.2",
+      "data": {
+        "cost": 0.000875,
+        "durationMs": 1
+      }
+    }
+  ],
+  "snapshots": [
+    {
+      "timestamp": 1770141739700,
+      "trigger": "initial",
+      "instances": {
+        "inst-1770141739591-66ufxgbcc": {
+          "activeJobs": 0,
+          "activeJobIds": [],
+          "models": {},
+          "jobTypes": {}
+        },
+        "inst-1770141739595-orm0010sr": {
+          "activeJobs": 0,
+          "activeJobIds": [],
+          "models": {},
+          "jobTypes": {}
+        }
+      }
+    },
+    {
+      "timestamp": 1770141739702,
+      "trigger": "job:queued:capacity-plus-one-test-1770141739576-0",
+      "instances": {
+        "inst-1770141739591-66ufxgbcc": {
+          "activeJobs": 0,
+          "activeJobIds": [],
+          "models": {},
+          "jobTypes": {}
+        },
+        "inst-1770141739595-orm0010sr": {
+          "activeJobs": 0,
+          "activeJobIds": [],
+          "models": {
+            "openai/gpt-5.2": {
+              "rpm": 1,
+              "rpmRemaining": 499,
+              "tpm": 150,
+              "tpmRemaining": 499850
+            }
+          },
+          "jobTypes": {}
+        }
+      }
+    },
+    {
+      "timestamp": 1770141739703,
+      "trigger": "job:queued:capacity-plus-one-test-1770141739576-1",
+      "instances": {
+        "inst-1770141739591-66ufxgbcc": {
+          "activeJobs": 0,
+          "activeJobIds": [],
+          "models": {},
+          "jobTypes": {}
+        },
+        "inst-1770141739595-orm0010sr": {
+          "activeJobs": 0,
+          "activeJobIds": [],
+          "models": {
+            "openai/gpt-5.2": {
+              "rpm": 2,
+              "rpmRemaining": 498,
+              "tpm": 300,
+              "tpmRemaining": 499700
+            }
+          },
+          "jobTypes": {}
+        }
+      }
+    },
+    {
+      "timestamp": 1770141739703,
+      "trigger": "job:completed:capacity-plus-one-test-1770141739576-0",
+      "instances": {
+        "inst-1770141739591-66ufxgbcc": {
+          "activeJobs": 0,
+          "activeJobIds": [],
+          "models": {},
+          "jobTypes": {}
+        },
+        "inst-1770141739595-orm0010sr": {
+          "activeJobs": 1,
+          "activeJobIds": [
+            "capacity-plus-one-test-1770141739576-2"
+          ],
+          "models": {
+            "openai/gpt-5.2": {
+              "rpm": 2,
+              "rpmRemaining": 498,
+              "tpm": 300,
+              "tpmRemaining": 499700
+            }
+          },
+          "jobTypes": {
+            "summary": {
+              "ratio": 0.3,
+              "inFlight": 1,
+              "slots": 60
+            }
+          }
+        }
+      }
+    },
+    {
+      "timestamp": 1770141739704,
+      "trigger": "job:queued:capacity-plus-one-test-1770141739576-2",
+      "instances": {
+        "inst-1770141739591-66ufxgbcc": {
+          "activeJobs": 0,
+          "activeJobIds": [],
+          "models": {},
+          "jobTypes": {}
+        },
+        "inst-1770141739595-orm0010sr": {
+          "activeJobs": 0,
+          "activeJobIds": [],
+          "models": {
+            "openai/gpt-5.2": {
+              "rpm": 3,
+              "rpmRemaining": 497,
+              "tpm": 450,
+              "tpmRemaining": 499550
+            }
+          },
+          "jobTypes": {}
+        }
+      }
+    },
+    {
+      "timestamp": 1770141739704,
+      "trigger": "job:completed:capacity-plus-one-test-1770141739576-1",
+      "instances": {
+        "inst-1770141739591-66ufxgbcc": {
+          "activeJobs": 0,
+          "activeJobIds": [],
+          "models": {},
+          "jobTypes": {}
+        },
+        "inst-1770141739595-orm0010sr": {
+          "activeJobs": 0,
+          "activeJobIds": [],
+          "models": {
+            "openai/gpt-5.2": {
+              "rpm": 3,
+              "rpmRemaining": 497,
+              "tpm": 450,
+              "tpmRemaining": 499550
+            }
+          },
+          "jobTypes": {}
+        }
+      }
+    },
+    {
+      "timestamp": 1770141739704,
+      "trigger": "job:completed:capacity-plus-one-test-1770141739576-2",
+      "instances": {
+        "inst-1770141739591-66ufxgbcc": {
+          "activeJobs": 0,
+          "activeJobIds": [],
+          "models": {},
+          "jobTypes": {}
+        },
+        "inst-1770141739595-orm0010sr": {
+          "activeJobs": 0,
+          "activeJobIds": [],
+          "models": {
+            "openai/gpt-5.2": {
+              "rpm": 3,
+              "rpmRemaining": 497,
+              "tpm": 450,
+              "tpmRemaining": 499550
+            }
+          },
+          "jobTypes": {}
+        }
+      }
+    },
+    {
+      "timestamp": 1770141739705,
+      "trigger": "job:queued:capacity-plus-one-test-1770141739576-3",
+      "instances": {
+        "inst-1770141739591-66ufxgbcc": {
+          "activeJobs": 0,
+          "activeJobIds": [],
+          "models": {
+            "openai/gpt-5.2": {
+              "rpm": 1,
+              "rpmRemaining": 499,
+              "tpm": 150,
+              "tpmRemaining": 499850
+            }
+          },
+          "jobTypes": {}
+        },
+        "inst-1770141739595-orm0010sr": {
+          "activeJobs": 0,
+          "activeJobIds": [],
+          "models": {
+            "openai/gpt-5.2": {
+              "rpm": 3,
+              "rpmRemaining": 497,
+              "tpm": 450,
+              "tpmRemaining": 499550
+            }
+          },
+          "jobTypes": {}
+        }
+      }
+    },
+    {
+      "timestamp": 1770141739705,
+      "trigger": "job:completed:capacity-plus-one-test-1770141739576-3",
+      "instances": {
+        "inst-1770141739591-66ufxgbcc": {
+          "activeJobs": 1,
+          "activeJobIds": [
+            "capacity-plus-one-test-1770141739576-4"
+          ],
+          "models": {
+            "openai/gpt-5.2": {
+              "rpm": 1,
+              "rpmRemaining": 499,
+              "tpm": 150,
+              "tpmRemaining": 499850
+            }
+          },
+          "jobTypes": {
+            "summary": {
+              "ratio": 0.3,
+              "inFlight": 1,
+              "slots": 60
+            }
+          }
+        },
+        "inst-1770141739595-orm0010sr": {
+          "activeJobs": 0,
+          "activeJobIds": [],
+          "models": {
+            "openai/gpt-5.2": {
+              "rpm": 3,
+              "rpmRemaining": 497,
+              "tpm": 450,
+              "tpmRemaining": 499550
+            }
+          },
+          "jobTypes": {}
+        }
+      }
+    },
+    {
+      "timestamp": 1770141739705,
+      "trigger": "job:queued:capacity-plus-one-test-1770141739576-4",
+      "instances": {
+        "inst-1770141739591-66ufxgbcc": {
+          "activeJobs": 0,
+          "activeJobIds": [],
+          "models": {
+            "openai/gpt-5.2": {
+              "rpm": 2,
+              "rpmRemaining": 498,
+              "tpm": 300,
+              "tpmRemaining": 499700
+            }
+          },
+          "jobTypes": {}
+        },
+        "inst-1770141739595-orm0010sr": {
+          "activeJobs": 0,
+          "activeJobIds": [],
+          "models": {
+            "openai/gpt-5.2": {
+              "rpm": 3,
+              "rpmRemaining": 497,
+              "tpm": 450,
+              "tpmRemaining": 499550
+            }
+          },
+          "jobTypes": {}
+        }
+      }
+    },
+    {
+      "timestamp": 1770141739705,
+      "trigger": "job:completed:capacity-plus-one-test-1770141739576-4",
+      "instances": {
+        "inst-1770141739591-66ufxgbcc": {
+          "activeJobs": 0,
+          "activeJobIds": [],
+          "models": {
+            "openai/gpt-5.2": {
+              "rpm": 2,
+              "rpmRemaining": 498,
+              "tpm": 300,
+              "tpmRemaining": 499700
+            }
+          },
+          "jobTypes": {}
+        },
+        "inst-1770141739595-orm0010sr": {
+          "activeJobs": 0,
+          "activeJobIds": [],
+          "models": {
+            "openai/gpt-5.2": {
+              "rpm": 3,
+              "rpmRemaining": 497,
+              "tpm": 450,
+              "tpmRemaining": 499550
+            }
+          },
+          "jobTypes": {}
+        }
+      }
+    },
+    {
+      "timestamp": 1770141739706,
+      "trigger": "job:queued:capacity-plus-one-test-1770141739576-5",
+      "instances": {
+        "inst-1770141739591-66ufxgbcc": {
+          "activeJobs": 0,
+          "activeJobIds": [],
+          "models": {
+            "openai/gpt-5.2": {
+              "rpm": 2,
+              "rpmRemaining": 498,
+              "tpm": 300,
+              "tpmRemaining": 499700
+            }
+          },
+          "jobTypes": {}
+        },
+        "inst-1770141739595-orm0010sr": {
+          "activeJobs": 0,
+          "activeJobIds": [],
+          "models": {
+            "openai/gpt-5.2": {
+              "rpm": 4,
+              "rpmRemaining": 496,
+              "tpm": 600,
+              "tpmRemaining": 499400
+            }
+          },
+          "jobTypes": {}
+        }
+      }
+    },
+    {
+      "timestamp": 1770141739706,
+      "trigger": "job:completed:capacity-plus-one-test-1770141739576-5",
+      "instances": {
+        "inst-1770141739591-66ufxgbcc": {
+          "activeJobs": 0,
+          "activeJobIds": [],
+          "models": {
+            "openai/gpt-5.2": {
+              "rpm": 2,
+              "rpmRemaining": 498,
+              "tpm": 300,
+              "tpmRemaining": 499700
+            }
+          },
+          "jobTypes": {}
+        },
+        "inst-1770141739595-orm0010sr": {
+          "activeJobs": 0,
+          "activeJobIds": [],
+          "models": {
+            "openai/gpt-5.2": {
+              "rpm": 4,
+              "rpmRemaining": 496,
+              "tpm": 600,
+              "tpmRemaining": 499400
+            }
+          },
+          "jobTypes": {}
+        }
+      }
+    },
+    {
+      "timestamp": 1770141739707,
+      "trigger": "job:queued:capacity-plus-one-test-1770141739576-6",
+      "instances": {
+        "inst-1770141739591-66ufxgbcc": {
+          "activeJobs": 0,
+          "activeJobIds": [],
+          "models": {
+            "openai/gpt-5.2": {
+              "rpm": 3,
+              "rpmRemaining": 497,
+              "tpm": 450,
+              "tpmRemaining": 499550
+            }
+          },
+          "jobTypes": {}
+        },
+        "inst-1770141739595-orm0010sr": {
+          "activeJobs": 0,
+          "activeJobIds": [],
+          "models": {
+            "openai/gpt-5.2": {
+              "rpm": 4,
+              "rpmRemaining": 496,
+              "tpm": 600,
+              "tpmRemaining": 499400
+            }
+          },
+          "jobTypes": {}
+        }
+      }
+    },
+    {
+      "timestamp": 1770141739707,
+      "trigger": "job:completed:capacity-plus-one-test-1770141739576-6",
+      "instances": {
+        "inst-1770141739591-66ufxgbcc": {
+          "activeJobs": 1,
+          "activeJobIds": [
+            "capacity-plus-one-test-1770141739576-7"
+          ],
+          "models": {
+            "openai/gpt-5.2": {
+              "rpm": 3,
+              "rpmRemaining": 497,
+              "tpm": 450,
+              "tpmRemaining": 499550
+            }
+          },
+          "jobTypes": {
+            "summary": {
+              "ratio": 0.3,
+              "inFlight": 1,
+              "slots": 60
+            }
+          }
+        },
+        "inst-1770141739595-orm0010sr": {
+          "activeJobs": 0,
+          "activeJobIds": [],
+          "models": {
+            "openai/gpt-5.2": {
+              "rpm": 4,
+              "rpmRemaining": 496,
+              "tpm": 600,
+              "tpmRemaining": 499400
+            }
+          },
+          "jobTypes": {}
+        }
+      }
+    },
+    {
+      "timestamp": 1770141739707,
+      "trigger": "job:queued:capacity-plus-one-test-1770141739576-7",
+      "instances": {
+        "inst-1770141739591-66ufxgbcc": {
+          "activeJobs": 0,
+          "activeJobIds": [],
+          "models": {
+            "openai/gpt-5.2": {
+              "rpm": 4,
+              "rpmRemaining": 496,
+              "tpm": 600,
+              "tpmRemaining": 499400
+            }
+          },
+          "jobTypes": {}
+        },
+        "inst-1770141739595-orm0010sr": {
+          "activeJobs": 0,
+          "activeJobIds": [],
+          "models": {
+            "openai/gpt-5.2": {
+              "rpm": 4,
+              "rpmRemaining": 496,
+              "tpm": 600,
+              "tpmRemaining": 499400
+            }
+          },
+          "jobTypes": {}
+        }
+      }
+    },
+    {
+      "timestamp": 1770141739707,
+      "trigger": "job:completed:capacity-plus-one-test-1770141739576-7",
+      "instances": {
+        "inst-1770141739591-66ufxgbcc": {
+          "activeJobs": 0,
+          "activeJobIds": [],
+          "models": {
+            "openai/gpt-5.2": {
+              "rpm": 4,
+              "rpmRemaining": 496,
+              "tpm": 600,
+              "tpmRemaining": 499400
+            }
+          },
+          "jobTypes": {}
+        },
+        "inst-1770141739595-orm0010sr": {
+          "activeJobs": 0,
+          "activeJobIds": [],
+          "models": {
+            "openai/gpt-5.2": {
+              "rpm": 4,
+              "rpmRemaining": 496,
+              "tpm": 600,
+              "tpmRemaining": 499400
+            }
+          },
+          "jobTypes": {}
+        }
+      }
+    },
+    {
+      "timestamp": 1770141739708,
+      "trigger": "job:queued:capacity-plus-one-test-1770141739576-8",
+      "instances": {
+        "inst-1770141739591-66ufxgbcc": {
+          "activeJobs": 0,
+          "activeJobIds": [],
+          "models": {
+            "openai/gpt-5.2": {
+              "rpm": 4,
+              "rpmRemaining": 496,
+              "tpm": 600,
+              "tpmRemaining": 499400
+            }
+          },
+          "jobTypes": {}
+        },
+        "inst-1770141739595-orm0010sr": {
+          "activeJobs": 0,
+          "activeJobIds": [],
+          "models": {
+            "openai/gpt-5.2": {
+              "rpm": 5,
+              "rpmRemaining": 495,
+              "tpm": 750,
+              "tpmRemaining": 499250
+            }
+          },
+          "jobTypes": {}
+        }
+      }
+    },
+    {
+      "timestamp": 1770141739708,
+      "trigger": "job:completed:capacity-plus-one-test-1770141739576-8",
+      "instances": {
+        "inst-1770141739591-66ufxgbcc": {
+          "activeJobs": 1,
+          "activeJobIds": [
+            "capacity-plus-one-test-1770141739576-9"
+          ],
+          "models": {
+            "openai/gpt-5.2": {
+              "rpm": 4,
+              "rpmRemaining": 496,
+              "tpm": 600,
+              "tpmRemaining": 499400
+            }
+          },
+          "jobTypes": {
+            "summary": {
+              "ratio": 0.3,
+              "inFlight": 1,
+              "slots": 60
+            }
+          }
+        },
+        "inst-1770141739595-orm0010sr": {
+          "activeJobs": 0,
+          "activeJobIds": [],
+          "models": {
+            "openai/gpt-5.2": {
+              "rpm": 5,
+              "rpmRemaining": 495,
+              "tpm": 750,
+              "tpmRemaining": 499250
+            }
+          },
+          "jobTypes": {}
+        }
+      }
+    },
+    {
+      "timestamp": 1770141739708,
+      "trigger": "job:queued:capacity-plus-one-test-1770141739576-9",
+      "instances": {
+        "inst-1770141739591-66ufxgbcc": {
+          "activeJobs": 0,
+          "activeJobIds": [],
+          "models": {
+            "openai/gpt-5.2": {
+              "rpm": 5,
+              "rpmRemaining": 495,
+              "tpm": 750,
+              "tpmRemaining": 499250
+            }
+          },
+          "jobTypes": {}
+        },
+        "inst-1770141739595-orm0010sr": {
+          "activeJobs": 0,
+          "activeJobIds": [],
+          "models": {
+            "openai/gpt-5.2": {
+              "rpm": 5,
+              "rpmRemaining": 495,
+              "tpm": 750,
+              "tpmRemaining": 499250
+            }
+          },
+          "jobTypes": {}
+        }
+      }
+    },
+    {
+      "timestamp": 1770141739708,
+      "trigger": "job:completed:capacity-plus-one-test-1770141739576-9",
+      "instances": {
+        "inst-1770141739591-66ufxgbcc": {
+          "activeJobs": 0,
+          "activeJobIds": [],
+          "models": {
+            "openai/gpt-5.2": {
+              "rpm": 5,
+              "rpmRemaining": 495,
+              "tpm": 750,
+              "tpmRemaining": 499250
+            }
+          },
+          "jobTypes": {}
+        },
+        "inst-1770141739595-orm0010sr": {
+          "activeJobs": 0,
+          "activeJobIds": [],
+          "models": {
+            "openai/gpt-5.2": {
+              "rpm": 5,
+              "rpmRemaining": 495,
+              "tpm": 750,
+              "tpmRemaining": 499250
+            }
+          },
+          "jobTypes": {}
+        }
+      }
+    },
+    {
+      "timestamp": 1770141739709,
+      "trigger": "job:queued:capacity-plus-one-test-1770141739576-10",
+      "instances": {
+        "inst-1770141739591-66ufxgbcc": {
+          "activeJobs": 0,
+          "activeJobIds": [],
+          "models": {
+            "openai/gpt-5.2": {
+              "rpm": 5,
+              "rpmRemaining": 495,
+              "tpm": 750,
+              "tpmRemaining": 499250
+            }
+          },
+          "jobTypes": {}
+        },
+        "inst-1770141739595-orm0010sr": {
+          "activeJobs": 0,
+          "activeJobIds": [],
+          "models": {
+            "openai/gpt-5.2": {
+              "rpm": 6,
+              "rpmRemaining": 494,
+              "tpm": 900,
+              "tpmRemaining": 499100
+            }
+          },
+          "jobTypes": {}
+        }
+      }
+    },
+    {
+      "timestamp": 1770141739709,
+      "trigger": "job:completed:capacity-plus-one-test-1770141739576-10",
+      "instances": {
+        "inst-1770141739591-66ufxgbcc": {
+          "activeJobs": 0,
+          "activeJobIds": [],
+          "models": {
+            "openai/gpt-5.2": {
+              "rpm": 5,
+              "rpmRemaining": 495,
+              "tpm": 750,
+              "tpmRemaining": 499250
+            }
+          },
+          "jobTypes": {}
+        },
+        "inst-1770141739595-orm0010sr": {
+          "activeJobs": 1,
+          "activeJobIds": [
+            "capacity-plus-one-test-1770141739576-11"
+          ],
+          "models": {
+            "openai/gpt-5.2": {
+              "rpm": 6,
+              "rpmRemaining": 494,
+              "tpm": 900,
+              "tpmRemaining": 499100
+            }
+          },
+          "jobTypes": {
+            "summary": {
+              "ratio": 0.3,
+              "inFlight": 1,
+              "slots": 60
+            }
+          }
+        }
+      }
+    },
+    {
+      "timestamp": 1770141739709,
+      "trigger": "job:queued:capacity-plus-one-test-1770141739576-11",
+      "instances": {
+        "inst-1770141739591-66ufxgbcc": {
+          "activeJobs": 0,
+          "activeJobIds": [],
+          "models": {
+            "openai/gpt-5.2": {
+              "rpm": 5,
+              "rpmRemaining": 495,
+              "tpm": 750,
+              "tpmRemaining": 499250
+            }
+          },
+          "jobTypes": {}
+        },
+        "inst-1770141739595-orm0010sr": {
+          "activeJobs": 0,
+          "activeJobIds": [],
+          "models": {
+            "openai/gpt-5.2": {
+              "rpm": 7,
+              "rpmRemaining": 493,
+              "tpm": 1050,
+              "tpmRemaining": 498950
+            }
+          },
+          "jobTypes": {}
+        }
+      }
+    },
+    {
+      "timestamp": 1770141739709,
+      "trigger": "job:completed:capacity-plus-one-test-1770141739576-11",
+      "instances": {
+        "inst-1770141739591-66ufxgbcc": {
+          "activeJobs": 0,
+          "activeJobIds": [],
+          "models": {
+            "openai/gpt-5.2": {
+              "rpm": 5,
+              "rpmRemaining": 495,
+              "tpm": 750,
+              "tpmRemaining": 499250
+            }
+          },
+          "jobTypes": {}
+        },
+        "inst-1770141739595-orm0010sr": {
+          "activeJobs": 0,
+          "activeJobIds": [],
+          "models": {
+            "openai/gpt-5.2": {
+              "rpm": 7,
+              "rpmRemaining": 493,
+              "tpm": 1050,
+              "tpmRemaining": 498950
+            }
+          },
+          "jobTypes": {}
+        }
+      }
+    },
+    {
+      "timestamp": 1770141739710,
+      "trigger": "job:queued:capacity-plus-one-test-1770141739576-12",
+      "instances": {
+        "inst-1770141739591-66ufxgbcc": {
+          "activeJobs": 0,
+          "activeJobIds": [],
+          "models": {
+            "openai/gpt-5.2": {
+              "rpm": 5,
+              "rpmRemaining": 495,
+              "tpm": 750,
+              "tpmRemaining": 499250
+            }
+          },
+          "jobTypes": {}
+        },
+        "inst-1770141739595-orm0010sr": {
+          "activeJobs": 0,
+          "activeJobIds": [],
+          "models": {
+            "openai/gpt-5.2": {
+              "rpm": 8,
+              "rpmRemaining": 492,
+              "tpm": 1200,
+              "tpmRemaining": 498800
+            }
+          },
+          "jobTypes": {}
+        }
+      }
+    },
+    {
+      "timestamp": 1770141739710,
+      "trigger": "job:completed:capacity-plus-one-test-1770141739576-12",
+      "instances": {
+        "inst-1770141739591-66ufxgbcc": {
+          "activeJobs": 1,
+          "activeJobIds": [
+            "capacity-plus-one-test-1770141739576-13"
+          ],
+          "models": {
+            "openai/gpt-5.2": {
+              "rpm": 5,
+              "rpmRemaining": 495,
+              "tpm": 750,
+              "tpmRemaining": 499250
+            }
+          },
+          "jobTypes": {}
+        },
+        "inst-1770141739595-orm0010sr": {
+          "activeJobs": 0,
+          "activeJobIds": [],
+          "models": {
+            "openai/gpt-5.2": {
+              "rpm": 8,
+              "rpmRemaining": 492,
+              "tpm": 1200,
+              "tpmRemaining": 498800
+            }
+          },
+          "jobTypes": {}
+        }
+      }
+    },
+    {
+      "timestamp": 1770141739711,
+      "trigger": "job:queued:capacity-plus-one-test-1770141739576-13",
+      "instances": {
+        "inst-1770141739591-66ufxgbcc": {
+          "activeJobs": 0,
+          "activeJobIds": [],
+          "models": {
+            "openai/gpt-5.2": {
+              "rpm": 6,
+              "rpmRemaining": 494,
+              "tpm": 900,
+              "tpmRemaining": 499100
+            }
+          },
+          "jobTypes": {}
+        },
+        "inst-1770141739595-orm0010sr": {
+          "activeJobs": 0,
+          "activeJobIds": [],
+          "models": {
+            "openai/gpt-5.2": {
+              "rpm": 8,
+              "rpmRemaining": 492,
+              "tpm": 1200,
+              "tpmRemaining": 498800
+            }
+          },
+          "jobTypes": {}
+        }
+      }
+    },
+    {
+      "timestamp": 1770141739711,
+      "trigger": "job:completed:capacity-plus-one-test-1770141739576-13",
+      "instances": {
+        "inst-1770141739591-66ufxgbcc": {
+          "activeJobs": 0,
+          "activeJobIds": [],
+          "models": {
+            "openai/gpt-5.2": {
+              "rpm": 6,
+              "rpmRemaining": 494,
+              "tpm": 900,
+              "tpmRemaining": 499100
+            }
+          },
+          "jobTypes": {}
+        },
+        "inst-1770141739595-orm0010sr": {
+          "activeJobs": 1,
+          "activeJobIds": [
+            "capacity-plus-one-test-1770141739576-14"
+          ],
+          "models": {
+            "openai/gpt-5.2": {
+              "rpm": 8,
+              "rpmRemaining": 492,
+              "tpm": 1200,
+              "tpmRemaining": 498800
+            }
+          },
+          "jobTypes": {
+            "summary": {
+              "ratio": 0.3,
+              "inFlight": 1,
+              "slots": 60
+            }
+          }
+        }
+      }
+    },
+    {
+      "timestamp": 1770141739711,
+      "trigger": "job:queued:capacity-plus-one-test-1770141739576-14",
+      "instances": {
+        "inst-1770141739591-66ufxgbcc": {
+          "activeJobs": 0,
+          "activeJobIds": [],
+          "models": {
+            "openai/gpt-5.2": {
+              "rpm": 6,
+              "rpmRemaining": 494,
+              "tpm": 900,
+              "tpmRemaining": 499100
+            }
+          },
+          "jobTypes": {}
+        },
+        "inst-1770141739595-orm0010sr": {
+          "activeJobs": 0,
+          "activeJobIds": [],
+          "models": {
+            "openai/gpt-5.2": {
+              "rpm": 9,
+              "rpmRemaining": 491,
+              "tpm": 1350,
+              "tpmRemaining": 498650
+            }
+          },
+          "jobTypes": {}
+        }
+      }
+    },
+    {
+      "timestamp": 1770141739711,
+      "trigger": "job:completed:capacity-plus-one-test-1770141739576-14",
+      "instances": {
+        "inst-1770141739591-66ufxgbcc": {
+          "activeJobs": 0,
+          "activeJobIds": [],
+          "models": {
+            "openai/gpt-5.2": {
+              "rpm": 6,
+              "rpmRemaining": 494,
+              "tpm": 900,
+              "tpmRemaining": 499100
+            }
+          },
+          "jobTypes": {}
+        },
+        "inst-1770141739595-orm0010sr": {
+          "activeJobs": 0,
+          "activeJobIds": [],
+          "models": {
+            "openai/gpt-5.2": {
+              "rpm": 9,
+              "rpmRemaining": 491,
+              "tpm": 1350,
+              "tpmRemaining": 498650
+            }
+          },
+          "jobTypes": {}
+        }
+      }
+    },
+    {
+      "timestamp": 1770141739712,
+      "trigger": "job:queued:capacity-plus-one-test-1770141739576-15",
+      "instances": {
+        "inst-1770141739591-66ufxgbcc": {
+          "activeJobs": 0,
+          "activeJobIds": [],
+          "models": {
+            "openai/gpt-5.2": {
+              "rpm": 7,
+              "rpmRemaining": 493,
+              "tpm": 1050,
+              "tpmRemaining": 498950
+            }
+          },
+          "jobTypes": {}
+        },
+        "inst-1770141739595-orm0010sr": {
+          "activeJobs": 0,
+          "activeJobIds": [],
+          "models": {
+            "openai/gpt-5.2": {
+              "rpm": 9,
+              "rpmRemaining": 491,
+              "tpm": 1350,
+              "tpmRemaining": 498650
+            }
+          },
+          "jobTypes": {}
+        }
+      }
+    },
+    {
+      "timestamp": 1770141739712,
+      "trigger": "job:completed:capacity-plus-one-test-1770141739576-15",
+      "instances": {
+        "inst-1770141739591-66ufxgbcc": {
+          "activeJobs": 1,
+          "activeJobIds": [
+            "capacity-plus-one-test-1770141739576-16"
+          ],
+          "models": {
+            "openai/gpt-5.2": {
+              "rpm": 7,
+              "rpmRemaining": 493,
+              "tpm": 1050,
+              "tpmRemaining": 498950
+            }
+          },
+          "jobTypes": {
+            "summary": {
+              "ratio": 0.3,
+              "inFlight": 1,
+              "slots": 60
+            }
+          }
+        },
+        "inst-1770141739595-orm0010sr": {
+          "activeJobs": 0,
+          "activeJobIds": [],
+          "models": {
+            "openai/gpt-5.2": {
+              "rpm": 9,
+              "rpmRemaining": 491,
+              "tpm": 1350,
+              "tpmRemaining": 498650
+            }
+          },
+          "jobTypes": {}
+        }
+      }
+    },
+    {
+      "timestamp": 1770141739712,
+      "trigger": "job:queued:capacity-plus-one-test-1770141739576-16",
+      "instances": {
+        "inst-1770141739591-66ufxgbcc": {
+          "activeJobs": 0,
+          "activeJobIds": [],
+          "models": {
+            "openai/gpt-5.2": {
+              "rpm": 8,
+              "rpmRemaining": 492,
+              "tpm": 1200,
+              "tpmRemaining": 498800
+            }
+          },
+          "jobTypes": {}
+        },
+        "inst-1770141739595-orm0010sr": {
+          "activeJobs": 0,
+          "activeJobIds": [],
+          "models": {
+            "openai/gpt-5.2": {
+              "rpm": 9,
+              "rpmRemaining": 491,
+              "tpm": 1350,
+              "tpmRemaining": 498650
+            }
+          },
+          "jobTypes": {}
+        }
+      }
+    },
+    {
+      "timestamp": 1770141739713,
+      "trigger": "job:completed:capacity-plus-one-test-1770141739576-16",
+      "instances": {
+        "inst-1770141739591-66ufxgbcc": {
+          "activeJobs": 1,
+          "activeJobIds": [
+            "capacity-plus-one-test-1770141739576-17"
+          ],
+          "models": {
+            "openai/gpt-5.2": {
+              "rpm": 8,
+              "rpmRemaining": 492,
+              "tpm": 1200,
+              "tpmRemaining": 498800
+            }
+          },
+          "jobTypes": {
+            "summary": {
+              "ratio": 0.3,
+              "inFlight": 1,
+              "slots": 60
+            }
+          }
+        },
+        "inst-1770141739595-orm0010sr": {
+          "activeJobs": 0,
+          "activeJobIds": [],
+          "models": {
+            "openai/gpt-5.2": {
+              "rpm": 9,
+              "rpmRemaining": 491,
+              "tpm": 1350,
+              "tpmRemaining": 498650
+            }
+          },
+          "jobTypes": {}
+        }
+      }
+    },
+    {
+      "timestamp": 1770141739713,
+      "trigger": "job:queued:capacity-plus-one-test-1770141739576-17",
+      "instances": {
+        "inst-1770141739591-66ufxgbcc": {
+          "activeJobs": 1,
+          "activeJobIds": [
+            "capacity-plus-one-test-1770141739576-17"
+          ],
+          "models": {
+            "openai/gpt-5.2": {
+              "rpm": 8,
+              "rpmRemaining": 492,
+              "tpm": 1200,
+              "tpmRemaining": 498800
+            }
+          },
+          "jobTypes": {
+            "summary": {
+              "ratio": 0.3,
+              "inFlight": 1,
+              "slots": 60
+            }
+          }
+        },
+        "inst-1770141739595-orm0010sr": {
+          "activeJobs": 0,
+          "activeJobIds": [],
+          "models": {
+            "openai/gpt-5.2": {
+              "rpm": 9,
+              "rpmRemaining": 491,
+              "tpm": 1350,
+              "tpmRemaining": 498650
+            }
+          },
+          "jobTypes": {}
+        }
+      }
+    },
+    {
+      "timestamp": 1770141739713,
+      "trigger": "job:completed:capacity-plus-one-test-1770141739576-17",
+      "instances": {
+        "inst-1770141739591-66ufxgbcc": {
+          "activeJobs": 0,
+          "activeJobIds": [],
+          "models": {
+            "openai/gpt-5.2": {
+              "rpm": 9,
+              "rpmRemaining": 491,
+              "tpm": 1350,
+              "tpmRemaining": 498650
+            }
+          },
+          "jobTypes": {}
+        },
+        "inst-1770141739595-orm0010sr": {
+          "activeJobs": 0,
+          "activeJobIds": [],
+          "models": {
+            "openai/gpt-5.2": {
+              "rpm": 10,
+              "rpmRemaining": 490,
+              "tpm": 1500,
+              "tpmRemaining": 498500
+            }
+          },
+          "jobTypes": {}
+        }
+      }
+    },
+    {
+      "timestamp": 1770141739713,
+      "trigger": "job:queued:capacity-plus-one-test-1770141739576-18",
+      "instances": {
+        "inst-1770141739591-66ufxgbcc": {
+          "activeJobs": 0,
+          "activeJobIds": [],
+          "models": {
+            "openai/gpt-5.2": {
+              "rpm": 9,
+              "rpmRemaining": 491,
+              "tpm": 1350,
+              "tpmRemaining": 498650
+            }
+          },
+          "jobTypes": {}
+        },
+        "inst-1770141739595-orm0010sr": {
+          "activeJobs": 0,
+          "activeJobIds": [],
+          "models": {
+            "openai/gpt-5.2": {
+              "rpm": 10,
+              "rpmRemaining": 490,
+              "tpm": 1500,
+              "tpmRemaining": 498500
+            }
+          },
+          "jobTypes": {}
+        }
+      }
+    },
+    {
+      "timestamp": 1770141739714,
+      "trigger": "job:queued:capacity-plus-one-test-1770141739576-19",
+      "instances": {
+        "inst-1770141739591-66ufxgbcc": {
+          "activeJobs": 0,
+          "activeJobIds": [],
+          "models": {
+            "openai/gpt-5.2": {
+              "rpm": 10,
+              "rpmRemaining": 490,
+              "tpm": 1500,
+              "tpmRemaining": 498500
+            }
+          },
+          "jobTypes": {}
+        },
+        "inst-1770141739595-orm0010sr": {
+          "activeJobs": 0,
+          "activeJobIds": [],
+          "models": {
+            "openai/gpt-5.2": {
+              "rpm": 10,
+              "rpmRemaining": 490,
+              "tpm": 1500,
+              "tpmRemaining": 498500
+            }
+          },
+          "jobTypes": {}
+        }
+      }
+    },
+    {
+      "timestamp": 1770141739714,
+      "trigger": "job:completed:capacity-plus-one-test-1770141739576-19",
+      "instances": {
+        "inst-1770141739591-66ufxgbcc": {
+          "activeJobs": 0,
+          "activeJobIds": [],
+          "models": {
+            "openai/gpt-5.2": {
+              "rpm": 10,
+              "rpmRemaining": 490,
+              "tpm": 1500,
+              "tpmRemaining": 498500
+            }
+          },
+          "jobTypes": {}
+        },
+        "inst-1770141739595-orm0010sr": {
+          "activeJobs": 1,
+          "activeJobIds": [
+            "capacity-plus-one-test-1770141739576-20"
+          ],
+          "models": {
+            "openai/gpt-5.2": {
+              "rpm": 10,
+              "rpmRemaining": 490,
+              "tpm": 1500,
+              "tpmRemaining": 498500
+            }
+          },
+          "jobTypes": {
+            "summary": {
+              "ratio": 0.3,
+              "inFlight": 1,
+              "slots": 60
+            }
+          }
+        }
+      }
+    },
+    {
+      "timestamp": 1770141739714,
+      "trigger": "job:queued:capacity-plus-one-test-1770141739576-20",
+      "instances": {
+        "inst-1770141739591-66ufxgbcc": {
+          "activeJobs": 0,
+          "activeJobIds": [],
+          "models": {
+            "openai/gpt-5.2": {
+              "rpm": 10,
+              "rpmRemaining": 490,
+              "tpm": 1500,
+              "tpmRemaining": 498500
+            }
+          },
+          "jobTypes": {}
+        },
+        "inst-1770141739595-orm0010sr": {
+          "activeJobs": 0,
+          "activeJobIds": [],
+          "models": {
+            "openai/gpt-5.2": {
+              "rpm": 11,
+              "rpmRemaining": 489,
+              "tpm": 1650,
+              "tpmRemaining": 498350
+            }
+          },
+          "jobTypes": {}
+        }
+      }
+    },
+    {
+      "timestamp": 1770141739714,
+      "trigger": "job:completed:capacity-plus-one-test-1770141739576-20",
+      "instances": {
+        "inst-1770141739591-66ufxgbcc": {
+          "activeJobs": 0,
+          "activeJobIds": [],
+          "models": {
+            "openai/gpt-5.2": {
+              "rpm": 10,
+              "rpmRemaining": 490,
+              "tpm": 1500,
+              "tpmRemaining": 498500
+            }
+          },
+          "jobTypes": {}
+        },
+        "inst-1770141739595-orm0010sr": {
+          "activeJobs": 0,
+          "activeJobIds": [],
+          "models": {
+            "openai/gpt-5.2": {
+              "rpm": 11,
+              "rpmRemaining": 489,
+              "tpm": 1650,
+              "tpmRemaining": 498350
+            }
+          },
+          "jobTypes": {}
+        }
+      }
+    },
+    {
+      "timestamp": 1770141739714,
+      "trigger": "job:completed:capacity-plus-one-test-1770141739576-18",
+      "instances": {
+        "inst-1770141739591-66ufxgbcc": {
+          "activeJobs": 0,
+          "activeJobIds": [],
+          "models": {
+            "openai/gpt-5.2": {
+              "rpm": 9,
+              "rpmRemaining": 491,
+              "tpm": 1350,
+              "tpmRemaining": 498650
+            }
+          },
+          "jobTypes": {
+            "summary": {
+              "ratio": 0.3,
+              "inFlight": 1,
+              "slots": 60
+            }
+          }
+        },
+        "inst-1770141739595-orm0010sr": {
+          "activeJobs": 0,
+          "activeJobIds": [],
+          "models": {
+            "openai/gpt-5.2": {
+              "rpm": 10,
+              "rpmRemaining": 490,
+              "tpm": 1500,
+              "tpmRemaining": 498500
+            }
+          },
+          "jobTypes": {}
+        }
+      }
+    },
+    {
+      "timestamp": 1770141739715,
+      "trigger": "job:queued:capacity-plus-one-test-1770141739576-21",
+      "instances": {
+        "inst-1770141739591-66ufxgbcc": {
+          "activeJobs": 1,
+          "activeJobIds": [
+            "capacity-plus-one-test-1770141739576-21"
+          ],
+          "models": {
+            "openai/gpt-5.2": {
+              "rpm": 10,
+              "rpmRemaining": 490,
+              "tpm": 1500,
+              "tpmRemaining": 498500
+            }
+          },
+          "jobTypes": {
+            "summary": {
+              "ratio": 0.3,
+              "inFlight": 1,
+              "slots": 60
+            }
+          }
+        },
+        "inst-1770141739595-orm0010sr": {
+          "activeJobs": 0,
+          "activeJobIds": [],
+          "models": {
+            "openai/gpt-5.2": {
+              "rpm": 11,
+              "rpmRemaining": 489,
+              "tpm": 1650,
+              "tpmRemaining": 498350
+            }
+          },
+          "jobTypes": {}
+        }
+      }
+    },
+    {
+      "timestamp": 1770141739715,
+      "trigger": "job:completed:capacity-plus-one-test-1770141739576-21",
+      "instances": {
+        "inst-1770141739591-66ufxgbcc": {
+          "activeJobs": 0,
+          "activeJobIds": [],
+          "models": {
+            "openai/gpt-5.2": {
+              "rpm": 11,
+              "rpmRemaining": 489,
+              "tpm": 1650,
+              "tpmRemaining": 498350
+            }
+          },
+          "jobTypes": {}
+        },
+        "inst-1770141739595-orm0010sr": {
+          "activeJobs": 0,
+          "activeJobIds": [],
+          "models": {
+            "openai/gpt-5.2": {
+              "rpm": 11,
+              "rpmRemaining": 489,
+              "tpm": 1650,
+              "tpmRemaining": 498350
+            }
+          },
+          "jobTypes": {}
+        }
+      }
+    },
+    {
+      "timestamp": 1770141739716,
+      "trigger": "job:queued:capacity-plus-one-test-1770141739576-22",
+      "instances": {
+        "inst-1770141739591-66ufxgbcc": {
+          "activeJobs": 0,
+          "activeJobIds": [],
+          "models": {
+            "openai/gpt-5.2": {
+              "rpm": 12,
+              "rpmRemaining": 488,
+              "tpm": 1800,
+              "tpmRemaining": 498200
+            }
+          },
+          "jobTypes": {}
+        },
+        "inst-1770141739595-orm0010sr": {
+          "activeJobs": 0,
+          "activeJobIds": [],
+          "models": {
+            "openai/gpt-5.2": {
+              "rpm": 11,
+              "rpmRemaining": 489,
+              "tpm": 1650,
+              "tpmRemaining": 498350
+            }
+          },
+          "jobTypes": {}
+        }
+      }
+    },
+    {
+      "timestamp": 1770141739716,
+      "trigger": "job:completed:capacity-plus-one-test-1770141739576-22",
+      "instances": {
+        "inst-1770141739591-66ufxgbcc": {
+          "activeJobs": 0,
+          "activeJobIds": [],
+          "models": {
+            "openai/gpt-5.2": {
+              "rpm": 12,
+              "rpmRemaining": 488,
+              "tpm": 1800,
+              "tpmRemaining": 498200
+            }
+          },
+          "jobTypes": {}
+        },
+        "inst-1770141739595-orm0010sr": {
+          "activeJobs": 1,
+          "activeJobIds": [
+            "capacity-plus-one-test-1770141739576-23"
+          ],
+          "models": {
+            "openai/gpt-5.2": {
+              "rpm": 11,
+              "rpmRemaining": 489,
+              "tpm": 1650,
+              "tpmRemaining": 498350
+            }
+          },
+          "jobTypes": {
+            "summary": {
+              "ratio": 0.3,
+              "inFlight": 1,
+              "slots": 60
+            }
+          }
+        }
+      }
+    },
+    {
+      "timestamp": 1770141739716,
+      "trigger": "job:queued:capacity-plus-one-test-1770141739576-23",
+      "instances": {
+        "inst-1770141739591-66ufxgbcc": {
+          "activeJobs": 0,
+          "activeJobIds": [],
+          "models": {
+            "openai/gpt-5.2": {
+              "rpm": 12,
+              "rpmRemaining": 488,
+              "tpm": 1800,
+              "tpmRemaining": 498200
+            }
+          },
+          "jobTypes": {}
+        },
+        "inst-1770141739595-orm0010sr": {
+          "activeJobs": 0,
+          "activeJobIds": [],
+          "models": {
+            "openai/gpt-5.2": {
+              "rpm": 12,
+              "rpmRemaining": 488,
+              "tpm": 1800,
+              "tpmRemaining": 498200
+            }
+          },
+          "jobTypes": {}
+        }
+      }
+    },
+    {
+      "timestamp": 1770141739717,
+      "trigger": "job:completed:capacity-plus-one-test-1770141739576-23",
+      "instances": {
+        "inst-1770141739591-66ufxgbcc": {
+          "activeJobs": 0,
+          "activeJobIds": [],
+          "models": {
+            "openai/gpt-5.2": {
+              "rpm": 12,
+              "rpmRemaining": 488,
+              "tpm": 1800,
+              "tpmRemaining": 498200
+            }
+          },
+          "jobTypes": {}
+        },
+        "inst-1770141739595-orm0010sr": {
+          "activeJobs": 0,
+          "activeJobIds": [],
+          "models": {
+            "openai/gpt-5.2": {
+              "rpm": 12,
+              "rpmRemaining": 488,
+              "tpm": 1800,
+              "tpmRemaining": 498200
+            }
+          },
+          "jobTypes": {}
+        }
+      }
+    },
+    {
+      "timestamp": 1770141739717,
+      "trigger": "job:queued:capacity-plus-one-test-1770141739576-24",
+      "instances": {
+        "inst-1770141739591-66ufxgbcc": {
+          "activeJobs": 0,
+          "activeJobIds": [],
+          "models": {
+            "openai/gpt-5.2": {
+              "rpm": 12,
+              "rpmRemaining": 488,
+              "tpm": 1800,
+              "tpmRemaining": 498200
+            }
+          },
+          "jobTypes": {}
+        },
+        "inst-1770141739595-orm0010sr": {
+          "activeJobs": 0,
+          "activeJobIds": [],
+          "models": {
+            "openai/gpt-5.2": {
+              "rpm": 13,
+              "rpmRemaining": 487,
+              "tpm": 1950,
+              "tpmRemaining": 498050
+            }
+          },
+          "jobTypes": {}
+        }
+      }
+    },
+    {
+      "timestamp": 1770141739717,
+      "trigger": "job:completed:capacity-plus-one-test-1770141739576-24",
+      "instances": {
+        "inst-1770141739591-66ufxgbcc": {
+          "activeJobs": 0,
+          "activeJobIds": [],
+          "models": {
+            "openai/gpt-5.2": {
+              "rpm": 12,
+              "rpmRemaining": 488,
+              "tpm": 1800,
+              "tpmRemaining": 498200
+            }
+          },
+          "jobTypes": {}
+        },
+        "inst-1770141739595-orm0010sr": {
+          "activeJobs": 0,
+          "activeJobIds": [],
+          "models": {
+            "openai/gpt-5.2": {
+              "rpm": 13,
+              "rpmRemaining": 487,
+              "tpm": 1950,
+              "tpmRemaining": 498050
+            }
+          },
+          "jobTypes": {}
+        }
+      }
+    },
+    {
+      "timestamp": 1770141739718,
+      "trigger": "job:queued:capacity-plus-one-test-1770141739576-25",
+      "instances": {
+        "inst-1770141739591-66ufxgbcc": {
+          "activeJobs": 0,
+          "activeJobIds": [],
+          "models": {
+            "openai/gpt-5.2": {
+              "rpm": 13,
+              "rpmRemaining": 487,
+              "tpm": 1950,
+              "tpmRemaining": 498050
+            }
+          },
+          "jobTypes": {}
+        },
+        "inst-1770141739595-orm0010sr": {
+          "activeJobs": 0,
+          "activeJobIds": [],
+          "models": {
+            "openai/gpt-5.2": {
+              "rpm": 13,
+              "rpmRemaining": 487,
+              "tpm": 1950,
+              "tpmRemaining": 498050
+            }
+          },
+          "jobTypes": {}
+        }
+      }
+    },
+    {
+      "timestamp": 1770141739719,
+      "trigger": "job:completed:capacity-plus-one-test-1770141739576-25",
+      "instances": {
+        "inst-1770141739591-66ufxgbcc": {
+          "activeJobs": 1,
+          "activeJobIds": [
+            "capacity-plus-one-test-1770141739576-26"
+          ],
+          "models": {
+            "openai/gpt-5.2": {
+              "rpm": 13,
+              "rpmRemaining": 487,
+              "tpm": 1950,
+              "tpmRemaining": 498050
+            }
+          },
+          "jobTypes": {
+            "summary": {
+              "ratio": 0.3,
+              "inFlight": 1,
+              "slots": 60
+            }
+          }
+        },
+        "inst-1770141739595-orm0010sr": {
+          "activeJobs": 0,
+          "activeJobIds": [],
+          "models": {
+            "openai/gpt-5.2": {
+              "rpm": 13,
+              "rpmRemaining": 487,
+              "tpm": 1950,
+              "tpmRemaining": 498050
+            }
+          },
+          "jobTypes": {}
+        }
+      }
+    },
+    {
+      "timestamp": 1770141739719,
+      "trigger": "job:queued:capacity-plus-one-test-1770141739576-26",
+      "instances": {
+        "inst-1770141739591-66ufxgbcc": {
+          "activeJobs": 1,
+          "activeJobIds": [
+            "capacity-plus-one-test-1770141739576-26"
+          ],
+          "models": {
+            "openai/gpt-5.2": {
+              "rpm": 13,
+              "rpmRemaining": 487,
+              "tpm": 1950,
+              "tpmRemaining": 498050
+            }
+          },
+          "jobTypes": {
+            "summary": {
+              "ratio": 0.3,
+              "inFlight": 1,
+              "slots": 60
+            }
+          }
+        },
+        "inst-1770141739595-orm0010sr": {
+          "activeJobs": 0,
+          "activeJobIds": [],
+          "models": {
+            "openai/gpt-5.2": {
+              "rpm": 13,
+              "rpmRemaining": 487,
+              "tpm": 1950,
+              "tpmRemaining": 498050
+            }
+          },
+          "jobTypes": {}
+        }
+      }
+    },
+    {
+      "timestamp": 1770141739719,
+      "trigger": "job:completed:capacity-plus-one-test-1770141739576-26",
+      "instances": {
+        "inst-1770141739591-66ufxgbcc": {
+          "activeJobs": 1,
+          "activeJobIds": [
+            "capacity-plus-one-test-1770141739576-27"
+          ],
+          "models": {
+            "openai/gpt-5.2": {
+              "rpm": 14,
+              "rpmRemaining": 486,
+              "tpm": 2100,
+              "tpmRemaining": 497900
+            }
+          },
+          "jobTypes": {
+            "summary": {
+              "ratio": 0.3,
+              "inFlight": 1,
+              "slots": 60
+            }
+          }
+        },
+        "inst-1770141739595-orm0010sr": {
+          "activeJobs": 0,
+          "activeJobIds": [],
+          "models": {
+            "openai/gpt-5.2": {
+              "rpm": 13,
+              "rpmRemaining": 487,
+              "tpm": 1950,
+              "tpmRemaining": 498050
+            }
+          },
+          "jobTypes": {}
+        }
+      }
+    },
+    {
+      "timestamp": 1770141739720,
+      "trigger": "job:queued:capacity-plus-one-test-1770141739576-27",
+      "instances": {
+        "inst-1770141739591-66ufxgbcc": {
+          "activeJobs": 1,
+          "activeJobIds": [
+            "capacity-plus-one-test-1770141739576-27"
+          ],
+          "models": {
+            "openai/gpt-5.2": {
+              "rpm": 14,
+              "rpmRemaining": 486,
+              "tpm": 2100,
+              "tpmRemaining": 497900
+            }
+          },
+          "jobTypes": {
+            "summary": {
+              "ratio": 0.3,
+              "inFlight": 1,
+              "slots": 60
+            }
+          }
+        },
+        "inst-1770141739595-orm0010sr": {
+          "activeJobs": 0,
+          "activeJobIds": [],
+          "models": {
+            "openai/gpt-5.2": {
+              "rpm": 13,
+              "rpmRemaining": 487,
+              "tpm": 1950,
+              "tpmRemaining": 498050
+            }
+          },
+          "jobTypes": {}
+        }
+      }
+    },
+    {
+      "timestamp": 1770141739721,
+      "trigger": "job:completed:capacity-plus-one-test-1770141739576-27",
+      "instances": {
+        "inst-1770141739591-66ufxgbcc": {
+          "activeJobs": 0,
+          "activeJobIds": [],
+          "models": {
+            "openai/gpt-5.2": {
+              "rpm": 15,
+              "rpmRemaining": 485,
+              "tpm": 2250,
+              "tpmRemaining": 497750
+            }
+          },
+          "jobTypes": {}
+        },
+        "inst-1770141739595-orm0010sr": {
+          "activeJobs": 0,
+          "activeJobIds": [],
+          "models": {
+            "openai/gpt-5.2": {
+              "rpm": 13,
+              "rpmRemaining": 487,
+              "tpm": 1950,
+              "tpmRemaining": 498050
+            }
+          },
+          "jobTypes": {
+            "summary": {
+              "ratio": 0.3,
+              "inFlight": 1,
+              "slots": 60
+            }
+          }
+        }
+      }
+    },
+    {
+      "timestamp": 1770141739721,
+      "trigger": "job:queued:capacity-plus-one-test-1770141739576-28",
+      "instances": {
+        "inst-1770141739591-66ufxgbcc": {
+          "activeJobs": 0,
+          "activeJobIds": [],
+          "models": {
+            "openai/gpt-5.2": {
+              "rpm": 15,
+              "rpmRemaining": 485,
+              "tpm": 2250,
+              "tpmRemaining": 497750
+            }
+          },
+          "jobTypes": {}
+        },
+        "inst-1770141739595-orm0010sr": {
+          "activeJobs": 0,
+          "activeJobIds": [],
+          "models": {
+            "openai/gpt-5.2": {
+              "rpm": 14,
+              "rpmRemaining": 486,
+              "tpm": 2100,
+              "tpmRemaining": 497900
+            }
+          },
+          "jobTypes": {}
+        }
+      }
+    },
+    {
+      "timestamp": 1770141739722,
+      "trigger": "job:completed:capacity-plus-one-test-1770141739576-28",
+      "instances": {
+        "inst-1770141739591-66ufxgbcc": {
+          "activeJobs": 0,
+          "activeJobIds": [],
+          "models": {
+            "openai/gpt-5.2": {
+              "rpm": 15,
+              "rpmRemaining": 485,
+              "tpm": 2250,
+              "tpmRemaining": 497750
+            }
+          },
+          "jobTypes": {}
+        },
+        "inst-1770141739595-orm0010sr": {
+          "activeJobs": 1,
+          "activeJobIds": [
+            "capacity-plus-one-test-1770141739576-29"
+          ],
+          "models": {
+            "openai/gpt-5.2": {
+              "rpm": 14,
+              "rpmRemaining": 486,
+              "tpm": 2100,
+              "tpmRemaining": 497900
+            }
+          },
+          "jobTypes": {
+            "summary": {
+              "ratio": 0.3,
+              "inFlight": 1,
+              "slots": 60
+            }
+          }
+        }
+      }
+    },
+    {
+      "timestamp": 1770141739722,
+      "trigger": "job:queued:capacity-plus-one-test-1770141739576-29",
+      "instances": {
+        "inst-1770141739591-66ufxgbcc": {
+          "activeJobs": 0,
+          "activeJobIds": [],
+          "models": {
+            "openai/gpt-5.2": {
+              "rpm": 15,
+              "rpmRemaining": 485,
+              "tpm": 2250,
+              "tpmRemaining": 497750
+            }
+          },
+          "jobTypes": {}
+        },
+        "inst-1770141739595-orm0010sr": {
+          "activeJobs": 0,
+          "activeJobIds": [],
+          "models": {
+            "openai/gpt-5.2": {
+              "rpm": 15,
+              "rpmRemaining": 485,
+              "tpm": 2250,
+              "tpmRemaining": 497750
+            }
+          },
+          "jobTypes": {}
+        }
+      }
+    },
+    {
+      "timestamp": 1770141739723,
+      "trigger": "job:completed:capacity-plus-one-test-1770141739576-29",
+      "instances": {
+        "inst-1770141739591-66ufxgbcc": {
+          "activeJobs": 1,
+          "activeJobIds": [
+            "capacity-plus-one-test-1770141739576-30"
+          ],
+          "models": {
+            "openai/gpt-5.2": {
+              "rpm": 15,
+              "rpmRemaining": 485,
+              "tpm": 2250,
+              "tpmRemaining": 497750
+            }
+          },
+          "jobTypes": {
+            "summary": {
+              "ratio": 0.3,
+              "inFlight": 1,
+              "slots": 60
+            }
+          }
+        },
+        "inst-1770141739595-orm0010sr": {
+          "activeJobs": 0,
+          "activeJobIds": [],
+          "models": {
+            "openai/gpt-5.2": {
+              "rpm": 15,
+              "rpmRemaining": 485,
+              "tpm": 2250,
+              "tpmRemaining": 497750
+            }
+          },
+          "jobTypes": {}
+        }
+      }
+    },
+    {
+      "timestamp": 1770141739723,
+      "trigger": "job:queued:capacity-plus-one-test-1770141739576-30",
+      "instances": {
+        "inst-1770141739591-66ufxgbcc": {
+          "activeJobs": 0,
+          "activeJobIds": [],
+          "models": {
+            "openai/gpt-5.2": {
+              "rpm": 16,
+              "rpmRemaining": 484,
+              "tpm": 2400,
+              "tpmRemaining": 497600
+            }
+          },
+          "jobTypes": {}
+        },
+        "inst-1770141739595-orm0010sr": {
+          "activeJobs": 0,
+          "activeJobIds": [],
+          "models": {
+            "openai/gpt-5.2": {
+              "rpm": 15,
+              "rpmRemaining": 485,
+              "tpm": 2250,
+              "tpmRemaining": 497750
+            }
+          },
+          "jobTypes": {}
+        }
+      }
+    },
+    {
+      "timestamp": 1770141739723,
+      "trigger": "job:completed:capacity-plus-one-test-1770141739576-30",
+      "instances": {
+        "inst-1770141739591-66ufxgbcc": {
+          "activeJobs": 1,
+          "activeJobIds": [
+            "capacity-plus-one-test-1770141739576-31"
+          ],
+          "models": {
+            "openai/gpt-5.2": {
+              "rpm": 16,
+              "rpmRemaining": 484,
+              "tpm": 2400,
+              "tpmRemaining": 497600
+            }
+          },
+          "jobTypes": {
+            "summary": {
+              "ratio": 0.3,
+              "inFlight": 1,
+              "slots": 60
+            }
+          }
+        },
+        "inst-1770141739595-orm0010sr": {
+          "activeJobs": 0,
+          "activeJobIds": [],
+          "models": {
+            "openai/gpt-5.2": {
+              "rpm": 15,
+              "rpmRemaining": 485,
+              "tpm": 2250,
+              "tpmRemaining": 497750
+            }
+          },
+          "jobTypes": {}
+        }
+      }
+    },
+    {
+      "timestamp": 1770141739723,
+      "trigger": "job:queued:capacity-plus-one-test-1770141739576-31",
+      "instances": {
+        "inst-1770141739591-66ufxgbcc": {
+          "activeJobs": 1,
+          "activeJobIds": [
+            "capacity-plus-one-test-1770141739576-31"
+          ],
+          "models": {
+            "openai/gpt-5.2": {
+              "rpm": 16,
+              "rpmRemaining": 484,
+              "tpm": 2400,
+              "tpmRemaining": 497600
+            }
+          },
+          "jobTypes": {
+            "summary": {
+              "ratio": 0.3,
+              "inFlight": 1,
+              "slots": 60
+            }
+          }
+        },
+        "inst-1770141739595-orm0010sr": {
+          "activeJobs": 0,
+          "activeJobIds": [],
+          "models": {
+            "openai/gpt-5.2": {
+              "rpm": 15,
+              "rpmRemaining": 485,
+              "tpm": 2250,
+              "tpmRemaining": 497750
+            }
+          },
+          "jobTypes": {}
+        }
+      }
+    },
+    {
+      "timestamp": 1770141739723,
+      "trigger": "job:completed:capacity-plus-one-test-1770141739576-31",
+      "instances": {
+        "inst-1770141739591-66ufxgbcc": {
+          "activeJobs": 0,
+          "activeJobIds": [],
+          "models": {
+            "openai/gpt-5.2": {
+              "rpm": 17,
+              "rpmRemaining": 483,
+              "tpm": 2550,
+              "tpmRemaining": 497450
+            }
+          },
+          "jobTypes": {}
+        },
+        "inst-1770141739595-orm0010sr": {
+          "activeJobs": 1,
+          "activeJobIds": [
+            "capacity-plus-one-test-1770141739576-32"
+          ],
+          "models": {
+            "openai/gpt-5.2": {
+              "rpm": 15,
+              "rpmRemaining": 485,
+              "tpm": 2250,
+              "tpmRemaining": 497750
+            }
+          },
+          "jobTypes": {
+            "summary": {
+              "ratio": 0.3,
+              "inFlight": 1,
+              "slots": 60
+            }
+          }
+        }
+      }
+    },
+    {
+      "timestamp": 1770141739724,
+      "trigger": "job:queued:capacity-plus-one-test-1770141739576-32",
+      "instances": {
+        "inst-1770141739591-66ufxgbcc": {
+          "activeJobs": 0,
+          "activeJobIds": [],
+          "models": {
+            "openai/gpt-5.2": {
+              "rpm": 17,
+              "rpmRemaining": 483,
+              "tpm": 2550,
+              "tpmRemaining": 497450
+            }
+          },
+          "jobTypes": {}
+        },
+        "inst-1770141739595-orm0010sr": {
+          "activeJobs": 0,
+          "activeJobIds": [],
+          "models": {
+            "openai/gpt-5.2": {
+              "rpm": 16,
+              "rpmRemaining": 484,
+              "tpm": 2400,
+              "tpmRemaining": 497600
+            }
+          },
+          "jobTypes": {}
+        }
+      }
+    },
+    {
+      "timestamp": 1770141739724,
+      "trigger": "job:completed:capacity-plus-one-test-1770141739576-32",
+      "instances": {
+        "inst-1770141739591-66ufxgbcc": {
+          "activeJobs": 0,
+          "activeJobIds": [],
+          "models": {
+            "openai/gpt-5.2": {
+              "rpm": 17,
+              "rpmRemaining": 483,
+              "tpm": 2550,
+              "tpmRemaining": 497450
+            }
+          },
+          "jobTypes": {}
+        },
+        "inst-1770141739595-orm0010sr": {
+          "activeJobs": 1,
+          "activeJobIds": [
+            "capacity-plus-one-test-1770141739576-33"
+          ],
+          "models": {
+            "openai/gpt-5.2": {
+              "rpm": 16,
+              "rpmRemaining": 484,
+              "tpm": 2400,
+              "tpmRemaining": 497600
+            }
+          },
+          "jobTypes": {
+            "summary": {
+              "ratio": 0.3,
+              "inFlight": 1,
+              "slots": 60
+            }
+          }
+        }
+      }
+    },
+    {
+      "timestamp": 1770141739724,
+      "trigger": "job:queued:capacity-plus-one-test-1770141739576-33",
+      "instances": {
+        "inst-1770141739591-66ufxgbcc": {
+          "activeJobs": 0,
+          "activeJobIds": [],
+          "models": {
+            "openai/gpt-5.2": {
+              "rpm": 17,
+              "rpmRemaining": 483,
+              "tpm": 2550,
+              "tpmRemaining": 497450
+            }
+          },
+          "jobTypes": {}
+        },
+        "inst-1770141739595-orm0010sr": {
+          "activeJobs": 0,
+          "activeJobIds": [],
+          "models": {
+            "openai/gpt-5.2": {
+              "rpm": 17,
+              "rpmRemaining": 483,
+              "tpm": 2550,
+              "tpmRemaining": 497450
+            }
+          },
+          "jobTypes": {}
+        }
+      }
+    },
+    {
+      "timestamp": 1770141739724,
+      "trigger": "job:completed:capacity-plus-one-test-1770141739576-33",
+      "instances": {
+        "inst-1770141739591-66ufxgbcc": {
+          "activeJobs": 0,
+          "activeJobIds": [],
+          "models": {
+            "openai/gpt-5.2": {
+              "rpm": 17,
+              "rpmRemaining": 483,
+              "tpm": 2550,
+              "tpmRemaining": 497450
+            }
+          },
+          "jobTypes": {}
+        },
+        "inst-1770141739595-orm0010sr": {
+          "activeJobs": 1,
+          "activeJobIds": [
+            "capacity-plus-one-test-1770141739576-34"
+          ],
+          "models": {
+            "openai/gpt-5.2": {
+              "rpm": 17,
+              "rpmRemaining": 483,
+              "tpm": 2550,
+              "tpmRemaining": 497450
+            }
+          },
+          "jobTypes": {
+            "summary": {
+              "ratio": 0.3,
+              "inFlight": 1,
+              "slots": 60
+            }
+          }
+        }
+      }
+    },
+    {
+      "timestamp": 1770141739724,
+      "trigger": "job:queued:capacity-plus-one-test-1770141739576-34",
+      "instances": {
+        "inst-1770141739591-66ufxgbcc": {
+          "activeJobs": 0,
+          "activeJobIds": [],
+          "models": {
+            "openai/gpt-5.2": {
+              "rpm": 17,
+              "rpmRemaining": 483,
+              "tpm": 2550,
+              "tpmRemaining": 497450
+            }
+          },
+          "jobTypes": {}
+        },
+        "inst-1770141739595-orm0010sr": {
+          "activeJobs": 0,
+          "activeJobIds": [],
+          "models": {
+            "openai/gpt-5.2": {
+              "rpm": 18,
+              "rpmRemaining": 482,
+              "tpm": 2700,
+              "tpmRemaining": 497300
+            }
+          },
+          "jobTypes": {}
+        }
+      }
+    },
+    {
+      "timestamp": 1770141739725,
+      "trigger": "job:completed:capacity-plus-one-test-1770141739576-34",
+      "instances": {
+        "inst-1770141739591-66ufxgbcc": {
+          "activeJobs": 0,
+          "activeJobIds": [],
+          "models": {
+            "openai/gpt-5.2": {
+              "rpm": 17,
+              "rpmRemaining": 483,
+              "tpm": 2550,
+              "tpmRemaining": 497450
+            }
+          },
+          "jobTypes": {}
+        },
+        "inst-1770141739595-orm0010sr": {
+          "activeJobs": 0,
+          "activeJobIds": [],
+          "models": {
+            "openai/gpt-5.2": {
+              "rpm": 18,
+              "rpmRemaining": 482,
+              "tpm": 2700,
+              "tpmRemaining": 497300
+            }
+          },
+          "jobTypes": {}
+        }
+      }
+    },
+    {
+      "timestamp": 1770141739725,
+      "trigger": "job:queued:capacity-plus-one-test-1770141739576-35",
+      "instances": {
+        "inst-1770141739591-66ufxgbcc": {
+          "activeJobs": 1,
+          "activeJobIds": [
+            "capacity-plus-one-test-1770141739576-35"
+          ],
+          "models": {
+            "openai/gpt-5.2": {
+              "rpm": 17,
+              "rpmRemaining": 483,
+              "tpm": 2550,
+              "tpmRemaining": 497450
+            }
+          },
+          "jobTypes": {
+            "summary": {
+              "ratio": 0.3,
+              "inFlight": 1,
+              "slots": 60
+            }
+          }
+        },
+        "inst-1770141739595-orm0010sr": {
+          "activeJobs": 0,
+          "activeJobIds": [],
+          "models": {
+            "openai/gpt-5.2": {
+              "rpm": 18,
+              "rpmRemaining": 482,
+              "tpm": 2700,
+              "tpmRemaining": 497300
+            }
+          },
+          "jobTypes": {}
+        }
+      }
+    },
+    {
+      "timestamp": 1770141739726,
+      "trigger": "job:completed:capacity-plus-one-test-1770141739576-35",
+      "instances": {
+        "inst-1770141739591-66ufxgbcc": {
+          "activeJobs": 0,
+          "activeJobIds": [],
+          "models": {
+            "openai/gpt-5.2": {
+              "rpm": 18,
+              "rpmRemaining": 482,
+              "tpm": 2700,
+              "tpmRemaining": 497300
+            }
+          },
+          "jobTypes": {
+            "summary": {
+              "ratio": 0.3,
+              "inFlight": 1,
+              "slots": 60
+            }
+          }
+        },
+        "inst-1770141739595-orm0010sr": {
+          "activeJobs": 0,
+          "activeJobIds": [],
+          "models": {
+            "openai/gpt-5.2": {
+              "rpm": 18,
+              "rpmRemaining": 482,
+              "tpm": 2700,
+              "tpmRemaining": 497300
+            }
+          },
+          "jobTypes": {}
+        }
+      }
+    },
+    {
+      "timestamp": 1770141739726,
+      "trigger": "job:queued:capacity-plus-one-test-1770141739576-36",
+      "instances": {
+        "inst-1770141739591-66ufxgbcc": {
+          "activeJobs": 0,
+          "activeJobIds": [],
+          "models": {
+            "openai/gpt-5.2": {
+              "rpm": 19,
+              "rpmRemaining": 481,
+              "tpm": 2850,
+              "tpmRemaining": 497150
+            }
+          },
+          "jobTypes": {}
+        },
+        "inst-1770141739595-orm0010sr": {
+          "activeJobs": 0,
+          "activeJobIds": [],
+          "models": {
+            "openai/gpt-5.2": {
+              "rpm": 18,
+              "rpmRemaining": 482,
+              "tpm": 2700,
+              "tpmRemaining": 497300
+            }
+          },
+          "jobTypes": {}
+        }
+      }
+    },
+    {
+      "timestamp": 1770141739726,
+      "trigger": "job:completed:capacity-plus-one-test-1770141739576-36",
+      "instances": {
+        "inst-1770141739591-66ufxgbcc": {
+          "activeJobs": 0,
+          "activeJobIds": [],
+          "models": {
+            "openai/gpt-5.2": {
+              "rpm": 19,
+              "rpmRemaining": 481,
+              "tpm": 2850,
+              "tpmRemaining": 497150
+            }
+          },
+          "jobTypes": {}
+        },
+        "inst-1770141739595-orm0010sr": {
+          "activeJobs": 1,
+          "activeJobIds": [
+            "capacity-plus-one-test-1770141739576-37"
+          ],
+          "models": {
+            "openai/gpt-5.2": {
+              "rpm": 18,
+              "rpmRemaining": 482,
+              "tpm": 2700,
+              "tpmRemaining": 497300
+            }
+          },
+          "jobTypes": {
+            "summary": {
+              "ratio": 0.3,
+              "inFlight": 1,
+              "slots": 60
+            }
+          }
+        }
+      }
+    },
+    {
+      "timestamp": 1770141739726,
+      "trigger": "job:queued:capacity-plus-one-test-1770141739576-37",
+      "instances": {
+        "inst-1770141739591-66ufxgbcc": {
+          "activeJobs": 0,
+          "activeJobIds": [],
+          "models": {
+            "openai/gpt-5.2": {
+              "rpm": 19,
+              "rpmRemaining": 481,
+              "tpm": 2850,
+              "tpmRemaining": 497150
+            }
+          },
+          "jobTypes": {}
+        },
+        "inst-1770141739595-orm0010sr": {
+          "activeJobs": 0,
+          "activeJobIds": [],
+          "models": {
+            "openai/gpt-5.2": {
+              "rpm": 19,
+              "rpmRemaining": 481,
+              "tpm": 2850,
+              "tpmRemaining": 497150
+            }
+          },
+          "jobTypes": {}
+        }
+      }
+    },
+    {
+      "timestamp": 1770141739727,
+      "trigger": "job:completed:capacity-plus-one-test-1770141739576-37",
+      "instances": {
+        "inst-1770141739591-66ufxgbcc": {
+          "activeJobs": 0,
+          "activeJobIds": [],
+          "models": {
+            "openai/gpt-5.2": {
+              "rpm": 19,
+              "rpmRemaining": 481,
+              "tpm": 2850,
+              "tpmRemaining": 497150
+            }
+          },
+          "jobTypes": {}
+        },
+        "inst-1770141739595-orm0010sr": {
+          "activeJobs": 1,
+          "activeJobIds": [
+            "capacity-plus-one-test-1770141739576-38"
+          ],
+          "models": {
+            "openai/gpt-5.2": {
+              "rpm": 19,
+              "rpmRemaining": 481,
+              "tpm": 2850,
+              "tpmRemaining": 497150
+            }
+          },
+          "jobTypes": {
+            "summary": {
+              "ratio": 0.3,
+              "inFlight": 1,
+              "slots": 60
+            }
+          }
+        }
+      }
+    },
+    {
+      "timestamp": 1770141739727,
+      "trigger": "job:queued:capacity-plus-one-test-1770141739576-38",
+      "instances": {
+        "inst-1770141739591-66ufxgbcc": {
+          "activeJobs": 0,
+          "activeJobIds": [],
+          "models": {
+            "openai/gpt-5.2": {
+              "rpm": 19,
+              "rpmRemaining": 481,
+              "tpm": 2850,
+              "tpmRemaining": 497150
+            }
+          },
+          "jobTypes": {}
+        },
+        "inst-1770141739595-orm0010sr": {
+          "activeJobs": 0,
+          "activeJobIds": [],
+          "models": {
+            "openai/gpt-5.2": {
+              "rpm": 20,
+              "rpmRemaining": 480,
+              "tpm": 3000,
+              "tpmRemaining": 497000
+            }
+          },
+          "jobTypes": {}
+        }
+      }
+    },
+    {
+      "timestamp": 1770141739727,
+      "trigger": "job:completed:capacity-plus-one-test-1770141739576-38",
+      "instances": {
+        "inst-1770141739591-66ufxgbcc": {
+          "activeJobs": 1,
+          "activeJobIds": [
+            "capacity-plus-one-test-1770141739576-39"
+          ],
+          "models": {
+            "openai/gpt-5.2": {
+              "rpm": 19,
+              "rpmRemaining": 481,
+              "tpm": 2850,
+              "tpmRemaining": 497150
+            }
+          },
+          "jobTypes": {
+            "summary": {
+              "ratio": 0.3,
+              "inFlight": 1,
+              "slots": 60
+            }
+          }
+        },
+        "inst-1770141739595-orm0010sr": {
+          "activeJobs": 0,
+          "activeJobIds": [],
+          "models": {
+            "openai/gpt-5.2": {
+              "rpm": 20,
+              "rpmRemaining": 480,
+              "tpm": 3000,
+              "tpmRemaining": 497000
+            }
+          },
+          "jobTypes": {}
+        }
+      }
+    },
+    {
+      "timestamp": 1770141739727,
+      "trigger": "job:queued:capacity-plus-one-test-1770141739576-39",
+      "instances": {
+        "inst-1770141739591-66ufxgbcc": {
+          "activeJobs": 0,
+          "activeJobIds": [],
+          "models": {
+            "openai/gpt-5.2": {
+              "rpm": 20,
+              "rpmRemaining": 480,
+              "tpm": 3000,
+              "tpmRemaining": 497000
+            }
+          },
+          "jobTypes": {}
+        },
+        "inst-1770141739595-orm0010sr": {
+          "activeJobs": 0,
+          "activeJobIds": [],
+          "models": {
+            "openai/gpt-5.2": {
+              "rpm": 20,
+              "rpmRemaining": 480,
+              "tpm": 3000,
+              "tpmRemaining": 497000
+            }
+          },
+          "jobTypes": {}
+        }
+      }
+    },
+    {
+      "timestamp": 1770141739728,
+      "trigger": "job:completed:capacity-plus-one-test-1770141739576-39",
+      "instances": {
+        "inst-1770141739591-66ufxgbcc": {
+          "activeJobs": 1,
+          "activeJobIds": [
+            "capacity-plus-one-test-1770141739576-40"
+          ],
+          "models": {
+            "openai/gpt-5.2": {
+              "rpm": 20,
+              "rpmRemaining": 480,
+              "tpm": 3000,
+              "tpmRemaining": 497000
+            }
+          },
+          "jobTypes": {}
+        },
+        "inst-1770141739595-orm0010sr": {
+          "activeJobs": 0,
+          "activeJobIds": [],
+          "models": {
+            "openai/gpt-5.2": {
+              "rpm": 20,
+              "rpmRemaining": 480,
+              "tpm": 3000,
+              "tpmRemaining": 497000
+            }
+          },
+          "jobTypes": {}
+        }
+      }
+    },
+    {
+      "timestamp": 1770141739728,
+      "trigger": "job:queued:capacity-plus-one-test-1770141739576-40",
+      "instances": {
+        "inst-1770141739591-66ufxgbcc": {
+          "activeJobs": 0,
+          "activeJobIds": [],
+          "models": {
+            "openai/gpt-5.2": {
+              "rpm": 21,
+              "rpmRemaining": 479,
+              "tpm": 3150,
+              "tpmRemaining": 496850
+            }
+          },
+          "jobTypes": {}
+        },
+        "inst-1770141739595-orm0010sr": {
+          "activeJobs": 0,
+          "activeJobIds": [],
+          "models": {
+            "openai/gpt-5.2": {
+              "rpm": 20,
+              "rpmRemaining": 480,
+              "tpm": 3000,
+              "tpmRemaining": 497000
+            }
+          },
+          "jobTypes": {}
+        }
+      }
+    },
+    {
+      "timestamp": 1770141739728,
+      "trigger": "job:completed:capacity-plus-one-test-1770141739576-40",
+      "instances": {
+        "inst-1770141739591-66ufxgbcc": {
+          "activeJobs": 0,
+          "activeJobIds": [],
+          "models": {
+            "openai/gpt-5.2": {
+              "rpm": 21,
+              "rpmRemaining": 479,
+              "tpm": 3150,
+              "tpmRemaining": 496850
+            }
+          },
+          "jobTypes": {}
+        },
+        "inst-1770141739595-orm0010sr": {
+          "activeJobs": 1,
+          "activeJobIds": [
+            "capacity-plus-one-test-1770141739576-41"
+          ],
+          "models": {
+            "openai/gpt-5.2": {
+              "rpm": 20,
+              "rpmRemaining": 480,
+              "tpm": 3000,
+              "tpmRemaining": 497000
+            }
+          },
+          "jobTypes": {
+            "summary": {
+              "ratio": 0.3,
+              "inFlight": 1,
+              "slots": 60
+            }
+          }
+        }
+      }
+    },
+    {
+      "timestamp": 1770141739728,
+      "trigger": "job:queued:capacity-plus-one-test-1770141739576-41",
+      "instances": {
+        "inst-1770141739591-66ufxgbcc": {
+          "activeJobs": 0,
+          "activeJobIds": [],
+          "models": {
+            "openai/gpt-5.2": {
+              "rpm": 21,
+              "rpmRemaining": 479,
+              "tpm": 3150,
+              "tpmRemaining": 496850
+            }
+          },
+          "jobTypes": {}
+        },
+        "inst-1770141739595-orm0010sr": {
+          "activeJobs": 0,
+          "activeJobIds": [],
+          "models": {
+            "openai/gpt-5.2": {
+              "rpm": 21,
+              "rpmRemaining": 479,
+              "tpm": 3150,
+              "tpmRemaining": 496850
+            }
+          },
+          "jobTypes": {}
+        }
+      }
+    },
+    {
+      "timestamp": 1770141739729,
+      "trigger": "job:completed:capacity-plus-one-test-1770141739576-41",
+      "instances": {
+        "inst-1770141739591-66ufxgbcc": {
+          "activeJobs": 0,
+          "activeJobIds": [],
+          "models": {
+            "openai/gpt-5.2": {
+              "rpm": 21,
+              "rpmRemaining": 479,
+              "tpm": 3150,
+              "tpmRemaining": 496850
+            }
+          },
+          "jobTypes": {}
+        },
+        "inst-1770141739595-orm0010sr": {
+          "activeJobs": 0,
+          "activeJobIds": [],
+          "models": {
+            "openai/gpt-5.2": {
+              "rpm": 21,
+              "rpmRemaining": 479,
+              "tpm": 3150,
+              "tpmRemaining": 496850
+            }
+          },
+          "jobTypes": {}
+        }
+      }
+    },
+    {
+      "timestamp": 1770141739729,
+      "trigger": "job:queued:capacity-plus-one-test-1770141739576-42",
+      "instances": {
+        "inst-1770141739591-66ufxgbcc": {
+          "activeJobs": 0,
+          "activeJobIds": [],
+          "models": {
+            "openai/gpt-5.2": {
+              "rpm": 21,
+              "rpmRemaining": 479,
+              "tpm": 3150,
+              "tpmRemaining": 496850
+            }
+          },
+          "jobTypes": {}
+        },
+        "inst-1770141739595-orm0010sr": {
+          "activeJobs": 1,
+          "activeJobIds": [
+            "capacity-plus-one-test-1770141739576-42"
+          ],
+          "models": {
+            "openai/gpt-5.2": {
+              "rpm": 21,
+              "rpmRemaining": 479,
+              "tpm": 3150,
+              "tpmRemaining": 496850
+            }
+          },
+          "jobTypes": {
+            "summary": {
+              "ratio": 0.3,
+              "inFlight": 1,
+              "slots": 60
+            }
+          }
+        }
+      }
+    },
+    {
+      "timestamp": 1770141739729,
+      "trigger": "job:completed:capacity-plus-one-test-1770141739576-42",
+      "instances": {
+        "inst-1770141739591-66ufxgbcc": {
+          "activeJobs": 1,
+          "activeJobIds": [
+            "capacity-plus-one-test-1770141739576-43"
+          ],
+          "models": {
+            "openai/gpt-5.2": {
+              "rpm": 21,
+              "rpmRemaining": 479,
+              "tpm": 3150,
+              "tpmRemaining": 496850
+            }
+          },
+          "jobTypes": {
+            "summary": {
+              "ratio": 0.3,
+              "inFlight": 1,
+              "slots": 60
+            }
+          }
+        },
+        "inst-1770141739595-orm0010sr": {
+          "activeJobs": 0,
+          "activeJobIds": [],
+          "models": {
+            "openai/gpt-5.2": {
+              "rpm": 22,
+              "rpmRemaining": 478,
+              "tpm": 3300,
+              "tpmRemaining": 496700
+            }
+          },
+          "jobTypes": {}
+        }
+      }
+    },
+    {
+      "timestamp": 1770141739730,
+      "trigger": "job:queued:capacity-plus-one-test-1770141739576-43",
+      "instances": {
+        "inst-1770141739591-66ufxgbcc": {
+          "activeJobs": 0,
+          "activeJobIds": [],
+          "models": {
+            "openai/gpt-5.2": {
+              "rpm": 22,
+              "rpmRemaining": 478,
+              "tpm": 3300,
+              "tpmRemaining": 496700
+            }
+          },
+          "jobTypes": {}
+        },
+        "inst-1770141739595-orm0010sr": {
+          "activeJobs": 0,
+          "activeJobIds": [],
+          "models": {
+            "openai/gpt-5.2": {
+              "rpm": 22,
+              "rpmRemaining": 478,
+              "tpm": 3300,
+              "tpmRemaining": 496700
+            }
+          },
+          "jobTypes": {}
+        }
+      }
+    },
+    {
+      "timestamp": 1770141739730,
+      "trigger": "job:completed:capacity-plus-one-test-1770141739576-43",
+      "instances": {
+        "inst-1770141739591-66ufxgbcc": {
+          "activeJobs": 1,
+          "activeJobIds": [
+            "capacity-plus-one-test-1770141739576-44"
+          ],
+          "models": {
+            "openai/gpt-5.2": {
+              "rpm": 22,
+              "rpmRemaining": 478,
+              "tpm": 3300,
+              "tpmRemaining": 496700
+            }
+          },
+          "jobTypes": {
+            "summary": {
+              "ratio": 0.3,
+              "inFlight": 1,
+              "slots": 60
+            }
+          }
+        },
+        "inst-1770141739595-orm0010sr": {
+          "activeJobs": 0,
+          "activeJobIds": [],
+          "models": {
+            "openai/gpt-5.2": {
+              "rpm": 22,
+              "rpmRemaining": 478,
+              "tpm": 3300,
+              "tpmRemaining": 496700
+            }
+          },
+          "jobTypes": {}
+        }
+      }
+    },
+    {
+      "timestamp": 1770141739730,
+      "trigger": "job:queued:capacity-plus-one-test-1770141739576-44",
+      "instances": {
+        "inst-1770141739591-66ufxgbcc": {
+          "activeJobs": 0,
+          "activeJobIds": [],
+          "models": {
+            "openai/gpt-5.2": {
+              "rpm": 23,
+              "rpmRemaining": 477,
+              "tpm": 3450,
+              "tpmRemaining": 496550
+            }
+          },
+          "jobTypes": {}
+        },
+        "inst-1770141739595-orm0010sr": {
+          "activeJobs": 0,
+          "activeJobIds": [],
+          "models": {
+            "openai/gpt-5.2": {
+              "rpm": 22,
+              "rpmRemaining": 478,
+              "tpm": 3300,
+              "tpmRemaining": 496700
+            }
+          },
+          "jobTypes": {}
+        }
+      }
+    },
+    {
+      "timestamp": 1770141739730,
+      "trigger": "job:completed:capacity-plus-one-test-1770141739576-44",
+      "instances": {
+        "inst-1770141739591-66ufxgbcc": {
+          "activeJobs": 0,
+          "activeJobIds": [],
+          "models": {
+            "openai/gpt-5.2": {
+              "rpm": 23,
+              "rpmRemaining": 477,
+              "tpm": 3450,
+              "tpmRemaining": 496550
+            }
+          },
+          "jobTypes": {}
+        },
+        "inst-1770141739595-orm0010sr": {
+          "activeJobs": 0,
+          "activeJobIds": [],
+          "models": {
+            "openai/gpt-5.2": {
+              "rpm": 22,
+              "rpmRemaining": 478,
+              "tpm": 3300,
+              "tpmRemaining": 496700
+            }
+          },
+          "jobTypes": {}
+        }
+      }
+    },
+    {
+      "timestamp": 1770141739731,
+      "trigger": "job:queued:capacity-plus-one-test-1770141739576-45",
+      "instances": {
+        "inst-1770141739591-66ufxgbcc": {
+          "activeJobs": 0,
+          "activeJobIds": [],
+          "models": {
+            "openai/gpt-5.2": {
+              "rpm": 23,
+              "rpmRemaining": 477,
+              "tpm": 3450,
+              "tpmRemaining": 496550
+            }
+          },
+          "jobTypes": {}
+        },
+        "inst-1770141739595-orm0010sr": {
+          "activeJobs": 0,
+          "activeJobIds": [],
+          "models": {
+            "openai/gpt-5.2": {
+              "rpm": 23,
+              "rpmRemaining": 477,
+              "tpm": 3450,
+              "tpmRemaining": 496550
+            }
+          },
+          "jobTypes": {}
+        }
+      }
+    },
+    {
+      "timestamp": 1770141739731,
+      "trigger": "job:completed:capacity-plus-one-test-1770141739576-45",
+      "instances": {
+        "inst-1770141739591-66ufxgbcc": {
+          "activeJobs": 1,
+          "activeJobIds": [
+            "capacity-plus-one-test-1770141739576-46"
+          ],
+          "models": {
+            "openai/gpt-5.2": {
+              "rpm": 23,
+              "rpmRemaining": 477,
+              "tpm": 3450,
+              "tpmRemaining": 496550
+            }
+          },
+          "jobTypes": {
+            "summary": {
+              "ratio": 0.3,
+              "inFlight": 1,
+              "slots": 60
+            }
+          }
+        },
+        "inst-1770141739595-orm0010sr": {
+          "activeJobs": 0,
+          "activeJobIds": [],
+          "models": {
+            "openai/gpt-5.2": {
+              "rpm": 23,
+              "rpmRemaining": 477,
+              "tpm": 3450,
+              "tpmRemaining": 496550
+            }
+          },
+          "jobTypes": {}
+        }
+      }
+    },
+    {
+      "timestamp": 1770141739731,
+      "trigger": "job:queued:capacity-plus-one-test-1770141739576-46",
+      "instances": {
+        "inst-1770141739591-66ufxgbcc": {
+          "activeJobs": 0,
+          "activeJobIds": [],
+          "models": {
+            "openai/gpt-5.2": {
+              "rpm": 24,
+              "rpmRemaining": 476,
+              "tpm": 3600,
+              "tpmRemaining": 496400
+            }
+          },
+          "jobTypes": {}
+        },
+        "inst-1770141739595-orm0010sr": {
+          "activeJobs": 0,
+          "activeJobIds": [],
+          "models": {
+            "openai/gpt-5.2": {
+              "rpm": 23,
+              "rpmRemaining": 477,
+              "tpm": 3450,
+              "tpmRemaining": 496550
+            }
+          },
+          "jobTypes": {}
+        }
+      }
+    },
+    {
+      "timestamp": 1770141739731,
+      "trigger": "job:completed:capacity-plus-one-test-1770141739576-46",
+      "instances": {
+        "inst-1770141739591-66ufxgbcc": {
+          "activeJobs": 0,
+          "activeJobIds": [],
+          "models": {
+            "openai/gpt-5.2": {
+              "rpm": 24,
+              "rpmRemaining": 476,
+              "tpm": 3600,
+              "tpmRemaining": 496400
+            }
+          },
+          "jobTypes": {}
+        },
+        "inst-1770141739595-orm0010sr": {
+          "activeJobs": 0,
+          "activeJobIds": [],
+          "models": {
+            "openai/gpt-5.2": {
+              "rpm": 23,
+              "rpmRemaining": 477,
+              "tpm": 3450,
+              "tpmRemaining": 496550
+            }
+          },
+          "jobTypes": {}
+        }
+      }
+    },
+    {
+      "timestamp": 1770141739732,
+      "trigger": "job:queued:capacity-plus-one-test-1770141739576-47",
+      "instances": {
+        "inst-1770141739591-66ufxgbcc": {
+          "activeJobs": 0,
+          "activeJobIds": [],
+          "models": {
+            "openai/gpt-5.2": {
+              "rpm": 24,
+              "rpmRemaining": 476,
+              "tpm": 3600,
+              "tpmRemaining": 496400
+            }
+          },
+          "jobTypes": {}
+        },
+        "inst-1770141739595-orm0010sr": {
+          "activeJobs": 0,
+          "activeJobIds": [],
+          "models": {
+            "openai/gpt-5.2": {
+              "rpm": 24,
+              "rpmRemaining": 476,
+              "tpm": 3600,
+              "tpmRemaining": 496400
+            }
+          },
+          "jobTypes": {}
+        }
+      }
+    },
+    {
+      "timestamp": 1770141739732,
+      "trigger": "job:completed:capacity-plus-one-test-1770141739576-47",
+      "instances": {
+        "inst-1770141739591-66ufxgbcc": {
+          "activeJobs": 0,
+          "activeJobIds": [],
+          "models": {
+            "openai/gpt-5.2": {
+              "rpm": 24,
+              "rpmRemaining": 476,
+              "tpm": 3600,
+              "tpmRemaining": 496400
+            }
+          },
+          "jobTypes": {}
+        },
+        "inst-1770141739595-orm0010sr": {
+          "activeJobs": 0,
+          "activeJobIds": [],
+          "models": {
+            "openai/gpt-5.2": {
+              "rpm": 24,
+              "rpmRemaining": 476,
+              "tpm": 3600,
+              "tpmRemaining": 496400
+            }
+          },
+          "jobTypes": {}
+        }
+      }
+    },
+    {
+      "timestamp": 1770141739733,
+      "trigger": "job:queued:capacity-plus-one-test-1770141739576-48",
+      "instances": {
+        "inst-1770141739591-66ufxgbcc": {
+          "activeJobs": 1,
+          "activeJobIds": [
+            "capacity-plus-one-test-1770141739576-48"
+          ],
+          "models": {
+            "openai/gpt-5.2": {
+              "rpm": 24,
+              "rpmRemaining": 476,
+              "tpm": 3600,
+              "tpmRemaining": 496400
+            }
+          },
+          "jobTypes": {
+            "summary": {
+              "ratio": 0.3,
+              "inFlight": 1,
+              "slots": 60
+            }
+          }
+        },
+        "inst-1770141739595-orm0010sr": {
+          "activeJobs": 0,
+          "activeJobIds": [],
+          "models": {
+            "openai/gpt-5.2": {
+              "rpm": 24,
+              "rpmRemaining": 476,
+              "tpm": 3600,
+              "tpmRemaining": 496400
+            }
+          },
+          "jobTypes": {}
+        }
+      }
+    },
+    {
+      "timestamp": 1770141739733,
+      "trigger": "job:queued:capacity-plus-one-test-1770141739576-49",
+      "instances": {
+        "inst-1770141739591-66ufxgbcc": {
+          "activeJobs": 0,
+          "activeJobIds": [],
+          "models": {
+            "openai/gpt-5.2": {
+              "rpm": 25,
+              "rpmRemaining": 475,
+              "tpm": 3750,
+              "tpmRemaining": 496250
+            }
+          },
+          "jobTypes": {}
+        },
+        "inst-1770141739595-orm0010sr": {
+          "activeJobs": 0,
+          "activeJobIds": [],
+          "models": {
+            "openai/gpt-5.2": {
+              "rpm": 25,
+              "rpmRemaining": 475,
+              "tpm": 3750,
+              "tpmRemaining": 496250
+            }
+          },
+          "jobTypes": {}
+        }
+      }
+    },
+    {
+      "timestamp": 1770141739733,
+      "trigger": "job:completed:capacity-plus-one-test-1770141739576-49",
+      "instances": {
+        "inst-1770141739591-66ufxgbcc": {
+          "activeJobs": 0,
+          "activeJobIds": [],
+          "models": {
+            "openai/gpt-5.2": {
+              "rpm": 25,
+              "rpmRemaining": 475,
+              "tpm": 3750,
+              "tpmRemaining": 496250
+            }
+          },
+          "jobTypes": {}
+        },
+        "inst-1770141739595-orm0010sr": {
+          "activeJobs": 0,
+          "activeJobIds": [],
+          "models": {
+            "openai/gpt-5.2": {
+              "rpm": 25,
+              "rpmRemaining": 475,
+              "tpm": 3750,
+              "tpmRemaining": 496250
+            }
+          },
+          "jobTypes": {}
+        }
+      }
+    },
+    {
+      "timestamp": 1770141739734,
+      "trigger": "job:completed:capacity-plus-one-test-1770141739576-48",
+      "instances": {
+        "inst-1770141739591-66ufxgbcc": {
+          "activeJobs": 0,
+          "activeJobIds": [],
+          "models": {
+            "openai/gpt-5.2": {
+              "rpm": 25,
+              "rpmRemaining": 475,
+              "tpm": 3750,
+              "tpmRemaining": 496250
+            }
+          },
+          "jobTypes": {}
+        },
+        "inst-1770141739595-orm0010sr": {
+          "activeJobs": 0,
+          "activeJobIds": [],
+          "models": {
+            "openai/gpt-5.2": {
+              "rpm": 25,
+              "rpmRemaining": 475,
+              "tpm": 3750,
+              "tpmRemaining": 496250
+            }
+          },
+          "jobTypes": {}
+        }
+      }
+    },
+    {
+      "timestamp": 1770141739734,
+      "trigger": "job:queued:capacity-plus-one-test-1770141739576-50",
+      "instances": {
+        "inst-1770141739591-66ufxgbcc": {
+          "activeJobs": 0,
+          "activeJobIds": [],
+          "models": {
+            "openai/gpt-5.2": {
+              "rpm": 25,
+              "rpmRemaining": 475,
+              "tpm": 3750,
+              "tpmRemaining": 496250
+            }
+          },
+          "jobTypes": {}
+        },
+        "inst-1770141739595-orm0010sr": {
+          "activeJobs": 0,
+          "activeJobIds": [],
+          "models": {
+            "openai/gpt-5.2": {
+              "rpm": 26,
+              "rpmRemaining": 474,
+              "tpm": 3900,
+              "tpmRemaining": 496100
+            }
+          },
+          "jobTypes": {}
+        }
+      }
+    },
+    {
+      "timestamp": 1770141739734,
+      "trigger": "job:completed:capacity-plus-one-test-1770141739576-50",
+      "instances": {
+        "inst-1770141739591-66ufxgbcc": {
+          "activeJobs": 0,
+          "activeJobIds": [],
+          "models": {
+            "openai/gpt-5.2": {
+              "rpm": 25,
+              "rpmRemaining": 475,
+              "tpm": 3750,
+              "tpmRemaining": 496250
+            }
+          },
+          "jobTypes": {}
+        },
+        "inst-1770141739595-orm0010sr": {
+          "activeJobs": 0,
+          "activeJobIds": [],
+          "models": {
+            "openai/gpt-5.2": {
+              "rpm": 26,
+              "rpmRemaining": 474,
+              "tpm": 3900,
+              "tpmRemaining": 496100
+            }
+          },
+          "jobTypes": {}
+        }
+      }
+    },
+    {
+      "timestamp": 1770141739936,
+      "trigger": "after-sending-jobs",
+      "instances": {
+        "inst-1770141739591-66ufxgbcc": {
+          "activeJobs": 0,
+          "activeJobIds": [],
+          "models": {
+            "openai/gpt-5.2": {
+              "rpm": 25,
+              "rpmRemaining": 475,
+              "tpm": 3750,
+              "tpmRemaining": 496250
+            }
+          },
+          "jobTypes": {}
+        },
+        "inst-1770141739595-orm0010sr": {
+          "activeJobs": 0,
+          "activeJobIds": [],
+          "models": {
+            "openai/gpt-5.2": {
+              "rpm": 26,
+              "rpmRemaining": 474,
+              "tpm": 3900,
+              "tpmRemaining": 496100
+            }
+          },
+          "jobTypes": {}
+        }
+      }
+    },
+    {
+      "timestamp": 1770141739937,
+      "trigger": "final",
+      "instances": {
+        "inst-1770141739591-66ufxgbcc": {
+          "activeJobs": 0,
+          "activeJobIds": [],
+          "models": {
+            "openai/gpt-5.2": {
+              "rpm": 25,
+              "rpmRemaining": 475,
+              "tpm": 3750,
+              "tpmRemaining": 496250
+            }
+          },
+          "jobTypes": {}
+        },
+        "inst-1770141739595-orm0010sr": {
+          "activeJobs": 0,
+          "activeJobIds": [],
+          "models": {
+            "openai/gpt-5.2": {
+              "rpm": 26,
+              "rpmRemaining": 474,
+              "tpm": 3900,
+              "tpmRemaining": 496100
+            }
+          },
+          "jobTypes": {}
+        }
+      }
+    }
+  ],
+  "summary": {
+    "totalJobs": 51,
+    "completed": 51,
+    "failed": 0,
+    "avgDurationMs": 0.35294117647058826,
+    "byInstance": {
+      "inst-1770141739595-orm0010sr": {
+        "completed": 26,
+        "failed": 0,
+        "total": 26
+      },
+      "inst-1770141739591-66ufxgbcc": {
+        "completed": 25,
+        "failed": 0,
+        "total": 25
+      }
+    },
+    "byJobType": {
+      "summary": {
+        "completed": 51,
+        "failed": 0,
+        "total": 51
+      }
+    },
+    "byModel": {
+      "openai/gpt-5.2": {
+        "completed": 51,
+        "failed": 0,
+        "total": 51
+      }
+    }
+  }
+}

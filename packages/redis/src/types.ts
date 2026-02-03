@@ -1,7 +1,7 @@
 /**
  * Type definitions for the Redis distributed backend.
  */
-import type { DistributedBackendConfig, ModelRateLimitConfig, ResourcesPerJob } from '@llm-rate-limiter/core';
+import type { BackendConfig, ModelRateLimitConfig, ResourceEstimationsPerJob } from '@llm-rate-limiter/core';
 import type { Redis, RedisOptions } from 'ioredis';
 
 // =============================================================================
@@ -31,9 +31,9 @@ export interface RedisBackendInitConfig {
   /** Map of model ID to its rate limit configuration */
   models: Record<string, ModelRateLimitConfig>;
   /** Job type configurations with per-type resource estimates and capacity ratios */
-  resourcesPerJob?: ResourcesPerJob;
-  /** Model priority order */
-  order?: readonly string[];
+  resourceEstimationsPerJob?: ResourceEstimationsPerJob;
+  /** Model escalation priority order */
+  escalationOrder?: readonly string[];
 }
 
 /**
@@ -57,6 +57,12 @@ export interface RedisBackendFactory {
    * Throws if not yet initialized.
    */
   getInstance: () => RedisBackendInstance;
+
+  /**
+   * Stop the backend and close all Redis connections.
+   * Called automatically by the rate limiter during stop().
+   */
+  stop: () => Promise<void>;
 }
 
 /**
@@ -94,7 +100,7 @@ export interface RedisBackendConfig {
   /** Instance timeout in ms (default: 15000) - instances not seen for this long are cleaned up */
   instanceTimeoutMs?: number;
   /** Job type configuration for distributed job type capacity (optional) */
-  resourcesPerJob?: ResourcesPerJob;
+  resourceEstimationsPerJob?: ResourceEstimationsPerJob;
 }
 
 /**
@@ -130,7 +136,7 @@ export interface RedisBackendStats {
  */
 export interface RedisBackendInstance {
   /** Get the backend config to pass to createLLMRateLimiter */
-  getBackendConfig: () => DistributedBackendConfig;
+  getBackendConfig: () => BackendConfig;
   /** Stop the backend (cleanup intervals, disconnect if we created the client) */
   stop: () => Promise<void>;
   /** Get current stats for monitoring */

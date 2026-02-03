@@ -27,7 +27,7 @@ describe('realistic load - very slow jobs', () => {
   it(
     'should maintain correctness with very slow jobs (500-1000ms) simulating LLM calls',
     async () => {
-      const setup = createLatencyTestSetup(createDistributedBackend, {
+      const setup = await createLatencyTestSetup(createDistributedBackend, {
         tpm: FIFTY,
         rpm: FIVE,
         instanceCount: TWO,
@@ -55,7 +55,7 @@ describe('realistic load - mixed fast and slow', () => {
   it(
     'should handle mixed fast and slow jobs with latency',
     async () => {
-      const setup = createLatencyTestSetup(createDistributedBackend, {
+      const setup = await createLatencyTestSetup(createDistributedBackend, {
         tpm: HUNDRED,
         rpm: TEN,
         instanceCount: THREE,

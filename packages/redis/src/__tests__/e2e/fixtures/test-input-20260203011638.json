@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-02-03T03:37:51.120Z",
+  "generatedAt": "2026-02-03T06:16:38.762Z",
   "totalJobs": 15000,
   "testDurationMs": 479999,
   "seed": 20240215,
@@ -105059,5 +105059,87 @@
     "ImageCreation": 2970,
     "BudgetCalculation": 2949,
     "WeatherForecast": 3021
+  },
+  "config": {
+    "models": {
+      "ModelA": {
+        "requestsPerMinute": 500,
+        "tokensPerMinute": 1000000,
+        "pricing": {
+          "input": 0.01,
+          "cached": 0.005,
+          "output": 0.02
+        }
+      },
+      "ModelB": {
+        "requestsPerMinute": 500,
+        "tokensPerMinute": 1000000,
+        "pricing": {
+          "input": 0.01,
+          "cached": 0.005,
+          "output": 0.02
+        }
+      },
+      "ModelC": {
+        "requestsPerMinute": 100,
+        "tokensPerMinute": 500000,
+        "pricing": {
+          "input": 0.005,
+          "cached": 0.0025,
+          "output": 0.01
+        }
+      }
+    },
+    "modelOrder": ["ModelA", "ModelB", "ModelC"],
+    "jobTypes": {
+      "Summary": {
+        "estimatedUsedTokens": 10000,
+        "estimatedNumberOfRequests": 1,
+        "ratio": {
+          "initialValue": 0.3,
+          "flexible": true
+        }
+      },
+      "VacationPlanning": {
+        "estimatedUsedTokens": 2000,
+        "estimatedNumberOfRequests": 3,
+        "ratio": {
+          "initialValue": 0.4,
+          "flexible": false
+        }
+      },
+      "ImageCreation": {
+        "estimatedUsedTokens": 5000,
+        "estimatedNumberOfRequests": 1,
+        "ratio": {
+          "initialValue": 0.1,
+          "flexible": true
+        }
+      },
+      "BudgetCalculation": {
+        "estimatedUsedTokens": 3000,
+        "estimatedNumberOfRequests": 5,
+        "ratio": {
+          "initialValue": 0.1,
+          "flexible": true
+        }
+      },
+      "WeatherForecast": {
+        "estimatedUsedTokens": 1000,
+        "estimatedNumberOfRequests": 1,
+        "ratio": {
+          "initialValue": 0.1,
+          "flexible": true
+        }
+      }
+    },
+    "ratioAdjustment": {
+      "highLoadThreshold": 0.8,
+      "lowLoadThreshold": 0.3,
+      "maxAdjustment": 0.1,
+      "minRatio": 0.05,
+      "adjustmentIntervalMs": 5000,
+      "releasesPerAdjustment": 10
+    }
   }
 }

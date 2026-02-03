@@ -56,11 +56,11 @@ describe('Redis Distributed - Limits Across Instances', () => {
 
     const backend1 = createTestBackend(state, createRedisBackend, {
       capacity: SMALL_CAPACITY_TEN,
-      resourcesPerJob: { jobA: { estimatedUsedTokens: HUNDRED, ratio: { initialValue: ONE } } },
+      resourceEstimationsPerJob: { jobA: { estimatedUsedTokens: HUNDRED, ratio: { initialValue: ONE } } },
     });
     const backend2 = createTestBackend(state, createRedisBackend, {
       capacity: SMALL_CAPACITY_TEN,
-      resourcesPerJob: { jobA: { estimatedUsedTokens: HUNDRED, ratio: { initialValue: ONE } } },
+      resourceEstimationsPerJob: { jobA: { estimatedUsedTokens: HUNDRED, ratio: { initialValue: ONE } } },
     });
 
     try {
@@ -86,11 +86,11 @@ describe('Redis Distributed - Release And Reacquire', () => {
 
     const backend1 = createTestBackend(state, createRedisBackend, {
       capacity: SMALL_CAPACITY_TEN,
-      resourcesPerJob: THREE_TYPES_CONFIG,
+      resourceEstimationsPerJob: THREE_TYPES_CONFIG,
     });
     const backend2 = createTestBackend(state, createRedisBackend, {
       capacity: SMALL_CAPACITY_TEN,
-      resourcesPerJob: THREE_TYPES_CONFIG,
+      resourceEstimationsPerJob: THREE_TYPES_CONFIG,
     });
 
     try {
@@ -115,11 +115,11 @@ describe('Redis Distributed - Shared Stats', () => {
 
     const backend1 = createTestBackend(state, createRedisBackend, {
       capacity: MEDIUM_CAPACITY,
-      resourcesPerJob: THREE_TYPES_CONFIG,
+      resourceEstimationsPerJob: THREE_TYPES_CONFIG,
     });
     const backend2 = createTestBackend(state, createRedisBackend, {
       capacity: MEDIUM_CAPACITY,
-      resourcesPerJob: THREE_TYPES_CONFIG,
+      resourceEstimationsPerJob: THREE_TYPES_CONFIG,
     });
 
     try {
@@ -143,7 +143,7 @@ describe('Redis Distributed - Non-Flexible Preservation', () => {
 
     const backend = createTestBackend(state, createRedisBackend, {
       capacity: MEDIUM_CAPACITY,
-      resourcesPerJob: FIVE_TYPES_CONFIG,
+      resourceEstimationsPerJob: FIVE_TYPES_CONFIG,
     });
 
     try {

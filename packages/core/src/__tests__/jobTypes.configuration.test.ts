@@ -123,19 +123,19 @@ describe('Job Types Configuration - Large Capacity', () => {
   });
 });
 
-describe('Job Types Configuration - Without Job Type', () => {
-  it('should handle job without jobType when resourcesPerJob is configured', async () => {
+describe('Job Types Configuration - With Job Type', () => {
+  it('should handle job with jobType when resourceEstimationsPerJob is configured', async () => {
     const limiter = createTestLimiter({
       capacity: TEN,
       jobTypes: { typeA: { ratio: ONE } },
     });
 
     try {
-      // Queue a job WITHOUT specifying jobType
-      // The limiter should process it normally without job type tracking
+      // Queue a job WITH specifying jobType
+      // The limiter should process it with job type tracking
       const result = await limiter.queueJob({
-        jobId: 'no-type-job',
-        // Note: no jobType specified
+        jobId: 'typed-job',
+        jobType: 'typeA',
         job: createSimpleTestJob(),
       });
 
@@ -147,55 +147,60 @@ describe('Job Types Configuration - Without Job Type', () => {
   });
 });
 
-describe('Job Types Configuration - No resourcesPerJob', () => {
-  it('should work without resourcesPerJob configured', async () => {
-    // Create limiter without any job type configuration
+describe('Job Types Configuration - With resourceEstimationsPerJob', () => {
+  it('should work with default resourceEstimationsPerJob configured', async () => {
+    // Create limiter with default job type configuration
     const limiter = createLLMRateLimiter({
       models: {
         model1: {
           requestsPerMinute: HIGH_RPM,
           maxConcurrentRequests: TEN,
-          resourcesPerEvent: { estimatedNumberOfRequests: ONE },
           pricing: DEFAULT_PRICING,
         },
+      },
+      resourceEstimationsPerJob: {
+        default: { estimatedNumberOfRequests: ONE },
       },
     });
 
     try {
-      // Should work without job type tracking
+      // Should work with default job type
       const result = await limiter.queueJob({
         jobId: 'simple-job',
+        jobType: 'default',
         job: createSimpleTestJob(),
       });
 
       expect(result).toBeDefined();
 
-      // Job type stats should be undefined
+      // Job type stats should be defined when resourceEstimationsPerJob is configured
       const stats = limiter.getJobTypeStats();
-      expect(stats).toBeUndefined();
+      expect(stats).toBeDefined();
     } finally {
       limiter.stop();
     }
   });
 
-  it('should ignore jobType when resourcesPerJob is not configured', async () => {
-    // Create limiter without resourcesPerJob
+  it('should handle jobType that matches resourceEstimationsPerJob configuration', async () => {
+    // Create limiter with resourceEstimationsPerJob
     const limiter = createLLMRateLimiter({
       models: {
         model1: {
           requestsPerMinute: HIGH_RPM,
           maxConcurrentRequests: TEN,
-          resourcesPerEvent: { estimatedNumberOfRequests: ONE },
           pricing: DEFAULT_PRICING,
         },
+      },
+      resourceEstimationsPerJob: {
+        someType: { estimatedNumberOfRequests: ONE },
       },
     });
 
     try {
-      // Specifying jobType should be ignored (not cause error)
+      // Specifying jobType that matches config should work
       const result = await limiter.queueJob({
         jobId: 'typed-job',
-        jobType: 'someType', // This should be ignored
+        jobType: 'someType',
         job: createSimpleTestJob(),
       });
 

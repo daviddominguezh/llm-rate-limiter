@@ -1,11 +1,13 @@
 import { createLLMRateLimiter } from '../multiModelRateLimiter.js';
 import type { LLMRateLimiterInstance } from '../multiModelTypes.js';
 import {
+  DEFAULT_JOB_TYPE,
   DEFAULT_PRICING,
   ONE,
   RPM_LIMIT_HIGH,
   THREE,
   ZERO,
+  createDefaultResourceEstimations,
   createMockJobResult,
   createMockUsage,
   generateJobId,
@@ -13,12 +15,11 @@ import {
 
 const MODEL_CONFIG = {
   requestsPerMinute: RPM_LIMIT_HIGH,
-  resourcesPerEvent: { estimatedNumberOfRequests: ONE },
   pricing: DEFAULT_PRICING,
 };
 
 describe('MultiModelRateLimiter - job delegation basic', () => {
-  let limiter: LLMRateLimiterInstance | undefined = undefined;
+  let limiter: LLMRateLimiterInstance<'default'> | undefined = undefined;
   afterEach(() => {
     limiter?.stop();
     limiter = undefined;
@@ -30,11 +31,13 @@ describe('MultiModelRateLimiter - job delegation basic', () => {
         'model-a': MODEL_CONFIG,
         'model-b': MODEL_CONFIG,
       },
-      order: ['model-a', 'model-b'],
+      escalationOrder: ['model-a', 'model-b'],
+      resourceEstimationsPerJob: createDefaultResourceEstimations(),
     });
     const modelsAttempted: string[] = [];
     const result = await limiter.queueJob({
       jobId: generateJobId(),
+      jobType: DEFAULT_JOB_TYPE,
       job: ({ modelId }, resolve, reject) => {
         modelsAttempted.push(modelId);
         const usage = createMockUsage(modelId);
@@ -52,7 +55,7 @@ describe('MultiModelRateLimiter - job delegation basic', () => {
 });
 
 describe('MultiModelRateLimiter - job delegation chain 3 models', () => {
-  let limiter: LLMRateLimiterInstance | undefined = undefined;
+  let limiter: LLMRateLimiterInstance<'default'> | undefined = undefined;
   afterEach(() => {
     limiter?.stop();
     limiter = undefined;
@@ -65,11 +68,13 @@ describe('MultiModelRateLimiter - job delegation chain 3 models', () => {
         'model-b': MODEL_CONFIG,
         'model-c': MODEL_CONFIG,
       },
-      order: ['model-a', 'model-b', 'model-c'],
+      escalationOrder: ['model-a', 'model-b', 'model-c'],
+      resourceEstimationsPerJob: createDefaultResourceEstimations(),
     });
     const modelsAttempted: string[] = [];
     const result = await limiter.queueJob({
       jobId: generateJobId(),
+      jobType: DEFAULT_JOB_TYPE,
       job: ({ modelId }, resolve, reject) => {
         modelsAttempted.push(modelId);
         const usage = createMockUsage(modelId);
@@ -87,7 +92,7 @@ describe('MultiModelRateLimiter - job delegation chain 3 models', () => {
 });
 
 describe('MultiModelRateLimiter - job delegation chain 4 models', () => {
-  let limiter: LLMRateLimiterInstance | undefined = undefined;
+  let limiter: LLMRateLimiterInstance<'default'> | undefined = undefined;
   afterEach(() => {
     limiter?.stop();
     limiter = undefined;
@@ -101,11 +106,13 @@ describe('MultiModelRateLimiter - job delegation chain 4 models', () => {
         'model-c': MODEL_CONFIG,
         'model-d': MODEL_CONFIG,
       },
-      order: ['model-a', 'model-b', 'model-c', 'model-d'],
+      escalationOrder: ['model-a', 'model-b', 'model-c', 'model-d'],
+      resourceEstimationsPerJob: createDefaultResourceEstimations(),
     });
     const modelsAttempted: string[] = [];
     const result = await limiter.queueJob({
       jobId: generateJobId(),
+      jobType: DEFAULT_JOB_TYPE,
       job: ({ modelId }, resolve, reject) => {
         modelsAttempted.push(modelId);
         const usage = createMockUsage(modelId);
@@ -123,7 +130,7 @@ describe('MultiModelRateLimiter - job delegation chain 4 models', () => {
 });
 
 describe('MultiModelRateLimiter - job delegation retry', () => {
-  let limiter: LLMRateLimiterInstance | undefined = undefined;
+  let limiter: LLMRateLimiterInstance<'default'> | undefined = undefined;
   afterEach(() => {
     limiter?.stop();
     limiter = undefined;
@@ -135,12 +142,14 @@ describe('MultiModelRateLimiter - job delegation retry', () => {
         'model-a': MODEL_CONFIG,
         'model-b': MODEL_CONFIG,
       },
-      order: ['model-a', 'model-b'],
+      escalationOrder: ['model-a', 'model-b'],
+      resourceEstimationsPerJob: createDefaultResourceEstimations(),
     });
     let attemptCount = ZERO;
     const modelsAttempted: string[] = [];
     const result = await limiter.queueJob({
       jobId: generateJobId(),
+      jobType: DEFAULT_JOB_TYPE,
       job: ({ modelId }, resolve, reject) => {
         attemptCount += ONE;
         modelsAttempted.push(modelId);

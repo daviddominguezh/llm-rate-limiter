@@ -4,7 +4,7 @@
 import { describe, expect, it } from '@jest/globals';
 import { setTimeout as sleep } from 'node:timers/promises';
 
-import type { RatioAdjustmentConfig, ResourcesPerJob } from '../jobTypeTypes.js';
+import type { RatioAdjustmentConfig, ResourceEstimationsPerJob } from '../jobTypeTypes.js';
 import { type JobTypeManager, createJobTypeManager } from '../utils/jobTypeManager.js';
 
 const ZERO = 0;
@@ -27,12 +27,12 @@ const LOW_LOAD_02 = 0.2;
 const ADJUSTMENT_INTERVAL_MS = 50;
 
 const createManager = (
-  resourcesPerJob: ResourcesPerJob,
+  resourceEstimationsPerJob: ResourceEstimationsPerJob,
   ratioConfig?: RatioAdjustmentConfig,
   capacity?: number
 ): JobTypeManager => {
   const manager = createJobTypeManager({
-    resourcesPerJob,
+    resourceEstimationsPerJob,
     ratioAdjustmentConfig: ratioConfig,
     label: 'test',
   });

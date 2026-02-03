@@ -4,13 +4,13 @@
  * Key features:
  * 1. Per-model independent rate limits (RPM, RPD, TPM, TPD, concurrency)
  * 2. Automatic fallback to next available model when one is exhausted
- * 3. User-defined priority order for model usage
+ * 3. User-defined escalation order for model usage
  * 4. Compile-time type safety:
- *    - Order array can only contain model IDs that have limits defined
- *    - Order is optional for single model, required for multiple models
+ *    - escalationOrder array can only contain model IDs that have limits defined
+ *    - escalationOrder is optional for single model, required for multiple models
  */
 import type { DistributedBackendFactory } from './backendFactoryTypes.js';
-import type { JobTypeStats, RatioAdjustmentConfig, ResourcesPerJob } from './jobTypeTypes.js';
+import type { JobTypeStats, RatioAdjustmentConfig, ResourceEstimationsPerJob } from './jobTypeTypes.js';
 import type { InternalJobResult, InternalLimiterStats, LogFn, MemoryLimitConfig } from './types.js';
 
 // =============================================================================
@@ -44,6 +44,10 @@ export interface ModelRateLimitConfig {
   tokensPerDay?: number;
   /** Maximum concurrent requests for this model (optional) */
   maxConcurrentRequests?: number;
+  /** Minimum capacity floor for this model (default: 0) */
+  minCapacity?: number;
+  /** Maximum capacity ceiling for this model (optional) */
+  maxCapacity?: number;
   /** Pricing for cost calculation (USD per million tokens) */
   pricing: ModelPricing;
 }
@@ -88,44 +92,30 @@ export type HasMultipleModels<T extends ModelsConfig> = IsSingleModel<T> extends
  */
 export interface LLMRateLimiterConfigBase<
   T extends ModelsConfig,
-  J extends ResourcesPerJob = ResourcesPerJob,
+  J extends ResourceEstimationsPerJob = ResourceEstimationsPerJob,
 > {
   /** Map of model ID to its rate limit configuration */
   models: T;
   /** Memory-based limits configuration (shared across all models) */
   memory?: MemoryLimitConfig;
-  /** Minimum capacity floor for memory (default: 0) */
-  minCapacity?: number;
-  /** Maximum capacity ceiling for memory (optional) */
-  maxCapacity?: number;
-  /** Label for logging (default: 'MultiModelRateLimiter') */
-  label?: string;
   /** Optional logging callback */
   onLog?: LogFn;
   /** Callback triggered when available slots change */
   onAvailableSlotsChange?: OnAvailableSlotsChange;
   /**
    * Backend for distributed rate limiting.
-   * - V1 BackendConfig: Simple acquire/release callbacks
-   * - V2 DistributedBackendConfig: Fair distribution with registration
-   * - V2 DistributedBackendFactory: Factory that receives rate limiter config (no duplication)
+   * - BackendConfig: Direct backend with registration and fair distribution
+   * - DistributedBackendFactory: Factory that receives rate limiter config (no duplication)
    */
-  backend?: BackendConfig | DistributedBackendConfig | DistributedBackendFactory;
+  backend?: BackendConfig | DistributedBackendFactory;
   /**
    * Job type configurations with per-type resource estimates and capacity ratios.
-   * When specified, enables job type-based capacity allocation.
-   * Each job type can have different resource estimates (tokens, requests, memory).
+   * Each job type defines resource estimates (tokens, requests, memory) and capacity allocation.
    * Ratios determine how total capacity is divided among job types.
-   * @alias estimates
    */
-  resourcesPerJob?: J;
-  /**
-   * Alias for resourcesPerJob - job type configurations with resource estimates.
-   */
-  estimates?: J;
+  resourceEstimationsPerJob: J;
   /**
    * Configuration for dynamic ratio adjustment algorithm.
-   * Only applies when resourcesPerJob/estimates is defined.
    */
   ratioAdjustmentConfig?: RatioAdjustmentConfig;
 }
@@ -135,20 +125,19 @@ export interface LLMRateLimiterConfigBase<
 // =============================================================================
 
 /**
- * Validated configuration that enforces order requirements at compile time.
+ * Validated configuration that enforces escalationOrder requirements at compile time.
  *
- * - If only one model is defined, `order`/`escalationOrder` is optional
- * - If multiple models are defined, `order` or `escalationOrder` is REQUIRED
- * - The order array can only contain model IDs that are defined in `models`
- * - If `resourcesPerJob`/`estimates` is defined, `jobType` in queueJob becomes type-safe
+ * - If only one model is defined, `escalationOrder` is optional
+ * - If multiple models are defined, `escalationOrder` is REQUIRED
+ * - The escalationOrder array can only contain model IDs that are defined in `models`
  */
 export type ValidatedLLMRateLimiterConfig<
   T extends ModelsConfig,
-  J extends ResourcesPerJob = ResourcesPerJob,
+  J extends ResourceEstimationsPerJob = ResourceEstimationsPerJob,
 > = LLMRateLimiterConfigBase<T, J> &
   (HasMultipleModels<T> extends true
-    ? { order: ReadonlyArray<ModelIds<T>> } | { escalationOrder: ReadonlyArray<ModelIds<T>> }
-    : { order?: ReadonlyArray<ModelIds<T>>; escalationOrder?: ReadonlyArray<ModelIds<T>> });
+    ? { escalationOrder: ReadonlyArray<ModelIds<T>> }
+    : { escalationOrder?: ReadonlyArray<ModelIds<T>> });
 
 /**
  * Loose configuration type for internal use.
@@ -156,22 +145,15 @@ export type ValidatedLLMRateLimiterConfig<
  */
 export interface LLMRateLimiterConfig {
   models: ModelsConfig;
-  /** Model priority order (first model is preferred) */
-  order?: readonly string[];
-  /** Alias for order - model escalation priority */
+  /** Model escalation priority order (first model is preferred, fallback to next) */
   escalationOrder?: readonly string[];
   memory?: MemoryLimitConfig;
-  minCapacity?: number;
-  maxCapacity?: number;
-  label?: string;
   onLog?: LogFn;
   onAvailableSlotsChange?: OnAvailableSlotsChange;
-  /** Backend for distributed rate limiting (V1, V2, or factory) */
-  backend?: BackendConfig | DistributedBackendConfig | DistributedBackendFactory;
-  /** Job type configurations with per-type resource estimates and capacity ratios */
-  resourcesPerJob?: ResourcesPerJob;
-  /** Alias for resourcesPerJob */
-  estimates?: ResourcesPerJob;
+  /** Backend for distributed rate limiting */
+  backend?: BackendConfig | DistributedBackendFactory;
+  /** Job type configurations with per-type resource estimates and capacity ratios (required) */
+  resourceEstimationsPerJob: ResourceEstimationsPerJob;
   /** Configuration for dynamic ratio adjustment algorithm */
   ratioAdjustmentConfig?: RatioAdjustmentConfig;
 }
@@ -265,11 +247,11 @@ export interface QueueJobOptions<
   /** Unique identifier for this job (for traceability) */
   jobId: string;
   /**
-   * Job type for capacity allocation.
+   * Job type for capacity allocation (required).
    * Must match a key in resourcesPerJob configuration.
-   * When resourcesPerJob is configured, this determines which capacity pool the job uses.
+   * Determines which capacity pool the job uses.
    */
-  jobType?: JobType;
+  jobType: JobType;
   /** Job function that receives args with modelId, and resolve/reject callbacks */
   job: LLMJob<T, Args>;
   /** User-defined args passed to job (modelId is injected automatically) */
@@ -370,6 +352,7 @@ export interface RelativeAvailabilityAdjustment {
 export type OnAvailableSlotsChange = (
   availability: Availability,
   reason: AvailabilityChangeReason,
+  modelId: string,
   adjustment?: RelativeAvailabilityAdjustment
 ) => void;
 
@@ -393,50 +376,6 @@ export interface BackendActualResources {
   tokens: number;
 }
 
-/** Context passed to backend.acquire callback */
-export interface BackendAcquireContext {
-  /** The model being acquired */
-  modelId: string;
-  /** Job identifier (may be undefined for direct model calls) */
-  jobId: string | undefined;
-  /** Job type for capacity allocation (undefined if not using job types) */
-  jobType?: string;
-  /** Estimated resources for this job */
-  estimated: BackendEstimatedResources;
-}
-
-/** Context passed to backend.release callback */
-export interface BackendReleaseContext {
-  /** The model being released */
-  modelId: string;
-  /** Job identifier (may be undefined for direct model calls) */
-  jobId: string | undefined;
-  /** Job type for capacity allocation (undefined if not using job types) */
-  jobType?: string;
-  /** Estimated resources that were reserved */
-  estimated: BackendEstimatedResources;
-  /** Actual resources used (zero if job failed before execution) */
-  actual: BackendActualResources;
-}
-
-/** Backend configuration for distributed rate limiting (V1 - simple acquire/release) */
-export interface BackendConfig {
-  /**
-   * Called before executing a job to acquire distributed capacity.
-   * Return true to proceed, false to try next model (or reject if none left).
-   */
-  acquire: (context: BackendAcquireContext) => Promise<boolean>;
-  /**
-   * Called after job completes (success or failure) to release distributed capacity.
-   * Errors are silently caught - user handles error logging in their implementation.
-   */
-  release: (context: BackendReleaseContext) => Promise<void>;
-}
-
-// =============================================================================
-// Backend V2 (Fair Distribution) Types
-// =============================================================================
-
 /** Allocation info for a specific instance from the distributed backend */
 export interface AllocationInfo {
   /** Slots allocated to THIS instance (how many more jobs to fetch) */
@@ -453,23 +392,41 @@ export type AllocationCallback = (allocation: AllocationInfo) => void;
 /** Unsubscribe function returned by subscribe */
 export type Unsubscribe = () => void;
 
-/** Context passed to V2 backend.acquire callback (includes instanceId) */
-export interface BackendAcquireContextV2 extends BackendAcquireContext {
+/** Context passed to backend.acquire callback */
+export interface BackendAcquireContext {
   /** The instance making the acquire request */
   instanceId: string;
+  /** The model being acquired */
+  modelId: string;
+  /** Job identifier */
+  jobId: string;
+  /** Job type for capacity allocation */
+  jobType: string;
+  /** Estimated resources for this job */
+  estimated: BackendEstimatedResources;
 }
 
-/** Context passed to V2 backend.release callback (includes instanceId) */
-export interface BackendReleaseContextV2 extends BackendReleaseContext {
+/** Context passed to backend.release callback */
+export interface BackendReleaseContext {
   /** The instance making the release request */
   instanceId: string;
+  /** The model being released */
+  modelId: string;
+  /** Job identifier */
+  jobId: string;
+  /** Job type for capacity allocation */
+  jobType: string;
+  /** Estimated resources that were reserved */
+  estimated: BackendEstimatedResources;
+  /** Actual resources used (zero if job failed before execution) */
+  actual: BackendActualResources;
 }
 
 /**
- * Backend configuration for distributed rate limiting with fair distribution (V2).
+ * Backend configuration for distributed rate limiting with fair distribution.
  * Provides instance registration and allocation-based slot distribution.
  */
-export interface DistributedBackendConfig {
+export interface BackendConfig {
   /**
    * Register this instance with the backend.
    * Called when the rate limiter starts.
@@ -487,12 +444,12 @@ export interface DistributedBackendConfig {
    * Called before executing a job to acquire a slot from this instance's allocation.
    * Return true to proceed, false to reject (no capacity in allocation).
    */
-  acquire: (context: BackendAcquireContextV2) => Promise<boolean>;
+  acquire: (context: BackendAcquireContext) => Promise<boolean>;
 
   /**
    * Called after job completes to release capacity and trigger reallocation.
    */
-  release: (context: BackendReleaseContextV2) => Promise<void>;
+  release: (context: BackendReleaseContext) => Promise<void>;
 
   /**
    * Subscribe to allocation updates for this instance.
@@ -533,8 +490,8 @@ export interface DistributedAvailability {
  */
 export interface JobExecutionContext<T extends InternalJobResult, Args extends ArgsWithoutModelId> {
   jobId: string;
-  /** Job type for capacity allocation (undefined if not using job types) */
-  jobType: string | undefined;
+  /** Job type for capacity allocation (required) */
+  jobType: string;
   job: QueueJobOptions<T, Args>['job'];
   args: Args | undefined;
   triedModels: Set<string>;

@@ -1,10 +1,17 @@
 import { createLLMRateLimiter } from '../multiModelRateLimiter.js';
 import type { LLMRateLimiterConfig } from '../multiModelTypes.js';
-import { DEFAULT_PRICING, RPM_LIMIT_HIGH } from './multiModelRateLimiter.helpers.js';
+import {
+  DEFAULT_PRICING,
+  RPM_LIMIT_HIGH,
+  createDefaultResourceEstimations,
+} from './multiModelRateLimiter.helpers.js';
 
 describe('MultiModelRateLimiter - validation empty models', () => {
   it('should throw error for empty models', () => {
-    const invalidConfig: LLMRateLimiterConfig = { models: {} };
+    const invalidConfig: LLMRateLimiterConfig = {
+      models: {},
+      resourceEstimationsPerJob: createDefaultResourceEstimations(),
+    };
     expect(() => createLLMRateLimiter(invalidConfig)).toThrow(
       'At least one model must be configured in models'
     );
@@ -20,10 +27,11 @@ describe('MultiModelRateLimiter - validation undefined model in order', () => {
           pricing: DEFAULT_PRICING,
         },
       },
-      order: ['gpt-4', 'undefined-model'],
+      escalationOrder: ['gpt-4', 'undefined-model'],
+      resourceEstimationsPerJob: createDefaultResourceEstimations(),
     };
     expect(() => createLLMRateLimiter(invalidConfig)).toThrow(
-      "Model 'undefined-model' in order array is not defined in models"
+      "Model 'undefined-model' in escalationOrder is not defined in models"
     );
   });
 });
@@ -41,9 +49,10 @@ describe('MultiModelRateLimiter - validation missing order', () => {
           pricing: DEFAULT_PRICING,
         },
       },
+      resourceEstimationsPerJob: createDefaultResourceEstimations(),
     };
     expect(() => createLLMRateLimiter(invalidConfig)).toThrow(
-      'order (or escalationOrder) is required when multiple models are configured'
+      'escalationOrder is required when multiple models are configured'
     );
   });
 });

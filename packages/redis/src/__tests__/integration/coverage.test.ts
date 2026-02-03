@@ -133,6 +133,7 @@ describe('Redis Backend - acquire error handling', () => {
         instanceId: 'non-existent-instance',
         modelId: 'test-model',
         jobId: 'test-job',
+        jobType: 'test-job-type',
         estimated: { tokens: ONE, requests: ONE },
       });
       expect(result).toBe(false);

@@ -6,6 +6,7 @@ import { setTimeout as sleep } from 'node:timers/promises';
 import { createLLMRateLimiter } from '../multiModelRateLimiter.js';
 import type { BackendConfig, LLMRateLimiterInstance, ModelRateLimitConfig } from '../multiModelTypes.js';
 import type { DistributedBackendInstance } from './distributedBackend.helpers.js';
+import { DEFAULT_JOB_TYPE, createDefaultResourceEstimations } from './multiModelRateLimiter.helpers.js';
 
 export const ZERO = 0;
 export const ONE = 1;
@@ -21,7 +22,10 @@ export const FIVE_HUNDRED = 500;
 export const THOUSAND = 1000;
 export const REALISTIC_TEST_TIMEOUT = 120_000;
 
-export type InstanceArray = Array<{ limiter: LLMRateLimiterInstance; unsubscribe: () => void }>;
+export type InstanceArray = Array<{
+  limiter: LLMRateLimiterInstance<typeof DEFAULT_JOB_TYPE>;
+  unsubscribe: () => void;
+}>;
 
 export interface LatencyConfig {
   acquireMinMs: number;
@@ -102,6 +106,8 @@ export const wrapBackendWithLatency = (
   latency: LatencyConfig,
   tracker: TestTracker
 ): BackendConfig => ({
+  register: (instanceId) => backend.register(instanceId),
+  unregister: (instanceId) => backend.unregister(instanceId),
   acquire: async (ctx): Promise<boolean> => {
     const ms = randomInt(latency.acquireMinMs, latency.acquireMaxMs);
     tracker.trackAcquireLatency(ms);
@@ -114,16 +120,24 @@ export const wrapBackendWithLatency = (
     await sleep(ms);
     await backend.release(ctx);
   },
+  subscribe: (instanceId, callback) => backend.subscribe(instanceId, callback),
 });
 
-export const createLatencyLimiters = (config: LimiterSetupConfig, tracker: TestTracker): InstanceArray => {
+export const createLatencyLimiters = async (
+  config: LimiterSetupConfig,
+  tracker: TestTracker
+): Promise<InstanceArray> => {
   const instances: InstanceArray = [];
   for (let i = ZERO; i < config.count; i += ONE) {
     const wrappedBackend = wrapBackendWithLatency(config.backend.backend, config.latency, tracker);
     const limiter = createLLMRateLimiter({
       backend: wrappedBackend,
       models: { default: createModelConfig(config.tokensPerJob) },
+      resourceEstimationsPerJob: {
+        [DEFAULT_JOB_TYPE]: { estimatedNumberOfRequests: ONE, estimatedUsedTokens: config.tokensPerJob },
+      },
     });
+    await limiter.start();
     const unsubscribe = config.backend.subscribe((avail) => {
       limiter.setDistributedAvailability(avail);
     });
@@ -153,6 +167,7 @@ export const fireSlowJobs = async (
       const promise = limiter
         .queueJob({
           jobId: `i${i}-j${j}`,
+          jobType: DEFAULT_JOB_TYPE,
           job: async ({ modelId }, resolve) => {
             const duration = randomInt(jobConfig.minDurationMs, jobConfig.maxDurationMs);
             tracker.trackJobDuration(duration);
@@ -204,7 +219,7 @@ export interface TestSetup {
 }
 
 /** Creates a standard latency test setup */
-export const createLatencyTestSetup = (
+export const createLatencyTestSetup = async (
   backendFactory: (config: {
     tokensPerMinute: number;
     requestsPerMinute: number;
@@ -218,14 +233,14 @@ export const createLatencyTestSetup = (
     tokensPerJob: number;
     latency: LatencyConfig;
   }
-): TestSetup => {
+): Promise<TestSetup> => {
   const backend = backendFactory({
     tokensPerMinute: config.tpm,
     requestsPerMinute: config.rpm,
     estimatedTokensPerRequest: config.tokensPerJob,
   });
   const tracker = createTestTracker();
-  const instances = createLatencyLimiters(
+  const instances = await createLatencyLimiters(
     { count: config.instanceCount, backend, latency: config.latency, tokensPerJob: config.tokensPerJob },
     tracker
   );

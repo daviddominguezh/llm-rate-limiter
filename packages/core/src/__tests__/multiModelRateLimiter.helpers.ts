@@ -96,15 +96,21 @@ export const createMockUsage = (modelId: string): UsageEntry => ({
   cachedTokens: ZERO_CACHED_TOKENS,
 });
 
+/** Default job type for tests */
+export const DEFAULT_JOB_TYPE = 'default';
+
 /** Helper to create job options for tests. The job auto-resolves after execution. */
 export const createJobOptions = <
   T extends InternalJobResult,
   Args extends ArgsWithoutModelId = ArgsWithoutModelId,
+  JobType extends string = typeof DEFAULT_JOB_TYPE,
 >(
   jobFn: (args: JobArgs<Args>) => T | Promise<T>,
-  args?: Args
-): QueueJobOptions<T, Args> => ({
+  args?: Args,
+  jobType: JobType = DEFAULT_JOB_TYPE as JobType
+): QueueJobOptions<T, Args, JobType> => ({
   jobId: generateJobId(),
+  jobType,
   job: async (jobArgs, resolve): Promise<T> => {
     const result = await jobFn(jobArgs);
     const { modelId } = jobArgs;
@@ -115,8 +121,12 @@ export const createJobOptions = <
 });
 
 /** Helper to create simple job options that just returns a result. */
-export const simpleJob = <T extends InternalJobResult>(result: T): QueueJobOptions<T> => ({
+export const simpleJob = <T extends InternalJobResult, JobType extends string = typeof DEFAULT_JOB_TYPE>(
+  result: T,
+  jobType: JobType = DEFAULT_JOB_TYPE as JobType
+): QueueJobOptions<T, ArgsWithoutModelId, JobType> => ({
   jobId: generateJobId(),
+  jobType,
   job: (jobArgs, resolve): T => {
     const { modelId } = jobArgs;
     resolve(createMockUsage(modelId));
@@ -138,25 +148,66 @@ export function ensureDefined<T extends object>(
   return value;
 }
 
-/** Creates a model config with memory estimation */
+/** Creates a model config for tests */
+export const createModelConfig = (
+  rpm: number
+): {
+  requestsPerMinute: number;
+  pricing: ModelPricing;
+} => ({
+  requestsPerMinute: rpm,
+  pricing: DEFAULT_PRICING,
+});
+
+/** Creates a two-model config for tests */
+export const createTwoModels = (rpm: number): Record<string, ReturnType<typeof createModelConfig>> => ({
+  'gpt-4': createModelConfig(rpm),
+  'gpt-3.5': createModelConfig(rpm),
+});
+
+/** Creates job type config with memory estimation */
+export const createJobTypeWithMemory = (
+  memoryKB: number
+): { estimatedUsedMemoryKB: number; estimatedNumberOfRequests: number } => ({
+  estimatedUsedMemoryKB: memoryKB,
+  estimatedNumberOfRequests: ONE,
+});
+
+/** Creates default resourceEstimationsPerJob for tests */
+export const createDefaultResourceEstimations = (): { default: { estimatedNumberOfRequests: number } } => ({
+  default: { estimatedNumberOfRequests: ONE },
+});
+
+/** Creates a model config with memory estimation for tests */
 export const createMemoryModelConfig = (
   rpm: number,
   memoryKB: number
 ): {
   requestsPerMinute: number;
-  resourcesPerEvent: { estimatedNumberOfRequests: number; estimatedUsedMemoryKB: number };
   pricing: ModelPricing;
 } => ({
   requestsPerMinute: rpm,
-  resourcesPerEvent: { estimatedNumberOfRequests: ONE, estimatedUsedMemoryKB: memoryKB },
   pricing: DEFAULT_PRICING,
 });
 
-/** Creates a two-model config for memory tests */
-export const createTwoMemoryModels = (
-  rpm: number,
+/** Creates resourceEstimationsPerJob with memory estimation for tests */
+export const createResourceEstimationsWithMemory = (
   memoryKB: number
-): Record<string, ReturnType<typeof createMemoryModelConfig>> => ({
-  'gpt-4': createMemoryModelConfig(rpm, memoryKB),
-  'gpt-3.5': createMemoryModelConfig(rpm, memoryKB),
+): { default: { estimatedNumberOfRequests: number; estimatedUsedMemoryKB: number } } => ({
+  default: { estimatedNumberOfRequests: ONE, estimatedUsedMemoryKB: memoryKB },
+});
+
+/** Creates resourceEstimationsPerJob with only token estimates (no request estimates) for tests */
+export const createTokenOnlyResourceEstimations = (
+  tokens: number
+): { default: { estimatedUsedTokens: number } } => ({
+  default: { estimatedUsedTokens: tokens },
+});
+
+/** Creates resourceEstimationsPerJob with both request and token estimates for tests */
+export const createFullResourceEstimations = (
+  requests: number,
+  tokens: number
+): { default: { estimatedNumberOfRequests: number; estimatedUsedTokens: number } } => ({
+  default: { estimatedNumberOfRequests: requests, estimatedUsedTokens: tokens },
 });

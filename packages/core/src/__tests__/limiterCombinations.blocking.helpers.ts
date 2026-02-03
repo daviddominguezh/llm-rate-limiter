@@ -2,6 +2,7 @@
  * Helpers for blocking tests in limiter combinations tests.
  */
 import {
+  DEFAULT_JOB_TYPE,
   ESTIMATED_MEMORY_KB,
   LONG_JOB_DELAY_MS,
   ONE,
@@ -33,6 +34,7 @@ export const testSemaphoreBlocker = async (
   expect(newLimiter.hasCapacity()).toBe(true);
   const slowJobPromise = newLimiter.queueJob({
     jobId: generateJobId(),
+    jobType: DEFAULT_JOB_TYPE,
     job: async ({ modelId }, resolve) => {
       await setTimeoutAsync(LONG_JOB_DELAY_MS);
       resolve(createMockUsage(modelId));
@@ -65,6 +67,7 @@ export const testTimeWindowBlocker = async (
   expect(newLimiter.hasCapacity()).toBe(true);
   await newLimiter.queueJob({
     jobId: generateJobId(),
+    jobType: DEFAULT_JOB_TYPE,
     job: ({ modelId }, resolve) => {
       resolve(createMockUsage(modelId));
       return createMockJobResult('exhaust-job');

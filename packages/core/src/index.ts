@@ -13,7 +13,7 @@ export type {
   JobTypeState,
   JobTypeStats,
   RatioAdjustmentConfig,
-  ResourcesPerJob,
+  ResourceEstimationsPerJob,
 } from './jobTypeTypes.js';
 export { DEFAULT_RATIO_ADJUSTMENT_CONFIG } from './jobTypeTypes.js';
 
@@ -41,21 +41,17 @@ export type {
   UsageEntry,
   UsageEntryWithCost,
   ValidatedLLMRateLimiterConfig,
-  // Backend types (V1)
+  // Backend types
   BackendConfig,
   BackendAcquireContext,
   BackendReleaseContext,
   BackendEstimatedResources,
   BackendActualResources,
-  // Backend types (V2 - distributed)
-  DistributedBackendConfig,
-  BackendAcquireContextV2,
-  BackendReleaseContextV2,
   AllocationInfo,
   AllocationCallback,
   Unsubscribe,
   DistributedAvailability,
-  // Backend factory types (V2 - clean API)
+  // Backend factory types
   DistributedBackendFactory,
   BackendFactoryInitConfig,
   BackendFactoryInstance,

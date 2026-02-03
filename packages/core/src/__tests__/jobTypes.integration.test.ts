@@ -110,18 +110,16 @@ describe('Job Types Integration - Model Fallback', () => {
         modelA: {
           requestsPerMinute: HIGH_RPM,
           maxConcurrentRequests: TEN,
-          resourcesPerEvent: { estimatedNumberOfRequests: ONE },
           pricing: DEFAULT_PRICING,
         },
         modelB: {
           requestsPerMinute: HIGH_RPM,
           maxConcurrentRequests: TEN,
-          resourcesPerEvent: { estimatedNumberOfRequests: ONE },
           pricing: DEFAULT_PRICING,
         },
       },
-      order: ['modelA', 'modelB'],
-      resourcesPerJob: {
+      escalationOrder: ['modelA', 'modelB'],
+      resourceEstimationsPerJob: {
         typeA: { estimatedUsedTokens: HUNDRED, ratio: { initialValue: ONE } },
       },
     });
@@ -159,20 +157,20 @@ describe('Job Types Integration - Memory Manager Interaction', () => {
   it('should handle job type + memory manager interaction', async () => {
     const limiter = createLLMRateLimiter({
       memory: { freeMemoryRatio: 0.5 },
-      maxCapacity: HUNDRED,
       models: {
         model1: {
           requestsPerMinute: HIGH_RPM,
           maxConcurrentRequests: TEN,
-          resourcesPerEvent: {
-            estimatedNumberOfRequests: ONE,
-            estimatedUsedMemoryKB: TEN,
-          },
+          maxCapacity: HUNDRED,
           pricing: DEFAULT_PRICING,
         },
       },
-      resourcesPerJob: {
-        typeA: { estimatedUsedTokens: HUNDRED, ratio: { initialValue: ONE } },
+      resourceEstimationsPerJob: {
+        typeA: {
+          estimatedUsedTokens: HUNDRED,
+          estimatedUsedMemoryKB: TEN,
+          ratio: { initialValue: ONE },
+        },
       },
     });
 
@@ -195,10 +193,16 @@ describe('Job Types Integration - Memory Manager Interaction', () => {
 
 describe('Job Types Integration - Backend Rejection', () => {
   it('should handle backend rejection with acquired job type slot', async () => {
-    let acquireCount = ZERO;
     const rejectingBackend = {
+      register: async (): Promise<{ slots: number; tokensPerMinute: number; requestsPerMinute: number }> =>
+        await Promise.resolve({ slots: TEN, tokensPerMinute: HUNDRED, requestsPerMinute: HIGH_RPM }),
+      unregister: async (): Promise<void> => {
+        await Promise.resolve();
+      },
+      subscribe: (): (() => void) => () => {
+        /* unsubscribe */
+      },
       acquire: async (_ctx: BackendAcquireContext): Promise<boolean> => {
-        acquireCount += ONE;
         // Reject all acquire attempts
         return await Promise.resolve(false);
       },
@@ -213,16 +217,16 @@ describe('Job Types Integration - Backend Rejection', () => {
         model1: {
           requestsPerMinute: HIGH_RPM,
           maxConcurrentRequests: TEN,
-          resourcesPerEvent: { estimatedNumberOfRequests: ONE },
           pricing: DEFAULT_PRICING,
         },
       },
-      resourcesPerJob: {
+      resourceEstimationsPerJob: {
         typeA: { estimatedUsedTokens: HUNDRED, ratio: { initialValue: ONE } },
       },
     });
 
     try {
+      await limiter.start();
       // Backend rejects, should throw and release job type slot
       await expect(
         limiter.queueJob({

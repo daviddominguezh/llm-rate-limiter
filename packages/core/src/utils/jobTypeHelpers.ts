@@ -4,9 +4,10 @@
 import {
   DEFAULT_RATIO_ADJUSTMENT_CONFIG,
   type JobTypeLoadMetrics,
+  type JobTypeResources,
   type JobTypeState,
   type RatioAdjustmentConfig,
-  type ResourcesPerJob,
+  type ResourceEstimationsPerJob,
 } from '../jobTypeTypes.js';
 
 const ZERO = 0;
@@ -30,7 +31,7 @@ export const mergeRatioConfig = (config?: RatioAdjustmentConfig): Required<Ratio
 
 /** Create initial states from config and calculated ratios */
 export const createInitialStates = (
-  resourcesPerJob: ResourcesPerJob,
+  resourcesPerJob: ResourceEstimationsPerJob,
   ratios: Map<string, number>
 ): Map<string, JobTypeState> => {
   const states = new Map<string, JobTypeState>();
@@ -39,17 +40,19 @@ export const createInitialStates = (
     const ratio = ratios.get(jobTypeId) ?? ZERO;
     const flexible = jobConfig.ratio?.flexible !== false;
 
+    const resources: JobTypeResources = {
+      estimatedNumberOfRequests: jobConfig.estimatedNumberOfRequests,
+      estimatedUsedTokens: jobConfig.estimatedUsedTokens,
+      estimatedUsedMemoryKB: jobConfig.estimatedUsedMemoryKB,
+    };
+
     states.set(jobTypeId, {
       currentRatio: ratio,
       initialRatio: ratio,
       flexible,
       inFlight: ZERO,
       allocatedSlots: ZERO,
-      resources: {
-        estimatedNumberOfRequests: jobConfig.estimatedNumberOfRequests,
-        estimatedUsedTokens: jobConfig.estimatedUsedTokens,
-        estimatedUsedMemoryKB: jobConfig.estimatedUsedMemoryKB,
-      },
+      resources,
     });
   }
 

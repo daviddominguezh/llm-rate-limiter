@@ -6,7 +6,7 @@ import type {
   JobTypeState,
   JobTypeStats,
   RatioAdjustmentConfig,
-  ResourcesPerJob,
+  ResourceEstimationsPerJob,
 } from '../jobTypeTypes.js';
 import type { LogFn } from '../types.js';
 import {
@@ -34,7 +34,7 @@ const PRECISION_DIGITS = 4;
  * Configuration for creating a JobTypeManager.
  */
 export interface JobTypeManagerConfig {
-  resourcesPerJob: ResourcesPerJob;
+  resourceEstimationsPerJob: ResourceEstimationsPerJob;
   ratioAdjustmentConfig?: RatioAdjustmentConfig;
   label: string;
   onLog?: LogFn;
@@ -79,15 +79,15 @@ class JobTypeManagerImpl implements JobTypeManager {
   private adjustmentInterval: ReturnType<typeof setInterval> | null = null;
 
   constructor(managerConfig: JobTypeManagerConfig) {
-    const { resourcesPerJob, ratioAdjustmentConfig, label, onLog } = managerConfig;
+    const { resourceEstimationsPerJob, ratioAdjustmentConfig, label, onLog } = managerConfig;
 
-    validateJobTypeConfig(resourcesPerJob);
-    const calculated = calculateInitialRatios(resourcesPerJob);
+    validateJobTypeConfig(resourceEstimationsPerJob);
+    const calculated = calculateInitialRatios(resourceEstimationsPerJob);
     validateCalculatedRatios(calculated);
 
     this.config = mergeRatioConfig(ratioAdjustmentConfig);
     this.log = onLog === undefined ? createNoOpLogger() : createPrefixedLogger(label, onLog);
-    this.states = createInitialStates(resourcesPerJob, calculated.ratios);
+    this.states = createInitialStates(resourceEstimationsPerJob, calculated.ratios);
 
     this.log('JobTypeManager initialized', {
       jobTypes: Array.from(this.states.keys()),

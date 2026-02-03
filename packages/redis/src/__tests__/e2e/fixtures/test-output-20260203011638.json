@@ -1,6 +1,6 @@
 {
-  "generatedAt": "2026-02-03T03:40:19.455Z",
-  "jobDataFile": "../packages/redis/src/__tests__/e2e/fixtures/jobData.json",
+  "generatedAt": "2026-02-03T06:16:38.779Z",
+  "jobDataFile": "test-input-20260203011638.json",
   "timeline": [
     {
       "timeMs": 0,

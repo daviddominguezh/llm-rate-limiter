@@ -37,7 +37,7 @@ export const createChangeTracker = (
 ): TrackerResult => {
   const calls: string[] = [];
   const tracker = new AvailabilityTracker({
-    callback: (_, reason) => {
+    callback: (_availability, reason, _modelId) => {
       calls.push(reason);
     },
     getStats,

@@ -55,7 +55,7 @@ const createBackends = (): RedisBackendInstance[] => {
     backends.push(
       createTestBackend(state, createRedisBackend, {
         capacity: CAPACITY,
-        resourcesPerJob: JOB_TYPES_CONFIG,
+        resourceEstimationsPerJob: JOB_TYPES_CONFIG,
       })
     );
   }

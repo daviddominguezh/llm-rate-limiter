@@ -23,6 +23,7 @@ const ZERO_PRICING = { input: ZERO, cached: ZERO, output: ZERO };
 interface CallbackRecord {
   availability: Availability;
   reason: AvailabilityChangeReason;
+  modelId: string;
   adjustment?: RelativeAvailabilityAdjustment;
 }
 
@@ -50,9 +51,9 @@ const defaultJobType = {
 const createCallbackLimiter = (calls: CallbackRecord[]): LLMRateLimiterInstance =>
   createLLMRateLimiter({
     models: { default: defaultModelConfig },
-    resourcesPerJob: { default: defaultJobType } as Record<string, typeof defaultJobType>,
-    onAvailableSlotsChange: (availability, reason, adjustment) => {
-      calls.push({ availability, reason, adjustment });
+    resourceEstimationsPerJob: { default: defaultJobType } as Record<string, typeof defaultJobType>,
+    onAvailableSlotsChange: (availability, reason, modelId, adjustment) => {
+      calls.push({ availability, reason, modelId, adjustment });
     },
   });
 
@@ -60,16 +61,15 @@ type LimiterConfig = Parameters<typeof createLLMRateLimiter>[typeof ZERO];
 
 const createMemoryLimiterConfig = (calls: CallbackRecord[]): LimiterConfig => ({
   memory: { freeMemoryRatio: FREE_MEMORY_RATIO },
-  maxCapacity: ESTIMATED_MEMORY_KB * TEN,
-  models: { default: defaultModelConfig },
-  resourcesPerJob: {
+  models: { default: { ...defaultModelConfig, maxCapacity: ESTIMATED_MEMORY_KB * TEN } },
+  resourceEstimationsPerJob: {
     default: {
       estimatedUsedTokens: ESTIMATED_TOKENS,
       estimatedUsedMemoryKB: ESTIMATED_MEMORY_KB,
     },
   },
-  onAvailableSlotsChange: (availability, reason, adjustment) => {
-    calls.push({ availability, reason, adjustment });
+  onAvailableSlotsChange: (availability, reason, modelId, adjustment) => {
+    calls.push({ availability, reason, modelId, adjustment });
   },
 });
 
@@ -154,9 +154,14 @@ describe('onAvailableSlotsChange callback - optional', () => {
   it('should work without callback (optional)', async () => {
     const limiter = createLLMRateLimiter({
       models: { default: { tokensPerMinute: ESTIMATED_TOKENS * TEN, pricing: ZERO_PRICING } },
+      resourceEstimationsPerJob: { default: defaultJobType },
     });
     await expect(
-      limiter.queueJob({ jobId: 'test-1', job: createSimpleJobForModel(ESTIMATED_TOKENS) })
+      limiter.queueJob({
+        jobId: 'test-1',
+        jobType: 'default',
+        job: createSimpleJobForModel(ESTIMATED_TOKENS),
+      })
     ).resolves.toBeDefined();
     limiter.stop();
   });
@@ -168,10 +173,12 @@ describe('onAvailableSlotsChange callback - multi-model', () => {
     const modelConfig = { tokensPerMinute: ESTIMATED_TOKENS * TEN, pricing: ZERO_PRICING };
     const limiter = createLLMRateLimiter({
       models: { modelA: modelConfig, modelB: modelConfig },
-      order: ['modelA', 'modelB'],
-      resourcesPerJob: { default: { estimatedUsedTokens: ESTIMATED_TOKENS, estimatedNumberOfRequests: ONE } },
-      onAvailableSlotsChange: (availability, reason, adjustment) => {
-        calls.push({ availability, reason, adjustment });
+      escalationOrder: ['modelA', 'modelB'],
+      resourceEstimationsPerJob: {
+        default: { estimatedUsedTokens: ESTIMATED_TOKENS, estimatedNumberOfRequests: ONE },
+      },
+      onAvailableSlotsChange: (availability, reason, modelId, adjustment) => {
+        calls.push({ availability, reason, modelId, adjustment });
       },
     });
     const actualTokens = ESTIMATED_TOKENS + HUNDRED;

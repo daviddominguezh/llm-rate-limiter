@@ -1,10 +1,8 @@
 /**
- * Type definitions for the LLM Rate Limiter with strict compile-time type safety.
+ * Type definitions for the LLM Rate Limiter.
  *
- * The configuration enforces at compile time:
- * 1. If `requestsPerMinute` OR `requestsPerDay` is set -> `resourcesPerEvent.estimatedNumberOfRequests` is REQUIRED
- * 2. If `tokensPerMinute` OR `tokensPerDay` is set -> `resourcesPerEvent.estimatedUsedTokens` is REQUIRED
- * 3. If `memory` is set -> `resourcesPerEvent.estimatedUsedMemoryKB` is REQUIRED
+ * Resource estimates (tokens, requests, memory) are defined at the job type level
+ * via resourcesPerJob in the multi-model limiter configuration.
  */
 
 // =============================================================================
@@ -51,7 +49,7 @@ export interface InternalJobResult {
 
 /**
  * Memory limit configuration.
- * Note: minCapacity and maxCapacity are now at the main config level.
+ * Note: minCapacity and maxCapacity are now at the model level (ModelRateLimitConfig).
  */
 export interface MemoryLimitConfig {
   /** Ratio of free memory to use, 0-1 (default: 0.8) */
@@ -66,60 +64,14 @@ export interface MemoryLimitConfig {
 
 /**
  * Base resources interface with all fields optional.
+ * Note: estimatedUsedMemoryKB is defined at job type level only (JobTypeResourceConfig).
  */
 export interface BaseResourcesPerEvent {
-  /** Estimated number of LLM API requests this job will make (required for RPM/RPD limits) */
+  /** Estimated number of LLM API requests this job will make */
   estimatedNumberOfRequests?: number;
-  /** Estimated total tokens this job will use across all requests (required for TPM/TPD limits) */
+  /** Estimated total tokens this job will use across all requests */
   estimatedUsedTokens?: number;
-  /** Estimated memory usage in KB for this job (required for memory limits) */
-  estimatedUsedMemoryKB?: number;
 }
-
-/** Required field for request-based limits */
-interface RequestResources {
-  estimatedNumberOfRequests: number;
-}
-
-/** Required field for token-based limits */
-interface TokenResources {
-  estimatedUsedTokens: number;
-}
-
-/** Required field for memory-based limits */
-interface MemoryResources {
-  estimatedUsedMemoryKB: number;
-}
-
-// =============================================================================
-// Conditional Type Helpers
-// =============================================================================
-
-/**
- * Infer required resourcesPerEvent fields based on configured limits.
- */
-export type InferResourcesPerEvent<T> = (T extends { requestsPerMinute: number } | { requestsPerDay: number }
-  ? RequestResources
-  : Partial<RequestResources>) &
-  (T extends { tokensPerMinute: number } | { tokensPerDay: number }
-    ? TokenResources
-    : Partial<TokenResources>) &
-  (T extends { memory: MemoryLimitConfig } ? MemoryResources : Partial<MemoryResources>);
-
-/**
- * Check if any limit that requires resourcesPerEvent is configured.
- */
-export type HasAnyResourceLimit<T> = T extends { memory: MemoryLimitConfig }
-  ? true
-  : T extends { requestsPerMinute: number }
-    ? true
-    : T extends { requestsPerDay: number }
-      ? true
-      : T extends { tokensPerMinute: number }
-        ? true
-        : T extends { tokensPerDay: number }
-          ? true
-          : false;
 
 // =============================================================================
 // Base Configuration
@@ -149,29 +101,23 @@ export interface InternalLimiterConfigBase {
   label?: string;
   /** Optional logging callback */
   onLog?: LogFn;
+  /** Estimated number of requests per job (for pre-reservation) */
+  estimatedNumberOfRequests?: number;
+  /** Estimated tokens per job (for pre-reservation) */
+  estimatedUsedTokens?: number;
+  /** Estimated memory per job in KB (for pre-reservation) */
+  estimatedUsedMemoryKB?: number;
 }
 
 // =============================================================================
-// Validated Configuration Type
+// Configuration Type
 // =============================================================================
 
 /**
- * Validated configuration type for the internal rate limiter.
- * Resource estimates (requests, tokens) are now at the job type level (resourcesPerJob),
- * so resourcesPerEvent is only required for memory limits at the internal limiter level.
- */
-export type InternalValidatedConfig<T extends InternalLimiterConfigBase> = T &
-  (T extends { memory: MemoryLimitConfig }
-    ? { resourcesPerEvent: MemoryResources & Partial<RequestResources> & Partial<TokenResources> }
-    : { resourcesPerEvent?: BaseResourcesPerEvent });
-
-/**
  * Configuration for the internal rate limiter.
- * Use InternalValidatedConfig<T> for strict compile-time checking.
+ * Resource estimates (tokens, requests, memory) are at job type level (resourcesPerJob).
  */
-export type InternalLimiterConfig = InternalLimiterConfigBase & {
-  resourcesPerEvent?: BaseResourcesPerEvent;
-};
+export type InternalLimiterConfig = InternalLimiterConfigBase;
 
 // =============================================================================
 // Statistics Types

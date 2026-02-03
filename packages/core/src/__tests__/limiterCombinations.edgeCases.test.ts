@@ -1,5 +1,6 @@
 import {
   CONCURRENCY_LIMIT,
+  DEFAULT_JOB_TYPE,
   ESTIMATED_MEMORY_KB,
   FREE_MEMORY_RATIO,
   HIGH_CONCURRENCY,
@@ -34,6 +35,7 @@ describe('EdgeCase - getBlockingReason returns null', () => {
   it('should return null when no limiter is blocking', () => {
     const limiter = createLLMRateLimiter({
       models: { default: { requestsPerMinute: HIGH_RPM, pricing: ZERO_PRICING } },
+      resourceEstimationsPerJob: { [DEFAULT_JOB_TYPE]: { estimatedNumberOfRequests: ONE } },
     });
     const result = getBlockingReason(limiter, ['rpm']);
     expect(result).toBeNull();
@@ -73,9 +75,16 @@ describe('EdgeCase - memory and concurrency exhausted', () => {
   it('should report no capacity when both are exhausted', async () => {
     const limiter = createLLMRateLimiter({
       memory: { freeMemoryRatio: FREE_MEMORY_RATIO },
-      maxCapacity: MEMORY_MAX_CAPACITY_KB,
-      models: { default: { maxConcurrentRequests: CONCURRENCY_LIMIT, pricing: ZERO_PRICING } },
-      resourcesPerJob: { default: { estimatedUsedMemoryKB: ESTIMATED_MEMORY_KB } },
+      models: {
+        default: {
+          maxConcurrentRequests: CONCURRENCY_LIMIT,
+          pricing: ZERO_PRICING,
+          maxCapacity: MEMORY_MAX_CAPACITY_KB,
+        },
+      },
+      resourceEstimationsPerJob: {
+        [DEFAULT_JOB_TYPE]: { estimatedUsedMemoryKB: ESTIMATED_MEMORY_KB, estimatedNumberOfRequests: ONE },
+      },
     });
     const jobPromise = limiter.queueJob({
       jobId: generateJobId(),
@@ -100,9 +109,11 @@ describe('EdgeCase - rpm and rpd exhausted', () => {
   it('should report no capacity when both are exhausted', async () => {
     const limiter = createLLMRateLimiter({
       models: { default: { requestsPerMinute: RPM_LIMIT, requestsPerDay: RPD_LIMIT, pricing: ZERO_PRICING } },
+      resourceEstimationsPerJob: { [DEFAULT_JOB_TYPE]: { estimatedNumberOfRequests: ONE } },
     });
     await limiter.queueJob({
       jobId: generateJobId(),
+      jobType: DEFAULT_JOB_TYPE,
       job: ({ modelId }, resolve) => {
         resolve(createMockUsage(modelId));
         return createMockJobResult('exhaust-job');
@@ -120,9 +131,11 @@ describe('EdgeCase - tpm and tpd exhausted', () => {
   it('should report no capacity when both are exhausted', async () => {
     const limiter = createLLMRateLimiter({
       models: { default: { tokensPerMinute: TPM_LIMIT, tokensPerDay: TPD_LIMIT, pricing: ZERO_PRICING } },
+      resourceEstimationsPerJob: { [DEFAULT_JOB_TYPE]: { estimatedNumberOfRequests: ONE } },
     });
     await limiter.queueJob({
       jobId: generateJobId(),
+      jobType: DEFAULT_JOB_TYPE,
       job: ({ modelId }, resolve) => {
         resolve(createMockUsage(modelId));
         return createMockJobResult('exhaust-job');
@@ -148,9 +161,11 @@ describe('EdgeCase - all time-based limiters exhausted', () => {
           pricing: ZERO_PRICING,
         },
       },
+      resourceEstimationsPerJob: { [DEFAULT_JOB_TYPE]: { estimatedNumberOfRequests: ONE } },
     });
     await limiter.queueJob({
       jobId: generateJobId(),
+      jobType: DEFAULT_JOB_TYPE,
       job: ({ modelId }, resolve) => {
         resolve(createMockUsage(modelId));
         return createMockJobResult('exhaust-job');
@@ -172,9 +187,16 @@ describe('EdgeCase - release memory on error', () => {
   it('should release memory and concurrency on job failure', async () => {
     const limiter = createLLMRateLimiter({
       memory: { freeMemoryRatio: FREE_MEMORY_RATIO },
-      maxCapacity: MEMORY_MAX_CAPACITY_KB,
-      models: { default: { maxConcurrentRequests: CONCURRENCY_LIMIT, pricing: ZERO_PRICING } },
-      resourcesPerJob: { default: { estimatedUsedMemoryKB: ESTIMATED_MEMORY_KB } },
+      models: {
+        default: {
+          maxConcurrentRequests: CONCURRENCY_LIMIT,
+          pricing: ZERO_PRICING,
+          maxCapacity: MEMORY_MAX_CAPACITY_KB,
+        },
+      },
+      resourceEstimationsPerJob: {
+        [DEFAULT_JOB_TYPE]: { estimatedUsedMemoryKB: ESTIMATED_MEMORY_KB, estimatedNumberOfRequests: ONE },
+      },
     });
     await expect(
       limiter.queueJob({
@@ -195,10 +217,12 @@ describe('EdgeCase - request counters on error', () => {
   it('should still increment request counters even on job failure', async () => {
     const limiter = createLLMRateLimiter({
       models: { default: { requestsPerMinute: TEN, requestsPerDay: HUNDRED, pricing: ZERO_PRICING } },
+      resourceEstimationsPerJob: { [DEFAULT_JOB_TYPE]: { estimatedNumberOfRequests: ONE } },
     });
     await expect(
       limiter.queueJob({
         jobId: generateJobId(),
+        jobType: DEFAULT_JOB_TYPE,
         job: createFailingJob,
       })
     ).rejects.toThrow('Intentional failure');
@@ -215,10 +239,12 @@ describe('EdgeCase - token counters on error', () => {
       models: {
         default: { tokensPerMinute: TEN_THOUSAND, tokensPerDay: HUNDRED_THOUSAND, pricing: ZERO_PRICING },
       },
+      resourceEstimationsPerJob: { [DEFAULT_JOB_TYPE]: { estimatedNumberOfRequests: ONE } },
     });
     await expect(
       limiter.queueJob({
         jobId: generateJobId(),
+        jobType: DEFAULT_JOB_TYPE,
         job: createFailingJob,
       })
     ).rejects.toThrow('Intentional failure');

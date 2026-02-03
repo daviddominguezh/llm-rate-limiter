@@ -37,7 +37,7 @@ describe('extreme load - burst 10 instances 100 jobs', () => {
         requestsPerMinute: RPM,
         estimatedTokensPerRequest: TEN,
       });
-      const instances = createTestInstances(TEN, backend, TEN);
+      const instances = await createTestInstances(TEN, backend, TEN);
       const tracker = createJobTracker();
       await fireSimultaneousJobs(
         instances,
@@ -66,7 +66,7 @@ describe('extreme load - variable job sizes', () => {
         requestsPerMinute: RPM,
         estimatedTokensPerRequest: FIFTY,
       });
-      const instances = createTestInstances(FIVE, backend, FIFTY);
+      const instances = await createTestInstances(FIVE, backend, FIFTY);
       const tracker = createJobTracker();
       await fireSimultaneousJobs(
         instances,
@@ -95,7 +95,7 @@ describe('extreme load - 2000 concurrent jobs', () => {
         requestsPerMinute: RPM,
         estimatedTokensPerRequest: TEN,
       });
-      const instances = createTestInstances(TEN, backend, TEN);
+      const instances = await createTestInstances(TEN, backend, TEN);
       const tracker = createJobTracker();
       await fireSimultaneousJobs(
         instances,
@@ -126,7 +126,7 @@ describe('extreme load - token limit exhaustion', () => {
         requestsPerMinute: RPM,
         estimatedTokensPerRequest: TPJ,
       });
-      const instances = createTestInstances(FIVE, backend, TPJ);
+      const instances = await createTestInstances(FIVE, backend, TPJ);
       const tracker = createJobTracker();
       await fireSimultaneousJobs(instances, HUNDRED, { getTokens: () => TPJ, getDelay: () => ONE }, tracker);
       const stats = backend.getStats();
@@ -149,7 +149,7 @@ describe('extreme load - request limit exhaustion', () => {
         requestsPerMinute: RPM,
         estimatedTokensPerRequest: ONE,
       });
-      const instances = createTestInstances(TEN, backend, ONE);
+      const instances = await createTestInstances(TEN, backend, ONE);
       const tracker = createJobTracker();
       await fireSimultaneousJobs(instances, FIFTY, { getTokens: () => ONE, getDelay: () => ONE }, tracker);
       const stats = backend.getStats();
@@ -172,7 +172,7 @@ describe('extreme load - race for last slot', () => {
         requestsPerMinute: RPM,
         estimatedTokensPerRequest: TEN,
       });
-      const instances = createTestInstances(TEN, backend, TEN);
+      const instances = await createTestInstances(TEN, backend, TEN);
       const t1 = createJobTracker();
       await fireSimultaneousJobs(instances, ONE, { getTokens: () => TEN, getDelay: () => ONE }, t1);
       expect(t1.completed).toBe(RPM);

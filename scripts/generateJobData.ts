@@ -13,49 +13,34 @@ import { fileURLToPath } from 'url';
 import {
   JOB_FAILURE_RATE,
   JOB_TYPES,
+  JOB_TYPE_CONFIG,
+  type JobData,
+  type JobDataFile,
   type JobTypeName,
   MAX_JOB_DURATION_MS,
   MIN_JOB_DURATION_MS,
+  MODEL_CONFIG,
+  MODEL_ORDER,
   ONE,
   ONE_SECOND_MS,
   OUTPUT_DIR,
+  RATIO_ADJUSTMENT_CONFIG,
   TOTAL_JOBS,
   TRAFFIC_PATTERN,
+  type TrafficPatternSummary,
   type TrafficSegment,
   ZERO,
   generateTimestamp,
   getInputFilename,
+  getOutputFilename,
 } from './e2eScriptConfig.js';
+import { buildCompactPredictions, runPredictionSimulation } from './predictionEngine.js';
+
+/** Re-export types for backwards compatibility */
+export type { JobData, JobDataFile, TrafficPatternSummary } from './e2eScriptConfig.js';
 
 const currentFilePath = fileURLToPath(import.meta.url);
 const currentDir = path.dirname(currentFilePath);
-
-/** Job data structure */
-export interface JobData {
-  id: string;
-  jobType: JobTypeName;
-  durationMs: number;
-  scheduledAtMs: number;
-  shouldFail: boolean;
-}
-
-/** Traffic pattern summary for the job data file */
-export interface TrafficPatternSummary {
-  spikes: Array<{ startMs: number; endMs: number; ratePerSec: number }>;
-  valleys: Array<{ startMs: number; endMs: number; ratePerSec: number }>;
-  steady: Array<{ startMs: number; endMs: number; ratePerSec: number }>;
-}
-
-/** Complete job data file structure */
-export interface JobDataFile {
-  generatedAt: string;
-  totalJobs: number;
-  testDurationMs: number;
-  seed: number;
-  jobs: JobData[];
-  trafficPattern: TrafficPatternSummary;
-  jobTypeDistribution: Record<JobTypeName, number>;
-}
 
 /**
  * Seeded random number generator for reproducibility.
@@ -230,6 +215,12 @@ const generateJobDataFile = (): void => {
     jobs,
     trafficPattern: buildTrafficPatternSummary(),
     jobTypeDistribution: calculateJobTypeDistribution(jobs),
+    config: {
+      models: MODEL_CONFIG,
+      modelOrder: MODEL_ORDER,
+      jobTypes: JOB_TYPE_CONFIG,
+      ratioAdjustment: RATIO_ADJUSTMENT_CONFIG,
+    },
   };
 
   // Write to file
@@ -261,7 +252,44 @@ const generateJobDataFile = (): void => {
     );
   }
 
-  console.log(`\nSaved to: ${outputPath}`);
+  console.log(`\nSaved input to: ${outputPath}`);
+
+  // Now generate predictions
+  console.log('\n=== Running Prediction Simulation ===');
+  const inputFilename = getInputFilename(timestamp);
+  const startTime = Date.now();
+  const predictions = runPredictionSimulation(jobDataFile, inputFilename);
+  const elapsed = Date.now() - startTime;
+  console.log(`Simulation completed in ${elapsed}ms`);
+
+  // Build compact predictions and save
+  const compactPredictions = buildCompactPredictions(predictions);
+  const predictionsFilename = getOutputFilename(timestamp);
+  const predictionsPath = path.join(outputDirPath, predictionsFilename);
+  fs.writeFileSync(predictionsPath, JSON.stringify(compactPredictions, null, 2));
+
+  console.log('\n=== Prediction Summary ===');
+  console.log(`Jobs processed: ${predictions.summary.totalJobsProcessed}`);
+  console.log(`Jobs failed: ${predictions.summary.totalJobsFailed}`);
+  console.log(`Jobs rejected: ${predictions.summary.totalRejections}`);
+  console.log(`Model fallbacks: ${predictions.summary.modelFallbacks}`);
+  console.log(`Minute resets: ${predictions.summary.minuteBoundaryResets}`);
+  console.log(`Peak concurrent jobs: ${predictions.summary.peakConcurrentJobs}`);
+  console.log(`VacationPlanning ratio unchanged: ${predictions.vacationPlanningRatioNeverChanged}`);
+
+  console.log('\nModel usage:');
+  for (const [modelId, usage] of Object.entries(predictions.summary.modelUsage)) {
+    console.log(
+      `  ${modelId}: ${usage.jobs} jobs, ${usage.tokensUsed} tokens, ${usage.requestsUsed} requests`
+    );
+  }
+
+  console.log('\nFinal ratios:');
+  for (const [jobType, ratio] of Object.entries(predictions.finalRatios)) {
+    console.log(`  ${jobType}: ${(ratio * 100).toFixed(1)}%`);
+  }
+
+  console.log(`\nSaved predictions to: ${predictionsPath}`);
 };
 
 // Run if executed directly

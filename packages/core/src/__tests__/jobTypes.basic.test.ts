@@ -11,9 +11,11 @@ import {
   validateJobTypeExists,
 } from '../utils/jobTypeValidation.js';
 import {
+  DEFAULT_JOB_TYPE,
   DEFAULT_PRICING,
   ONE,
   RPM_LIMIT_HIGH,
+  createDefaultResourceEstimations,
   createMockJobResult,
   simpleJob,
 } from './multiModelRateLimiter.helpers.js';
@@ -37,7 +39,6 @@ const RATIO_15 = 1.5;
 const MODEL_CONFIG = {
   model1: {
     requestsPerMinute: RPM_LIMIT_HIGH,
-    resourcesPerEvent: { estimatedNumberOfRequests: ONE },
     pricing: DEFAULT_PRICING,
   },
 };
@@ -118,7 +119,7 @@ describe('Job type validation - ratio calculation', () => {
 describe('JobTypeManager - initialization', () => {
   it('should create manager with initial states', () => {
     const manager = createJobTypeManager({
-      resourcesPerJob: {
+      resourceEstimationsPerJob: {
         job1: { estimatedUsedTokens: THOUSAND, ratio: { initialValue: RATIO_06 } },
         job2: { estimatedUsedTokens: HUNDRED },
       },
@@ -135,7 +136,7 @@ describe('JobTypeManager - initialization', () => {
 describe('JobTypeManager - acquire and release', () => {
   it('should acquire and release slots', () => {
     const manager = createJobTypeManager({
-      resourcesPerJob: { job1: { estimatedUsedTokens: HUNDRED } },
+      resourceEstimationsPerJob: { job1: { estimatedUsedTokens: HUNDRED } },
       label: 'test',
     });
     manager.setTotalCapacity(TEN);
@@ -149,7 +150,7 @@ describe('JobTypeManager - acquire and release', () => {
 
   it('should return undefined for unknown job type', () => {
     const manager = createJobTypeManager({
-      resourcesPerJob: { job1: { estimatedUsedTokens: HUNDRED } },
+      resourceEstimationsPerJob: { job1: { estimatedUsedTokens: HUNDRED } },
       label: 'test',
     });
     expect(manager.getState('unknown')).toBeUndefined();
@@ -162,7 +163,7 @@ describe('JobTypeManager - acquire and release', () => {
 describe('JobTypeManager - capacity limits', () => {
   it('should respect allocated slots', () => {
     const manager = createJobTypeManager({
-      resourcesPerJob: {
+      resourceEstimationsPerJob: {
         job1: { estimatedUsedTokens: HUNDRED, ratio: { initialValue: RATIO_05 } },
         job2: { estimatedUsedTokens: HUNDRED, ratio: { initialValue: RATIO_05 } },
       },
@@ -183,7 +184,7 @@ describe('Rate limiter with job types - stats', () => {
   it('should create limiter with job types and include in stats', () => {
     const limiter = createLLMRateLimiter({
       models: MODEL_CONFIG,
-      resourcesPerJob: {
+      resourceEstimationsPerJob: {
         'summarize-pdf': { estimatedUsedTokens: THOUSAND },
         'create-recipe': { estimatedUsedTokens: HUNDRED },
       },
@@ -199,7 +200,7 @@ describe('Rate limiter with job types - stats', () => {
   it('should include job types with correct ratios in stats', () => {
     const limiter = createLLMRateLimiter({
       models: MODEL_CONFIG,
-      resourcesPerJob: {
+      resourceEstimationsPerJob: {
         job1: { estimatedUsedTokens: HUNDRED, ratio: { initialValue: THIRD } },
         job2: { estimatedUsedTokens: HUNDRED, ratio: { initialValue: THIRD } },
         job3: { estimatedUsedTokens: HUNDRED, ratio: { initialValue: THIRD } },
@@ -215,10 +216,12 @@ describe('Rate limiter with job types - stats', () => {
 
 describe('Rate limiter with job types - backward compatibility', () => {
   it('should work without job types (backward compatible)', async () => {
-    const limiter = createLLMRateLimiter({ models: MODEL_CONFIG });
-    const result = await limiter.queueJob(simpleJob(createMockJobResult('test-result')));
+    const limiter = createLLMRateLimiter({
+      models: MODEL_CONFIG,
+      resourceEstimationsPerJob: createDefaultResourceEstimations(),
+    });
+    const result = await limiter.queueJob(simpleJob(createMockJobResult('test-result'), DEFAULT_JOB_TYPE));
     expect(result.modelUsed).toBe('model1');
-    expect(limiter.getJobTypeStats()).toBeUndefined();
     limiter.stop();
   });
 });

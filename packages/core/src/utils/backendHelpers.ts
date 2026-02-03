@@ -1,28 +1,16 @@
 /**
  * Backend helper functions for the LLM Rate Limiter.
  */
-import type { ResourcesPerJob } from '../jobTypeTypes.js';
-import type {
-  BackendConfig,
-  BackendEstimatedResources,
-  DistributedBackendConfig,
-} from '../multiModelTypes.js';
+import type { ResourceEstimationsPerJob } from '../jobTypeTypes.js';
+import type { BackendConfig, BackendEstimatedResources } from '../multiModelTypes.js';
 
 const ZERO = 0;
 
-/** Check if the backend is V2 (has register method) */
-export const isV2Backend = (
-  backend: BackendConfig | DistributedBackendConfig
-): backend is DistributedBackendConfig => 'register' in backend && typeof backend.register === 'function';
-
 /** Get estimated resources for backend from resourcesPerJob config */
 export const getEstimatedResourcesForBackend = (
-  resourcesPerJob: ResourcesPerJob | undefined,
-  jobType: string | undefined
+  resourcesPerJob: ResourceEstimationsPerJob,
+  jobType: string
 ): BackendEstimatedResources => {
-  if (resourcesPerJob === undefined || jobType === undefined) {
-    return { requests: ZERO, tokens: ZERO };
-  }
   const resources = resourcesPerJob[jobType];
   return {
     requests: resources?.estimatedNumberOfRequests ?? ZERO,
@@ -32,31 +20,28 @@ export const getEstimatedResourcesForBackend = (
 
 /** Backend operation context */
 export interface BackendOperationContext {
-  backend: BackendConfig | DistributedBackendConfig | undefined;
-  resourcesPerJob: ResourcesPerJob | undefined;
+  backend: BackendConfig | undefined;
+  resourceEstimationsPerJob: ResourceEstimationsPerJob;
   instanceId: string;
   modelId: string;
   jobId: string;
-  /** Job type for capacity allocation (undefined if not using job types) */
-  jobType?: string;
+  /** Job type for capacity allocation (required) */
+  jobType: string;
 }
 
 /** Acquire backend slot */
 export const acquireBackend = async (ctx: BackendOperationContext): Promise<boolean> => {
-  const { backend, resourcesPerJob, instanceId, modelId, jobId, jobType } = ctx;
+  const { backend, resourceEstimationsPerJob, instanceId, modelId, jobId, jobType } = ctx;
   if (backend === undefined) {
     return true;
   }
-  const baseContext = {
+  return await backend.acquire({
+    instanceId,
     modelId,
     jobId,
     jobType,
-    estimated: getEstimatedResourcesForBackend(resourcesPerJob, jobType),
-  };
-  if (isV2Backend(backend)) {
-    return await backend.acquire({ ...baseContext, instanceId });
-  }
-  return await backend.acquire(baseContext);
+    estimated: getEstimatedResourcesForBackend(resourceEstimationsPerJob, jobType),
+  });
 };
 
 /** Release backend slot */
@@ -64,24 +49,20 @@ export const releaseBackend = (
   ctx: BackendOperationContext,
   actual: { requests: number; tokens: number }
 ): void => {
-  const { backend, resourcesPerJob, instanceId, modelId, jobId, jobType } = ctx;
+  const { backend, resourceEstimationsPerJob, instanceId, modelId, jobId, jobType } = ctx;
   if (backend === undefined) {
     return;
   }
-  const baseContext = {
-    modelId,
-    jobId,
-    jobType,
-    estimated: getEstimatedResourcesForBackend(resourcesPerJob, jobType),
-    actual,
-  };
-  if (isV2Backend(backend)) {
-    backend.release({ ...baseContext, instanceId }).catch(() => {
+  backend
+    .release({
+      instanceId,
+      modelId,
+      jobId,
+      jobType,
+      estimated: getEstimatedResourcesForBackend(resourceEstimationsPerJob, jobType),
+      actual,
+    })
+    .catch(() => {
       /* User handles errors */
     });
-    return;
-  }
-  backend.release(baseContext).catch(() => {
-    /* User handles errors */
-  });
 };

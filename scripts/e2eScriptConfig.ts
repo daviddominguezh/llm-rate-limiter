@@ -171,3 +171,37 @@ export const ONE_SECOND_MS = 1000;
 export const ZERO = 0;
 export const ONE = 1;
 export const HUNDRED_PERCENT = 100;
+
+/** Job data structure */
+export interface JobData {
+  id: string;
+  jobType: JobTypeName;
+  durationMs: number;
+  scheduledAtMs: number;
+  shouldFail: boolean;
+}
+
+/** Traffic pattern summary for the job data file */
+export interface TrafficPatternSummary {
+  spikes: Array<{ startMs: number; endMs: number; ratePerSec: number }>;
+  valleys: Array<{ startMs: number; endMs: number; ratePerSec: number }>;
+  steady: Array<{ startMs: number; endMs: number; ratePerSec: number }>;
+}
+
+/** Complete job data file structure */
+export interface JobDataFile {
+  generatedAt: string;
+  totalJobs: number;
+  testDurationMs: number;
+  seed: number;
+  jobs: JobData[];
+  trafficPattern: TrafficPatternSummary;
+  jobTypeDistribution: Record<JobTypeName, number>;
+  /** Configuration used for this test run */
+  config: {
+    models: Record<ModelName, ModelConfig>;
+    modelOrder: readonly ModelName[];
+    jobTypes: Record<JobTypeName, JobTypeConfig>;
+    ratioAdjustment: typeof RATIO_ADJUSTMENT_CONFIG;
+  };
+}

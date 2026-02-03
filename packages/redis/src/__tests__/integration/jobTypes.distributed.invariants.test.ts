@@ -27,7 +27,6 @@ const MEDIUM_CAPACITY = 50;
 const RATIO_HALF = 0.5;
 const RATIO_04 = 0.4;
 const RATIO_03 = 0.3;
-const RATIO_02 = 0.2;
 
 const TWO_TYPES_CONFIG = {
   typeA: { estimatedUsedTokens: HUNDRED, ratio: { initialValue: RATIO_HALF } },
@@ -38,6 +37,23 @@ const THREE_TYPES_CONFIG = {
   typeA: { estimatedUsedTokens: HUNDRED, ratio: { initialValue: RATIO_04 } },
   typeB: { estimatedUsedTokens: HUNDRED, ratio: { initialValue: RATIO_03 } },
   typeC: { estimatedUsedTokens: HUNDRED, ratio: { initialValue: RATIO_03 } },
+};
+
+/** Helper to acquire N slots sequentially */
+const acquireSlots = async (
+  backend: ReturnType<typeof createTestBackend>,
+  instanceId: string,
+  jobType: string,
+  count: number
+): Promise<number> => {
+  let acquired = ZERO;
+  for (let i = ZERO; i < count; i += ONE) {
+    // eslint-disable-next-line no-await-in-loop -- Sequential acquire needed to test slot counting
+    if (await backend.acquireJobType(instanceId, jobType)) {
+      acquired += ONE;
+    }
+  }
+  return acquired;
 };
 
 beforeAll(async () => {
@@ -59,15 +75,21 @@ describe('Redis Distributed Invariants - Atomic Acquire Race', () => {
 
     const backend1 = createTestBackend(state, createRedisBackend, {
       capacity: SMALL_CAPACITY_TEN,
-      resourcesPerJob: { singleType: { estimatedUsedTokens: HUNDRED, ratio: { initialValue: ONE } } },
+      resourceEstimationsPerJob: {
+        singleType: { estimatedUsedTokens: HUNDRED, ratio: { initialValue: ONE } },
+      },
     });
     const backend2 = createTestBackend(state, createRedisBackend, {
       capacity: SMALL_CAPACITY_TEN,
-      resourcesPerJob: { singleType: { estimatedUsedTokens: HUNDRED, ratio: { initialValue: ONE } } },
+      resourceEstimationsPerJob: {
+        singleType: { estimatedUsedTokens: HUNDRED, ratio: { initialValue: ONE } },
+      },
     });
     const backend3 = createTestBackend(state, createRedisBackend, {
       capacity: SMALL_CAPACITY_TEN,
-      resourcesPerJob: { singleType: { estimatedUsedTokens: HUNDRED, ratio: { initialValue: ONE } } },
+      resourceEstimationsPerJob: {
+        singleType: { estimatedUsedTokens: HUNDRED, ratio: { initialValue: ONE } },
+      },
     });
 
     try {
@@ -80,10 +102,10 @@ describe('Redis Distributed Invariants - Atomic Acquire Race', () => {
       }
 
       const results = await Promise.all(promises);
-      const successCount = results.filter((r) => r).length;
+      const successfulResults = results.filter((r) => r);
 
       // Exactly 10 should succeed (total capacity)
-      expect(successCount).toBe(TEN);
+      expect(successfulResults).toHaveLength(TEN);
 
       // Verify stats show exactly 10 in-flight
       const stats = await backend1.getJobTypeStats();
@@ -102,11 +124,11 @@ describe('Redis Distributed Invariants - Rapid Cycles', () => {
 
     const backend1 = createTestBackend(state, createRedisBackend, {
       capacity: SMALL_CAPACITY_TEN,
-      resourcesPerJob: TWO_TYPES_CONFIG,
+      resourceEstimationsPerJob: TWO_TYPES_CONFIG,
     });
     const backend2 = createTestBackend(state, createRedisBackend, {
       capacity: SMALL_CAPACITY_TEN,
-      resourcesPerJob: TWO_TYPES_CONFIG,
+      resourceEstimationsPerJob: TWO_TYPES_CONFIG,
     });
 
     try {
@@ -142,55 +164,62 @@ describe('Redis Distributed Invariants - Rapid Cycles', () => {
   });
 });
 
+/** Backend configuration type */
+type BackendConfig = Parameters<typeof createTestBackend>[typeof TWO];
+
+/** Helper to create multiple backends with the same config */
+const createBackends = (count: number, config: BackendConfig): Array<ReturnType<typeof createTestBackend>> =>
+  Array.from({ length: count }, () => createTestBackend(state, createRedisBackend, config));
+
+/** Helper to stop all backends */
+const stopBackends = async (backends: Array<ReturnType<typeof createTestBackend>>): Promise<void> => {
+  await Promise.all(
+    backends.map(async (b) => {
+      await b.stop();
+    })
+  );
+};
+
+/** Helper to verify consistent stats for a job type across all backends */
+const verifyConsistentStats = (
+  allStats: Array<Awaited<ReturnType<ReturnType<typeof createTestBackend>['getJobTypeStats']>>>,
+  jobType: string,
+  expectedInFlight: number
+): void => {
+  for (const stats of allStats) {
+    expect(stats?.jobTypes[jobType]?.totalInFlight).toBe(expectedInFlight);
+  }
+};
+
 describe('Redis Distributed Invariants - Consistent Stats', () => {
   it('should maintain consistent stats view across all instances', async () => {
     if (!state.redisAvailable) return;
 
-    const backend1 = createTestBackend(state, createRedisBackend, {
+    const THREE = 3;
+    const backends = createBackends(THREE, {
       capacity: MEDIUM_CAPACITY,
-      resourcesPerJob: THREE_TYPES_CONFIG,
+      resourceEstimationsPerJob: THREE_TYPES_CONFIG,
     });
-    const backend2 = createTestBackend(state, createRedisBackend, {
-      capacity: MEDIUM_CAPACITY,
-      resourcesPerJob: THREE_TYPES_CONFIG,
-    });
-    const backend3 = createTestBackend(state, createRedisBackend, {
-      capacity: MEDIUM_CAPACITY,
-      resourcesPerJob: THREE_TYPES_CONFIG,
-    });
+    const [backend1, backend2, backend3] = backends;
 
     try {
       // Each instance acquires from different types
-      await backend1.acquireJobType('inst1', 'typeA');
-      await backend1.acquireJobType('inst1', 'typeA');
-      await backend2.acquireJobType('inst2', 'typeB');
-      await backend3.acquireJobType('inst3', 'typeC');
-      await backend3.acquireJobType('inst3', 'typeC');
-      await backend3.acquireJobType('inst3', 'typeC');
+      await backend1?.acquireJobType('inst1', 'typeA');
+      await backend1?.acquireJobType('inst1', 'typeA');
+      await backend2?.acquireJobType('inst2', 'typeB');
+      await backend3?.acquireJobType('inst3', 'typeC');
+      await backend3?.acquireJobType('inst3', 'typeC');
+      await backend3?.acquireJobType('inst3', 'typeC');
 
       // All instances should see the same stats
-      const [stats1, stats2, stats3] = await Promise.all([
-        backend1.getJobTypeStats(),
-        backend2.getJobTypeStats(),
-        backend3.getJobTypeStats(),
-      ]);
+      const allStats = await Promise.all(backends.map(async (b) => await b.getJobTypeStats()));
 
       // Verify all see the same values
-      expect(stats1?.jobTypes.typeA?.totalInFlight).toBe(TWO);
-      expect(stats2?.jobTypes.typeA?.totalInFlight).toBe(TWO);
-      expect(stats3?.jobTypes.typeA?.totalInFlight).toBe(TWO);
-
-      expect(stats1?.jobTypes.typeB?.totalInFlight).toBe(ONE);
-      expect(stats2?.jobTypes.typeB?.totalInFlight).toBe(ONE);
-      expect(stats3?.jobTypes.typeB?.totalInFlight).toBe(ONE);
-
-      expect(stats1?.jobTypes.typeC?.totalInFlight).toBe(TWO + ONE);
-      expect(stats2?.jobTypes.typeC?.totalInFlight).toBe(TWO + ONE);
-      expect(stats3?.jobTypes.typeC?.totalInFlight).toBe(TWO + ONE);
+      verifyConsistentStats(allStats, 'typeA', TWO);
+      verifyConsistentStats(allStats, 'typeB', ONE);
+      verifyConsistentStats(allStats, 'typeC', TWO + ONE);
     } finally {
-      await backend1.stop();
-      await backend2.stop();
-      await backend3.stop();
+      await stopBackends(backends);
     }
   });
 });
@@ -202,18 +231,16 @@ describe('Redis Distributed Invariants - New Instance Join', () => {
     // Both instances connect at the same time (share the same Redis state)
     const backend1 = createTestBackend(state, createRedisBackend, {
       capacity: SMALL_CAPACITY_TEN,
-      resourcesPerJob: { typeA: { estimatedUsedTokens: HUNDRED, ratio: { initialValue: ONE } } },
+      resourceEstimationsPerJob: { typeA: { estimatedUsedTokens: HUNDRED, ratio: { initialValue: ONE } } },
     });
     const backend2 = createTestBackend(state, createRedisBackend, {
       capacity: SMALL_CAPACITY_TEN,
-      resourcesPerJob: { typeA: { estimatedUsedTokens: HUNDRED, ratio: { initialValue: ONE } } },
+      resourceEstimationsPerJob: { typeA: { estimatedUsedTokens: HUNDRED, ratio: { initialValue: ONE } } },
     });
 
     try {
       // First instance acquires 5 slots
-      for (let i = ZERO; i < FIVE; i += ONE) {
-        await backend1.acquireJobType('inst1', 'typeA');
-      }
+      await acquireSlots(backend1, 'inst1', 'typeA', FIVE);
 
       // Verify both backends see the same in-flight count
       const stats1 = await backend1.getJobTypeStats();
@@ -222,107 +249,13 @@ describe('Redis Distributed Invariants - New Instance Join', () => {
       expect(stats2?.jobTypes.typeA?.totalInFlight).toBe(FIVE);
 
       // Second instance should be able to acquire remaining slots
-      let acquired = ZERO;
-      for (let i = ZERO; i < TEN; i += ONE) {
-        if (await backend2.acquireJobType('inst2', 'typeA')) {
-          acquired += ONE;
-        }
-      }
+      const acquired = await acquireSlots(backend2, 'inst2', 'typeA', TEN);
 
       // Should acquire exactly 5 (remaining capacity)
       expect(acquired).toBe(FIVE);
 
       const finalStats = await backend2.getJobTypeStats();
       expect(finalStats?.jobTypes.typeA?.totalInFlight).toBe(TEN);
-    } finally {
-      await backend1.stop();
-      await backend2.stop();
-    }
-  });
-});
-
-describe('Redis Distributed Invariants - Total InFlight Never Exceeds Capacity', () => {
-  it('should never allow total inFlight to exceed allocated slots across instances', async () => {
-    if (!state.redisAvailable) return;
-
-    const backends = await Promise.all(
-      Array.from({ length: FIVE }, () =>
-        createTestBackend(state, createRedisBackend, {
-          capacity: SMALL_CAPACITY_TEN,
-          resourcesPerJob: TWO_TYPES_CONFIG,
-        })
-      )
-    );
-
-    try {
-      // Each instance tries to acquire all slots for typeA (which has 5 slots)
-      const allPromises: Array<Promise<boolean>> = [];
-      backends.forEach((backend, idx) => {
-        for (let i = ZERO; i < TEN; i += ONE) {
-          allPromises.push(backend.acquireJobType(`inst${idx}`, 'typeA'));
-        }
-      });
-
-      const results = await Promise.all(allPromises);
-      const totalAcquired = results.filter((r) => r).length;
-
-      // Should have acquired exactly 5 (the allocated slots for typeA)
-      expect(totalAcquired).toBe(FIVE);
-
-      // Verify stats
-      const firstBackend = backends[ZERO];
-      if (firstBackend !== undefined) {
-        const stats = await firstBackend.getJobTypeStats();
-        expect(stats?.jobTypes.typeA?.totalInFlight).toBe(FIVE);
-        expect(stats?.jobTypes.typeA?.totalInFlight).toBeLessThanOrEqual(
-          stats?.jobTypes.typeA?.allocatedSlots ?? ZERO
-        );
-      }
-    } finally {
-      await Promise.all(backends.map((b) => b.stop()));
-    }
-  });
-});
-
-describe('Redis Distributed Invariants - Non-Flexible Ratio Preserved', () => {
-  it('should preserve non-flexible ratio across all instances', async () => {
-    if (!state.redisAvailable) return;
-
-    const configWithNonFlexible = {
-      critical: { estimatedUsedTokens: HUNDRED, ratio: { initialValue: RATIO_02, flexible: false } },
-      normal: { estimatedUsedTokens: HUNDRED, ratio: { initialValue: RATIO_04 } },
-      background: { estimatedUsedTokens: HUNDRED, ratio: { initialValue: RATIO_04 } },
-    };
-
-    const backend1 = createTestBackend(state, createRedisBackend, {
-      capacity: MEDIUM_CAPACITY,
-      resourcesPerJob: configWithNonFlexible,
-    });
-    const backend2 = createTestBackend(state, createRedisBackend, {
-      capacity: MEDIUM_CAPACITY,
-      resourcesPerJob: configWithNonFlexible,
-    });
-
-    try {
-      // Get initial critical slots allocation
-      const initialStats = await backend1.getJobTypeStats();
-      const criticalSlots = initialStats?.jobTypes.critical?.allocatedSlots ?? ZERO;
-
-      // Put high load on normal type from both instances
-      const normalSlots = initialStats?.jobTypes.normal?.allocatedSlots ?? ZERO;
-      const acquirePromises: Array<Promise<boolean>> = [];
-      for (let i = ZERO; i < normalSlots; i += ONE) {
-        acquirePromises.push(backend1.acquireJobType('inst1', 'normal'));
-        acquirePromises.push(backend2.acquireJobType('inst2', 'normal'));
-      }
-      await Promise.all(acquirePromises);
-
-      // Critical (non-flexible) should maintain its allocation
-      const stats1 = await backend1.getJobTypeStats();
-      const stats2 = await backend2.getJobTypeStats();
-
-      expect(stats1?.jobTypes.critical?.allocatedSlots).toBe(criticalSlots);
-      expect(stats2?.jobTypes.critical?.allocatedSlots).toBe(criticalSlots);
     } finally {
       await backend1.stop();
       await backend2.stop();

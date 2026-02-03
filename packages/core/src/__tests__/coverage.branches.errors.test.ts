@@ -4,17 +4,18 @@
 import { createLLMRateLimiter } from '../multiModelRateLimiter.js';
 import type { LLMRateLimiterInstance } from '../multiModelTypes.js';
 import { ONE, RATIO_HALF, TEN, ZERO } from './coverage.branches.helpers.js';
+import { DEFAULT_JOB_TYPE, createDefaultResourceEstimations } from './multiModelRateLimiter.helpers.js';
 
 /** Create a basic limiter for error tests */
-const createBasicLimiter = (): LLMRateLimiterInstance =>
+const createBasicLimiter = (): LLMRateLimiterInstance<typeof DEFAULT_JOB_TYPE> =>
   createLLMRateLimiter({
     models: {
       default: {
         requestsPerMinute: TEN,
-        resourcesPerEvent: { estimatedNumberOfRequests: ONE },
         pricing: { input: ZERO, cached: ZERO, output: ZERO },
       },
     },
+    resourceEstimationsPerJob: createDefaultResourceEstimations(),
   });
 
 describe('multiModelRateLimiter - onError callback', () => {
@@ -23,6 +24,7 @@ describe('multiModelRateLimiter - onError callback', () => {
     const errors: Error[] = [];
     const jobPromise = limiter.queueJob({
       jobId: 'error-test',
+      jobType: DEFAULT_JOB_TYPE,
       job: (_, resolve) => {
         resolve({ modelId: 'default', inputTokens: ZERO, cachedTokens: ZERO, outputTokens: ZERO });
         throw new Error('Test error');
@@ -42,6 +44,7 @@ describe('multiModelRateLimiter - resolve/reject requirement', () => {
     const limiter = createBasicLimiter();
     const jobPromise = limiter.queueJob({
       jobId: 'no-callback',
+      jobType: DEFAULT_JOB_TYPE,
       job: () => ({ requestCount: ONE, usage: { input: ZERO, output: ZERO, cached: ZERO } }),
     });
     await expect(jobPromise).rejects.toThrow('Job must call resolve() or reject()');
@@ -55,6 +58,7 @@ describe('multiModelRateLimiter - non-Error handling', () => {
     const errors: Error[] = [];
     const jobPromise = limiter.queueJob({
       jobId: 'string-error',
+      jobType: DEFAULT_JOB_TYPE,
       job: (_, resolve) => {
         resolve({ modelId: 'default', inputTokens: ZERO, cachedTokens: ZERO, outputTokens: ZERO });
         throw new Error('string error');
@@ -87,9 +91,11 @@ describe('multiModelRateLimiter - queueJobForModel with memory', () => {
       models: {
         default: {
           requestsPerMinute: TEN,
-          resourcesPerEvent: { estimatedNumberOfRequests: ONE, estimatedUsedMemoryKB: ONE },
           pricing: { input: ZERO, cached: ZERO, output: ZERO },
         },
+      },
+      resourceEstimationsPerJob: {
+        default: { estimatedNumberOfRequests: ONE, estimatedUsedMemoryKB: ONE },
       },
       memory: { freeMemoryRatio: RATIO_HALF },
     });

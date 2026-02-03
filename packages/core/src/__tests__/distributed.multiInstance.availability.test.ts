@@ -2,7 +2,7 @@
  * Tests for distributed rate limiting - availability notifications and pub/sub.
  */
 import { createLLMRateLimiter } from '../multiModelRateLimiter.js';
-import type { Availability, AvailabilityChangeReason } from '../multiModelTypes.js';
+import type { Availability, AvailabilityChangeReason, LLMRateLimiterInstance } from '../multiModelTypes.js';
 import {
   FIFTY,
   HUNDRED,
@@ -17,6 +17,7 @@ import {
   createModelConfig,
 } from './distributed.multiInstance.helpers.js';
 import { createConnectedLimiters, createDistributedBackend } from './distributedBackend.helpers.js';
+import { DEFAULT_JOB_TYPE, createDefaultResourceEstimations } from './multiModelRateLimiter.helpers.js';
 
 interface JobResult {
   requestCount: number;
@@ -25,6 +26,7 @@ interface JobResult {
 }
 interface TokenJobOptions {
   jobId: string;
+  jobType: string;
   job: (
     args: { modelId: string },
     resolve: (u: { modelId: string; inputTokens: number; cachedTokens: number; outputTokens: number }) => void
@@ -32,6 +34,7 @@ interface TokenJobOptions {
 }
 const createTokenJob = (jobId: string, tokens: number): TokenJobOptions => ({
   jobId,
+  jobType: DEFAULT_JOB_TYPE,
   job: (
     { modelId }: { modelId: string },
     resolve: (u: { modelId: string; inputTokens: number; cachedTokens: number; outputTokens: number }) => void
@@ -49,19 +52,24 @@ describe('distributed - availability notifications', () => {
       estimatedTokensPerRequest: TEN,
     });
     const availabilityChanges: Array<{ instanceId: number; reason: AvailabilityChangeReason }> = [];
-    const instances = createConnectedLimiters(THREE, distributedBackend, (backend, instanceId) =>
-      createLLMRateLimiter({
-        backend,
-        models: { default: createModelConfig(TEN, ONE) },
-        onAvailableSlotsChange: (_, reason) => {
-          availabilityChanges.push({ instanceId, reason });
-        },
-      })
+    const instances = await createConnectedLimiters(
+      THREE,
+      distributedBackend,
+      (backend, instanceId) =>
+        createLLMRateLimiter({
+          backend,
+          models: { default: createModelConfig(TEN, ONE) },
+          resourceEstimationsPerJob: createDefaultResourceEstimations(),
+          onAvailableSlotsChange: (_availability, reason, _modelId, _adjustment) => {
+            availabilityChanges.push({ instanceId, reason });
+          },
+        }) as LLMRateLimiterInstance
     );
     const [instance1] = instances;
     if (instance1 === undefined) throw new Error('Instance not created');
     await instance1.limiter.queueJob({
       jobId: 'trigger-change',
+      jobType: DEFAULT_JOB_TYPE,
       job: ({ modelId }, resolve) => {
         resolve({ modelId, inputTokens: TEN, cachedTokens: ZERO, outputTokens: ZERO });
         return { requestCount: ONE, usage: { input: TEN, output: ZERO, cached: ZERO } };
@@ -81,8 +89,15 @@ describe('distributed - time window reset jobs', () => {
       requestsPerMinute: TWO,
       estimatedTokensPerRequest: TWENTY,
     });
-    const instances = createConnectedLimiters(ONE, distributedBackend, (backend) =>
-      createLLMRateLimiter({ backend, models: { default: createModelConfig(TWENTY, ONE) } })
+    const instances = await createConnectedLimiters(
+      ONE,
+      distributedBackend,
+      (backend) =>
+        createLLMRateLimiter({
+          backend,
+          models: { default: createModelConfig(TWENTY, ONE) },
+          resourceEstimationsPerJob: createDefaultResourceEstimations(),
+        }) as LLMRateLimiterInstance
     );
     const [instance] = instances;
     if (instance === undefined) throw new Error('Instance not created');
@@ -104,7 +119,8 @@ describe('distributed - setDistributedAvailability basic', () => {
     const receivedAvailabilities: Availability[] = [];
     const limiter = createLLMRateLimiter({
       models: { default: createModelConfig(TEN, ONE) },
-      onAvailableSlotsChange: (availability, reason) => {
+      resourceEstimationsPerJob: createDefaultResourceEstimations(),
+      onAvailableSlotsChange: (availability, reason, _modelId, _adjustment) => {
         if (reason === 'distributed') {
           receivedAvailabilities.push(availability);
         }
@@ -119,24 +135,25 @@ describe('distributed - setDistributedAvailability basic', () => {
 });
 
 describe('distributed - setDistributedAvailability propagation', () => {
-  it('should propagate availability to all subscribed limiters', () => {
+  it('should propagate availability to all subscribed limiters', async () => {
     const distributedBackend = createDistributedBackend({
       tokensPerMinute: HUNDRED,
       requestsPerMinute: TEN,
       estimatedTokensPerRequest: TEN,
     });
     const receivedByInstance = new Map<number, Availability[]>();
-    const instances = createConnectedLimiters(THREE, distributedBackend, (backend, instanceId) => {
+    const instances = await createConnectedLimiters(THREE, distributedBackend, (backend, instanceId) => {
       receivedByInstance.set(instanceId, []);
       return createLLMRateLimiter({
         backend,
         models: { default: createModelConfig(TEN, ONE) },
-        onAvailableSlotsChange: (availability, reason) => {
+        resourceEstimationsPerJob: createDefaultResourceEstimations(),
+        onAvailableSlotsChange: (availability, reason, _modelId, _adjustment) => {
           if (reason === 'distributed') {
             receivedByInstance.get(instanceId)?.push(availability);
           }
         },
-      });
+      }) as LLMRateLimiterInstance;
     });
     distributedBackend.reset();
     for (const [, received] of receivedByInstance) {

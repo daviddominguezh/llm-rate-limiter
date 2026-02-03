@@ -3,11 +3,14 @@
  * Simulates Redis-like centralized state with pub/sub notifications.
  */
 import type {
+  AllocationCallback,
+  AllocationInfo,
   BackendAcquireContext,
   BackendConfig,
   BackendReleaseContext,
   DistributedAvailability,
   LLMRateLimiterInstance,
+  Unsubscribe,
 } from '../multiModelTypes.js';
 
 const ZERO = 0;
@@ -225,9 +228,29 @@ const createSubscribeFn =
     };
   };
 
+const createAllocationFromAvailability = (avail: DistributedAvailability): AllocationInfo => ({
+  slots: avail.slots,
+  tokensPerMinute: avail.tokensPerMinute ?? ZERO,
+  requestsPerMinute: avail.requestsPerMinute ?? ZERO,
+});
+
+const createBackendSubscribeFn =
+  (
+    instanceSubscribers: Map<string, AllocationCallback>,
+    calcAvail: () => DistributedAvailability
+  ): ((instanceId: string, callback: AllocationCallback) => Unsubscribe) =>
+  (instanceId: string, callback: AllocationCallback): Unsubscribe => {
+    instanceSubscribers.set(instanceId, callback);
+    callback(createAllocationFromAvailability(calcAvail()));
+    return (): void => {
+      instanceSubscribers.delete(instanceId);
+    };
+  };
+
 /** Creates a dummy distributed backend that simulates centralized rate limiting. */
 export const createDistributedBackend = (config: DistributedBackendConfig): DistributedBackendInstance => {
   const subscribers = new Set<AvailabilitySubscriber>();
+  const instanceSubscribers = new Map<string, AllocationCallback>();
   const modelUsage = new Map<string, ModelUsage>();
   const state = new BackendStateManager();
   const usage = createUsageHelpers(modelUsage, () => state.getTime());
@@ -240,11 +263,17 @@ export const createDistributedBackend = (config: DistributedBackendConfig): Dist
   const doRelease = createReleaseFn(usage, state, notify);
   return {
     backend: {
+      register: async (_instanceId: string): Promise<AllocationInfo> =>
+        await Promise.resolve(createAllocationFromAvailability(calcAvail())),
+      unregister: async (_instanceId: string): Promise<void> => {
+        await Promise.resolve();
+      },
       acquire: async (ctx): Promise<boolean> => await Promise.resolve(doAcquire(ctx)),
       release: async (ctx): Promise<void> => {
         doRelease(ctx);
         await Promise.resolve();
       },
+      subscribe: createBackendSubscribeFn(instanceSubscribers, calcAvail),
     },
     subscribe: createSubscribeFn(subscribers, calcAvail),
     getAvailability: calcAvail,
@@ -263,14 +292,15 @@ export const createDistributedBackend = (config: DistributedBackendConfig): Dist
 };
 
 /** Creates multiple rate limiter instances connected to the same distributed backend */
-export const createConnectedLimiters = (
+export const createConnectedLimiters = async (
   count: number,
   distributedBackend: DistributedBackendInstance,
   createLimiter: (backend: BackendConfig, instanceId: number) => LLMRateLimiterInstance
-): Array<{ limiter: LLMRateLimiterInstance; unsubscribe: () => void }> => {
+): Promise<Array<{ limiter: LLMRateLimiterInstance; unsubscribe: () => void }>> => {
   const instances: Array<{ limiter: LLMRateLimiterInstance; unsubscribe: () => void }> = [];
   for (let i = ZERO; i < count; i += ONE) {
     const limiter = createLimiter(distributedBackend.backend, i);
+    await limiter.start();
     const unsubscribe = distributedBackend.subscribe((avail) => {
       limiter.setDistributedAvailability(avail);
     });

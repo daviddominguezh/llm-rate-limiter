@@ -30,6 +30,9 @@ const RADIX_BASE = 36;
 const RANDOM_SLICE_START = 2;
 const FIFTY = 50;
 
+/** Default job type for tests */
+const DEFAULT_JOB_TYPE = 'test-job';
+
 const DEFAULT_TIMEOUT = 60_000;
 
 const state = createTestState();
@@ -107,6 +110,7 @@ const queueJobsForAllLimiters = (
       const promise = limiter
         .queueJob({
           jobId: `job-${limiter.getInstanceId()}-${j}`,
+          jobType: DEFAULT_JOB_TYPE,
           job: async ({ modelId }, resolve) => {
             await sleep(FIVE);
             resolve({ modelId, inputTokens: ZERO, cachedTokens: ZERO, outputTokens: ZERO });

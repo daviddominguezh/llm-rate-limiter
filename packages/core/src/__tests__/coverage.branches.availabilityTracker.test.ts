@@ -48,7 +48,7 @@ describe('availabilityTracker - checkAndEmit no callback', () => {
         estimatedUsedMemoryKB: ZERO,
       },
     });
-    tracker.checkAndEmit('tokensMinute');
+    tracker.checkAndEmit('tokensMinute', 'default');
     expect(tracker.getCurrentAvailability().slots).toBeGreaterThan(ZERO);
   });
 });
@@ -57,7 +57,7 @@ describe('availabilityTracker - hintReason with null previous', () => {
   it('should use hintReason when previousAvailability is null', () => {
     const calls: string[] = [];
     const tracker = new AvailabilityTracker({
-      callback: (_, reason) => {
+      callback: (_availability, reason, _modelId) => {
         calls.push(reason);
       },
       getStats: () => ({
@@ -73,7 +73,7 @@ describe('availabilityTracker - hintReason with null previous', () => {
         estimatedUsedMemoryKB: ZERO,
       },
     });
-    tracker.checkAndEmit('tokensMinute');
+    tracker.checkAndEmit('tokensMinute', 'default');
     expect(calls[ZERO]).toBe('tokensMinute');
   });
 });
@@ -81,14 +81,17 @@ describe('availabilityTracker - hintReason with null previous', () => {
 describe('availabilityTracker - emitAdjustment no callback', () => {
   it('should return from emitAdjustment when callback is undefined', () => {
     const tracker = createBasicTracker();
-    tracker.emitAdjustment({
-      tokensPerMinute: ZERO,
-      tokensPerDay: ZERO,
-      requestsPerMinute: ZERO,
-      requestsPerDay: ZERO,
-      memoryKB: ZERO,
-      concurrentRequests: ZERO,
-    });
+    tracker.emitAdjustment(
+      {
+        tokensPerMinute: ZERO,
+        tokensPerDay: ZERO,
+        requestsPerMinute: ZERO,
+        requestsPerDay: ZERO,
+        memoryKB: ZERO,
+        concurrentRequests: ZERO,
+      },
+      'default'
+    );
     expect(tracker.getCurrentAvailability().slots).toBe(Number.POSITIVE_INFINITY);
   });
 });
@@ -108,7 +111,7 @@ describe('availabilityTracker - tokensPerDay change', () => {
     );
     tracker.initialize();
     tokensDay = FIFTY;
-    tracker.checkAndEmit('tokensDay');
+    tracker.checkAndEmit('tokensDay', 'default');
     expect(calls.includes('tokensDay')).toBe(true);
   });
 });
@@ -128,7 +131,7 @@ describe('availabilityTracker - requestsPerMinute change', () => {
     );
     tracker.initialize();
     reqMin = FIFTY;
-    tracker.checkAndEmit('requestsMinute');
+    tracker.checkAndEmit('requestsMinute', 'default');
     expect(calls.includes('requestsMinute')).toBe(true);
   });
 });
@@ -148,7 +151,7 @@ describe('availabilityTracker - requestsPerDay change', () => {
     );
     tracker.initialize();
     reqDay = FIFTY;
-    tracker.checkAndEmit('requestsDay');
+    tracker.checkAndEmit('requestsDay', 'default');
     expect(calls.includes('requestsDay')).toBe(true);
   });
 });
@@ -164,7 +167,7 @@ describe('availabilityTracker - concurrentRequests change', () => {
     );
     tracker.initialize();
     conc = FIFTY;
-    tracker.checkAndEmit('concurrentRequests');
+    tracker.checkAndEmit('concurrentRequests', 'default');
     expect(calls.includes('concurrentRequests')).toBe(true);
   });
 });
@@ -181,7 +184,7 @@ describe('availabilityTracker - memory change', () => {
     );
     tracker.initialize();
     memKB = HUNDRED;
-    tracker.checkAndEmit('memory');
+    tracker.checkAndEmit('memory', 'default');
     expect(calls.includes('memory')).toBe(true);
   });
 });
@@ -199,7 +202,7 @@ describe('availabilityTracker - skip unchanged', () => {
       { estimatedUsedTokens: TEN, estimatedNumberOfRequests: ONE, estimatedUsedMemoryKB: ZERO }
     );
     tracker.initialize();
-    tracker.checkAndEmit('tokensMinute');
+    tracker.checkAndEmit('tokensMinute', 'default');
     expect(calls.length).toBe(ZERO);
   });
 });

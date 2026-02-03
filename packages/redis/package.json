@@ -14,8 +14,9 @@
   "scripts": {
     "build": "rm -rf dist tsconfig*.tsbuildinfo && tsc -p tsconfig.build.json",
     "typecheck": "tsc -b",
-    "test": "NODE_OPTIONS='--experimental-vm-modules' npx jest",
-    "test:watch": "NODE_OPTIONS='--experimental-vm-modules' npx jest --watch"
+    "test": "NODE_OPTIONS='--experimental-vm-modules' npx jest --testPathIgnorePatterns=e2e",
+    "test:e2e": "NODE_OPTIONS='--experimental-vm-modules' npx jest --testPathPatterns=e2e",
+    "test:watch": "NODE_OPTIONS='--experimental-vm-modules' npx jest --watch --testPathIgnorePatterns=e2e"
   },
   "files": [
     "dist",

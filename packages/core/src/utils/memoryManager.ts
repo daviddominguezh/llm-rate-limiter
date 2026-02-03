@@ -20,7 +20,7 @@ export interface MemoryManagerConfig {
   label: string;
   estimatedUsedMemoryKB: number;
   onLog?: LogFn;
-  onAvailabilityChange?: (reason: AvailabilityChangeReason) => void;
+  onAvailabilityChange?: (reason: AvailabilityChangeReason, modelId: string) => void;
 }
 
 /** Memory manager instance */
@@ -37,13 +37,34 @@ interface SharedMemoryState {
   semaphore: Semaphore;
   intervalId: NodeJS.Timeout;
   referenceCount: number;
-  availabilityCallbacks: Set<(reason: AvailabilityChangeReason) => void>;
+  availabilityCallbacks: Set<(reason: AvailabilityChangeReason, modelId: string) => void>;
   freeMemoryRatio: number;
   minCapacity: number | undefined;
   maxCapacity: number | undefined;
 }
 
 let sharedState: SharedMemoryState | null = null;
+
+/** Extract capacity bounds from models config (uses minimum across all models) */
+const extractCapacityBounds = (
+  config: LLMRateLimiterConfig
+): { minCapacity: number | undefined; maxCapacity: number | undefined } => {
+  let minCapacity: number | undefined;
+  let maxCapacity: number | undefined;
+
+  for (const modelConfig of Object.values(config.models)) {
+    if (modelConfig.minCapacity !== undefined) {
+      minCapacity =
+        minCapacity === undefined ? modelConfig.minCapacity : Math.min(minCapacity, modelConfig.minCapacity);
+    }
+    if (modelConfig.maxCapacity !== undefined) {
+      maxCapacity =
+        maxCapacity === undefined ? modelConfig.maxCapacity : Math.min(maxCapacity, modelConfig.maxCapacity);
+    }
+  }
+
+  return { minCapacity, maxCapacity };
+};
 
 /** Calculate memory capacity based on shared config and available memory */
 const calculateCapacity = (
@@ -72,7 +93,7 @@ const getOrCreateSharedState = (
   }
 
   const freeMemoryRatio = config.memory?.freeMemoryRatio ?? DEFAULT_FREE_MEMORY_RATIO;
-  const { minCapacity, maxCapacity } = config;
+  const { minCapacity, maxCapacity } = extractCapacityBounds(config);
   const recalculationIntervalMs = config.memory?.recalculationIntervalMs ?? DEFAULT_RECALCULATION_INTERVAL_MS;
 
   const semaphore = new Semaphore(
@@ -80,14 +101,14 @@ const getOrCreateSharedState = (
     `${label}/Memory`,
     onLog
   );
-  const availabilityCallbacks = new Set<(reason: AvailabilityChangeReason) => void>();
+  const availabilityCallbacks = new Set<(reason: AvailabilityChangeReason, modelId: string) => void>();
 
   const intervalId = setInterval(() => {
     const newCapacity = calculateCapacity(freeMemoryRatio, minCapacity, maxCapacity);
     if (newCapacity !== semaphore.getStats().max) {
       semaphore.resize(newCapacity);
       for (const callback of availabilityCallbacks) {
-        callback(MEMORY_REASON);
+        callback(MEMORY_REASON, '*');
       }
     }
   }, recalculationIntervalMs);
@@ -106,7 +127,7 @@ const getOrCreateSharedState = (
 };
 
 /** Release reference to shared state, cleanup if last reference */
-const releaseSharedState = (callback?: (reason: AvailabilityChangeReason) => void): void => {
+const releaseSharedState = (callback?: (reason: AvailabilityChangeReason, modelId: string) => void): void => {
   if (sharedState === null) {
     return;
   }
@@ -133,12 +154,12 @@ const createAcquire =
   (
     state: SharedMemoryState,
     estimatedMemoryKB: number,
-    onAvailabilityChange?: (reason: AvailabilityChangeReason) => void
+    onAvailabilityChange?: (reason: AvailabilityChangeReason, modelId: string) => void
   ): MemoryManagerInstance['acquire'] =>
-  async (_modelId) => {
+  async (modelId) => {
     if (estimatedMemoryKB > ZERO) {
       await state.semaphore.acquire(estimatedMemoryKB);
-      onAvailabilityChange?.(MEMORY_REASON);
+      onAvailabilityChange?.(MEMORY_REASON, modelId);
     }
   };
 
@@ -147,12 +168,12 @@ const createRelease =
   (
     state: SharedMemoryState,
     estimatedMemoryKB: number,
-    onAvailabilityChange?: (reason: AvailabilityChangeReason) => void
+    onAvailabilityChange?: (reason: AvailabilityChangeReason, modelId: string) => void
   ): MemoryManagerInstance['release'] =>
-  (_modelId) => {
+  (modelId) => {
     if (estimatedMemoryKB > ZERO) {
       state.semaphore.release(estimatedMemoryKB);
-      onAvailabilityChange?.(MEMORY_REASON);
+      onAvailabilityChange?.(MEMORY_REASON, modelId);
     }
   };
 

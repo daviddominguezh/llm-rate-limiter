@@ -18,7 +18,8 @@
     "typecheck": "tsc -b",
     "test": "npm run test --workspaces --if-present",
     "test:core": "npm run test -w @llm-rate-limiter/core",
-    "test:redis": "npm run test -w @llm-rate-limiter/redis"
+    "test:redis": "npm run test -w @llm-rate-limiter/redis",
+    "test:redis-e2e": "npm run test:e2e -w @llm-rate-limiter/redis"
   },
   "devDependencies": {
     "@eslint/js": "^9.28.0",

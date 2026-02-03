@@ -135,14 +135,31 @@ const buildModelConfig = (limiters: LimiterType[]): ModelRateLimitConfig => {
   return { ...merged, pricing: ZERO_PRICING };
 };
 
+// Default job type for tests
+export const DEFAULT_JOB_TYPE = 'default';
+
+// Default resource estimations for tests - includes all resources needed for blocking tests
+const DEFAULT_RESOURCE_ESTIMATIONS = {
+  [DEFAULT_JOB_TYPE]: {
+    estimatedUsedMemoryKB: ESTIMATED_MEMORY_KB,
+    estimatedNumberOfRequests: DEFAULT_REQUEST_COUNT,
+    estimatedUsedTokens: MOCK_TOTAL_TOKENS,
+  },
+};
+
 // Helper to build config for given limiters with high limits (non-blocking)
 export const buildHighLimitConfig = (limiters: LimiterType[]): LLMRateLimiterConfig => {
   const hasMemory = limiters.includes('memory');
+  const modelConfig = buildModelConfig(limiters);
   return {
-    ...(hasMemory
-      ? { memory: { freeMemoryRatio: FREE_MEMORY_RATIO }, maxCapacity: HIGH_MEMORY_MAX_CAPACITY_KB }
-      : {}),
-    models: { default: buildModelConfig(limiters) },
+    ...(hasMemory ? { memory: { freeMemoryRatio: FREE_MEMORY_RATIO } } : {}),
+    models: {
+      default: {
+        ...modelConfig,
+        ...(hasMemory ? { maxCapacity: HIGH_MEMORY_MAX_CAPACITY_KB } : {}),
+      },
+    },
+    resourceEstimationsPerJob: DEFAULT_RESOURCE_ESTIMATIONS,
   };
 };
 
@@ -155,18 +172,20 @@ export const buildConfigWithBlockingLimiter = (
   const isMemoryBlocking = blockingLimiter === 'memory';
   const modelConfig = buildModelConfig(activeLimiters);
   const blocking = getBlockingLimitPart(blockingLimiter);
-  const memoryConfig = hasMemory
-    ? {
-        memory: { freeMemoryRatio: FREE_MEMORY_RATIO },
-        maxCapacity: isMemoryBlocking ? MEMORY_MAX_CAPACITY_KB : HIGH_MEMORY_MAX_CAPACITY_KB,
-      }
+  const memoryConfig = hasMemory ? { memory: { freeMemoryRatio: FREE_MEMORY_RATIO } } : {};
+  const memoryCapacity = hasMemory
+    ? { maxCapacity: isMemoryBlocking ? MEMORY_MAX_CAPACITY_KB : HIGH_MEMORY_MAX_CAPACITY_KB }
     : {};
-  return { ...memoryConfig, models: { default: { ...modelConfig, ...blocking } } };
+  return {
+    ...memoryConfig,
+    models: { default: { ...modelConfig, ...blocking, ...memoryCapacity } },
+    resourceEstimationsPerJob: DEFAULT_RESOURCE_ESTIMATIONS,
+  };
 };
 
 // Helper to check which limiter is blocking
-export const getBlockingReason = (
-  limiter: LLMRateLimiterInstance,
+export const getBlockingReason = <T extends string>(
+  limiter: LLMRateLimiterInstance<T>,
   activeLimiters: LimiterType[]
 ): LimiterType | null => {
   const stats = limiter.getModelStats('default');
@@ -216,6 +235,7 @@ export const queueSimpleJob = async <T extends MockJobResult>(
 ): Promise<T> => {
   const jobResult = await limiter.queueJob({
     jobId: generateJobId(),
+    jobType: DEFAULT_JOB_TYPE,
     job: ({ modelId }, resolve) => {
       resolve(createMockUsage(modelId));
       return result;
@@ -232,6 +252,7 @@ export const queueDelayedJob = async (
 ): Promise<MockJobResult> => {
   const jobResult = await limiter.queueJob({
     jobId: generateJobId(),
+    jobType: DEFAULT_JOB_TYPE,
     job: async ({ modelId }, resolve) => {
       await setTimeoutAsync(delayMs);
       resolve(createMockUsage(modelId));

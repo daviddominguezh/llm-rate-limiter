@@ -1,7 +1,7 @@
 /**
  * Job type operations for Redis backend.
  */
-import type { ResourcesPerJob } from '@llm-rate-limiter/core';
+import type { ResourceEstimationsPerJob } from '@llm-rate-limiter/core';
 import type { Redis as RedisType } from 'ioredis';
 
 import { SUCCESS_RESULT } from './constants.js';
@@ -25,20 +25,23 @@ export class RedisJobTypeOps {
   constructor(
     private readonly redis: RedisType,
     private readonly keys: RedisKeys,
-    resourcesPerJob: ResourcesPerJob | undefined,
+    resourceEstimationsPerJob: ResourceEstimationsPerJob | undefined,
     totalCapacity: number
   ) {
-    if (resourcesPerJob === undefined) {
+    if (resourceEstimationsPerJob === undefined) {
       this.initPromise = null;
     } else {
-      const promise = this.init(resourcesPerJob, totalCapacity);
+      const promise = this.init(resourceEstimationsPerJob, totalCapacity);
       promise.catch(ignoreError);
       this.initPromise = promise;
     }
   }
 
-  private async init(resourcesPerJob: ResourcesPerJob, totalCapacity: number): Promise<void> {
-    const initData = buildJobTypesInitData(resourcesPerJob);
+  private async init(
+    resourceEstimationsPerJob: ResourceEstimationsPerJob,
+    totalCapacity: number
+  ): Promise<void> {
+    const initData = buildJobTypesInitData(resourceEstimationsPerJob);
     await evalScript(this.redis, INIT_JOB_TYPES_SCRIPT, [this.keys.jobTypes], [JSON.stringify(initData)]);
     await evalScript(
       this.redis,

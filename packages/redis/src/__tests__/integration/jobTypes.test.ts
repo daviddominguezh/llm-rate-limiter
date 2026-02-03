@@ -45,7 +45,7 @@ describe('Redis Backend - Job Types Stats', () => {
 
     const backend = createTestBackend(state, createRedisBackend, {
       capacity: SMALL_CAPACITY_TEN,
-      resourcesPerJob: JOB_TYPES_CONFIG,
+      resourceEstimationsPerJob: JOB_TYPES_CONFIG,
     });
 
     try {
@@ -76,7 +76,7 @@ describe('Redis Backend - Job Type Acquire Success', () => {
 
     const backend = createTestBackend(state, createRedisBackend, {
       capacity: SMALL_CAPACITY_TEN,
-      resourcesPerJob: JOB_TYPES_CONFIG,
+      resourceEstimationsPerJob: JOB_TYPES_CONFIG,
     });
 
     try {
@@ -95,7 +95,7 @@ describe('Redis Backend - Job Type Acquire Failures', () => {
 
     const backend = createTestBackend(state, createRedisBackend, {
       capacity: SMALL_CAPACITY_TEN,
-      resourcesPerJob: { job1: { estimatedUsedTokens: EXPECTED_JOB1_SLOTS } },
+      resourceEstimationsPerJob: { job1: { estimatedUsedTokens: EXPECTED_JOB1_SLOTS } },
     });
 
     try {
@@ -124,7 +124,7 @@ describe('Redis Backend - Job Type Release', () => {
 
     const backend = createTestBackend(state, createRedisBackend, {
       capacity: SMALL_CAPACITY_TEN,
-      resourcesPerJob: JOB_TYPES_CONFIG,
+      resourceEstimationsPerJob: JOB_TYPES_CONFIG,
     });
 
     try {
@@ -144,7 +144,7 @@ describe('Redis Backend - Job Type Capacity', () => {
 
     const backend = createTestBackend(state, createRedisBackend, {
       capacity: SMALL_CAPACITY_TEN,
-      resourcesPerJob: {
+      resourceEstimationsPerJob: {
         job1: { estimatedUsedTokens: EXPECTED_JOB1_SLOTS, ratio: { initialValue: RATIO_06 } },
       },
     });

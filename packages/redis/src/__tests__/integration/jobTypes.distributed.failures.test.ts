@@ -26,6 +26,36 @@ const SINGLE_TYPE_CONFIG = {
   typeA: { estimatedUsedTokens: HUNDRED, ratio: { initialValue: ONE } },
 };
 
+/** Helper to acquire N slots sequentially */
+const acquireSlots = async (
+  backend: ReturnType<typeof createTestBackend>,
+  instanceId: string,
+  jobType: string,
+  count: number
+): Promise<number> => {
+  let acquired = ZERO;
+  for (let i = ZERO; i < count; i += ONE) {
+    // eslint-disable-next-line no-await-in-loop -- Sequential acquire needed to test slot counting
+    if (await backend.acquireJobType(instanceId, jobType)) {
+      acquired += ONE;
+    }
+  }
+  return acquired;
+};
+
+/** Helper to release N slots sequentially */
+const releaseSlots = async (
+  backend: ReturnType<typeof createTestBackend>,
+  instanceId: string,
+  jobType: string,
+  count: number
+): Promise<void> => {
+  for (let i = ZERO; i < count; i += ONE) {
+    // eslint-disable-next-line no-await-in-loop -- Sequential release needed to test slot counting
+    await backend.releaseJobType(instanceId, jobType);
+  }
+};
+
 beforeAll(async () => {
   await setupBeforeAll(state);
 });
@@ -45,11 +75,11 @@ describe('Redis Distributed Failures - Instance Disconnect', () => {
 
     const backend1 = createTestBackend(state, createRedisBackend, {
       capacity: SMALL_CAPACITY_TEN,
-      resourcesPerJob: SINGLE_TYPE_CONFIG,
+      resourceEstimationsPerJob: SINGLE_TYPE_CONFIG,
     });
     const backend2 = createTestBackend(state, createRedisBackend, {
       capacity: SMALL_CAPACITY_TEN,
-      resourcesPerJob: SINGLE_TYPE_CONFIG,
+      resourceEstimationsPerJob: SINGLE_TYPE_CONFIG,
     });
 
     try {
@@ -81,7 +111,7 @@ describe('Redis Distributed Failures - Release After Stop', () => {
 
     const backend = createTestBackend(state, createRedisBackend, {
       capacity: SMALL_CAPACITY_TEN,
-      resourcesPerJob: SINGLE_TYPE_CONFIG,
+      resourceEstimationsPerJob: SINGLE_TYPE_CONFIG,
     });
 
     // Acquire a slot
@@ -101,7 +131,7 @@ describe('Redis Distributed Failures - Multiple Stop Calls', () => {
 
     const backend = createTestBackend(state, createRedisBackend, {
       capacity: SMALL_CAPACITY_TEN,
-      resourcesPerJob: SINGLE_TYPE_CONFIG,
+      resourceEstimationsPerJob: SINGLE_TYPE_CONFIG,
     });
 
     await backend.acquireJobType('inst1', 'typeA');
@@ -119,18 +149,16 @@ describe('Redis Distributed Failures - Slot Release And Reacquire', () => {
 
     const backend1 = createTestBackend(state, createRedisBackend, {
       capacity: SMALL_CAPACITY_TEN,
-      resourcesPerJob: SINGLE_TYPE_CONFIG,
+      resourceEstimationsPerJob: SINGLE_TYPE_CONFIG,
     });
     const backend2 = createTestBackend(state, createRedisBackend, {
       capacity: SMALL_CAPACITY_TEN,
-      resourcesPerJob: SINGLE_TYPE_CONFIG,
+      resourceEstimationsPerJob: SINGLE_TYPE_CONFIG,
     });
 
     try {
       // Instance 1 acquires all slots
-      for (let i = ZERO; i < TEN; i += ONE) {
-        await backend1.acquireJobType('inst1', 'typeA');
-      }
+      await acquireSlots(backend1, 'inst1', 'typeA', TEN);
 
       // Verify all slots used
       const statsBefore = await backend1.getJobTypeStats();
@@ -140,21 +168,14 @@ describe('Redis Distributed Failures - Slot Release And Reacquire', () => {
       expect(await backend2.acquireJobType('inst2', 'typeA')).toBe(false);
 
       // Instance 1 releases some slots
-      for (let i = ZERO; i < FIVE; i += ONE) {
-        await backend1.releaseJobType('inst1', 'typeA');
-      }
+      await releaseSlots(backend1, 'inst1', 'typeA', FIVE);
 
       // Verify stats show 5 in-flight (remaining from inst1)
       const statsAfterRelease = await backend1.getJobTypeStats();
       expect(statsAfterRelease?.jobTypes.typeA?.totalInFlight).toBe(FIVE);
 
       // Now instance 2 should be able to acquire the released slots
-      let acquired = ZERO;
-      for (let i = ZERO; i < TEN; i += ONE) {
-        if (await backend2.acquireJobType('inst2', 'typeA')) {
-          acquired += ONE;
-        }
-      }
+      const acquired = await acquireSlots(backend2, 'inst2', 'typeA', TEN);
 
       // Should acquire exactly 5 (the released ones)
       expect(acquired).toBe(FIVE);
@@ -175,20 +196,20 @@ describe('Redis Distributed Failures - Concurrent Operations During Disconnect',
 
     const backend1 = createTestBackend(state, createRedisBackend, {
       capacity: SMALL_CAPACITY_TEN,
-      resourcesPerJob: SINGLE_TYPE_CONFIG,
+      resourceEstimationsPerJob: SINGLE_TYPE_CONFIG,
     });
     const backend2 = createTestBackend(state, createRedisBackend, {
       capacity: SMALL_CAPACITY_TEN,
-      resourcesPerJob: SINGLE_TYPE_CONFIG,
+      resourceEstimationsPerJob: SINGLE_TYPE_CONFIG,
     });
 
     try {
       // Start concurrent operations
-      const operations: Array<Promise<boolean | void>> = [];
+      const operations: Array<Promise<boolean>> = [];
 
       for (let i = ZERO; i < TEN; i += ONE) {
         operations.push(
-          (async (): Promise<boolean | void> => {
+          (async (): Promise<boolean> => {
             const acquired = await backend1.acquireJobType('inst1', 'typeA');
             if (acquired) {
               await delay(MEDIUM_DELAY_MS);
@@ -215,8 +236,8 @@ describe('Redis Distributed Failures - Concurrent Operations During Disconnect',
   });
 });
 
+const TWO = 2;
 const THREE = 3;
-const TWO_CONST = 2;
 const FOUR = 4;
 
 describe('Redis Distributed Failures - Stats After Operations', () => {
@@ -225,23 +246,18 @@ describe('Redis Distributed Failures - Stats After Operations', () => {
 
     const backend = createTestBackend(state, createRedisBackend, {
       capacity: SMALL_CAPACITY_TEN,
-      resourcesPerJob: SINGLE_TYPE_CONFIG,
+      resourceEstimationsPerJob: SINGLE_TYPE_CONFIG,
     });
 
     try {
       // Acquire 5
-      for (let i = ZERO; i < FIVE; i += ONE) {
-        await backend.acquireJobType('inst1', 'typeA');
-      }
+      await acquireSlots(backend, 'inst1', 'typeA', FIVE);
 
       // Release 3
-      for (let i = ZERO; i < THREE; i += ONE) {
-        await backend.releaseJobType('inst1', 'typeA');
-      }
+      await releaseSlots(backend, 'inst1', 'typeA', THREE);
 
       // Acquire 2 more
-      await backend.acquireJobType('inst1', 'typeA');
-      await backend.acquireJobType('inst1', 'typeA');
+      await acquireSlots(backend, 'inst1', 'typeA', TWO);
 
       // Stats should reflect: 5 - 3 + 2 = 4
       const stats = await backend.getJobTypeStats();

@@ -26,7 +26,6 @@ describe('rateLimiter - memory resize on interval', () => {
     mockMemoryValue = THOUSAND * TEN;
     const limiter = createInternalLimiter({
       memory: { freeMemoryRatio: RATIO_HALF, recalculationIntervalMs: TEN },
-      resourcesPerEvent: { estimatedUsedMemoryKB: ONE },
     });
     const { memory: initialMem } = limiter.getStats();
     const initialMax = initialMem?.maxCapacityKB ?? ZERO;

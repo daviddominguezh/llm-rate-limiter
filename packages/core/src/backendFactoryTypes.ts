@@ -2,11 +2,11 @@
  * Type definitions for distributed backend factories.
  *
  * Factories allow backends to receive rate limiter config without user duplication.
- * The factory pattern enables a clean API where models and resourcesPerJob are
+ * The factory pattern enables a clean API where models and resourceEstimationsPerJob are
  * configured once in the rate limiter, and the backend receives them automatically.
  */
-import type { ResourcesPerJob } from './jobTypeTypes.js';
-import type { DistributedBackendConfig, ModelsConfig } from './multiModelTypes.js';
+import type { ResourceEstimationsPerJob } from './jobTypeTypes.js';
+import type { BackendConfig, ModelsConfig } from './multiModelTypes.js';
 
 // =============================================================================
 // Backend Factory Types
@@ -20,29 +20,29 @@ export interface BackendFactoryInitConfig {
   /** Map of model ID to its rate limit configuration */
   models: ModelsConfig;
   /** Job type configurations with per-type resource estimates and capacity ratios */
-  resourcesPerJob?: ResourcesPerJob;
-  /** Model priority order */
-  order?: readonly string[];
+  resourceEstimationsPerJob?: ResourceEstimationsPerJob;
+  /** Model escalation priority order */
+  escalationOrder?: readonly string[];
 }
 
 /**
  * Backend instance returned by factory initialization.
- * Must provide getBackendConfig() to get the DistributedBackendConfig.
+ * Must provide getBackendConfig() to get the BackendConfig.
  */
 export interface BackendFactoryInstance {
   /** Get the backend config to pass to the rate limiter internals */
-  getBackendConfig: () => DistributedBackendConfig;
+  getBackendConfig: () => BackendConfig;
   /** Stop the backend (cleanup intervals, disconnect, etc.) */
   stop: () => Promise<void>;
 }
 
 /**
- * Factory interface for distributed backends (V2).
+ * Factory interface for distributed backends.
  * Allows backends to receive rate limiter config without user duplication.
  *
  * When a backend factory is provided to the rate limiter:
  * 1. Rate limiter calls factory.initialize() with its config during start()
- * 2. Factory creates the actual backend using models/resourcesPerJob from config
+ * 2. Factory creates the actual backend using models/resourceEstimationsPerJob from config
  * 3. Rate limiter uses the initialized backend's getBackendConfig() for operations
  */
 export interface DistributedBackendFactory {
@@ -64,22 +64,9 @@ export interface DistributedBackendFactory {
   getInstance: () => BackendFactoryInstance;
 }
 
-/**
- * Type guard for checking if a backend is a factory.
- * Checks for presence of 'initialize' method which only exists on factories.
- */
-/** Helper type for type guard */
-interface HasInitialize {
-  initialize: unknown;
-}
-
 export const isDistributedBackendFactory = (backend: unknown): backend is DistributedBackendFactory => {
-  if (backend === null || typeof backend !== 'object') {
-    return false;
-  }
-  if (!('initialize' in backend)) {
-    return false;
-  }
-  const { initialize } = backend as HasInitialize;
+  if (backend === null || typeof backend !== 'object') return false;
+  if (!('initialize' in backend)) return false;
+  const { initialize } = backend as { initialize: unknown };
   return typeof initialize === 'function';
 };

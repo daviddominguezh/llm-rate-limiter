@@ -3,7 +3,11 @@
  * Contains trackers, job firing utilities, and limiter management.
  */
 import { createLLMRateLimiter } from '@llm-rate-limiter/core';
-import type { LLMRateLimiterInstance, ModelRateLimitConfig } from '@llm-rate-limiter/core';
+import type {
+  LLMRateLimiterInstance,
+  ModelRateLimitConfig,
+  ResourceEstimationsPerJob,
+} from '@llm-rate-limiter/core';
 import { setTimeout as sleep } from 'node:timers/promises';
 
 import { createRedisBackend } from '../../redisBackend.js';
@@ -16,6 +20,17 @@ const ONE = 1;
 const FIVE = 5;
 const TEN = 10;
 const THOUSAND = 1000;
+
+/** Default job type for tests */
+const DEFAULT_JOB_TYPE = 'test-job';
+
+/** Default resource estimations for tests */
+const DEFAULT_RESOURCE_ESTIMATIONS: ResourceEstimationsPerJob = {
+  [DEFAULT_JOB_TYPE]: {
+    estimatedUsedTokens: TEN,
+    estimatedNumberOfRequests: ONE,
+  },
+};
 
 /** Simple job tracker for counting completions and failures */
 export interface JobTracker {
@@ -130,6 +145,7 @@ export const createAndStartLimiter = async (
   const limiter = createLLMRateLimiter({
     backend: backend.getBackendConfig(),
     models: { default: createModelConfig(TEN) },
+    resourceEstimationsPerJob: DEFAULT_RESOURCE_ESTIMATIONS,
   });
   await limiter.start();
   return limiter;
@@ -177,6 +193,7 @@ export const fireJobsWithDelay = async (
       const promise = limiter
         .queueJob({
           jobId: `i${i}-j${j}`,
+          jobType: DEFAULT_JOB_TYPE,
           job: async ({ modelId }, resolve) => {
             await sleep(delay);
             resolve({ modelId, inputTokens: TEN, cachedTokens: ZERO, outputTokens: ZERO });
@@ -210,6 +227,7 @@ export const fireSlowJobsWithTracking = async (
       const promise = limiter
         .queueJob({
           jobId: `i${i}-j${j}`,
+          jobType: DEFAULT_JOB_TYPE,
           job: async ({ modelId }, resolve) => {
             const duration = randomInt(jobConfig.minDurationMs, jobConfig.maxDurationMs);
             tracker.trackJobDuration(duration);

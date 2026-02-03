@@ -1,7 +1,7 @@
 /**
  * Helper functions and types for the Redis backend.
  */
-import type { ResourcesPerJob } from '@llm-rate-limiter/core';
+import type { ResourceEstimationsPerJob } from '@llm-rate-limiter/core';
 import type { Redis as RedisType } from 'ioredis';
 
 import {
@@ -44,7 +44,7 @@ export interface BackendOperationConfig {
   requestsPerMinute: number;
   heartbeatIntervalMs: number;
   instanceTimeoutMs: number;
-  resourcesPerJob?: ResourcesPerJob;
+  resourceEstimationsPerJob?: ResourceEstimationsPerJob;
 }
 
 /** Execute a Lua script and return string result */
@@ -68,17 +68,17 @@ export interface JobTypeInitConfig {
 const FULL_RATIO = 1;
 
 /**
- * Build initialization data for job types based on resourcesPerJob config.
+ * Build initialization data for job types based on resourceEstimationsPerJob config.
  * Calculates initial ratios similar to core JobTypeManager.
  */
 export const buildJobTypesInitData = (
-  resourcesPerJob: ResourcesPerJob
+  resourceEstimationsPerJob: ResourceEstimationsPerJob
 ): Record<string, JobTypeInitConfig> => {
-  const jobTypeIds = Object.keys(resourcesPerJob);
+  const jobTypeIds = Object.keys(resourceEstimationsPerJob);
   let specifiedTotal = ZERO;
   const specifiedRatios = new Map<string, number>();
   for (const id of jobTypeIds) {
-    const { ratio } = resourcesPerJob[id] ?? {};
+    const { ratio } = resourceEstimationsPerJob[id] ?? {};
     if (ratio?.initialValue !== undefined) {
       specifiedRatios.set(id, ratio.initialValue);
       specifiedTotal += ratio.initialValue;
@@ -89,7 +89,7 @@ export const buildJobTypesInitData = (
   const evenShare = unspecifiedCount > ZERO ? remainingRatio / unspecifiedCount : ZERO;
   const result: Record<string, JobTypeInitConfig> = {};
   for (const id of jobTypeIds) {
-    const { ratio } = resourcesPerJob[id] ?? {};
+    const { ratio } = resourceEstimationsPerJob[id] ?? {};
     const ratioValue = specifiedRatios.get(id) ?? evenShare;
     const flexible = ratio?.flexible !== false;
     result[id] = { currentRatio: ratioValue, initialRatio: ratioValue, flexible };

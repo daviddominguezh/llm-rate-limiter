@@ -6,6 +6,7 @@ import { createInternalLimiter } from '../rateLimiter.js';
 import { buildJobArgs } from '../utils/jobExecutionHelpers.js';
 import { createMemoryManager } from '../utils/memoryManager.js';
 import { HUNDRED, ONE, RATIO_HALF, TEN, THOUSAND, ZERO } from './coverage.branches.helpers.js';
+import { createDefaultResourceEstimations } from './multiModelRateLimiter.helpers.js';
 
 describe('rateLimiter - daily counter refunds', () => {
   it('should refund to daily counters', async () => {
@@ -25,7 +26,7 @@ describe('rateLimiter - daily counter refunds', () => {
 
 describe('rateLimiter - default freeMemoryRatio', () => {
   it('should use default freeMemoryRatio when not specified in memory config', () => {
-    const limiter = createInternalLimiter({ memory: {}, resourcesPerEvent: { estimatedUsedMemoryKB: ONE } });
+    const limiter = createInternalLimiter({ memory: {} });
     expect(limiter.getStats().memory?.maxCapacityKB).toBeGreaterThan(ZERO);
     limiter.stop();
   });
@@ -35,16 +36,26 @@ describe('multiModelRateLimiter - V1 backend start', () => {
   it('should be no-op when calling start with no backend', async () => {
     const limiter = createLLMRateLimiter({
       models: { default: { requestsPerMinute: TEN, pricing: { input: ZERO, cached: ZERO, output: ZERO } } },
+      resourceEstimationsPerJob: createDefaultResourceEstimations(),
     });
     await limiter.start();
     expect(limiter.getInstanceId()).toBeDefined();
     limiter.stop();
   });
 
-  it('should be no-op when calling start with V1 backend', async () => {
+  it('should be no-op when calling start with V2 backend', async () => {
     const limiter = createLLMRateLimiter({
       models: { default: { requestsPerMinute: TEN, pricing: { input: ZERO, cached: ZERO, output: ZERO } } },
+      resourceEstimationsPerJob: createDefaultResourceEstimations(),
       backend: {
+        register: async () =>
+          await Promise.resolve({ slots: TEN, tokensPerMinute: THOUSAND, requestsPerMinute: HUNDRED }),
+        unregister: async () => {
+          await Promise.resolve();
+        },
+        subscribe: () => () => {
+          /* unsubscribe */
+        },
         acquire: async () => await Promise.resolve(true),
         release: async () => {
           await Promise.resolve();
@@ -72,6 +83,7 @@ describe('memoryManager - configuration branches', () => {
       config: {
         models: { default: { pricing: { input: ONE, output: ONE, cached: ONE } } },
         memory: {},
+        resourceEstimationsPerJob: createDefaultResourceEstimations(),
       },
       label: 'test',
       estimatedUsedMemoryKB: TEN,
@@ -89,6 +101,8 @@ describe('memoryManager - configuration branches', () => {
           withoutMemory: { pricing: { input: ONE, output: ONE, cached: ONE } },
         },
         memory: {},
+        resourceEstimationsPerJob: createDefaultResourceEstimations(),
+        escalationOrder: ['withMemory', 'withoutMemory'],
       },
       label: 'test',
       estimatedUsedMemoryKB: TEN,

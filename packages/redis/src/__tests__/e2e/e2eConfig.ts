@@ -2,20 +2,23 @@
  * E2E Test Configuration
  * Shared configuration constants for e2e tests
  */
-import * as fs from 'fs';
-import * as path from 'path';
-import { fileURLToPath } from 'url';
+import * as fs from 'node:fs';
+import * as path from 'node:path';
+import { fileURLToPath } from 'node:url';
 
 const currentFilePath = fileURLToPath(import.meta.url);
 const currentDir = path.dirname(currentFilePath);
 
+/** Get Redis URL from environment */
+const getEnvRedisUrl = (): string | undefined => process.env.REDIS_URL;
+
 /** Redis connection URL for e2e tests - loaded from environment variable */
 export const getRedisUrl = (): string => {
-  const url = process.env['REDIS_URL'];
-  if (url === undefined || url === '') {
+  const redisUrl = getEnvRedisUrl();
+  if (redisUrl === undefined || redisUrl === '') {
     throw new Error('REDIS_URL environment variable is required for e2e tests');
   }
-  return url;
+  return redisUrl;
 };
 
 /** Key prefix for e2e tests to isolate from other data */
@@ -25,81 +28,39 @@ export const E2E_KEY_PREFIX = 'e2e-test:';
 export const NUM_INSTANCES = 5;
 
 /** Job type names */
-export const JOB_TYPES = [
-  'Summary',
-  'VacationPlanning',
-  'ImageCreation',
-  'BudgetCalculation',
-  'WeatherForecast',
-] as const;
-
-export type JobTypeName = (typeof JOB_TYPES)[number];
-
-/** Job type configuration for rate limiter */
-export const RESOURCES_PER_JOB = {
-  Summary: {
-    estimatedUsedTokens: 10000,
-    estimatedNumberOfRequests: 1,
-    ratio: { initialValue: 0.3, flexible: true },
-  },
-  VacationPlanning: {
-    estimatedUsedTokens: 2000,
-    estimatedNumberOfRequests: 3,
-    ratio: { initialValue: 0.4, flexible: false },
-  },
-  ImageCreation: {
-    estimatedUsedTokens: 5000,
-    estimatedNumberOfRequests: 1,
-    ratio: { initialValue: 0.1, flexible: true },
-  },
-  BudgetCalculation: {
-    estimatedUsedTokens: 3000,
-    estimatedNumberOfRequests: 5,
-    ratio: { initialValue: 0.1, flexible: true },
-  },
-  WeatherForecast: {
-    estimatedUsedTokens: 1000,
-    estimatedNumberOfRequests: 1,
-    ratio: { initialValue: 0.1, flexible: true },
-  },
-};
+export type JobTypeName =
+  | 'Summary'
+  | 'VacationPlanning'
+  | 'ImageCreation'
+  | 'BudgetCalculation'
+  | 'WeatherForecast';
 
 /** Model names */
-export const MODEL_NAMES = ['ModelA', 'ModelB', 'ModelC'] as const;
+export type ModelName = 'ModelA' | 'ModelB' | 'ModelC';
 
-export type ModelName = (typeof MODEL_NAMES)[number];
+/** Job type configuration structure */
+export interface JobTypeConfig {
+  estimatedUsedTokens: number;
+  estimatedNumberOfRequests: number;
+  ratio?: { initialValue: number; flexible: boolean };
+}
 
-/** Models configuration for rate limiter */
-export const MODELS = {
-  ModelA: {
-    requestsPerMinute: 500,
-    tokensPerMinute: 1000000,
-    pricing: { input: 0.01, cached: 0.005, output: 0.02 },
-  },
-  ModelB: {
-    requestsPerMinute: 500,
-    tokensPerMinute: 1000000,
-    pricing: { input: 0.01, cached: 0.005, output: 0.02 },
-  },
-  ModelC: {
-    requestsPerMinute: 100,
-    tokensPerMinute: 500000,
-    pricing: { input: 0.005, cached: 0.0025, output: 0.01 },
-  },
-};
+/** Model configuration structure */
+export interface ModelConfig {
+  requestsPerMinute: number;
+  tokensPerMinute: number;
+  pricing: { input: number; cached: number; output: number };
+}
 
-/** Model fallback order */
-export const MODEL_ORDER: readonly ModelName[] = ['ModelA', 'ModelB', 'ModelC'];
-
-/** Ratio adjustment configuration */
-export const RATIO_ADJUSTMENT_CONFIG = {
-  highLoadThreshold: 0.8,
-  lowLoadThreshold: 0.3,
-  maxAdjustment: 0.1,
-  minRatio: 0.05,
-  adjustmentIntervalMs: 5000,
-  releasesPerAdjustment: 10,
-};
+/** Ratio adjustment configuration structure */
+export interface RatioAdjustmentConfig {
+  highLoadThreshold: number;
+  lowLoadThreshold: number;
+  maxAdjustment: number;
+  minRatio: number;
+  adjustmentIntervalMs: number;
+  releasesPerAdjustment: number;
+}
 
 /** Time constants */
 export const ONE_MINUTE_MS = 60000;
@@ -131,6 +92,13 @@ export interface JobDataFile {
     steady: Array<{ startMs: number; endMs: number; ratePerSec: number }>;
   };
   jobTypeDistribution: Record<JobTypeName, number>;
+  /** Configuration used for this test run */
+  config: {
+    models: Record<ModelName, ModelConfig>;
+    modelOrder: readonly ModelName[];
+    jobTypes: Record<JobTypeName, JobTypeConfig>;
+    ratioAdjustment: RatioAdjustmentConfig;
+  };
 }
 
 /** Prediction summary */
@@ -166,6 +134,14 @@ export interface PredictionsFile {
   fullTimelineLength: number;
 }
 
+/** Type guard for JobDataFile */
+const isJobDataFile = (data: unknown): data is JobDataFile =>
+  typeof data === 'object' && data !== null && 'totalJobs' in data && 'jobs' in data && 'config' in data;
+
+/** Type guard for PredictionsFile */
+const isPredictionsFile = (data: unknown): data is PredictionsFile =>
+  typeof data === 'object' && data !== null && 'summary' in data && 'finalRatios' in data;
+
 /** Find the latest test files by timestamp */
 const findLatestTestFiles = (): { inputFile: string; outputFile: string } => {
   const fixturesDir = path.join(currentDir, 'fixtures');
@@ -180,7 +156,7 @@ const findLatestTestFiles = (): { inputFile: string; outputFile: string } => {
 
   // Sort by timestamp (descending) to get the latest
   inputFiles.sort().reverse();
-  const latestInput = inputFiles[ZERO];
+  const [latestInput] = inputFiles;
   if (latestInput === undefined) {
     throw new Error('No test-input files found in fixtures directory');
   }
@@ -197,12 +173,38 @@ const findLatestTestFiles = (): { inputFile: string; outputFile: string } => {
 export const loadJobData = (): JobDataFile => {
   const { inputFile } = findLatestTestFiles();
   const content = fs.readFileSync(inputFile, 'utf-8');
-  return JSON.parse(content) as JobDataFile;
+  const parsed: unknown = JSON.parse(content);
+  if (!isJobDataFile(parsed)) {
+    throw new Error('Invalid job data file format');
+  }
+  return parsed;
 };
 
 /** Load predictions from fixtures (uses latest test-output file) */
 export const loadPredictions = (): PredictionsFile => {
   const { outputFile } = findLatestTestFiles();
   const content = fs.readFileSync(outputFile, 'utf-8');
-  return JSON.parse(content) as PredictionsFile;
+  const parsed: unknown = JSON.parse(content);
+  if (!isPredictionsFile(parsed)) {
+    throw new Error('Invalid predictions file format');
+  }
+  return parsed;
 };
+
+/** Load configuration from the job data file */
+export const loadConfig = (): JobDataFile['config'] => {
+  const jobData = loadJobData();
+  return jobData.config;
+};
+
+/** Helper to get models config for rate limiter */
+export const getModelsConfig = (): Record<ModelName, ModelConfig> => loadConfig().models;
+
+/** Helper to get model order for rate limiter */
+export const getModelOrder = (): readonly ModelName[] => loadConfig().modelOrder;
+
+/** Helper to get job types config for rate limiter */
+export const getJobTypesConfig = (): Record<JobTypeName, JobTypeConfig> => loadConfig().jobTypes;
+
+/** Helper to get ratio adjustment config */
+export const getRatioAdjustmentConfig = (): RatioAdjustmentConfig => loadConfig().ratioAdjustment;

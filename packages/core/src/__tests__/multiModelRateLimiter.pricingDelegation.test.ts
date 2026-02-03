@@ -3,6 +3,7 @@ import type { JobCallbackContext, LLMRateLimiterInstance, UsageEntryWithCost } f
 import {
   ALT_PRICING,
   CHEAP_PRICING,
+  DEFAULT_JOB_TYPE,
   DEFAULT_PRICING,
   ONE,
   RPM_LIMIT_HIGH,
@@ -10,6 +11,7 @@ import {
   TOKENS_1M,
   TWO,
   ZERO,
+  createDefaultResourceEstimations,
   createMockJobResult,
   ensureDefined,
   generateJobId,
@@ -17,17 +19,14 @@ import {
 
 const MODEL_CONFIG = {
   requestsPerMinute: RPM_LIMIT_HIGH,
-  resourcesPerEvent: { estimatedNumberOfRequests: ONE },
   pricing: DEFAULT_PRICING,
 };
 const CHEAP_MODEL_CONFIG = {
   requestsPerMinute: RPM_LIMIT_HIGH,
-  resourcesPerEvent: { estimatedNumberOfRequests: ONE },
   pricing: CHEAP_PRICING,
 };
 const ALT_MODEL_CONFIG = {
   requestsPerMinute: RPM_LIMIT_HIGH,
-  resourcesPerEvent: { estimatedNumberOfRequests: ONE },
   pricing: ALT_PRICING,
 };
 
@@ -35,7 +34,7 @@ const getUsageAt = (ctx: JobCallbackContext, index: number): UsageEntryWithCost 
   ctx.usage[index];
 
 describe('MultiModelRateLimiter - pricing with delegation', () => {
-  let limiter: LLMRateLimiterInstance | undefined = undefined;
+  let limiter: LLMRateLimiterInstance<'default'> | undefined = undefined;
   afterEach(() => {
     limiter?.stop();
     limiter = undefined;
@@ -47,11 +46,13 @@ describe('MultiModelRateLimiter - pricing with delegation', () => {
         'model-a': MODEL_CONFIG,
         'model-b': ALT_MODEL_CONFIG,
       },
-      order: ['model-a', 'model-b'],
+      escalationOrder: ['model-a', 'model-b'],
+      resourceEstimationsPerJob: createDefaultResourceEstimations(),
     });
     let capturedCtx: JobCallbackContext | undefined = undefined;
     await limiter.queueJob({
       jobId: generateJobId(),
+      jobType: DEFAULT_JOB_TYPE,
       job: ({ modelId }, resolve, reject) => {
         const usage = { modelId, inputTokens: TOKENS_1M, outputTokens: ZERO, cachedTokens: ZERO };
         if (modelId === 'model-a') {
@@ -76,7 +77,7 @@ describe('MultiModelRateLimiter - pricing with delegation', () => {
 });
 
 describe('MultiModelRateLimiter - cost in usage entries', () => {
-  let limiter: LLMRateLimiterInstance | undefined = undefined;
+  let limiter: LLMRateLimiterInstance<'default'> | undefined = undefined;
   afterEach(() => {
     limiter?.stop();
     limiter = undefined;
@@ -85,10 +86,12 @@ describe('MultiModelRateLimiter - cost in usage entries', () => {
   it('should include cost in each usage entry', async () => {
     limiter = createLLMRateLimiter({
       models: { 'model-a': MODEL_CONFIG },
+      resourceEstimationsPerJob: createDefaultResourceEstimations(),
     });
     let capturedCtx: JobCallbackContext | undefined = undefined;
     await limiter.queueJob({
       jobId: generateJobId(),
+      jobType: DEFAULT_JOB_TYPE,
       job: ({ modelId }, resolve) => {
         resolve({ modelId, inputTokens: TOKENS_1M, outputTokens: ZERO, cachedTokens: ZERO });
         return createMockJobResult('test');
@@ -105,7 +108,7 @@ describe('MultiModelRateLimiter - cost in usage entries', () => {
 });
 
 describe('MultiModelRateLimiter - cost per model after delegation', () => {
-  let limiter: LLMRateLimiterInstance | undefined = undefined;
+  let limiter: LLMRateLimiterInstance<'default'> | undefined = undefined;
   afterEach(() => {
     limiter?.stop();
     limiter = undefined;
@@ -114,11 +117,13 @@ describe('MultiModelRateLimiter - cost per model after delegation', () => {
   it('should have cost property on each usage entry after delegation', async () => {
     limiter = createLLMRateLimiter({
       models: { 'model-a': MODEL_CONFIG, 'model-b': ALT_MODEL_CONFIG, 'model-c': CHEAP_MODEL_CONFIG },
-      order: ['model-a', 'model-b', 'model-c'],
+      escalationOrder: ['model-a', 'model-b', 'model-c'],
+      resourceEstimationsPerJob: createDefaultResourceEstimations(),
     });
     let capturedCtx: JobCallbackContext | undefined = undefined;
     await limiter.queueJob({
       jobId: generateJobId(),
+      jobType: DEFAULT_JOB_TYPE,
       job: ({ modelId }, resolve, reject) => {
         const usage = { modelId, inputTokens: TOKENS_1M, outputTokens: ZERO, cachedTokens: ZERO };
         if (modelId === 'model-c') {

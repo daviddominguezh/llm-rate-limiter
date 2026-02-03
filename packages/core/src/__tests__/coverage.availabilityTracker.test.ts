@@ -26,7 +26,7 @@ describe('availabilityTracker - change detection', () => {
     let statsTokens = HUNDRED;
     const calls: string[] = [];
     const tracker = new AvailabilityTracker({
-      callback: (_, reason) => {
+      callback: (_availability, reason, _modelId) => {
         calls.push(reason);
       },
       getStats: () => ({
@@ -44,7 +44,7 @@ describe('availabilityTracker - change detection', () => {
     });
     tracker.initialize();
     statsTokens = FIFTY;
-    tracker.checkAndEmit('tokensMinute');
+    tracker.checkAndEmit('tokensMinute', 'default');
     expect(calls.includes('tokensMinute')).toBe(true);
   });
 });
@@ -58,7 +58,7 @@ describe('availabilityTracker - adjustment callback', () => {
   it('should handle checkAndEmit with adjustment', () => {
     const calls: CallRecord[] = [];
     const tracker = new AvailabilityTracker({
-      callback: (_, reason, adjustment) => {
+      callback: (_availability, reason, _modelId, adjustment) => {
         calls.push({ reason, adjustment });
       },
       getStats: (): LLMRateLimiterStats => createMockStats(),
@@ -76,7 +76,7 @@ describe('availabilityTracker - adjustment callback', () => {
       memoryKB: ZERO,
       concurrentRequests: ZERO,
     };
-    tracker.checkAndEmit('adjustment', adjustment);
+    tracker.checkAndEmit('adjustment', 'default', adjustment);
     expect(calls.some((c) => c.reason === 'adjustment' && c.adjustment !== undefined)).toBe(true);
   });
 });

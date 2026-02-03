@@ -12,6 +12,8 @@ import { fileURLToPath } from 'url';
 
 import {
   JOB_TYPE_CONFIG,
+  type JobData,
+  type JobDataFile,
   type JobTypeName,
   MODEL_CONFIG,
   MODEL_ORDER,
@@ -25,7 +27,9 @@ import {
   ZERO,
   getOutputFilename,
 } from './e2eScriptConfig.js';
-import type { JobData, JobDataFile } from './generateJobData.js';
+
+/** Re-export JobData and JobDataFile types for external use */
+export type { JobData, JobDataFile } from './e2eScriptConfig.js';
 
 const currentFilePath = fileURLToPath(import.meta.url);
 const currentDir = path.dirname(currentFilePath);
@@ -115,15 +119,18 @@ interface SimulationState {
   currentMinute: number;
   modelUsagePerMinute: Map<number, Record<ModelName, ModelMinuteUsage>>;
   activeJobs: ActiveJob[];
+  activeJobIds: Set<string>;
   pendingJobs: JobData[];
-  completedJobs: string[];
-  failedJobs: string[];
-  rejectedJobs: string[];
+  pendingJobIds: Set<string>;
+  completedJobs: Set<string>;
+  failedJobs: Set<string>;
+  rejectedJobs: Set<string>;
   ratios: Record<JobTypeName, RatioState>;
   timeline: TimelineEvent[];
   totalFallbacks: number;
   totalMinuteResets: number;
   queueWaitTimes: number[];
+  nextJobIndex: number;
 }
 
 /** Calculate total capacity for job type slots */
@@ -231,6 +238,8 @@ const startJob = (state: SimulationState, job: JobData, modelId: ModelName, inst
   };
 
   state.activeJobs.push(activeJob);
+  state.activeJobIds.add(job.id);
+  state.pendingJobIds.delete(job.id);
   state.ratios[job.jobType].inFlightJobs++;
   consumeModelCapacity(state, modelId, job.jobType);
 
@@ -252,9 +261,10 @@ const completeFinishedJobs = (state: SimulationState): void => {
   for (const activeJob of state.activeJobs) {
     if (activeJob.endTimeMs <= state.currentTimeMs) {
       state.ratios[activeJob.job.jobType].inFlightJobs--;
+      state.activeJobIds.delete(activeJob.job.id);
 
       if (activeJob.job.shouldFail) {
-        state.failedJobs.push(activeJob.job.id);
+        state.failedJobs.add(activeJob.job.id);
         state.timeline.push({
           timeMs: activeJob.endTimeMs,
           type: 'job_failed',
@@ -265,7 +275,7 @@ const completeFinishedJobs = (state: SimulationState): void => {
           },
         });
       } else {
-        state.completedJobs.push(activeJob.job.id);
+        state.completedJobs.add(activeJob.job.id);
         state.timeline.push({
           timeMs: activeJob.endTimeMs,
           type: 'job_completed',
@@ -344,7 +354,7 @@ const tryProcessJob = (state: SimulationState, job: JobData): boolean => {
   }
 
   // Assign to a random instance (for simulation purposes, just use round-robin)
-  const instanceId = state.completedJobs.length % NUM_INSTANCES;
+  const instanceId = state.completedJobs.size % NUM_INSTANCES;
 
   // Start the job
   startJob(state, job, modelId, instanceId);
@@ -362,7 +372,8 @@ const processPendingJobs = (state: SimulationState): void => {
       const anyModelAvailable = MODEL_ORDER.some((modelId) => modelHasCapacity(state, modelId, job.jobType));
 
       if (!anyModelAvailable) {
-        state.rejectedJobs.push(job.id);
+        state.rejectedJobs.add(job.id);
+        state.pendingJobIds.delete(job.id);
         state.timeline.push({
           timeMs: state.currentTimeMs,
           type: 'job_rejected',
@@ -382,27 +393,29 @@ const processPendingJobs = (state: SimulationState): void => {
   state.pendingJobs = stillPending;
 };
 
-/** Queue new jobs that are scheduled for the current time */
+/** Queue new jobs that are scheduled for the current time (optimized with index) */
 const queueScheduledJobs = (state: SimulationState, allJobs: JobData[]): void => {
-  for (const job of allJobs) {
-    if (
-      job.scheduledAtMs <= state.currentTimeMs &&
-      !state.completedJobs.includes(job.id) &&
-      !state.failedJobs.includes(job.id) &&
-      !state.rejectedJobs.includes(job.id) &&
-      !state.pendingJobs.some((p) => p.id === job.id) &&
-      !state.activeJobs.some((a) => a.job.id === job.id)
-    ) {
-      state.pendingJobs.push(job);
-      state.timeline.push({
-        timeMs: state.currentTimeMs,
-        type: 'job_queued',
-        details: {
-          jobId: job.id,
-          jobType: job.jobType,
-        },
-      });
+  // Jobs are sorted by scheduledAtMs, so we can iterate from nextJobIndex
+  // and stop when we hit a job scheduled in the future
+  while (state.nextJobIndex < allJobs.length) {
+    const job = allJobs[state.nextJobIndex];
+    if (job.scheduledAtMs > state.currentTimeMs) {
+      // All remaining jobs are scheduled in the future
+      break;
     }
+    // Move to next job (this job will be queued now)
+    state.nextJobIndex++;
+    // Add to pending queue
+    state.pendingJobs.push(job);
+    state.pendingJobIds.add(job.id);
+    state.timeline.push({
+      timeMs: state.currentTimeMs,
+      type: 'job_queued',
+      details: {
+        jobId: job.id,
+        jobType: job.jobType,
+      },
+    });
   }
 };
 
@@ -518,9 +531,9 @@ const buildSummary = (state: SimulationState): PredictionSummary => {
   }
 
   return {
-    totalJobsProcessed: state.completedJobs.length,
-    totalJobsFailed: state.failedJobs.length,
-    totalRejections: state.rejectedJobs.length,
+    totalJobsProcessed: state.completedJobs.size,
+    totalJobsFailed: state.failedJobs.size,
+    totalRejections: state.rejectedJobs.size,
     modelUsage,
     modelFallbacks: state.totalFallbacks,
     ratioChanges,
@@ -561,15 +574,18 @@ const predictResults = (jobData: JobDataFile): PredictionResult => {
     currentMinute: ZERO,
     modelUsagePerMinute: new Map(),
     activeJobs: [],
+    activeJobIds: new Set(),
     pendingJobs: [],
-    completedJobs: [],
-    failedJobs: [],
-    rejectedJobs: [],
+    pendingJobIds: new Set(),
+    completedJobs: new Set(),
+    failedJobs: new Set(),
+    rejectedJobs: new Set(),
     ratios: initializeRatios(),
     timeline: [],
     totalFallbacks: ZERO,
     totalMinuteResets: ZERO,
     queueWaitTimes: [],
+    nextJobIndex: ZERO,
   };
 
   const timeStep = 100; // 100ms time steps for simulation
@@ -595,7 +611,7 @@ const predictResults = (jobData: JobDataFile): PredictionResult => {
     state.currentTimeMs += timeStep;
 
     // Early exit if all jobs are processed
-    const totalProcessed = state.completedJobs.length + state.failedJobs.length + state.rejectedJobs.length;
+    const totalProcessed = state.completedJobs.size + state.failedJobs.size + state.rejectedJobs.size;
     if (totalProcessed >= jobData.totalJobs && state.activeJobs.length === ZERO) {
       break;
     }
@@ -627,6 +643,39 @@ const extractTimestamp = (filename: string): string => {
 const loadJobData = (inputPath: string): JobDataFile => {
   const content = fs.readFileSync(inputPath, 'utf-8');
   return JSON.parse(content) as JobDataFile;
+};
+
+/** Build compact predictions output (without full timeline) */
+export const buildCompactPredictions = (
+  predictions: PredictionResult
+): PredictionResult & {
+  timelineEventCounts: Record<string, number>;
+  fullTimelineLength: number;
+} => ({
+  ...predictions,
+  timelineEventCounts: {
+    job_queued: predictions.timeline.filter((e) => e.type === 'job_queued').length,
+    job_started: predictions.timeline.filter((e) => e.type === 'job_started').length,
+    job_completed: predictions.timeline.filter((e) => e.type === 'job_completed').length,
+    job_failed: predictions.timeline.filter((e) => e.type === 'job_failed').length,
+    job_rejected: predictions.timeline.filter((e) => e.type === 'job_rejected').length,
+    model_fallback: predictions.timeline.filter((e) => e.type === 'model_fallback').length,
+    minute_reset: predictions.timeline.filter((e) => e.type === 'minute_reset').length,
+    ratio_change: predictions.timeline.filter((e) => e.type === 'ratio_change').length,
+  },
+  // Keep only first 100 timeline events as a sample
+  timeline: predictions.timeline.slice(0, 100),
+  fullTimelineLength: predictions.timeline.length,
+});
+
+/**
+ * Run prediction simulation on job data
+ * Exported for use by generateJobData.ts
+ */
+export const runPredictionSimulation = (jobData: JobDataFile, inputFilename: string): PredictionResult => {
+  const predictions = predictResults(jobData);
+  predictions.jobDataFile = inputFilename;
+  return predictions;
 };
 
 /** Run prediction and save results */
@@ -707,5 +756,8 @@ const runPrediction = (): void => {
   console.log(`\nPredictions saved to: ${outputPath}`);
 };
 
-// Run if executed directly
-runPrediction();
+// Run if executed directly (not imported as a module)
+const isMainModule = process.argv[1]?.endsWith('predictionEngine.ts') ?? false;
+if (isMainModule) {
+  runPrediction();
+}

@@ -5,9 +5,9 @@
 import type {
   AllocationCallback,
   AllocationInfo,
-  BackendAcquireContextV2,
-  BackendReleaseContextV2,
-  DistributedBackendConfig,
+  BackendAcquireContext,
+  BackendConfig,
+  BackendReleaseContext,
   Unsubscribe,
 } from '../multiModelTypes.js';
 
@@ -59,14 +59,14 @@ export class FairDistributionBackend {
   }
 
   /** Get the backend config to pass to rate limiter */
-  getBackendConfig(): DistributedBackendConfig {
+  getBackendConfig(): BackendConfig {
     return {
       register: async (id: string): Promise<AllocationInfo> => await this.register(id),
       unregister: async (id: string): Promise<void> => {
         await this.unregister(id);
       },
-      acquire: async (ctx: BackendAcquireContextV2): Promise<boolean> => await this.acquire(ctx),
-      release: async (ctx: BackendReleaseContextV2): Promise<void> => {
+      acquire: async (ctx: BackendAcquireContext): Promise<boolean> => await this.acquire(ctx),
+      release: async (ctx: BackendReleaseContext): Promise<void> => {
         await this.release(ctx);
       },
       subscribe: (id: string, cb: AllocationCallback): Unsubscribe => this.subscribe(id, cb),
@@ -116,7 +116,7 @@ export class FairDistributionBackend {
   }
 
   /** Acquire a slot from instance's allocation */
-  private async acquire(ctx: BackendAcquireContextV2): Promise<boolean> {
+  private async acquire(ctx: BackendAcquireContext): Promise<boolean> {
     const inst = this.instances.get(ctx.instanceId);
     if (inst === undefined || inst.allocation <= ZERO) {
       return await Promise.resolve(false);
@@ -128,7 +128,7 @@ export class FairDistributionBackend {
   }
 
   /** Release a slot (decrement in-flight, trigger reallocation) */
-  private async release(ctx: BackendReleaseContextV2): Promise<void> {
+  private async release(ctx: BackendReleaseContext): Promise<void> {
     const inst = this.instances.get(ctx.instanceId);
     if (inst === undefined || inst.inFlight <= ZERO) {
       return;

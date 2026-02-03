@@ -11,14 +11,14 @@ import type { BaseResourcesPerEvent } from './types.js';
 // Constants
 // =============================================================================
 
-/** Default high load threshold (80%) */
-const DEFAULT_HIGH_LOAD_THRESHOLD = 0.8;
+/** Default high load threshold (70%) */
+const DEFAULT_HIGH_LOAD_THRESHOLD = 0.7;
 /** Default low load threshold (30%) */
 const DEFAULT_LOW_LOAD_THRESHOLD = 0.3;
-/** Default maximum adjustment per cycle (10%) */
-const DEFAULT_MAX_ADJUSTMENT = 0.1;
-/** Default minimum ratio (5%) */
-const DEFAULT_MIN_RATIO = 0.05;
+/** Default maximum adjustment per cycle (20%) */
+const DEFAULT_MAX_ADJUSTMENT = 0.2;
+/** Default minimum ratio (1%) */
+const DEFAULT_MIN_RATIO = 0.01;
 /** Default adjustment interval in milliseconds (5 seconds) */
 const DEFAULT_ADJUSTMENT_INTERVAL_MS = 5000;
 /** Default number of releases between adjustments */
@@ -52,9 +52,15 @@ export interface JobTypeRatioConfig {
 
 /**
  * Resource configuration for a specific job type.
- * Extends base resources with ratio configuration.
+ * Extends base resources with ratio configuration and memory estimation.
  */
 export interface JobTypeResourceConfig extends BaseResourcesPerEvent {
+  /**
+   * Estimated memory usage in KB for this job type.
+   * Required when using memory-based limiting.
+   */
+  estimatedUsedMemoryKB?: number;
+
   /**
    * Optional ratio configuration for capacity allocation.
    * If not provided, capacity is distributed evenly among all job types.
@@ -68,29 +74,38 @@ export interface JobTypeResourceConfig extends BaseResourcesPerEvent {
  *
  * @example
  * ```typescript
- * const resourcesPerJob: ResourcesPerJob = {
+ * const resourceEstimationsPerJob: ResourceEstimationsPerJob = {
  *   'summarize-pdf': { estimatedUsedTokens: 20000, ratio: { initialValue: 0.7 } },
  *   'create-recipe': { estimatedUsedTokens: 500 },
  * };
  * ```
  */
-export type ResourcesPerJob<K extends string = string> = Record<K, JobTypeResourceConfig>;
+export type ResourceEstimationsPerJob<K extends string = string> = Record<K, JobTypeResourceConfig>;
 
 /**
- * Extract job type IDs from ResourcesPerJob as a string literal union.
+ * Extract job type IDs from ResourceEstimationsPerJob as a string literal union.
  * Enables compile-time type safety for jobType parameter.
  *
  * @example
  * ```typescript
- * type MyJobTypes = JobTypeIds<typeof myResourcesPerJob>;
+ * type MyJobTypes = JobTypeIds<typeof myResourceEstimationsPerJob>;
  * // MyJobTypes = 'summarize-pdf' | 'create-recipe'
  * ```
  */
-export type JobTypeIds<T extends ResourcesPerJob> = keyof T & string;
+export type JobTypeIds<T extends ResourceEstimationsPerJob> = keyof T & string;
 
 // =============================================================================
 // Job Type Runtime State
 // =============================================================================
+
+/**
+ * Estimated resources stored in job type state.
+ * Includes memory
+ */
+export interface JobTypeResources extends BaseResourcesPerEvent {
+  /** Estimated memory usage in KB for this job type */
+  estimatedUsedMemoryKB?: number;
+}
 
 /**
  * Runtime state for a single job type.
@@ -113,7 +128,7 @@ export interface JobTypeState {
   allocatedSlots: number;
 
   /** Estimated resources for this job type */
-  resources: BaseResourcesPerEvent;
+  resources: JobTypeResources;
 }
 
 /**
@@ -140,7 +155,7 @@ export interface JobTypeStats {
 export interface RatioAdjustmentConfig {
   /**
    * Load threshold above which a job type is considered "high load" and needs more capacity.
-   * @default 0.8 (80%)
+   * @default 0.7 (70%)
    */
   highLoadThreshold?: number;
 
@@ -153,14 +168,14 @@ export interface RatioAdjustmentConfig {
   /**
    * Maximum ratio change per adjustment cycle.
    * Prevents drastic reallocation swings.
-   * @default 0.1 (10%)
+   * @default 0.2 (20%)
    */
   maxAdjustment?: number;
 
   /**
    * Minimum ratio any job type can have.
    * Ensures all job types maintain some capacity.
-   * @default 0.05 (5%)
+   * @default 0.01 (1%)
    */
   minRatio?: number;
 

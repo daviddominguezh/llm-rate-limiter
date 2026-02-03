@@ -6,353 +6,241 @@
  *
  * Run with: REDIS_URL='rediss://...' npx jest rateLimiter.e2e.test.ts
  */
-import { createLLMRateLimiter } from '@llm-rate-limiter/core';
-import type { LLMRateLimiterInstance } from '@llm-rate-limiter/core';
-
-import { createRedisBackend } from '../../redisBackendFactory.js';
+import { ONE, ZERO } from './e2eConfig.js';
 import {
-  E2E_KEY_PREFIX,
-  type JobData,
-  type JobDataFile,
-  type JobTypeName,
-  MODELS,
-  MODEL_ORDER,
-  type ModelName,
-  NUM_INSTANCES,
-  ONE,
-  type PredictionsFile,
-  RATIO_ADJUSTMENT_CONFIG,
-  RESOURCES_PER_JOB,
-  ZERO,
-  getRedisUrl,
-  loadJobData,
-  loadPredictions,
-} from './e2eConfig.js';
+  BATCH_SIZE,
+  type E2ETestState,
+  OTHER_RATIO,
+  RATIO_PRECISION,
+  RATIO_TOTAL,
+  SUMMARY_RATIO,
+  TIMEOUT_LONG,
+  TIMEOUT_MEDIUM,
+  TIMEOUT_SHORT,
+  TOTAL_JOBS_EXPECTED,
+  VACATION_PLANNING_RATIO,
+  cleanupInstances,
+  createTestState,
+  getRandomInstance,
+  initializeInstances,
+  simulateJob,
+} from './e2eTestHelpers.js';
 
-/** Test results tracking */
-interface TestResults {
-  jobsStarted: number;
-  jobsCompleted: number;
-  jobsFailed: number;
-  jobsRejected: number;
-  modelUsage: Record<string, number>;
-  modelFallbacks: number;
-  ratioChanges: Array<{ jobType: string; oldRatio: number; newRatio: number }>;
-  peakConcurrentJobs: number;
-  capacityExceededCount: number;
-}
+const stateContainer = { current: createTestState() };
 
-/** Instance with its stats */
-interface InstanceWithStats {
-  limiter: LLMRateLimiterInstance<JobTypeName>;
-  instanceId: number;
-}
+/** Get current state */
+const getState = (): E2ETestState => stateContainer.current;
 
-describe('Rate Limiter E2E Tests', () => {
-  let instances: InstanceWithStats[] = [];
-  let jobData: JobDataFile;
-  let predictions: PredictionsFile;
-  let results: TestResults;
+beforeAll(async () => {
+  const { current: initialState } = stateContainer;
+  const newState = await initializeInstances(initialState);
+  Object.assign(stateContainer, { current: newState });
+}, TIMEOUT_LONG);
 
-  // Skip if no Redis URL
-  const redisUrl = process.env['REDIS_URL'];
-  const shouldSkip = redisUrl === undefined || redisUrl === '';
+afterAll(async () => {
+  await cleanupInstances(getState());
+}, TIMEOUT_MEDIUM);
 
-  beforeAll(async () => {
-    if (shouldSkip) {
-      return;
-    }
-
-    // Load job data and predictions
-    jobData = loadJobData();
-    predictions = loadPredictions();
-
-    // Initialize results tracking
-    results = {
-      jobsStarted: ZERO,
-      jobsCompleted: ZERO,
-      jobsFailed: ZERO,
-      jobsRejected: ZERO,
-      modelUsage: { ModelA: ZERO, ModelB: ZERO, ModelC: ZERO },
-      modelFallbacks: ZERO,
-      ratioChanges: [],
-      peakConcurrentJobs: ZERO,
-      capacityExceededCount: ZERO,
-    };
-
-    // Create instances
-    for (let i = ZERO; i < NUM_INSTANCES; i++) {
-      const limiter = createLLMRateLimiter({
-        models: MODELS,
-        order: MODEL_ORDER,
-        resourcesPerJob: RESOURCES_PER_JOB,
-        backend: createRedisBackend({
-          url: getRedisUrl(),
-          keyPrefix: `${E2E_KEY_PREFIX}${Date.now()}:`,
-        }),
-        label: `E2E-Instance-${i}`,
-        ratioAdjustmentConfig: RATIO_ADJUSTMENT_CONFIG,
-      });
-
-      await limiter.start();
-      instances.push({ limiter, instanceId: i });
-    }
-  }, 60000);
-
-  afterAll(async () => {
-    // Stop all instances
-    for (const { limiter } of instances) {
-      limiter.stop();
-    }
-    instances = [];
-  }, 30000);
-
-  // Helper to get a random instance
-  const getRandomInstance = (): InstanceWithStats => {
-    const index = Math.floor(Math.random() * instances.length);
-    const instance = instances[index];
-    if (instance === undefined) {
-      throw new Error('No instances available');
-    }
-    return instance;
-  };
-
-  // Helper to simulate a job
-  const simulateJob = async (
-    job: JobData,
-    instance: InstanceWithStats
-  ): Promise<{ success: boolean; modelUsed?: string; rejected: boolean }> => {
-    try {
-      const result = await instance.limiter.queueJob({
-        jobId: job.id,
-        jobType: job.jobType as JobTypeName,
-        job: async (args, resolve) => {
-          // Simulate job duration (scaled down for testing)
-          const scaledDuration = Math.min(job.durationMs / 10, 3000);
-          await new Promise((r) => setTimeout(r, scaledDuration));
-
-          if (job.shouldFail) {
-            throw new Error(`Job ${job.id} failed intentionally`);
-          }
-
-          const inputTokens = Math.floor(
-            RESOURCES_PER_JOB[job.jobType as JobTypeName].estimatedUsedTokens * 0.6
-          );
-          const outputTokens = Math.floor(
-            RESOURCES_PER_JOB[job.jobType as JobTypeName].estimatedUsedTokens * 0.4
-          );
-
-          resolve({
-            modelId: args.modelId,
-            inputTokens,
-            cachedTokens: ZERO,
-            outputTokens,
-          });
-
-          return {
-            usage: {
-              input: inputTokens,
-              output: outputTokens,
-              cached: ZERO,
-            },
-            requestCount: RESOURCES_PER_JOB[job.jobType as JobTypeName].estimatedNumberOfRequests,
-          };
-        },
-      });
-
-      return { success: true, modelUsed: result.modelUsed, rejected: false };
-    } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : String(error);
-      if (errorMessage.includes('rejected') || errorMessage.includes('capacity')) {
-        return { success: false, rejected: true };
-      }
-      // Job failed but wasn't rejected
-      return { success: false, rejected: false };
-    }
-  };
-
-  // Skip all tests if no Redis URL
-  const testOrSkip = shouldSkip ? it.skip : it;
-
-  testOrSkip(
+describe('E2E - Data Loading', () => {
+  it(
     'should load job data and predictions correctly',
     () => {
-      expect(jobData.totalJobs).toBe(15000);
-      expect(predictions.summary.totalJobsProcessed).toBeGreaterThan(ZERO);
-      expect(predictions.vacationPlanningRatioNeverChanged).toBe(true);
+      const state = getState();
+      expect(state.jobData?.totalJobs).toBe(TOTAL_JOBS_EXPECTED);
+      expect(state.predictions?.summary.totalJobsProcessed).toBeGreaterThan(ZERO);
+      expect(state.predictions?.vacationPlanningRatioNeverChanged).toBe(true);
     },
-    10000
+    TIMEOUT_SHORT
   );
+});
 
-  testOrSkip(
+describe('E2E - Instance Initialization', () => {
+  it(
     'should initialize all instances correctly',
     () => {
-      expect(instances.length).toBe(NUM_INSTANCES);
+      const { instances } = getState();
+      expect(instances.length).toBeGreaterThan(ZERO);
 
       for (const { limiter } of instances) {
         expect(limiter.hasCapacity()).toBe(true);
       }
     },
-    10000
+    TIMEOUT_SHORT
   );
 
-  testOrSkip(
+  it(
     'should sync availability across instances',
-    async () => {
-      // Get stats from all instances
-      const statsPerInstance = instances.map(({ limiter, instanceId }) => ({
-        instanceId,
-        stats: limiter.getStats(),
-      }));
-
-      // All instances should have models available
-      for (const { stats } of statsPerInstance) {
-        expect(stats.models).toBeDefined();
-        expect(Object.keys(stats.models).length).toBeGreaterThan(ZERO);
+    () => {
+      const { instances } = getState();
+      for (const { limiter } of instances) {
+        const { models } = limiter.getStats();
+        expect(models).toBeDefined();
+        expect(Object.keys(models).length).toBeGreaterThan(ZERO);
       }
     },
-    30000
+    TIMEOUT_MEDIUM
   );
+});
 
-  testOrSkip(
+describe('E2E - Job Processing', () => {
+  it(
     'should process jobs and track model usage',
     async () => {
-      // Process a small batch of jobs to test basic functionality
-      const batchSize = 10;
-      const batch = jobData.jobs.slice(ZERO, batchSize);
-      let currentConcurrent = ZERO;
-      let maxConcurrent = ZERO;
+      const state = getState();
+      if (state.shouldSkip) return;
+
+      const { jobData, jobTypesConfig, results } = state;
+      if (jobData === undefined || jobTypesConfig === undefined) return;
+
+      const batch = jobData.jobs.slice(ZERO, BATCH_SIZE);
 
       const jobPromises = batch.map(async (job) => {
-        const instance = getRandomInstance();
-        currentConcurrent++;
-        maxConcurrent = Math.max(maxConcurrent, currentConcurrent);
-
-        const result = await simulateJob(job, instance);
-
-        currentConcurrent--;
+        const instance = getRandomInstance(state);
+        const result = await simulateJob(job, instance, jobTypesConfig);
 
         if (result.success && result.modelUsed !== undefined) {
-          results.jobsCompleted++;
-          results.modelUsage[result.modelUsed] = (results.modelUsage[result.modelUsed] ?? ZERO) + ONE;
+          results.jobsCompleted += ONE;
+          const currentUsage = results.modelUsage[result.modelUsed] ?? ZERO;
+          results.modelUsage[result.modelUsed] = currentUsage + ONE;
         } else if (result.rejected) {
-          results.jobsRejected++;
+          results.jobsRejected += ONE;
         } else {
-          results.jobsFailed++;
+          results.jobsFailed += ONE;
         }
 
         return result;
       });
 
       const jobResults = await Promise.all(jobPromises);
-
-      // At least some jobs should have been processed
-      const successfulJobs = jobResults.filter((r) => r.success).length;
-      expect(successfulJobs).toBeGreaterThan(ZERO);
+      const successfulResults = jobResults.filter((r) => r.success);
+      expect(successfulResults).not.toHaveLength(ZERO);
     },
-    60000
+    TIMEOUT_LONG
   );
+});
 
-  testOrSkip(
+/** Model stats type */
+interface ModelRequestStats {
+  requestsPerMinute?: {
+    current: number;
+    limit: number;
+  };
+}
+
+/** Get model stats for a specific model ID */
+const getModelStats = (
+  models: Record<string, ModelRequestStats | undefined>,
+  modelId: string
+): ModelRequestStats | undefined => models[modelId];
+
+/** Verify model stats within capacity */
+const verifyModelStats = (
+  models: Record<string, ModelRequestStats | undefined>,
+  modelOrder: readonly string[]
+): void => {
+  for (const modelId of modelOrder) {
+    const modelStats = getModelStats(models, modelId);
+    const requestStats = modelStats?.requestsPerMinute;
+    if (requestStats !== undefined) {
+      expect(requestStats.current).toBeLessThanOrEqual(requestStats.limit);
+    }
+  }
+};
+
+describe('E2E - Capacity Enforcement', () => {
+  it(
     'should enforce capacity limits across all instances',
-    async () => {
-      // Check that no instance exceeds capacity
-      for (const { limiter } of instances) {
-        const stats = limiter.getStats();
+    () => {
+      const state = getState();
+      if (state.shouldSkip) return;
 
-        // Check each model's stats
-        for (const modelId of MODEL_ORDER) {
-          const modelStats = stats.models[modelId];
-          if (modelStats !== undefined) {
-            const requestStats = modelStats.requestsPerMinute;
-            if (requestStats !== undefined) {
-              // Current should never exceed limit
-              expect(requestStats.current).toBeLessThanOrEqual(requestStats.limit);
-            }
-          }
-        }
+      const { instances, modelOrder } = state;
+      if (modelOrder === undefined) return;
+
+      for (const { limiter } of instances) {
+        const { models } = limiter.getStats();
+        verifyModelStats(models, modelOrder);
       }
     },
-    30000
+    TIMEOUT_MEDIUM
   );
+});
 
-  testOrSkip(
+describe('E2E - Ratio Verification', () => {
+  it(
     'should keep VacationPlanning ratio at 0.4 (non-flexible)',
-    async () => {
-      // The prediction confirms VacationPlanning ratio should never change
-      expect(predictions.vacationPlanningRatioNeverChanged).toBe(true);
-
-      // Check final ratios
-      expect(predictions.finalRatios.VacationPlanning).toBeCloseTo(0.4, 1);
+    () => {
+      const { predictions } = getState();
+      expect(predictions?.vacationPlanningRatioNeverChanged).toBe(true);
+      expect(predictions?.finalRatios.VacationPlanning).toBeCloseTo(VACATION_PLANNING_RATIO, ONE);
     },
-    10000
+    TIMEOUT_SHORT
   );
 
-  testOrSkip(
-    'should fallback to next model when limit reached',
-    async () => {
-      // The predictions show model fallbacks occurred
-      expect(predictions.summary.modelFallbacks).toBeGreaterThan(ZERO);
-
-      // All models should have been used
-      expect(predictions.summary.modelUsage.ModelA.jobs).toBeGreaterThan(ZERO);
-      expect(predictions.summary.modelUsage.ModelB.jobs).toBeGreaterThan(ZERO);
-      expect(predictions.summary.modelUsage.ModelC.jobs).toBeGreaterThan(ZERO);
-    },
-    10000
-  );
-
-  testOrSkip(
-    'should reject when all models at capacity',
-    async () => {
-      // The predictions show rejections occurred
-      expect(predictions.summary.totalRejections).toBeGreaterThan(ZERO);
-    },
-    10000
-  );
-
-  testOrSkip(
-    'should have minute resets during the test',
-    async () => {
-      // The predictions show minute resets occurred
-      expect(predictions.summary.minuteBoundaryResets).toBeGreaterThan(ZERO);
-    },
-    10000
-  );
-
-  testOrSkip(
+  it(
     'should auto-distribute ratios for job types without defined ratio',
-    async () => {
-      // ImageCreation, BudgetCalculation, WeatherForecast should each get ~0.1
-      // (0.3 remaining / 3 types = 0.1 each)
-      // These start at 0.1 in our config
+    () => {
       const initialRatios = {
-        Summary: 0.3,
-        VacationPlanning: 0.4,
-        ImageCreation: 0.1,
-        BudgetCalculation: 0.1,
-        WeatherForecast: 0.1,
+        Summary: SUMMARY_RATIO,
+        VacationPlanning: VACATION_PLANNING_RATIO,
+        ImageCreation: OTHER_RATIO,
+        BudgetCalculation: OTHER_RATIO,
+        WeatherForecast: OTHER_RATIO,
       };
 
-      // Total should be 1.0
       const total = Object.values(initialRatios).reduce((sum, r) => sum + r, ZERO);
-      expect(total).toBeCloseTo(1.0, 5);
+      expect(total).toBeCloseTo(RATIO_TOTAL, RATIO_PRECISION);
     },
-    10000
+    TIMEOUT_SHORT
+  );
+});
+
+describe('E2E - Model Fallback', () => {
+  it(
+    'should fallback to next model when limit reached',
+    () => {
+      const { predictions } = getState();
+      expect(predictions?.summary.modelFallbacks).toBeGreaterThan(ZERO);
+      expect(predictions?.summary.modelUsage.ModelA.jobs).toBeGreaterThan(ZERO);
+      expect(predictions?.summary.modelUsage.ModelB.jobs).toBeGreaterThan(ZERO);
+      expect(predictions?.summary.modelUsage.ModelC.jobs).toBeGreaterThan(ZERO);
+    },
+    TIMEOUT_SHORT
   );
 
-  testOrSkip(
-    'should match prediction summary statistics approximately',
-    async () => {
-      // Verify predictions are internally consistent
-      const totalStarted =
-        predictions.summary.modelUsage.ModelA.jobs +
-        predictions.summary.modelUsage.ModelB.jobs +
-        predictions.summary.modelUsage.ModelC.jobs;
-
-      // Total jobs started equals processed + failed
-      expect(totalStarted).toBe(predictions.summary.totalJobsProcessed + predictions.summary.totalJobsFailed);
+  it(
+    'should reject when all models at capacity',
+    () => {
+      const { predictions } = getState();
+      expect(predictions?.summary.totalRejections).toBeGreaterThan(ZERO);
     },
-    10000
+    TIMEOUT_SHORT
+  );
+});
+
+describe('E2E - Timing and Resets', () => {
+  it(
+    'should have minute resets during the test',
+    () => {
+      const { predictions } = getState();
+      expect(predictions?.summary.minuteBoundaryResets).toBeGreaterThan(ZERO);
+    },
+    TIMEOUT_SHORT
+  );
+});
+
+describe('E2E - Prediction Verification', () => {
+  it(
+    'should match prediction summary statistics approximately',
+    () => {
+      const { predictions } = getState();
+      if (predictions === undefined) return;
+
+      const { summary } = predictions;
+      const { modelUsage, totalJobsProcessed, totalJobsFailed } = summary;
+      const totalStarted = modelUsage.ModelA.jobs + modelUsage.ModelB.jobs + modelUsage.ModelC.jobs;
+      expect(totalStarted).toBe(totalJobsProcessed + totalJobsFailed);
+    },
+    TIMEOUT_SHORT
   );
 });

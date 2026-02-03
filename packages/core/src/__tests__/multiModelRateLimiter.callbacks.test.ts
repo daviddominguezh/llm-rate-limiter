@@ -3,6 +3,7 @@ import { setTimeout as setTimeoutAsync } from 'node:timers/promises';
 import { createLLMRateLimiter } from '../multiModelRateLimiter.js';
 import type { JobCallbackContext, LLMRateLimiterInstance, UsageEntryWithCost } from '../multiModelTypes.js';
 import {
+  DEFAULT_JOB_TYPE,
   DEFAULT_PRICING,
   DELAY_MS_LONG,
   DELAY_MS_SHORT,
@@ -11,6 +12,7 @@ import {
   ONE,
   RPM_LIMIT_HIGH,
   ZERO,
+  createDefaultResourceEstimations,
   createMockJobResult,
   createMockUsage,
   ensureDefined,
@@ -19,7 +21,6 @@ import {
 
 const MODEL_CONFIG = {
   requestsPerMinute: RPM_LIMIT_HIGH,
-  resourcesPerEvent: { estimatedNumberOfRequests: ONE },
   pricing: DEFAULT_PRICING,
 };
 const getUsageAt = (ctx: JobCallbackContext | undefined, index: number): UsageEntryWithCost | undefined =>
@@ -42,18 +43,22 @@ const createRejectingJob = (
 };
 
 describe('MultiModelRateLimiter - onComplete jobId and usage', () => {
-  let limiter: LLMRateLimiterInstance | undefined = undefined;
+  let limiter: LLMRateLimiterInstance<'default'> | undefined = undefined;
   afterEach(() => {
     limiter?.stop();
     limiter = undefined;
   });
 
   it('should call onComplete with proper jobId and usage when job resolves', async () => {
-    limiter = createLLMRateLimiter({ models: { 'model-a': MODEL_CONFIG } });
+    limiter = createLLMRateLimiter({
+      models: { 'model-a': MODEL_CONFIG },
+      resourceEstimationsPerJob: createDefaultResourceEstimations(),
+    });
     let capturedCtx: JobCallbackContext | undefined = undefined;
     const testJobId = generateJobId();
     await limiter.queueJob({
       jobId: testJobId,
+      jobType: DEFAULT_JOB_TYPE,
       job: ({ modelId }, resolve) => createResolvingJob(modelId, resolve),
       onComplete: (_r, ctx) => {
         capturedCtx = ctx;
@@ -69,17 +74,21 @@ describe('MultiModelRateLimiter - onComplete jobId and usage', () => {
 });
 
 describe('MultiModelRateLimiter - onComplete totalCost', () => {
-  let limiter: LLMRateLimiterInstance | undefined = undefined;
+  let limiter: LLMRateLimiterInstance<'default'> | undefined = undefined;
   afterEach(() => {
     limiter?.stop();
     limiter = undefined;
   });
 
   it('should include totalCost in onComplete callback', async () => {
-    limiter = createLLMRateLimiter({ models: { 'model-a': MODEL_CONFIG } });
+    limiter = createLLMRateLimiter({
+      models: { 'model-a': MODEL_CONFIG },
+      resourceEstimationsPerJob: createDefaultResourceEstimations(),
+    });
     let capturedCtx: JobCallbackContext | undefined = undefined;
     await limiter.queueJob({
       jobId: generateJobId(),
+      jobType: DEFAULT_JOB_TYPE,
       job: ({ modelId }, resolve) => createResolvingJob(modelId, resolve),
       onComplete: (_r, ctx) => {
         capturedCtx = ctx;
@@ -92,7 +101,7 @@ describe('MultiModelRateLimiter - onComplete totalCost', () => {
 });
 
 describe('MultiModelRateLimiter - onComplete callback skipping', () => {
-  let limiter: LLMRateLimiterInstance | undefined = undefined;
+  let limiter: LLMRateLimiterInstance<'default'> | undefined = undefined;
   afterEach(() => {
     limiter?.stop();
     limiter = undefined;
@@ -104,10 +113,12 @@ describe('MultiModelRateLimiter - onComplete callback skipping', () => {
         'model-a': { maxConcurrentRequests: ONE, pricing: DEFAULT_PRICING },
         'model-b': { maxConcurrentRequests: ONE, pricing: DEFAULT_PRICING },
       },
-      order: ['model-a', 'model-b'],
+      escalationOrder: ['model-a', 'model-b'],
+      resourceEstimationsPerJob: createDefaultResourceEstimations(),
     });
     const blockingJobPromise = limiter.queueJob({
       jobId: generateJobId(),
+      jobType: DEFAULT_JOB_TYPE,
       job: async ({ modelId }, resolve) => {
         await setTimeoutAsync(DELAY_MS_LONG);
         resolve(createMockUsage(modelId));
@@ -119,6 +130,7 @@ describe('MultiModelRateLimiter - onComplete callback skipping', () => {
     const testJobId = generateJobId();
     await limiter.queueJob({
       jobId: testJobId,
+      jobType: DEFAULT_JOB_TYPE,
       job: ({ modelId }, resolve) => createResolvingJob(modelId, resolve),
       onComplete: (_r, ctx) => {
         capturedCtx = ctx;
@@ -133,19 +145,23 @@ describe('MultiModelRateLimiter - onComplete callback skipping', () => {
 });
 
 describe('MultiModelRateLimiter - onError jobId and usage', () => {
-  let limiter: LLMRateLimiterInstance | undefined = undefined;
+  let limiter: LLMRateLimiterInstance<'default'> | undefined = undefined;
   afterEach(() => {
     limiter?.stop();
     limiter = undefined;
   });
 
   it('should call onError with proper jobId and usage when job rejects without delegation', async () => {
-    limiter = createLLMRateLimiter({ models: { 'model-a': MODEL_CONFIG } });
+    limiter = createLLMRateLimiter({
+      models: { 'model-a': MODEL_CONFIG },
+      resourceEstimationsPerJob: createDefaultResourceEstimations(),
+    });
     let capturedCtx: JobCallbackContext | undefined = undefined;
     const testJobId = generateJobId();
     await expect(
       limiter.queueJob({
         jobId: testJobId,
+        jobType: DEFAULT_JOB_TYPE,
         job: ({ modelId }, _resolve, reject) => createRejectingJob(modelId, reject),
         onError: (_e, ctx) => {
           capturedCtx = ctx;
@@ -160,18 +176,22 @@ describe('MultiModelRateLimiter - onError jobId and usage', () => {
 });
 
 describe('MultiModelRateLimiter - onError totalCost', () => {
-  let limiter: LLMRateLimiterInstance | undefined = undefined;
+  let limiter: LLMRateLimiterInstance<'default'> | undefined = undefined;
   afterEach(() => {
     limiter?.stop();
     limiter = undefined;
   });
 
   it('should include totalCost in onError callback', async () => {
-    limiter = createLLMRateLimiter({ models: { 'model-a': MODEL_CONFIG } });
+    limiter = createLLMRateLimiter({
+      models: { 'model-a': MODEL_CONFIG },
+      resourceEstimationsPerJob: createDefaultResourceEstimations(),
+    });
     let capturedCtx: JobCallbackContext | undefined = undefined;
     await expect(
       limiter.queueJob({
         jobId: generateJobId(),
+        jobType: DEFAULT_JOB_TYPE,
         job: ({ modelId }, _resolve, reject) => createRejectingJob(modelId, reject),
         onError: (_e, ctx) => {
           capturedCtx = ctx;

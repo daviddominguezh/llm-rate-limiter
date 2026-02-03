@@ -3,7 +3,11 @@
  * Mirrors the core fairDistribution.testHelpers.ts but uses the real Redis backend.
  */
 import { createLLMRateLimiter } from '@llm-rate-limiter/core';
-import type { LLMRateLimiterInstance, ModelRateLimitConfig } from '@llm-rate-limiter/core';
+import type {
+  LLMRateLimiterInstance,
+  ModelRateLimitConfig,
+  ResourceEstimationsPerJob,
+} from '@llm-rate-limiter/core';
 import { EventEmitter, once } from 'node:events';
 import { setTimeout as sleep } from 'node:timers/promises';
 
@@ -13,6 +17,17 @@ const ZERO = 0;
 const ONE = 1;
 const TEN = 10;
 const THOUSAND = 1000;
+
+/** Default job type for tests */
+const DEFAULT_JOB_TYPE = 'test-job';
+
+/** Default resource estimations for tests */
+const DEFAULT_RESOURCE_ESTIMATIONS: ResourceEstimationsPerJob = {
+  [DEFAULT_JOB_TYPE]: {
+    estimatedUsedTokens: TEN,
+    estimatedNumberOfRequests: ONE,
+  },
+};
 
 /** Default model config for tests */
 export const createModelConfig = (_estimatedTokens: number = TEN): ModelRateLimitConfig => ({
@@ -29,6 +44,7 @@ export const createAndStartLimiter = async (
   const limiter = createLLMRateLimiter({
     backend: backend.getBackendConfig(),
     models: { default: createModelConfig() },
+    resourceEstimationsPerJob: DEFAULT_RESOURCE_ESTIMATIONS,
     onAvailableSlotsChange:
       onAvailableSlotsChange === undefined
         ? undefined
@@ -77,6 +93,7 @@ export const startControllableJobs = async (
     const queuePromise = limiter
       .queueJob({
         jobId: `job-${i}`,
+        jobType: DEFAULT_JOB_TYPE,
         job: async ({ modelId }, resolve) => {
           await deferred.promise;
           resolve({ modelId, inputTokens: ZERO, cachedTokens: ZERO, outputTokens: ZERO });

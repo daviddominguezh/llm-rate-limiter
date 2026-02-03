@@ -2,9 +2,9 @@
  * Shared test setup and helpers for Redis integration tests.
  */
 import type {
-  BackendAcquireContextV2,
-  BackendReleaseContextV2,
-  ResourcesPerJob,
+  BackendAcquireContext,
+  BackendReleaseContext,
+  ResourceEstimationsPerJob,
 } from '@llm-rate-limiter/core';
 import { Redis } from 'ioredis';
 import { setTimeout as setTimeoutAsync } from 'node:timers/promises';
@@ -51,19 +51,32 @@ export const delay = async (ms: number): Promise<void> => {
   await setTimeoutAsync(ms);
 };
 
+/** Default job type for testing */
+export const DEFAULT_JOB_TYPE = 'test-job-type';
+
 /** Create acquire context for testing */
-export const acquireCtx = (instanceId: string, jobId = 'test-job'): BackendAcquireContextV2 => ({
+export const acquireCtx = (
+  instanceId: string,
+  jobId = 'test-job',
+  jobType = DEFAULT_JOB_TYPE
+): BackendAcquireContext => ({
   instanceId,
   modelId: 'test-model',
   jobId,
+  jobType,
   estimated: { tokens: ESTIMATED_TOKENS, requests: ESTIMATED_REQUESTS },
 });
 
 /** Create release context for testing */
-export const releaseCtx = (instanceId: string, jobId = 'test-job'): BackendReleaseContextV2 => ({
+export const releaseCtx = (
+  instanceId: string,
+  jobId = 'test-job',
+  jobType = DEFAULT_JOB_TYPE
+): BackendReleaseContext => ({
   instanceId,
   modelId: 'test-model',
   jobId,
+  jobType,
   estimated: { tokens: ESTIMATED_TOKENS, requests: ESTIMATED_REQUESTS },
   actual: { tokens: ESTIMATED_TOKENS, requests: ESTIMATED_REQUESTS },
 });
@@ -150,7 +163,7 @@ export interface BackendOptions {
   capacity?: number;
   tokensPerMinute?: number;
   requestsPerMinute?: number;
-  resourcesPerJob?: ResourcesPerJob;
+  resourceEstimationsPerJob?: ResourceEstimationsPerJob;
 }
 
 /** Function type for creating Redis backends */
@@ -171,6 +184,6 @@ export const createTestBackend = (
     tokensPerMinute: options.tokensPerMinute,
     requestsPerMinute: options.requestsPerMinute,
     keyPrefix: stateRef.testPrefix,
-    resourcesPerJob: options.resourcesPerJob,
+    resourceEstimationsPerJob: options.resourceEstimationsPerJob,
   });
 };

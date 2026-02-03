@@ -1,7 +1,7 @@
 /**
  * Validation utilities for job type configuration.
  */
-import type { JobTypeResourceConfig, ResourcesPerJob } from '../jobTypeTypes.js';
+import type { JobTypeResourceConfig, ResourceEstimationsPerJob } from '../jobTypeTypes.js';
 
 const ZERO = 0;
 const ONE = 1;
@@ -46,7 +46,7 @@ const validateJobTypeRatio = (jobTypeId: string, config: JobTypeResourceConfig):
  *   - Any initialValue is out of range (0, 1]
  *   - Sum of specified initialValue exceeds 1
  */
-export const validateJobTypeConfig = (resourcesPerJob: ResourcesPerJob): void => {
+export const validateJobTypeConfig = (resourcesPerJob: ResourceEstimationsPerJob): void => {
   const jobTypes = Object.keys(resourcesPerJob);
 
   if (jobTypes.length === ZERO) {
@@ -86,7 +86,7 @@ export const validateJobTypeConfig = (resourcesPerJob: ResourcesPerJob): void =>
  * @param resourcesPerJob - The job type configuration
  * @returns Map of job type ID to calculated ratio
  */
-export const calculateInitialRatios = (resourcesPerJob: ResourcesPerJob): CalculatedRatios => {
+export const calculateInitialRatios = (resourcesPerJob: ResourceEstimationsPerJob): CalculatedRatios => {
   const ratios = new Map<string, number>();
   const jobTypes = Object.entries(resourcesPerJob);
 
@@ -148,7 +148,10 @@ export const validateCalculatedRatios = (calculated: CalculatedRatios): void => 
  * Validates that a job type ID exists in the configuration.
  * @throws Error if job type is unknown
  */
-export const validateJobTypeExists = (jobTypeId: string, resourcesPerJob: ResourcesPerJob): void => {
+export const validateJobTypeExists = (
+  jobTypeId: string,
+  resourcesPerJob: ResourceEstimationsPerJob
+): void => {
   if (!(jobTypeId in resourcesPerJob)) {
     const validJobTypes = Object.keys(resourcesPerJob).join(', ');
     throw new Error(`Unknown job type '${jobTypeId}'. Valid job types are: ${validJobTypes}`);

@@ -12,6 +12,7 @@ const ZERO = 0;
 const ONE = 1;
 const TEN = 10;
 const THOUSAND = 1000;
+const DEFAULT_JOB_TYPE = 'default';
 
 /** Default model config for tests */
 export const createModelConfig = (_estimatedTokens: number = TEN): ModelRateLimitConfig => ({
@@ -28,15 +29,16 @@ export const createAndStartLimiter = async (
   const limiter = createLLMRateLimiter({
     backend: backend.getBackendConfig(),
     models: { default: createModelConfig() },
+    resourceEstimationsPerJob: { [DEFAULT_JOB_TYPE]: { estimatedNumberOfRequests: ONE } },
     onAvailableSlotsChange:
       onAvailableSlotsChange === undefined
         ? undefined
-        : (avail) => {
+        : (avail, _reason, _modelId) => {
             onAvailableSlotsChange(avail.slots);
           },
   });
   await limiter.start();
-  return limiter;
+  return limiter as LLMRateLimiterInstance;
 };
 
 /** Controllable job that can be completed externally */
@@ -76,6 +78,7 @@ export const startControllableJobs = async (
     const queuePromise = limiter
       .queueJob({
         jobId: `job-${i}`,
+        jobType: DEFAULT_JOB_TYPE,
         job: async ({ modelId }, resolve) => {
           await deferred.promise;
           resolve({ modelId, inputTokens: ZERO, cachedTokens: ZERO, outputTokens: ZERO });

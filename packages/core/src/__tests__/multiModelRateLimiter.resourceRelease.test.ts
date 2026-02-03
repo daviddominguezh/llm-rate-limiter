@@ -3,18 +3,22 @@ import { setTimeout as setTimeoutAsync } from 'node:timers/promises';
 import { createLLMRateLimiter } from '../multiModelRateLimiter.js';
 import type { LLMRateLimiterInstance } from '../multiModelTypes.js';
 import {
+  DEFAULT_JOB_TYPE,
   DEFAULT_PRICING,
   DELAY_MS_LONG,
   DELAY_MS_SHORT,
   ONE,
   ZERO,
+  createDefaultResourceEstimations,
   createMockJobResult,
   createMockUsage,
   generateJobId,
 } from './multiModelRateLimiter.helpers.js';
 
+type DefaultJobType = typeof DEFAULT_JOB_TYPE;
+
 describe('MultiModelRateLimiter - resource release after resolve', () => {
-  let limiter: LLMRateLimiterInstance | undefined = undefined;
+  let limiter: LLMRateLimiterInstance<DefaultJobType> | undefined = undefined;
   afterEach(() => {
     limiter?.stop();
     limiter = undefined;
@@ -23,11 +27,13 @@ describe('MultiModelRateLimiter - resource release after resolve', () => {
   it('should free resources only after job resolves', async () => {
     limiter = createLLMRateLimiter({
       models: { 'model-a': { maxConcurrentRequests: ONE, pricing: DEFAULT_PRICING } },
+      resourceEstimationsPerJob: createDefaultResourceEstimations(),
     });
     expect(limiter.getModelStats('model-a').concurrency?.active).toBe(ZERO);
 
     const jobPromise = limiter.queueJob({
       jobId: generateJobId(),
+      jobType: DEFAULT_JOB_TYPE,
       job: async ({ modelId }, resolve) => {
         await setTimeoutAsync(DELAY_MS_LONG);
         resolve(createMockUsage(modelId));
@@ -47,7 +53,7 @@ describe('MultiModelRateLimiter - resource release after resolve', () => {
 });
 
 describe('MultiModelRateLimiter - resource release after reject', () => {
-  let limiter: LLMRateLimiterInstance | undefined = undefined;
+  let limiter: LLMRateLimiterInstance<DefaultJobType> | undefined = undefined;
   afterEach(() => {
     limiter?.stop();
     limiter = undefined;
@@ -56,11 +62,13 @@ describe('MultiModelRateLimiter - resource release after reject', () => {
   it('should free resources only after job rejects without delegation', async () => {
     limiter = createLLMRateLimiter({
       models: { 'model-a': { maxConcurrentRequests: ONE, pricing: DEFAULT_PRICING } },
+      resourceEstimationsPerJob: createDefaultResourceEstimations(),
     });
     expect(limiter.getModelStats('model-a').concurrency?.active).toBe(ZERO);
 
     const jobPromise = limiter.queueJob({
       jobId: generateJobId(),
+      jobType: DEFAULT_JOB_TYPE,
       job: async ({ modelId }, _resolve, reject) => {
         await setTimeoutAsync(DELAY_MS_LONG);
         reject(createMockUsage(modelId), { delegate: false });
@@ -78,7 +86,7 @@ describe('MultiModelRateLimiter - resource release after reject', () => {
 });
 
 describe('MultiModelRateLimiter - resource release per model', () => {
-  let limiter: LLMRateLimiterInstance | undefined = undefined;
+  let limiter: LLMRateLimiterInstance<DefaultJobType> | undefined = undefined;
   afterEach(() => {
     limiter?.stop();
     limiter = undefined;
@@ -90,11 +98,13 @@ describe('MultiModelRateLimiter - resource release per model', () => {
         'model-a': { maxConcurrentRequests: ONE, pricing: DEFAULT_PRICING },
         'model-b': { maxConcurrentRequests: ONE, pricing: DEFAULT_PRICING },
       },
-      order: ['model-a', 'model-b'],
+      escalationOrder: ['model-a', 'model-b'],
+      resourceEstimationsPerJob: createDefaultResourceEstimations(),
     });
 
     const jobAPromise = limiter.queueJob({
       jobId: generateJobId(),
+      jobType: DEFAULT_JOB_TYPE,
       job: async ({ modelId }, resolve) => {
         await setTimeoutAsync(DELAY_MS_SHORT);
         resolve(createMockUsage(modelId));
@@ -106,6 +116,7 @@ describe('MultiModelRateLimiter - resource release per model', () => {
 
     const jobBPromise = limiter.queueJob({
       jobId: generateJobId(),
+      jobType: DEFAULT_JOB_TYPE,
       job: async ({ modelId }, resolve) => {
         await setTimeoutAsync(DELAY_MS_LONG);
         resolve(createMockUsage(modelId));
@@ -127,7 +138,7 @@ describe('MultiModelRateLimiter - resource release per model', () => {
 });
 
 describe('MultiModelRateLimiter - resource release on delegation', () => {
-  let limiter: LLMRateLimiterInstance | undefined = undefined;
+  let limiter: LLMRateLimiterInstance<DefaultJobType> | undefined = undefined;
   afterEach(() => {
     limiter?.stop();
     limiter = undefined;
@@ -139,12 +150,14 @@ describe('MultiModelRateLimiter - resource release on delegation', () => {
         'model-a': { maxConcurrentRequests: ONE, pricing: DEFAULT_PRICING },
         'model-b': { maxConcurrentRequests: ONE, pricing: DEFAULT_PRICING },
       },
-      order: ['model-a', 'model-b'],
+      escalationOrder: ['model-a', 'model-b'],
+      resourceEstimationsPerJob: createDefaultResourceEstimations(),
     });
     const concurrencySnapshots: Array<{ a: number; b: number }> = [];
     const localLimiter = limiter;
     await limiter.queueJob({
       jobId: generateJobId(),
+      jobType: DEFAULT_JOB_TYPE,
       job: ({ modelId }, resolve, reject) => {
         const statsA = localLimiter.getModelStats('model-a');
         const statsB = localLimiter.getModelStats('model-b');

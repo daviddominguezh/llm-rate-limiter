@@ -3,18 +3,17 @@
  */
 import type { BackendFactoryInstance, DistributedBackendFactory } from '../backendFactoryTypes.js';
 import { isDistributedBackendFactory } from '../backendFactoryTypes.js';
-import type { JobTypeStats, RatioAdjustmentConfig, ResourcesPerJob } from '../jobTypeTypes.js';
+import type { JobTypeStats, RatioAdjustmentConfig, ResourceEstimationsPerJob } from '../jobTypeTypes.js';
 import type {
   AllocationInfo,
   BackendConfig,
-  DistributedBackendConfig,
   LLMRateLimiterStats,
   ModelsConfig,
   Unsubscribe,
 } from '../multiModelTypes.js';
 import type { InternalLimiterInstance, InternalLimiterStats, LogFn } from '../types.js';
 import type { AvailabilityTracker } from './availabilityTracker.js';
-import { type BackendOperationContext, isV2Backend } from './backendHelpers.js';
+import type { BackendOperationContext } from './backendHelpers.js';
 import { type JobTypeManager, createJobTypeManager } from './jobTypeManager.js';
 import type { MemoryManagerInstance } from './memoryManager.js';
 
@@ -85,23 +84,23 @@ export const stopAllResources = (
  * Convert resources per job config to job type keys array.
  */
 export const getJobTypeKeysFromConfig = (
-  resourcesPerJob: ResourcesPerJob | undefined
+  resourcesPerJob: ResourceEstimationsPerJob | undefined
 ): string[] | undefined => (resourcesPerJob === undefined ? undefined : Object.keys(resourcesPerJob));
 
 /** Build backend context params. */
 export interface BuildBackendContextParams {
-  backend: BackendConfig | DistributedBackendConfig | undefined;
-  resourcesPerJob: ResourcesPerJob | undefined;
+  backend: BackendConfig | undefined;
+  resourceEstimationsPerJob: ResourceEstimationsPerJob;
   instanceId: string;
   modelId: string;
   jobId: string;
-  jobType?: string;
+  jobType: string;
 }
 
 /** Build backend operation context. */
 export const buildBackendContext = (params: BuildBackendContextParams): BackendOperationContext => ({
   backend: params.backend,
-  resourcesPerJob: params.resourcesPerJob,
+  resourceEstimationsPerJob: params.resourceEstimationsPerJob,
   instanceId: params.instanceId,
   modelId: params.modelId,
   jobId: params.jobId,
@@ -117,14 +116,14 @@ export interface BackendRegistrationResult {
 }
 
 /**
- * Register with V2 backend if applicable.
+ * Register with backend.
  */
 export const registerWithBackend = async (
-  backend: BackendConfig | DistributedBackendConfig | undefined,
+  backend: BackendConfig | undefined,
   instanceId: string,
   availabilityTracker: AvailabilityTracker | null
 ): Promise<BackendRegistrationResult> => {
-  if (backend === undefined || !isV2Backend(backend)) {
+  if (backend === undefined) {
     return { unsubscribe: null, allocation: null };
   }
   const allocation = await backend.register(instanceId);
@@ -136,13 +135,10 @@ export const registerWithBackend = async (
 };
 
 /**
- * Unregister from V2 backend if applicable.
+ * Unregister from backend.
  */
-export const unregisterFromBackend = (
-  backend: BackendConfig | DistributedBackendConfig | undefined,
-  instanceId: string
-): void => {
-  if (backend !== undefined && isV2Backend(backend)) {
+export const unregisterFromBackend = (backend: BackendConfig | undefined, instanceId: string): void => {
+  if (backend !== undefined) {
     backend.unregister(instanceId).catch(() => {
       /* ignore */
     });
@@ -152,23 +148,27 @@ export const unregisterFromBackend = (
 /** Result of initializing a backend factory. */
 export interface FactoryInitResult {
   factoryInstance: BackendFactoryInstance | null;
-  resolvedBackend: BackendConfig | DistributedBackendConfig | undefined;
+  resolvedBackend: BackendConfig | undefined;
 }
 
 /**
  * Initialize backend factory if provided, or return the backend directly.
  */
 export const initializeBackendFactory = async (
-  backendOrFactory: BackendConfig | DistributedBackendConfig | DistributedBackendFactory | undefined,
+  backendOrFactory: BackendConfig | DistributedBackendFactory | undefined,
   models: ModelsConfig,
-  resourcesPerJob: ResourcesPerJob | undefined,
-  order: readonly string[] | undefined
+  resourceEstimationsPerJob: ResourceEstimationsPerJob | undefined,
+  escalationOrder: readonly string[] | undefined
 ): Promise<FactoryInitResult> => {
   if (!isDistributedBackendFactory(backendOrFactory)) {
     return { factoryInstance: null, resolvedBackend: backendOrFactory };
   }
 
-  const factoryInstance = await backendOrFactory.initialize({ models, resourcesPerJob, order });
+  const factoryInstance = await backendOrFactory.initialize({
+    models,
+    resourceEstimationsPerJob,
+    escalationOrder,
+  });
   const resolvedBackend = factoryInstance.getBackendConfig();
   return { factoryInstance, resolvedBackend };
 };
@@ -189,20 +189,20 @@ export const stopBackendFactory = (factoryInstance: BackendFactoryInstance | nul
  * Create job type manager if resources per job is configured.
  */
 export const createOptionalJobTypeManager = (
-  resourcesPerJob: ResourcesPerJob | undefined,
+  resourceEstimationsPerJob: ResourceEstimationsPerJob | undefined,
   ratioAdjustmentConfig: RatioAdjustmentConfig | undefined,
   label: string,
   onLog?: LogFn
 ): JobTypeManager | null =>
-  resourcesPerJob === undefined
+  resourceEstimationsPerJob === undefined
     ? null
-    : createJobTypeManager({ resourcesPerJob, ratioAdjustmentConfig, label, onLog });
+    : createJobTypeManager({ resourceEstimationsPerJob, ratioAdjustmentConfig, label, onLog });
 
 /** Acquire job type slot params. */
 export interface AcquireJobTypeSlotParams {
   manager: JobTypeManager | null;
-  resourcesConfig: ResourcesPerJob | undefined;
-  jobType: string | undefined;
+  resourcesConfig: ResourceEstimationsPerJob | undefined;
+  jobType: string;
   pollIntervalMs: number;
   waitForCapacity: (hasCapacity: () => boolean, pollMs: number) => Promise<unknown>;
 }
@@ -225,7 +225,7 @@ const tryAcquireWithRetry = async (
 /** Acquire job type slot if applicable. Returns true if slot was acquired. */
 export const acquireJobTypeSlot = async (params: AcquireJobTypeSlotParams): Promise<boolean> => {
   const { manager, resourcesConfig, jobType, pollIntervalMs, waitForCapacity } = params;
-  if (jobType === undefined || manager === null || resourcesConfig === undefined) {
+  if (manager === null || resourcesConfig === undefined) {
     return false;
   }
   return await tryAcquireWithRetry(manager, jobType, pollIntervalMs, waitForCapacity);

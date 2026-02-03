@@ -67,26 +67,27 @@ const calculateTotalRequestsPerMinute = (models: RedisBackendInitConfig['models'
 };
 
 /**
- * Build backend config from user config and rate limiter init config.
+ * Build backend config from user config, rate limiter init config, and pre-created Redis client.
  */
-const buildBackendConfig = (
+const buildBackendConfigWithClient = (
   userConfig: RedisBackendUserConfig,
-  config: RedisBackendInitConfig
+  config: RedisBackendInitConfig,
+  redisClient: RedisClient
 ): RedisBackendConfig => {
-  const { models, resourcesPerJob } = config;
+  const { models, resourceEstimationsPerJob } = config;
   const totalCapacity = calculateTotalCapacity(models);
   const tokensPerMinute = calculateTotalTokensPerMinute(models);
   const requestsPerMinute = calculateTotalRequestsPerMinute(models);
 
   return {
-    redis: new RedisClient(userConfig.url),
+    redis: redisClient,
     totalCapacity,
     tokensPerMinute: tokensPerMinute > ZERO ? tokensPerMinute : undefined,
     requestsPerMinute: requestsPerMinute > ZERO ? requestsPerMinute : undefined,
     keyPrefix: userConfig.keyPrefix ?? DEFAULT_FACTORY_KEY_PREFIX,
     heartbeatIntervalMs: userConfig.heartbeatIntervalMs,
     instanceTimeoutMs: userConfig.instanceTimeoutMs,
-    resourcesPerJob,
+    resourceEstimationsPerJob,
   };
 };
 
@@ -104,7 +105,7 @@ const buildBackendConfig = (
  * // Simple: just pass the URL
  * const limiter = createLLMRateLimiter({
  *   models,
- *   order: modelOrder,
+ *   escalationOrder: modelOrder,
  *   resourcesPerJob,
  *   backend: createRedisBackend('redis://localhost:6379'),
  * });
@@ -112,6 +113,8 @@ const buildBackendConfig = (
  * // With options
  * const limiter = createLLMRateLimiter({
  *   models,
+ *   escalationOrder: modelOrder,
+ *   resourcesPerJob,
  *   backend: createRedisBackend({
  *     url: 'redis://localhost:6379',
  *     keyPrefix: 'my-app:',
@@ -119,32 +122,54 @@ const buildBackendConfig = (
  * });
  * ```
  */
+/** Factory state for tracking instances and cleanup */
+interface FactoryState {
+  instance: RedisBackendInstance | null;
+  redisClient: RedisClient | null;
+  stopPromise: Promise<void> | null;
+}
+
+/** Perform stop cleanup on factory state */
+const performFactoryStop = async (state: FactoryState): Promise<void> => {
+  if (state.instance !== null) {
+    await state.instance.stop();
+  }
+  if (state.redisClient !== null) {
+    await state.redisClient.quit();
+  }
+};
+
 export const createRedisBackend = (config: string | RedisBackendUserConfig): RedisBackendFactory => {
   const userConfig = parseUserConfig(config);
-  let instance: RedisBackendInstance | null = null;
+  const state: FactoryState = { instance: null, redisClient: null, stopPromise: null };
 
   const initialize = async (initConfig: RedisBackendInitConfig): Promise<RedisBackendInstance> => {
-    if (instance !== null) {
-      return await Promise.resolve(instance);
+    if (state.instance !== null) {
+      return await Promise.resolve(state.instance);
     }
-
-    const backendConfig = buildBackendConfig(userConfig, initConfig);
-    instance = createRedisBackendLegacy(backendConfig);
-    return await Promise.resolve(instance);
+    state.redisClient = new RedisClient(userConfig.url);
+    const backendConfig = buildBackendConfigWithClient(userConfig, initConfig, state.redisClient);
+    state.instance = createRedisBackendLegacy(backendConfig);
+    return await Promise.resolve(state.instance);
   };
 
-  const isInitialized = (): boolean => instance !== null;
+  const isInitialized = (): boolean => state.instance !== null;
 
   const getInstance = (): RedisBackendInstance => {
-    if (instance === null) {
+    if (state.instance === null) {
       throw new Error('Redis backend factory not initialized. Call initialize() first.');
     }
-    return instance;
+    return state.instance;
   };
 
-  return {
-    initialize,
-    isInitialized,
-    getInstance,
+  const stop = async (): Promise<void> => {
+    if (state.stopPromise !== null) {
+      await state.stopPromise;
+      return;
+    }
+    state.stopPromise = performFactoryStop(state);
+    await state.stopPromise;
   };
+
+  return { initialize, isInitialized, getInstance, stop };
 };

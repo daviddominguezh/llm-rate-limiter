@@ -1,5 +1,6 @@
 import {
   CONCURRENCY_LIMIT,
+  DEFAULT_JOB_TYPE,
   DEFAULT_REQUEST_COUNT,
   ESTIMATED_MEMORY_KB,
   FREE_MEMORY_RATIO,
@@ -23,7 +24,7 @@ import {
 import type { LLMRateLimiterInstance } from './limiterCombinations.helpers.js';
 
 describe('Individual Limiter - memory blocking', () => {
-  let limiter: LLMRateLimiterInstance | undefined = undefined;
+  let limiter: LLMRateLimiterInstance<typeof DEFAULT_JOB_TYPE> | undefined = undefined;
   afterEach(() => {
     limiter?.stop();
     limiter = undefined;
@@ -32,14 +33,17 @@ describe('Individual Limiter - memory blocking', () => {
   it('should block when memory limit is exhausted', async () => {
     limiter = createLLMRateLimiter({
       memory: { freeMemoryRatio: FREE_MEMORY_RATIO },
-      maxCapacity: MEMORY_MAX_CAPACITY_KB,
       models: {
-        default: { resourcesPerEvent: { estimatedUsedMemoryKB: ESTIMATED_MEMORY_KB }, pricing: ZERO_PRICING },
+        default: { maxCapacity: MEMORY_MAX_CAPACITY_KB, pricing: ZERO_PRICING },
+      },
+      resourceEstimationsPerJob: {
+        [DEFAULT_JOB_TYPE]: { estimatedUsedMemoryKB: ESTIMATED_MEMORY_KB, estimatedNumberOfRequests: ONE },
       },
     });
     expect(limiter.hasCapacity()).toBe(true);
     const jobPromise = limiter.queueJob({
       jobId: generateJobId(),
+      jobType: DEFAULT_JOB_TYPE,
       job: async ({ modelId }, resolve) => {
         await setTimeoutAsync(LONG_JOB_DELAY_MS);
         resolve(createMockUsage(modelId));
@@ -56,7 +60,7 @@ describe('Individual Limiter - memory blocking', () => {
 });
 
 describe('Individual Limiter - memory restore', () => {
-  let limiter: LLMRateLimiterInstance | undefined = undefined;
+  let limiter: LLMRateLimiterInstance<typeof DEFAULT_JOB_TYPE> | undefined = undefined;
   afterEach(() => {
     limiter?.stop();
     limiter = undefined;
@@ -65,13 +69,16 @@ describe('Individual Limiter - memory restore', () => {
   it('should restore capacity after job completes', async () => {
     limiter = createLLMRateLimiter({
       memory: { freeMemoryRatio: FREE_MEMORY_RATIO },
-      maxCapacity: MEMORY_MAX_CAPACITY_KB,
       models: {
-        default: { resourcesPerEvent: { estimatedUsedMemoryKB: ESTIMATED_MEMORY_KB }, pricing: ZERO_PRICING },
+        default: { maxCapacity: MEMORY_MAX_CAPACITY_KB, pricing: ZERO_PRICING },
+      },
+      resourceEstimationsPerJob: {
+        [DEFAULT_JOB_TYPE]: { estimatedUsedMemoryKB: ESTIMATED_MEMORY_KB, estimatedNumberOfRequests: ONE },
       },
     });
     await limiter.queueJob({
       jobId: generateJobId(),
+      jobType: DEFAULT_JOB_TYPE,
       job: ({ modelId }, resolve) => {
         resolve(createMockUsage(modelId));
         return createMockJobResult('job-1');
@@ -85,7 +92,7 @@ describe('Individual Limiter - memory restore', () => {
 });
 
 describe('Individual Limiter - concurrency blocking', () => {
-  let limiter: LLMRateLimiterInstance | undefined = undefined;
+  let limiter: LLMRateLimiterInstance<typeof DEFAULT_JOB_TYPE> | undefined = undefined;
   afterEach(() => {
     limiter?.stop();
     limiter = undefined;
@@ -93,10 +100,12 @@ describe('Individual Limiter - concurrency blocking', () => {
   it('should block when concurrency limit is exhausted', async () => {
     limiter = createLLMRateLimiter({
       models: { default: { maxConcurrentRequests: CONCURRENCY_LIMIT, pricing: ZERO_PRICING } },
+      resourceEstimationsPerJob: { [DEFAULT_JOB_TYPE]: { estimatedNumberOfRequests: ONE } },
     });
     expect(limiter.hasCapacity()).toBe(true);
     const jobPromise = limiter.queueJob({
       jobId: generateJobId(),
+      jobType: DEFAULT_JOB_TYPE,
       job: async ({ modelId }, resolve) => {
         await setTimeoutAsync(LONG_JOB_DELAY_MS);
         resolve(createMockUsage(modelId));
@@ -113,7 +122,7 @@ describe('Individual Limiter - concurrency blocking', () => {
 });
 
 describe('Individual Limiter - concurrency restore', () => {
-  let limiter: LLMRateLimiterInstance | undefined = undefined;
+  let limiter: LLMRateLimiterInstance<typeof DEFAULT_JOB_TYPE> | undefined = undefined;
   afterEach(() => {
     limiter?.stop();
     limiter = undefined;
@@ -121,9 +130,11 @@ describe('Individual Limiter - concurrency restore', () => {
   it('should restore capacity after job completes', async () => {
     limiter = createLLMRateLimiter({
       models: { default: { maxConcurrentRequests: CONCURRENCY_LIMIT, pricing: ZERO_PRICING } },
+      resourceEstimationsPerJob: { [DEFAULT_JOB_TYPE]: { estimatedNumberOfRequests: ONE } },
     });
     await limiter.queueJob({
       jobId: generateJobId(),
+      jobType: DEFAULT_JOB_TYPE,
       job: ({ modelId }, resolve) => {
         resolve(createMockUsage(modelId));
         return createMockJobResult('job-1');
@@ -137,7 +148,7 @@ describe('Individual Limiter - concurrency restore', () => {
 });
 
 describe('Individual Limiter - rpm', () => {
-  let limiter: LLMRateLimiterInstance | undefined = undefined;
+  let limiter: LLMRateLimiterInstance<typeof DEFAULT_JOB_TYPE> | undefined = undefined;
   afterEach(() => {
     limiter?.stop();
     limiter = undefined;
@@ -148,14 +159,15 @@ describe('Individual Limiter - rpm', () => {
       models: {
         default: {
           requestsPerMinute: RPM_LIMIT,
-          resourcesPerEvent: { estimatedNumberOfRequests: DEFAULT_REQUEST_COUNT },
           pricing: ZERO_PRICING,
         },
       },
+      resourceEstimationsPerJob: { [DEFAULT_JOB_TYPE]: { estimatedNumberOfRequests: DEFAULT_REQUEST_COUNT } },
     });
     expect(limiter.hasCapacity()).toBe(true);
     await limiter.queueJob({
       jobId: generateJobId(),
+      jobType: DEFAULT_JOB_TYPE,
       job: ({ modelId }, resolve) => {
         resolve(createMockUsage(modelId));
         return createMockJobResult('job-1');
@@ -169,7 +181,7 @@ describe('Individual Limiter - rpm', () => {
 });
 
 describe('Individual Limiter - rpd', () => {
-  let limiter: LLMRateLimiterInstance | undefined = undefined;
+  let limiter: LLMRateLimiterInstance<typeof DEFAULT_JOB_TYPE> | undefined = undefined;
   afterEach(() => {
     limiter?.stop();
     limiter = undefined;
@@ -180,14 +192,15 @@ describe('Individual Limiter - rpd', () => {
       models: {
         default: {
           requestsPerDay: RPD_LIMIT,
-          resourcesPerEvent: { estimatedNumberOfRequests: DEFAULT_REQUEST_COUNT },
           pricing: ZERO_PRICING,
         },
       },
+      resourceEstimationsPerJob: { [DEFAULT_JOB_TYPE]: { estimatedNumberOfRequests: DEFAULT_REQUEST_COUNT } },
     });
     expect(limiter.hasCapacity()).toBe(true);
     await limiter.queueJob({
       jobId: generateJobId(),
+      jobType: DEFAULT_JOB_TYPE,
       job: ({ modelId }, resolve) => {
         resolve(createMockUsage(modelId));
         return createMockJobResult('job-1');
@@ -201,7 +214,7 @@ describe('Individual Limiter - rpd', () => {
 });
 
 describe('Individual Limiter - tpm', () => {
-  let limiter: LLMRateLimiterInstance | undefined = undefined;
+  let limiter: LLMRateLimiterInstance<typeof DEFAULT_JOB_TYPE> | undefined = undefined;
   afterEach(() => {
     limiter?.stop();
     limiter = undefined;
@@ -212,14 +225,17 @@ describe('Individual Limiter - tpm', () => {
       models: {
         default: {
           tokensPerMinute: TPM_LIMIT,
-          resourcesPerEvent: { estimatedUsedTokens: MOCK_TOTAL_TOKENS },
           pricing: ZERO_PRICING,
         },
+      },
+      resourceEstimationsPerJob: {
+        [DEFAULT_JOB_TYPE]: { estimatedUsedTokens: MOCK_TOTAL_TOKENS, estimatedNumberOfRequests: ONE },
       },
     });
     expect(limiter.hasCapacity()).toBe(true);
     await limiter.queueJob({
       jobId: generateJobId(),
+      jobType: DEFAULT_JOB_TYPE,
       job: ({ modelId }, resolve) => {
         resolve(createMockUsage(modelId));
         return createMockJobResult('job-1');
@@ -233,7 +249,7 @@ describe('Individual Limiter - tpm', () => {
 });
 
 describe('Individual Limiter - tpd', () => {
-  let limiter: LLMRateLimiterInstance | undefined = undefined;
+  let limiter: LLMRateLimiterInstance<typeof DEFAULT_JOB_TYPE> | undefined = undefined;
   afterEach(() => {
     limiter?.stop();
     limiter = undefined;
@@ -244,14 +260,17 @@ describe('Individual Limiter - tpd', () => {
       models: {
         default: {
           tokensPerDay: TPD_LIMIT,
-          resourcesPerEvent: { estimatedUsedTokens: MOCK_TOTAL_TOKENS },
           pricing: ZERO_PRICING,
         },
+      },
+      resourceEstimationsPerJob: {
+        [DEFAULT_JOB_TYPE]: { estimatedUsedTokens: MOCK_TOTAL_TOKENS, estimatedNumberOfRequests: ONE },
       },
     });
     expect(limiter.hasCapacity()).toBe(true);
     await limiter.queueJob({
       jobId: generateJobId(),
+      jobType: DEFAULT_JOB_TYPE,
       job: ({ modelId }, resolve) => {
         resolve(createMockUsage(modelId));
         return createMockJobResult('job-1');

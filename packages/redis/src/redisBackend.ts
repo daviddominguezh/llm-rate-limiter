@@ -4,9 +4,9 @@
 import type {
   AllocationCallback,
   AllocationInfo,
-  BackendAcquireContextV2,
-  BackendReleaseContextV2,
-  DistributedBackendConfig,
+  BackendAcquireContext,
+  BackendConfig,
+  BackendReleaseContext,
   Unsubscribe,
 } from '@llm-rate-limiter/core';
 import { Redis as RedisClient, type Redis as RedisType } from 'ioredis';
@@ -54,6 +54,7 @@ class RedisBackendImpl {
   private cleanupInterval: NodeJS.Timeout | null = null;
   private subscriberActive = false;
   private readonly jobTypeOps: RedisJobTypeOps;
+  private stopPromise: Promise<void> | null = null;
 
   constructor(redisConfig: RedisBackendConfig) {
     this.ownClient = !isRedisClient(redisConfig.redis);
@@ -69,14 +70,14 @@ class RedisBackendImpl {
       requestsPerMinute: redisConfig.requestsPerMinute ?? ZERO,
       heartbeatIntervalMs: redisConfig.heartbeatIntervalMs ?? DEFAULT_HEARTBEAT_INTERVAL_MS,
       instanceTimeoutMs: redisConfig.instanceTimeoutMs ?? DEFAULT_INSTANCE_TIMEOUT_MS,
-      resourcesPerJob: redisConfig.resourcesPerJob,
+      resourceEstimationsPerJob: redisConfig.resourceEstimationsPerJob,
     };
     this.setupSubscriberReconnection();
     this.startCleanupInterval();
     this.jobTypeOps = new RedisJobTypeOps(
       this.redis,
       this.keys,
-      redisConfig.resourcesPerJob,
+      redisConfig.resourceEstimationsPerJob,
       redisConfig.totalCapacity
     );
   }
@@ -174,7 +175,7 @@ class RedisBackendImpl {
     await evalScript(redis, UNREGISTER_SCRIPT, [instances, allocations, configKey, channel], [instanceId]);
   };
 
-  readonly acquire = async (context: BackendAcquireContextV2): Promise<boolean> => {
+  readonly acquire = async (context: BackendAcquireContext): Promise<boolean> => {
     const { keys, redis } = this;
     const { instances, allocations } = keys;
     try {
@@ -191,7 +192,7 @@ class RedisBackendImpl {
     }
   };
 
-  readonly release = async (context: BackendReleaseContextV2): Promise<void> => {
+  readonly release = async (context: BackendReleaseContext): Promise<void> => {
     const { keys, redis } = this;
     const { instances, allocations, config: configKey, channel } = keys;
     await evalScript(
@@ -221,6 +222,17 @@ class RedisBackendImpl {
   }
 
   readonly stop = async (): Promise<void> => {
+    // If already stopping or stopped, await the existing promise
+    if (this.stopPromise !== null) {
+      await this.stopPromise;
+      return;
+    }
+
+    this.stopPromise = this.performStop();
+    await this.stopPromise;
+  };
+
+  private async performStop(): Promise<void> {
     if (this.heartbeatInterval !== null) {
       clearInterval(this.heartbeatInterval);
       this.heartbeatInterval = null;
@@ -234,11 +246,12 @@ class RedisBackendImpl {
       await this.subscriber.unsubscribe(this.keys.channel);
       this.subscriberActive = false;
     }
-    this.subscriber.disconnect();
+    // Use quit() for graceful shutdown - waits for pending commands
+    await this.subscriber.quit();
     if (this.ownClient) {
-      this.redis.disconnect();
+      await this.redis.quit();
     }
-  };
+  }
 
   readonly getStats = async (): Promise<RedisBackendStats> => {
     const { keys, redis } = this;
@@ -262,7 +275,7 @@ class RedisBackendImpl {
   readonly getJobTypeStats = async (): Promise<RedisJobTypeStats | undefined> =>
     await this.jobTypeOps.getStats();
 
-  getBackendConfig(): DistributedBackendConfig {
+  getBackendConfig(): BackendConfig {
     return {
       register: this.register,
       unregister: this.unregister,

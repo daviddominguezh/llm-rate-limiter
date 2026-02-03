@@ -43,6 +43,9 @@ const RANDOM_SLICE_START = 2;
 const SLOW_JOB_PROBABILITY = 0.3;
 const REALISTIC_TEST_TIMEOUT = 180_000;
 
+/** Default job type for tests */
+const DEFAULT_JOB_TYPE = 'test-job';
+
 const state = createTestState();
 const backendManager = new BackendManager(state);
 
@@ -86,6 +89,7 @@ const queueMixedJobs = (
       const promise = limiter
         .queueJob({
           jobId: `i${i}-j${j}`,
+          jobType: DEFAULT_JOB_TYPE,
           job: async ({ modelId }, resolve) => {
             const duration = randomInt(minMs, maxMs);
             tracker.trackJobDuration(duration);

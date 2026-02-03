@@ -25,7 +25,7 @@ describe('realistic load - latency tracking', () => {
   it(
     'should track latency statistics accurately',
     async () => {
-      const setup = createLatencyTestSetup(createDistributedBackend, {
+      const setup = await createLatencyTestSetup(createDistributedBackend, {
         tpm: HUNDRED,
         rpm: TEN,
         instanceCount: TWO,

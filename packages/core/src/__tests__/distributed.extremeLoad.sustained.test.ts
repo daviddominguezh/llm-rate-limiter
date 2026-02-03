@@ -37,7 +37,7 @@ describe('extreme load - sustained across windows', () => {
         requestsPerMinute: RPM,
         estimatedTokensPerRequest: TEN,
       });
-      const instances = createTestInstances(THREE, backend, TEN);
+      const instances = await createTestInstances(THREE, backend, TEN);
       let totalCompleted = ZERO;
       const runWindow = async (): Promise<number> => {
         const t = createJobTracker();
@@ -74,7 +74,7 @@ describe('extreme load - 5000 jobs stress', () => {
         requestsPerMinute: RPM,
         estimatedTokensPerRequest: TEN,
       });
-      const instances = createTestInstances(TEN, backend, TEN);
+      const instances = await createTestInstances(TEN, backend, TEN);
       const tracker = createJobTracker();
       await fireSimultaneousJobs(
         instances,
@@ -104,7 +104,7 @@ describe('extreme load - ultimate 10000 jobs', () => {
         requestsPerMinute: RPM,
         estimatedTokensPerRequest: TWENTY,
       });
-      const instances = createTestInstances(TWENTY, backend, TWENTY);
+      const instances = await createTestInstances(TWENTY, backend, TWENTY);
       let grandTotal = ZERO;
       const runWindow = async (): Promise<number> => {
         backend.reset();

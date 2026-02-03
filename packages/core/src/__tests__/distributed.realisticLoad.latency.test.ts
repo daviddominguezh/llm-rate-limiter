@@ -23,7 +23,7 @@ describe('realistic load - basic latency', () => {
   it(
     'should respect limits with 10-50ms acquire latency and 50-200ms jobs',
     async () => {
-      const setup = createLatencyTestSetup(createDistributedBackend, {
+      const setup = await createLatencyTestSetup(createDistributedBackend, {
         tpm: HUNDRED,
         rpm: TEN,
         instanceCount: THREE,
@@ -51,7 +51,7 @@ describe('realistic load - high latency', () => {
   it(
     'should handle high latency backend (50-100ms acquire) under pressure',
     async () => {
-      const setup = createLatencyTestSetup(createDistributedBackend, {
+      const setup = await createLatencyTestSetup(createDistributedBackend, {
         tpm: FIFTY,
         rpm: FIVE,
         instanceCount: FIVE,

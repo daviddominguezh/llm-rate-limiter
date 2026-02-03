@@ -12,6 +12,7 @@ const TEN = 10;
 const TWENTY = 20;
 const FIFTY = 50;
 const DEFAULT_TIMEOUT = 30_000;
+const DEFAULT_JOB_TYPE = 'default';
 
 /** Helper to create multiple limiters - sequential creation required for test determinism */
 const createMultipleLimiters = async (
@@ -37,6 +38,7 @@ const queueJobsForAllLimiters = (
       const promise = limiter
         .queueJob({
           jobId: `job-${limiter.getInstanceId()}-${j}`,
+          jobType: DEFAULT_JOB_TYPE,
           job: async ({ modelId }, resolve) => {
             await sleep(FIVE);
             resolve({ modelId, inputTokens: ZERO, cachedTokens: ZERO, outputTokens: ZERO });

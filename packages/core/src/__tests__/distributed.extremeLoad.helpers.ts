@@ -23,6 +23,7 @@ export {
 
 export const ZERO = 0;
 export const ONE = 1;
+export const DEFAULT_JOB_TYPE = 'default';
 export const TWO = 2;
 export const THREE = 3;
 export const FIVE = 5;
@@ -79,6 +80,7 @@ export const fireSimultaneousJobs = async (
       const promise = limiter
         .queueJob({
           jobId: `i${i}-j${j}`,
+          jobType: DEFAULT_JOB_TYPE,
           job: async ({ modelId }, resolve) => {
             await sleep(delay);
             resolve({ modelId, inputTokens: tokens, cachedTokens: ZERO, outputTokens: ZERO });
@@ -118,11 +120,20 @@ export const assertJobAccountingCorrect = (
 };
 
 /** Create instances for a test */
-export const createTestInstances = (
+export const createTestInstances = async (
   count: number,
   backend: DistributedBackendInstance,
   estimatedTokens: number
-): InstanceArray =>
-  createConnectedLimiters(count, backend, (b) =>
-    createLLMRateLimiter({ backend: b, models: { default: createModelConfig(estimatedTokens) } })
+): Promise<InstanceArray> =>
+  await createConnectedLimiters(
+    count,
+    backend,
+    (b) =>
+      createLLMRateLimiter({
+        backend: b,
+        models: { default: createModelConfig(estimatedTokens) },
+        resourceEstimationsPerJob: {
+          [DEFAULT_JOB_TYPE]: { estimatedNumberOfRequests: ONE, estimatedUsedTokens: estimatedTokens },
+        },
+      }) as LLMRateLimiterInstance
   );

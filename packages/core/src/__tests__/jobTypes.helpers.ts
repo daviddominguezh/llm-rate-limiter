@@ -304,13 +304,13 @@ export const createTestModelConfig = (capacity: number): ModelRateLimitConfig =>
 });
 
 export const createTestLimiter = (config: TestLimiterConfig): LLMRateLimiterInstance => {
-  const resourcesPerJob: Record<
+  const resourceEstimationsPerJob: Record<
     string,
     { estimatedUsedTokens: number; ratio?: { initialValue: number; flexible?: boolean } }
   > = {};
 
   for (const [jobType, cfg] of Object.entries(config.jobTypes)) {
-    resourcesPerJob[jobType] = {
+    resourceEstimationsPerJob[jobType] = {
       estimatedUsedTokens: HUNDRED,
       ratio: cfg.ratio !== undefined ? { initialValue: cfg.ratio, flexible: cfg.flexible } : undefined,
     };
@@ -318,7 +318,7 @@ export const createTestLimiter = (config: TestLimiterConfig): LLMRateLimiterInst
 
   return createLLMRateLimiter({
     models: { model1: createTestModelConfig(config.capacity) },
-    resourcesPerJob,
+    resourceEstimationsPerJob,
     ratioAdjustmentConfig: config.ratioAdjustmentConfig,
   });
 };
@@ -328,20 +328,20 @@ export const createTestManager = (
   capacity: number = TEN,
   ratioAdjustmentConfig?: TestLimiterConfig['ratioAdjustmentConfig']
 ): JobTypeManager => {
-  const resourcesPerJob: Record<
+  const resourceEstimationsPerJob: Record<
     string,
     { estimatedUsedTokens: number; ratio?: { initialValue: number; flexible?: boolean } }
   > = {};
 
   for (const [jobType, cfg] of Object.entries(jobTypes)) {
-    resourcesPerJob[jobType] = {
+    resourceEstimationsPerJob[jobType] = {
       estimatedUsedTokens: HUNDRED,
       ratio: cfg.ratio !== undefined ? { initialValue: cfg.ratio, flexible: cfg.flexible } : undefined,
     };
   }
 
   const manager = createJobTypeManager({
-    resourcesPerJob,
+    resourceEstimationsPerJob,
     ratioAdjustmentConfig,
     label: 'test',
   });

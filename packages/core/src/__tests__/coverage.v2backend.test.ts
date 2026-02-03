@@ -4,7 +4,8 @@
 import { setTimeout as setTimeoutAsync } from 'node:timers/promises';
 
 import { createLLMRateLimiter } from '../multiModelRateLimiter.js';
-import type { AllocationInfo, LLMRateLimiterInstance } from '../multiModelTypes.js';
+import type { AllocationInfo } from '../multiModelTypes.js';
+import { DEFAULT_JOB_TYPE, createDefaultResourceEstimations } from './multiModelRateLimiter.helpers.js';
 
 const ZERO = 0;
 const ONE = 1;
@@ -67,52 +68,40 @@ const createV2Backend = (unregisterError = false): V2BackendResult => {
 };
 
 describe('multiModelRateLimiter - V2 backend register', () => {
-  let limiter: LLMRateLimiterInstance | undefined = undefined;
-  afterEach(() => {
-    limiter?.stop();
-    limiter = undefined;
-  });
-
   it('should register with V2 backend on start', async () => {
     const { backend, registerCalls, subscribeCalls } = createV2Backend();
-    limiter = createLLMRateLimiter({
+    const limiter = createLLMRateLimiter({
       models: {
         default: {
           requestsPerMinute: TEN,
-          resourcesPerEvent: { estimatedNumberOfRequests: ONE },
           pricing: ZERO_PRICING,
         },
       },
+      resourceEstimationsPerJob: createDefaultResourceEstimations(),
       backend,
     });
     await limiter.start();
     expect(registerCalls).toHaveLength(ONE);
     expect(subscribeCalls).toHaveLength(ONE);
+    limiter.stop();
   });
 });
 
 describe('multiModelRateLimiter - V2 backend unregister', () => {
-  let limiter: LLMRateLimiterInstance | undefined = undefined;
-  afterEach(() => {
-    limiter?.stop();
-    limiter = undefined;
-  });
-
   it('should unregister from V2 backend on stop', async () => {
     const { backend, unregisterCalls } = createV2Backend();
-    limiter = createLLMRateLimiter({
+    const limiter = createLLMRateLimiter({
       models: {
         default: {
           requestsPerMinute: TEN,
-          resourcesPerEvent: { estimatedNumberOfRequests: ONE },
           pricing: ZERO_PRICING,
         },
       },
+      resourceEstimationsPerJob: createDefaultResourceEstimations(),
       backend,
     });
     await limiter.start();
     limiter.stop();
-    limiter = undefined;
     await setTimeoutAsync(SHORT_DELAY);
     expect(unregisterCalls).toHaveLength(ONE);
   });
@@ -125,10 +114,10 @@ describe('multiModelRateLimiter - V2 backend unregister error', () => {
       models: {
         default: {
           requestsPerMinute: TEN,
-          resourcesPerEvent: { estimatedNumberOfRequests: ONE },
           pricing: ZERO_PRICING,
         },
       },
+      resourceEstimationsPerJob: createDefaultResourceEstimations(),
       backend,
     });
     await limiter.start();
@@ -145,19 +134,27 @@ describe('multiModelRateLimiter - start without backend', () => {
       models: {
         default: {
           requestsPerMinute: TEN,
-          resourcesPerEvent: { estimatedNumberOfRequests: ONE },
           pricing: ZERO_PRICING,
         },
       },
+      resourceEstimationsPerJob: createDefaultResourceEstimations(),
     });
     await limiter.start();
     limiter.stop();
   });
 });
 
-describe('multiModelRateLimiter - start with V1 backend', () => {
-  it('should do nothing on start with V1 backend', async () => {
-    const v1Backend = {
+describe('multiModelRateLimiter - start with minimal V2 backend', () => {
+  it('should handle minimal V2 backend on start', async () => {
+    const minimalV2Backend = {
+      register: async (_instanceId: string): Promise<AllocationInfo> =>
+        await Promise.resolve(DEFAULT_ALLOCATION),
+      unregister: async (): Promise<void> => {
+        await Promise.resolve();
+      },
+      subscribe: (): (() => void) => () => {
+        /* no-op */
+      },
       acquire: async (): Promise<boolean> => await Promise.resolve(true),
       release: async (): Promise<void> => {
         await Promise.resolve();
@@ -167,11 +164,11 @@ describe('multiModelRateLimiter - start with V1 backend', () => {
       models: {
         default: {
           requestsPerMinute: TEN,
-          resourcesPerEvent: { estimatedNumberOfRequests: ONE },
           pricing: ZERO_PRICING,
         },
       },
-      backend: v1Backend,
+      resourceEstimationsPerJob: createDefaultResourceEstimations(),
+      backend: minimalV2Backend,
     });
     await limiter.start();
     limiter.stop();
@@ -179,37 +176,35 @@ describe('multiModelRateLimiter - start with V1 backend', () => {
 });
 
 describe('memoryManager - zero memory model acquire/release', () => {
-  let limiter: LLMRateLimiterInstance | undefined = undefined;
-  afterEach(() => {
-    limiter?.stop();
-    limiter = undefined;
-  });
-
   it('should skip acquire/release for model without estimatedUsedMemoryKB', async () => {
-    limiter = createLLMRateLimiter({
+    const limiter = createLLMRateLimiter({
       models: {
         'model-no-mem': {
           requestsPerMinute: TEN,
-          resourcesPerEvent: { estimatedNumberOfRequests: ONE },
           pricing: ZERO_PRICING,
         },
         'model-with-mem': {
           requestsPerMinute: TEN,
-          resourcesPerEvent: { estimatedNumberOfRequests: ONE, estimatedUsedMemoryKB: ONE },
           pricing: ZERO_PRICING,
         },
       },
+      resourceEstimationsPerJob: {
+        default: { estimatedNumberOfRequests: ONE },
+        'with-memory': { estimatedNumberOfRequests: ONE, estimatedUsedMemoryKB: ONE },
+      },
       memory: { freeMemoryRatio: RATIO_HALF },
-      order: ['model-no-mem', 'model-with-mem'],
+      escalationOrder: ['model-no-mem', 'model-with-mem'],
     });
     const result = await limiter.queueJob({
       jobId: 'test-no-mem',
+      jobType: DEFAULT_JOB_TYPE,
       job: ({ modelId }, resolve) => {
         resolve({ modelId, inputTokens: ZERO, cachedTokens: ZERO, outputTokens: ZERO });
         return { requestCount: ONE, usage: { input: ZERO, output: ZERO, cached: ZERO } };
       },
     });
     expect(result.modelUsed).toBe('model-no-mem');
+    limiter.stop();
   });
 });
 
@@ -219,19 +214,19 @@ describe('multiModelRateLimiter - getInstanceId', () => {
       models: {
         default: {
           requestsPerMinute: TEN,
-          resourcesPerEvent: { estimatedNumberOfRequests: ONE },
           pricing: ZERO_PRICING,
         },
       },
+      resourceEstimationsPerJob: createDefaultResourceEstimations(),
     });
     const limiter2 = createLLMRateLimiter({
       models: {
         default: {
           requestsPerMinute: TEN,
-          resourcesPerEvent: { estimatedNumberOfRequests: ONE },
           pricing: ZERO_PRICING,
         },
       },
+      resourceEstimationsPerJob: createDefaultResourceEstimations(),
     });
     expect(limiter1.getInstanceId()).not.toBe(limiter2.getInstanceId());
     expect(limiter1.getInstanceId().startsWith('inst-')).toBe(true);
@@ -243,7 +238,7 @@ describe('multiModelRateLimiter - getInstanceId', () => {
 describe('backendHelpers - V2 backend release error', () => {
   it('should handle V2 backend release errors silently', async () => {
     const v2BackendWithReleaseError = {
-      register: async (instanceId: string): Promise<AllocationInfo> =>
+      register: async (_instanceId: string): Promise<AllocationInfo> =>
         await Promise.resolve({ ...DEFAULT_ALLOCATION }),
       unregister: async (): Promise<void> => {
         await Promise.resolve();
@@ -260,15 +255,16 @@ describe('backendHelpers - V2 backend release error', () => {
       models: {
         default: {
           requestsPerMinute: TEN,
-          resourcesPerEvent: { estimatedNumberOfRequests: ONE },
           pricing: ZERO_PRICING,
         },
       },
+      resourceEstimationsPerJob: createDefaultResourceEstimations(),
       backend: v2BackendWithReleaseError,
     });
     await limiter.start();
     const result = await limiter.queueJob({
       jobId: 'test-v2-release-error',
+      jobType: DEFAULT_JOB_TYPE,
       job: ({ modelId }, resolve) => {
         resolve({ modelId, inputTokens: ZERO, cachedTokens: ZERO, outputTokens: ZERO });
         return { requestCount: ONE, usage: { input: ZERO, output: ZERO, cached: ZERO } };

@@ -57,19 +57,18 @@ const trackEnd = (tracker: JobTypeTracker, jobType: string): void => {
 
 const createLimiter = (
   capacity: number,
-  resourcesPerJob: Record<string, { estimatedUsedTokens: number; ratio?: { initialValue: number } }>
+  resourceEstimationsPerJob: Record<string, { estimatedUsedTokens: number; ratio?: { initialValue: number } }>
 ): LLMRateLimiterInstance =>
   createLLMRateLimiter({
     models: {
       model1: {
         requestsPerMinute: RPM_LIMIT,
         maxConcurrentRequests: capacity,
-        resourcesPerEvent: { estimatedNumberOfRequests: ONE },
         pricing: DEFAULT_PRICING,
       },
     },
-    resourcesPerJob,
-  });
+    resourceEstimationsPerJob,
+  }) as LLMRateLimiterInstance;
 
 type JobFn = (
   ctx: { modelId: string },

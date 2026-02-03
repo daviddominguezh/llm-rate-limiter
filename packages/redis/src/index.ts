@@ -2,7 +2,7 @@
  * Redis distributed backend for the LLM Rate Limiter.
  *
  * This module provides a ready-to-use distributed backend that implements
- * the V2 DistributedBackendConfig interface with fair slot distribution.
+ * the BackendConfig interface with fair slot distribution.
  *
  * @example
  * ```typescript

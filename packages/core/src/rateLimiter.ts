@@ -10,10 +10,8 @@
 import type {
   InternalJobResult,
   InternalLimiterConfig,
-  InternalLimiterConfigBase,
   InternalLimiterInstance,
   InternalLimiterStats,
-  InternalValidatedConfig,
 } from './types.js';
 import { validateConfig } from './utils/configValidation.js';
 import { getAvailableMemoryKB } from './utils/memoryUtils.js';
@@ -25,11 +23,9 @@ export type {
   InternalJobResult,
   MemoryLimitConfig,
   InternalLimiterConfig,
-  InternalLimiterConfigBase,
   InternalLimiterStats,
   InternalLimiterInstance,
   BaseResourcesPerEvent,
-  InternalValidatedConfig,
 } from './types.js';
 
 const ZERO = 0;
@@ -60,11 +56,10 @@ class LLMRateLimiter implements InternalLimiterInstance {
     this.config = config;
     this.label = config.label ?? DEFAULT_LABEL;
 
-    // Extract estimated resources (with defaults of 0 if not configured)
-    const resources = config.resourcesPerEvent ?? {};
-    this.estimatedNumberOfRequests = resources.estimatedNumberOfRequests ?? ZERO;
-    this.estimatedUsedTokens = resources.estimatedUsedTokens ?? ZERO;
-    this.estimatedUsedMemoryKB = resources.estimatedUsedMemoryKB ?? ZERO;
+    // Resource estimates for pre-reservation before job execution
+    this.estimatedNumberOfRequests = config.estimatedNumberOfRequests ?? ZERO;
+    this.estimatedUsedTokens = config.estimatedUsedTokens ?? ZERO;
+    this.estimatedUsedMemoryKB = config.estimatedUsedMemoryKB ?? ZERO;
 
     this.initializeMemoryLimiter();
     this.initializeConcurrencyLimiter();
@@ -140,9 +135,13 @@ class LLMRateLimiter implements InternalLimiterInstance {
   }
 
   private async waitForTimeWindowCapacity(): Promise<void> {
+    // When estimates are 0, don't wait - we'll record actual usage after the job
+    if (this.estimatedNumberOfRequests === ZERO && this.estimatedUsedTokens === ZERO) {
+      return;
+    }
     const { promise, resolve } = Promise.withResolvers<undefined>();
     const checkCapacity = (): void => {
-      if (this.hasTimeWindowCapacity()) {
+      if (this.hasTimeWindowCapacityForEstimates()) {
         resolve(undefined);
         return;
       }
@@ -153,7 +152,8 @@ class LLMRateLimiter implements InternalLimiterInstance {
     await promise;
   }
 
-  private hasTimeWindowCapacity(): boolean {
+  /** Check capacity for actual estimates (used when waiting) */
+  private hasTimeWindowCapacityForEstimates(): boolean {
     const requestCounters = [this.rpmCounter, this.rpdCounter].filter((c) => c !== null);
     const tokenCounters = [this.tpmCounter, this.tpdCounter].filter((c) => c !== null);
     const hasRequestCapacity = requestCounters.every((c) => c.hasCapacityFor(this.estimatedNumberOfRequests));
@@ -161,9 +161,19 @@ class LLMRateLimiter implements InternalLimiterInstance {
     return hasRequestCapacity && hasTokenCapacity;
   }
 
+  private hasTimeWindowCapacity(): boolean {
+    const requestCounters = [this.rpmCounter, this.rpdCounter].filter((c) => c !== null);
+    const tokenCounters = [this.tpmCounter, this.tpdCounter].filter((c) => c !== null);
+    // When estimates are 0, check for at least 1 unit of capacity
+    const requestsToCheck = this.estimatedNumberOfRequests > ZERO ? this.estimatedNumberOfRequests : 1;
+    const tokensToCheck = this.estimatedUsedTokens > ZERO ? this.estimatedUsedTokens : 1;
+    const hasRequestCapacity = requestCounters.every((c) => c.hasCapacityFor(requestsToCheck));
+    const hasTokenCapacity = tokenCounters.every((c) => c.hasCapacityFor(tokensToCheck));
+    return hasRequestCapacity && hasTokenCapacity;
+  }
+
   private getMinTimeUntilCapacity(): number {
-    // This method is only called when hasTimeWindowCapacity() returns false,
-    // which means at least one counter doesn't have capacity, so times is never empty
+    // This method is only called when waiting for capacity with estimates > 0
     const requestCounters = [this.rpmCounter, this.rpdCounter].filter((c) => c !== null);
     const tokenCounters = [this.tpmCounter, this.tpdCounter].filter((c) => c !== null);
     const times = [
@@ -177,31 +187,49 @@ class LLMRateLimiter implements InternalLimiterInstance {
     return Math.min(...times);
   }
 
-  private reserveResources(): void {
-    // Reserve estimated resources BEFORE job execution
-    this.rpmCounter?.add(this.estimatedNumberOfRequests);
-    this.rpdCounter?.add(this.estimatedNumberOfRequests);
-    this.tpmCounter?.add(this.estimatedUsedTokens);
-    this.tpdCounter?.add(this.estimatedUsedTokens);
-  }
-
-  private refundDifference(result: InternalJobResult): void {
-    // Calculate actual usage
+  private recordActualUsage(result: InternalJobResult): void {
+    // Record actual usage AFTER job execution
+    // Note: When estimates are 0 (default), we just record the actual usage
+    // When estimates are provided, we've already reserved that amount and need to adjust
     const { requestCount: actualRequests, usage } = result;
     const actualTokens = usage.input + usage.output;
 
-    // Refund the difference between estimated and actual
-    const requestRefund = Math.max(ZERO, this.estimatedNumberOfRequests - actualRequests);
-    const tokenRefund = Math.max(ZERO, this.estimatedUsedTokens - actualTokens);
-
-    if (requestRefund > ZERO) {
-      if (this.rpmCounter !== null) this.rpmCounter.subtract(requestRefund);
-      if (this.rpdCounter !== null) this.rpdCounter.subtract(requestRefund);
+    if (this.estimatedNumberOfRequests === ZERO) {
+      // No reservation was made, add actual usage
+      this.rpmCounter?.add(actualRequests);
+      this.rpdCounter?.add(actualRequests);
+    } else {
+      // Reservation was made, refund the difference
+      const requestRefund = Math.max(ZERO, this.estimatedNumberOfRequests - actualRequests);
+      if (requestRefund > ZERO) {
+        this.rpmCounter?.subtract(requestRefund);
+        this.rpdCounter?.subtract(requestRefund);
+      }
     }
 
-    if (tokenRefund > ZERO) {
-      if (this.tpmCounter !== null) this.tpmCounter.subtract(tokenRefund);
-      if (this.tpdCounter !== null) this.tpdCounter.subtract(tokenRefund);
+    if (this.estimatedUsedTokens === ZERO) {
+      // No reservation was made, add actual usage
+      this.tpmCounter?.add(actualTokens);
+      this.tpdCounter?.add(actualTokens);
+    } else {
+      // Reservation was made, refund the difference
+      const tokenRefund = Math.max(ZERO, this.estimatedUsedTokens - actualTokens);
+      if (tokenRefund > ZERO) {
+        this.tpmCounter?.subtract(tokenRefund);
+        this.tpdCounter?.subtract(tokenRefund);
+      }
+    }
+  }
+
+  private reserveResources(): void {
+    // Reserve estimated resources BEFORE job execution (only if estimates are provided)
+    if (this.estimatedNumberOfRequests > ZERO) {
+      this.rpmCounter?.add(this.estimatedNumberOfRequests);
+      this.rpdCounter?.add(this.estimatedNumberOfRequests);
+    }
+    if (this.estimatedUsedTokens > ZERO) {
+      this.tpmCounter?.add(this.estimatedUsedTokens);
+      this.tpdCounter?.add(this.estimatedUsedTokens);
     }
   }
 
@@ -226,8 +254,8 @@ class LLMRateLimiter implements InternalLimiterInstance {
       // Execute the job
       const result = await job();
 
-      // Refund the difference between estimated and actual usage
-      this.refundDifference(result);
+      // Record actual usage (or refund difference if estimates were provided)
+      this.recordActualUsage(result);
 
       return result;
     } finally {
@@ -250,11 +278,9 @@ class LLMRateLimiter implements InternalLimiterInstance {
   }
 
   hasCapacity(): boolean {
-    // Check memory capacity (in KB)
-    if (
-      this.memorySemaphore !== null &&
-      this.memorySemaphore.getAvailablePermits() < this.estimatedUsedMemoryKB
-    ) {
+    // Check memory capacity (in KB) - when estimate is 0, check for at least 1 KB
+    const memoryToCheck = this.estimatedUsedMemoryKB > ZERO ? this.estimatedUsedMemoryKB : 1;
+    if (this.memorySemaphore !== null && this.memorySemaphore.getAvailablePermits() < memoryToCheck) {
       return false;
     }
     // Check concurrency capacity
@@ -291,12 +317,8 @@ class LLMRateLimiter implements InternalLimiterInstance {
  * Create a new internal LLM Rate Limiter instance.
  * This is used internally by the multi-model rate limiter.
  *
- * The type system enforces that resourcesPerEvent contains the required fields
- * based on which limits are configured:
- * - If requestsPerMinute or requestsPerDay is set, estimatedNumberOfRequests is required
- * - If tokensPerMinute or tokensPerDay is set, estimatedUsedTokens is required
- * - If memory is set, estimatedUsedMemoryKB is required
+ * Resource estimates (tokens, requests, memory) are defined at the job type level
+ * via resourcesPerJob in the multi-model limiter configuration.
  */
-export const createInternalLimiter = <T extends InternalLimiterConfigBase>(
-  config: InternalValidatedConfig<T>
-): InternalLimiterInstance => new LLMRateLimiter(config as InternalLimiterConfig);
+export const createInternalLimiter = (config: InternalLimiterConfig): InternalLimiterInstance =>
+  new LLMRateLimiter(config);

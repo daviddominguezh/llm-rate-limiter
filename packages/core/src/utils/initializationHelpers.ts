@@ -1,7 +1,7 @@
 /**
  * Initialization helpers for the LLM Rate Limiter.
  */
-import type { ResourcesPerJob } from '../jobTypeTypes.js';
+import type { ResourceEstimationsPerJob } from '../jobTypeTypes.js';
 import type { LLMRateLimiterConfig, LLMRateLimiterStats, ModelRateLimitConfig } from '../multiModelTypes.js';
 import { createInternalLimiter } from '../rateLimiter.js';
 import type {
@@ -12,7 +12,7 @@ import type {
 } from '../types.js';
 import { AvailabilityTracker } from './availabilityTracker.js';
 import { calculateMaxEstimatedResource } from './jobExecutionHelpers.js';
-import { buildModelLimiterConfig, getEffectiveResourcesPerJob } from './multiModelHelpers.js';
+import { buildModelLimiterConfig } from './multiModelHelpers.js';
 
 /** Estimated resources configuration */
 export interface EstimatedResources {
@@ -21,22 +21,20 @@ export interface EstimatedResources {
   estimatedNumberOfRequests: number;
 }
 
-/** Calculate all estimated resources from resourcesPerJob config */
+/** Calculate all estimated resources from resourceEstimationsPerJob config */
 export const calculateEstimatedResources = (
-  resourcesPerJob: ResourcesPerJob | undefined
-): EstimatedResources => {
-  if (resourcesPerJob === undefined) {
-    return { estimatedUsedMemoryKB: 0, estimatedUsedTokens: 0, estimatedNumberOfRequests: 0 };
-  }
-  return {
-    estimatedUsedMemoryKB: calculateMaxEstimatedResource(resourcesPerJob, (j) => j.estimatedUsedMemoryKB),
-    estimatedUsedTokens: calculateMaxEstimatedResource(resourcesPerJob, (j) => j.estimatedUsedTokens),
-    estimatedNumberOfRequests: calculateMaxEstimatedResource(
-      resourcesPerJob,
-      (j) => j.estimatedNumberOfRequests
-    ),
-  };
-};
+  resourceEstimationsPerJob: ResourceEstimationsPerJob
+): EstimatedResources => ({
+  estimatedUsedMemoryKB: calculateMaxEstimatedResource(
+    resourceEstimationsPerJob,
+    (j) => j.estimatedUsedMemoryKB
+  ),
+  estimatedUsedTokens: calculateMaxEstimatedResource(resourceEstimationsPerJob, (j) => j.estimatedUsedTokens),
+  estimatedNumberOfRequests: calculateMaxEstimatedResource(
+    resourceEstimationsPerJob,
+    (j) => j.estimatedNumberOfRequests
+  ),
+});
 
 /** Create availability tracker if callback is configured */
 export const createAvailabilityTracker = (
@@ -60,7 +58,8 @@ export const createAvailabilityTracker = (
 export const initializeModelLimiters = (
   models: Record<string, ModelRateLimitConfig>,
   label: string,
-  onLog: LogFn | undefined
+  onLog: LogFn | undefined,
+  estimatedResources?: EstimatedResources
 ): Map<string, InternalLimiterInstance> => {
   const limiters = new Map<string, InternalLimiterInstance>();
   for (const [modelId, modelConfig] of Object.entries(models)) {
@@ -68,7 +67,8 @@ export const initializeModelLimiters = (
       modelId,
       modelConfig as InternalLimiterConfig,
       label,
-      onLog
+      onLog,
+      estimatedResources
     );
     limiters.set(modelId, createInternalLimiter(limiterConfig));
   }
@@ -102,16 +102,15 @@ const ZERO = 0;
 const DEFAULT_JOB_TYPE_CAPACITY = 100;
 
 /** Calculate total capacity for job types from models config.
- * Uses the minimum maxConcurrentRequests across all models,
- * or a default if not specified. */
+ * Uses the sum of maxConcurrentRequests across all models,
+ * since jobs can run on any available model. */
 export const calculateJobTypeCapacity = (models: Record<string, ModelRateLimitConfig>): number => {
-  let minCapacity: number | null = null;
+  let totalCapacity = ZERO;
   for (const modelConfig of Object.values(models)) {
     const { maxConcurrentRequests } = modelConfig;
     if (typeof maxConcurrentRequests === 'number' && maxConcurrentRequests > ZERO) {
-      minCapacity =
-        minCapacity === null ? maxConcurrentRequests : Math.min(minCapacity, maxConcurrentRequests);
+      totalCapacity += maxConcurrentRequests;
     }
   }
-  return minCapacity ?? DEFAULT_JOB_TYPE_CAPACITY;
+  return totalCapacity > ZERO ? totalCapacity : DEFAULT_JOB_TYPE_CAPACITY;
 };

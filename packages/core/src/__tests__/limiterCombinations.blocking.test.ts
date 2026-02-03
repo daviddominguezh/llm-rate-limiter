@@ -1,5 +1,6 @@
 import type { UsageEntry } from '../multiModelTypes.js';
 import {
+  DEFAULT_JOB_TYPE,
   DEFAULT_REQUEST_COUNT,
   ESTIMATED_MEMORY_KB,
   FREE_MEMORY_RATIO,
@@ -29,7 +30,7 @@ interface TrackedJob {
 }
 
 describe('Blocking - concurrency actually blocks jobs', () => {
-  let limiter: LLMRateLimiterInstance | undefined = undefined;
+  let limiter: LLMRateLimiterInstance<'default'> | undefined = undefined;
   afterEach(() => {
     limiter?.stop();
     limiter = undefined;
@@ -38,6 +39,7 @@ describe('Blocking - concurrency actually blocks jobs', () => {
     const MAX_CONCURRENT = 2;
     limiter = createLLMRateLimiter({
       models: { default: { maxConcurrentRequests: MAX_CONCURRENT, pricing: ZERO_PRICING } },
+      resourceEstimationsPerJob: { [DEFAULT_JOB_TYPE]: { estimatedNumberOfRequests: ONE } },
     });
     const startTimes: Record<string, number> = {};
     const endTimes: Record<string, number> = {};
@@ -53,10 +55,10 @@ describe('Blocking - concurrency actually blocks jobs', () => {
       },
     });
     const promises = [
-      limiter.queueJob(createTrackedJob('A', JOB_DELAY_MS)),
-      limiter.queueJob(createTrackedJob('B', JOB_DELAY_MS)),
-      limiter.queueJob(createTrackedJob('C', SHORT_JOB_DELAY_MS)),
-      limiter.queueJob(createTrackedJob('D', SHORT_JOB_DELAY_MS)),
+      limiter.queueJob({ ...createTrackedJob('A', JOB_DELAY_MS), jobType: DEFAULT_JOB_TYPE }),
+      limiter.queueJob({ ...createTrackedJob('B', JOB_DELAY_MS), jobType: DEFAULT_JOB_TYPE }),
+      limiter.queueJob({ ...createTrackedJob('C', SHORT_JOB_DELAY_MS), jobType: DEFAULT_JOB_TYPE }),
+      limiter.queueJob({ ...createTrackedJob('D', SHORT_JOB_DELAY_MS), jobType: DEFAULT_JOB_TYPE }),
     ];
     await Promise.all(promises);
     const totalTime = Date.now() - start;
@@ -70,7 +72,7 @@ describe('Blocking - concurrency actually blocks jobs', () => {
 const SLOW_JOB_DELAY_MS = 200;
 
 describe('Blocking - memory actually blocks jobs', () => {
-  let limiter: LLMRateLimiterInstance | undefined = undefined;
+  let limiter: LLMRateLimiterInstance<'default'> | undefined = undefined;
   afterEach(() => {
     limiter?.stop();
     limiter = undefined;
@@ -79,14 +81,15 @@ describe('Blocking - memory actually blocks jobs', () => {
   it('should queue jobs when memory slots are exhausted', async () => {
     limiter = createLLMRateLimiter({
       memory: { freeMemoryRatio: FREE_MEMORY_RATIO },
-      maxCapacity: MEMORY_MAX_CAPACITY_KB,
       models: {
-        default: { resourcesPerEvent: { estimatedUsedMemoryKB: ESTIMATED_MEMORY_KB }, pricing: ZERO_PRICING },
+        default: { maxCapacity: MEMORY_MAX_CAPACITY_KB, pricing: ZERO_PRICING },
       },
+      resourceEstimationsPerJob: { [DEFAULT_JOB_TYPE]: { estimatedUsedMemoryKB: ESTIMATED_MEMORY_KB } },
     });
     const jobOrder: string[] = [];
     const slowJobPromise = limiter.queueJob({
       jobId: generateJobId(),
+      jobType: DEFAULT_JOB_TYPE,
       job: async ({ modelId }, resolve) => {
         jobOrder.push('slow-start');
         await setTimeoutAsync(SLOW_JOB_DELAY_MS);
@@ -99,6 +102,7 @@ describe('Blocking - memory actually blocks jobs', () => {
     expect(limiter.hasCapacity()).toBe(false);
     const fastJobPromise = limiter.queueJob({
       jobId: generateJobId(),
+      jobType: DEFAULT_JOB_TYPE,
       job: ({ modelId }, resolve) => {
         jobOrder.push('fast-start');
         jobOrder.push('fast-end');
@@ -112,7 +116,7 @@ describe('Blocking - memory actually blocks jobs', () => {
 });
 
 describe('Blocking - rpm actually blocks jobs', () => {
-  let limiter: LLMRateLimiterInstance | undefined = undefined;
+  let limiter: LLMRateLimiterInstance<'default'> | undefined = undefined;
   afterEach(() => {
     limiter?.stop();
     limiter = undefined;
@@ -123,13 +127,14 @@ describe('Blocking - rpm actually blocks jobs', () => {
       models: {
         default: {
           requestsPerMinute: RPM_LIMIT,
-          resourcesPerEvent: { estimatedNumberOfRequests: DEFAULT_REQUEST_COUNT },
           pricing: ZERO_PRICING,
         },
       },
+      resourceEstimationsPerJob: { [DEFAULT_JOB_TYPE]: { estimatedNumberOfRequests: DEFAULT_REQUEST_COUNT } },
     });
     const simpleJob = {
       jobId: generateJobId(),
+      jobType: 'default' as const,
       job: ({ modelId }: { modelId: string }, resolve: (u: UsageEntry) => void) => {
         resolve(createMockUsage(modelId));
         return createMockJobResult('job');
@@ -147,7 +152,7 @@ describe('Blocking - rpm actually blocks jobs', () => {
 });
 
 describe('Blocking - tpm token reservation', () => {
-  let limiter: LLMRateLimiterInstance | undefined = undefined;
+  let limiter: LLMRateLimiterInstance<'default'> | undefined = undefined;
   afterEach(() => {
     limiter?.stop();
     limiter = undefined;
@@ -159,13 +164,14 @@ describe('Blocking - tpm token reservation', () => {
       models: {
         default: {
           tokensPerMinute: TPM_LIMIT,
-          resourcesPerEvent: { estimatedUsedTokens: ESTIMATED_TOKENS },
           pricing: ZERO_PRICING,
         },
       },
+      resourceEstimationsPerJob: { [DEFAULT_JOB_TYPE]: { estimatedUsedTokens: ESTIMATED_TOKENS } },
     });
     const simpleJob = {
       jobId: generateJobId(),
+      jobType: 'default' as const,
       job: ({ modelId }: { modelId: string }, resolve: (u: UsageEntry) => void) => {
         resolve(createMockUsage(modelId));
         return createMockJobResult('job');
@@ -188,7 +194,7 @@ describe('Blocking - tpm token reservation', () => {
 });
 
 describe('Blocking - tpm never exceeds limit', () => {
-  let limiter: LLMRateLimiterInstance | undefined = undefined;
+  let limiter: LLMRateLimiterInstance<'default'> | undefined = undefined;
   afterEach(() => {
     limiter?.stop();
     limiter = undefined;
@@ -199,13 +205,14 @@ describe('Blocking - tpm never exceeds limit', () => {
       models: {
         default: {
           tokensPerMinute: ESTIMATED_TOKENS,
-          resourcesPerEvent: { estimatedUsedTokens: ESTIMATED_TOKENS },
           pricing: ZERO_PRICING,
         },
       },
+      resourceEstimationsPerJob: { [DEFAULT_JOB_TYPE]: { estimatedUsedTokens: ESTIMATED_TOKENS } },
     });
     await limiter.queueJob({
       jobId: generateJobId(),
+      jobType: DEFAULT_JOB_TYPE,
       job: ({ modelId }, resolve) => {
         resolve(createMockUsage(modelId));
         return createMockJobResult('job-1');
@@ -218,7 +225,7 @@ describe('Blocking - tpm never exceeds limit', () => {
 });
 
 describe('Blocking - combined limiters block correctly', () => {
-  let limiter: LLMRateLimiterInstance | undefined = undefined;
+  let limiter: LLMRateLimiterInstance<'default'> | undefined = undefined;
   afterEach(() => {
     limiter?.stop();
     limiter = undefined;
@@ -230,13 +237,14 @@ describe('Blocking - combined limiters block correctly', () => {
         default: {
           maxConcurrentRequests: ONE,
           requestsPerMinute: TEN,
-          resourcesPerEvent: { estimatedNumberOfRequests: DEFAULT_REQUEST_COUNT },
           pricing: ZERO_PRICING,
         },
       },
+      resourceEstimationsPerJob: { [DEFAULT_JOB_TYPE]: { estimatedNumberOfRequests: DEFAULT_REQUEST_COUNT } },
     });
     const slowJobPromise = limiter.queueJob({
       jobId: generateJobId(),
+      jobType: DEFAULT_JOB_TYPE,
       job: async ({ modelId }, resolve) => {
         await setTimeoutAsync(LONG_JOB_DELAY_MS);
         resolve(createMockUsage(modelId));

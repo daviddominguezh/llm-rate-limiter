@@ -101,10 +101,12 @@ export class AvailabilityTracker {
   /**
    * Set the distributed allocation for this instance.
    * Called when the V2 backend pushes an allocation update.
+   * @param allocation - The new allocation info
+   * @param modelId - The model that triggered the allocation change (use '*' for global changes)
    */
-  setDistributedAllocation(allocation: AllocationInfo): void {
+  setDistributedAllocation(allocation: AllocationInfo, modelId: string = '*'): void {
     this.distributedAllocation = allocation;
-    this.checkAndEmit('distributed');
+    this.checkAndEmit('distributed', modelId);
   }
 
   /** Get the current distributed allocation (for testing/inspection) */
@@ -153,14 +155,18 @@ export class AvailabilityTracker {
   }
 
   /** Check for changes and emit callback if availability changed */
-  checkAndEmit(hintReason: AvailabilityChangeReason, adjustment?: RelativeAvailabilityAdjustment): void {
+  checkAndEmit(
+    hintReason: AvailabilityChangeReason,
+    modelId: string,
+    adjustment?: RelativeAvailabilityAdjustment
+  ): void {
     if (this.callback === undefined) return;
     const currentAvailability = this.calculateAvailability();
     const { previousAvailability } = this;
 
     if (hintReason === 'adjustment' && adjustment !== undefined) {
       this.previousAvailability = currentAvailability;
-      this.callback(currentAvailability, 'adjustment', adjustment);
+      this.callback(currentAvailability, 'adjustment', modelId, adjustment);
       return;
     }
 
@@ -171,15 +177,15 @@ export class AvailabilityTracker {
     const reason =
       previousAvailability === null ? hintReason : determineReason(previousAvailability, currentAvailability);
     this.previousAvailability = currentAvailability;
-    this.callback(currentAvailability, reason, undefined);
+    this.callback(currentAvailability, reason, modelId, undefined);
   }
 
   /** Emit callback for adjustment with proper tracking */
-  emitAdjustment(adjustment: RelativeAvailabilityAdjustment): void {
+  emitAdjustment(adjustment: RelativeAvailabilityAdjustment, modelId: string): void {
     if (this.callback === undefined) return;
     const currentAvailability = this.calculateAvailability();
     this.previousAvailability = currentAvailability;
-    this.callback(currentAvailability, 'adjustment', adjustment);
+    this.callback(currentAvailability, 'adjustment', modelId, adjustment);
   }
 
   /** Initialize with current availability (call after limiter is fully initialized) */

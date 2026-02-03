@@ -1,5 +1,6 @@
 import type { ConcurrencyTracker, LLMJobResult } from './limiterCombinations.helpers.js';
 import {
+  DEFAULT_JOB_TYPE,
   DEFAULT_REQUEST_COUNT,
   ESTIMATED_MEMORY_KB,
   FREE_MEMORY_RATIO,
@@ -47,20 +48,22 @@ describe('EdgeCase - concurrent jobs with all limiters', () => {
   it('should handle multiple concurrent jobs with all limiters', async () => {
     const limiter = createLLMRateLimiter({
       memory: { freeMemoryRatio: FREE_MEMORY_RATIO },
-      maxCapacity: ESTIMATED_MEMORY_KB * TEN,
       models: {
         default: {
+          maxCapacity: ESTIMATED_MEMORY_KB * TEN,
           maxConcurrentRequests: THREE,
           requestsPerMinute: TEN,
           requestsPerDay: HUNDRED,
           tokensPerMinute: MOCK_TOTAL_TOKENS * TEN,
           tokensPerDay: MOCK_TOTAL_TOKENS * HUNDRED,
-          resourcesPerEvent: {
-            estimatedUsedMemoryKB: ESTIMATED_MEMORY_KB,
-            estimatedNumberOfRequests: DEFAULT_REQUEST_COUNT,
-            estimatedUsedTokens: MOCK_TOTAL_TOKENS,
-          },
           pricing: ZERO_PRICING,
+        },
+      },
+      resourceEstimationsPerJob: {
+        [DEFAULT_JOB_TYPE]: {
+          estimatedUsedMemoryKB: ESTIMATED_MEMORY_KB,
+          estimatedNumberOfRequests: DEFAULT_REQUEST_COUNT,
+          estimatedUsedTokens: MOCK_TOTAL_TOKENS,
         },
       },
     });
@@ -69,6 +72,7 @@ describe('EdgeCase - concurrent jobs with all limiters', () => {
       jobs.push(
         limiter.queueJob({
           jobId: generateJobId(),
+          jobType: DEFAULT_JOB_TYPE,
           job: ({ modelId }, resolve) => {
             resolve(createMockUsage(modelId));
             return createMockJobResult(`job-${String(i)}`);
@@ -91,11 +95,13 @@ describe('EdgeCase - concurrency limit tracking', () => {
           maxConcurrentRequests: MAX_CONCURRENT,
           requestsPerMinute: HUNDRED,
           tokensPerMinute: MOCK_TOTAL_TOKENS * HUNDRED,
-          resourcesPerEvent: {
-            estimatedNumberOfRequests: DEFAULT_REQUEST_COUNT,
-            estimatedUsedTokens: MOCK_TOTAL_TOKENS,
-          },
           pricing: ZERO_PRICING,
+        },
+      },
+      resourceEstimationsPerJob: {
+        [DEFAULT_JOB_TYPE]: {
+          estimatedNumberOfRequests: DEFAULT_REQUEST_COUNT,
+          estimatedUsedTokens: MOCK_TOTAL_TOKENS,
         },
       },
     });
@@ -105,6 +111,7 @@ describe('EdgeCase - concurrency limit tracking', () => {
       jobs.push(
         limiter.queueJob({
           jobId: generateJobId(),
+          jobType: DEFAULT_JOB_TYPE,
           job: async ({ modelId }, resolve) => {
             tracker.current += ONE;
             tracker.max = Math.max(tracker.max, tracker.current);
@@ -126,22 +133,24 @@ describe('EdgeCase - memory + rpm combination', () => {
   it('should handle memory + rpm combination correctly', async () => {
     const limiter = createLLMRateLimiter({
       memory: { freeMemoryRatio: FREE_MEMORY_RATIO },
-      maxCapacity: MEMORY_CAPACITY,
       models: {
         default: {
+          maxCapacity: MEMORY_CAPACITY,
           requestsPerMinute: THREE,
-          resourcesPerEvent: {
-            estimatedUsedMemoryKB: ESTIMATED_MEMORY_KB,
-            estimatedNumberOfRequests: DEFAULT_REQUEST_COUNT,
-          },
           pricing: ZERO_PRICING,
         },
       },
+      resourceEstimationsPerJob: {
+        [DEFAULT_JOB_TYPE]: {
+          estimatedUsedMemoryKB: ESTIMATED_MEMORY_KB,
+          estimatedNumberOfRequests: DEFAULT_REQUEST_COUNT,
+        },
+      },
     });
-    const job1 = limiter.queueJob(createSlowJob('slow-1'));
+    const job1 = limiter.queueJob({ ...createSlowJob('slow-1'), jobType: DEFAULT_JOB_TYPE });
     await setTimeoutAsync(SEMAPHORE_ACQUIRE_WAIT_MS);
     expect(limiter.getModelStats('default').memory?.activeKB).toBe(ESTIMATED_MEMORY_KB);
-    const job2 = limiter.queueJob(createSlowJob('slow-2'));
+    const job2 = limiter.queueJob({ ...createSlowJob('slow-2'), jobType: DEFAULT_JOB_TYPE });
     await setTimeoutAsync(SEMAPHORE_ACQUIRE_WAIT_MS);
     expect(limiter.getModelStats('default').memory?.availableKB).toBe(ZERO);
     expect(limiter.hasCapacity()).toBe(false);
@@ -157,13 +166,16 @@ describe('EdgeCase - concurrency + tpm combination', () => {
         default: {
           maxConcurrentRequests: TWO,
           tokensPerMinute: MOCK_TOTAL_TOKENS * THREE,
-          resourcesPerEvent: { estimatedUsedTokens: MOCK_TOTAL_TOKENS },
           pricing: ZERO_PRICING,
         },
+      },
+      resourceEstimationsPerJob: {
+        [DEFAULT_JOB_TYPE]: { estimatedUsedTokens: MOCK_TOTAL_TOKENS },
       },
     });
     await limiter.queueJob({
       jobId: generateJobId(),
+      jobType: DEFAULT_JOB_TYPE,
       job: ({ modelId }, resolve) => {
         resolve(createMockUsage(modelId));
         return createMockJobResult('job-1');
@@ -171,6 +183,7 @@ describe('EdgeCase - concurrency + tpm combination', () => {
     });
     await limiter.queueJob({
       jobId: generateJobId(),
+      jobType: DEFAULT_JOB_TYPE,
       job: ({ modelId }, resolve) => {
         resolve(createMockUsage(modelId));
         return createMockJobResult('job-2');

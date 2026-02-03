@@ -5,16 +5,18 @@ import { createLLMRateLimiter } from '../multiModelRateLimiter.js';
 import type { TestableConfig } from './coverage.branches.helpers.js';
 import { FIFTY, HUNDRED, ONE, TEN, ZERO } from './coverage.branches.helpers.js';
 
+const DEFAULT_JOB_TYPE = 'default';
+
 describe('multiModelRateLimiter - calculateCost with undefined pricing', () => {
   it('should return zero cost when pricing is undefined', async () => {
     const limiter = createLLMRateLimiter({
       models: {
         default: {
           requestsPerMinute: TEN,
-          resourcesPerEvent: { estimatedNumberOfRequests: ONE },
           pricing: { input: ONE, cached: ONE, output: ONE },
         },
       },
+      resourceEstimationsPerJob: { [DEFAULT_JOB_TYPE]: { estimatedNumberOfRequests: ONE } },
     });
     // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- Testing defensive code path for undefined pricing
     const { models } = Reflect.get(limiter, 'config') as TestableConfig;
@@ -25,6 +27,7 @@ describe('multiModelRateLimiter - calculateCost with undefined pricing', () => {
     let capturedCost = -ONE;
     await limiter.queueJob({
       jobId: 'no-pricing',
+      jobType: DEFAULT_JOB_TYPE,
       job: ({ modelId }, resolve) => {
         resolve({ modelId, inputTokens: HUNDRED, cachedTokens: ZERO, outputTokens: FIFTY });
         return { requestCount: ONE, usage: { input: HUNDRED, output: FIFTY, cached: ZERO } };

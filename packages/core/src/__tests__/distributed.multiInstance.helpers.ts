@@ -14,6 +14,8 @@ export const FIFTY = 50;
 export const HUNDRED = 100;
 export const MS_PER_MINUTE_PLUS_ONE = 60_001;
 
+const DEFAULT_JOB_TYPE = 'default';
+
 export type InstanceArray = Array<{ limiter: LLMRateLimiterInstance; unsubscribe: () => void }>;
 
 export const createModelConfig = (
@@ -26,7 +28,13 @@ export const createModelConfig = (
 });
 
 export const createLimiterWithBackend = (backend: BackendConfig): LLMRateLimiterInstance =>
-  createLLMRateLimiter({ backend, models: { default: createModelConfig(TEN, ONE) } });
+  createLLMRateLimiter({
+    backend,
+    models: { default: createModelConfig(TEN, ONE) },
+    resourceEstimationsPerJob: {
+      [DEFAULT_JOB_TYPE]: { estimatedNumberOfRequests: ONE, estimatedUsedTokens: TWENTY },
+    },
+  }) as LLMRateLimiterInstance;
 
 export const cleanupInstances = (instances: InstanceArray): void => {
   for (const { limiter, unsubscribe } of instances) {

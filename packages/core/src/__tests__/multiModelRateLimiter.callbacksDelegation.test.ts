@@ -1,11 +1,13 @@
 import { createLLMRateLimiter } from '../multiModelRateLimiter.js';
 import type { JobCallbackContext, LLMRateLimiterInstance, UsageEntryWithCost } from '../multiModelTypes.js';
 import {
+  DEFAULT_JOB_TYPE,
   DEFAULT_PRICING,
   ONE,
   RPM_LIMIT_HIGH,
   TWO,
   ZERO,
+  createDefaultResourceEstimations,
   createMockJobResult,
   createMockUsage,
   ensureDefined,
@@ -14,7 +16,6 @@ import {
 
 const MODEL_CONFIG = {
   requestsPerMinute: RPM_LIMIT_HIGH,
-  resourcesPerEvent: { estimatedNumberOfRequests: ONE },
   pricing: DEFAULT_PRICING,
 };
 
@@ -47,7 +48,7 @@ const createDelegatingJob = (resolve: ResolveUsage, reject: RejectUsage, modelId
 };
 
 describe('MultiModelRateLimiter - onError callback delegation', () => {
-  let limiter: LLMRateLimiterInstance | undefined = undefined;
+  let limiter: LLMRateLimiterInstance<'default'> | undefined = undefined;
   afterEach(() => {
     limiter?.stop();
     limiter = undefined;
@@ -59,13 +60,15 @@ describe('MultiModelRateLimiter - onError callback delegation', () => {
         'model-a': MODEL_CONFIG,
         'model-b': MODEL_CONFIG,
       },
-      order: ['model-a', 'model-b'],
+      escalationOrder: ['model-a', 'model-b'],
+      resourceEstimationsPerJob: createDefaultResourceEstimations(),
     });
     let capturedCtx: JobCallbackContext | undefined = undefined;
     const testJobId = generateJobId();
     await expect(
       limiter.queueJob({
         jobId: testJobId,
+        jobType: DEFAULT_JOB_TYPE,
         job: ({ modelId }, _resolve, reject) => {
           reject(createMockUsage(modelId), { delegate: modelId === 'model-a' });
           return createMockJobResult('test');
@@ -81,7 +84,7 @@ describe('MultiModelRateLimiter - onError callback delegation', () => {
 });
 
 describe('MultiModelRateLimiter - callback with delegation models', () => {
-  let limiter: LLMRateLimiterInstance | undefined = undefined;
+  let limiter: LLMRateLimiterInstance<'default'> | undefined = undefined;
   afterEach(() => {
     limiter?.stop();
     limiter = undefined;
@@ -93,11 +96,13 @@ describe('MultiModelRateLimiter - callback with delegation models', () => {
         'model-a': MODEL_CONFIG,
         'model-b': MODEL_CONFIG,
       },
-      order: ['model-a', 'model-b'],
+      escalationOrder: ['model-a', 'model-b'],
+      resourceEstimationsPerJob: createDefaultResourceEstimations(),
     });
     let capturedCtx: JobCallbackContext | undefined = undefined;
     await limiter.queueJob({
       jobId: generateJobId(),
+      jobType: DEFAULT_JOB_TYPE,
       job: ({ modelId }, resolve, reject) => {
         const usage = createMockUsage(modelId);
         if (modelId === 'model-a') {
@@ -121,7 +126,7 @@ describe('MultiModelRateLimiter - callback with delegation models', () => {
 });
 
 describe('MultiModelRateLimiter - callback with delegation cost', () => {
-  let limiter: LLMRateLimiterInstance | undefined = undefined;
+  let limiter: LLMRateLimiterInstance<'default'> | undefined = undefined;
   afterEach(() => {
     limiter?.stop();
     limiter = undefined;
@@ -130,11 +135,13 @@ describe('MultiModelRateLimiter - callback with delegation cost', () => {
   it('should accumulate totalCost from all attempted models', async () => {
     limiter = createLLMRateLimiter({
       models: { 'model-a': MODEL_CONFIG, 'model-b': MODEL_CONFIG },
-      order: ['model-a', 'model-b'],
+      escalationOrder: ['model-a', 'model-b'],
+      resourceEstimationsPerJob: createDefaultResourceEstimations(),
     });
     let singleCost = ZERO;
     await limiter.queueJob({
       jobId: generateJobId(),
+      jobType: DEFAULT_JOB_TYPE,
       job: ({ modelId }, resolve) => {
         resolve(createMockUsage(modelId));
         return createMockJobResult('test');
@@ -146,6 +153,7 @@ describe('MultiModelRateLimiter - callback with delegation cost', () => {
     let delegatedCost = ZERO;
     await limiter.queueJob({
       jobId: generateJobId(),
+      jobType: DEFAULT_JOB_TYPE,
       job: ({ modelId }, resolve, reject) => createDelegatingJob(resolve, reject, modelId),
       onComplete: (_r, { totalCost }) => {
         delegatedCost = totalCost;

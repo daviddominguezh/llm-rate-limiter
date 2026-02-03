@@ -1,50 +1,55 @@
 /** Helper functions for LLM Rate Limiter. */
-import type { ResourcesPerJob } from '../jobTypeTypes.js';
+import type { ResourceEstimationsPerJob } from '../jobTypeTypes.js';
 import type { LLMRateLimiterConfig, ModelsConfig } from '../multiModelTypes.js';
 import type { InternalLimiterConfig } from '../types.js';
 
 const ZERO = 0;
 const ONE = 1;
 
-const validateOrderArray = (order: readonly string[], models: ModelsConfig): void => {
-  for (const modelId of order) {
+const validateEscalationOrder = (escalationOrder: readonly string[], models: ModelsConfig): void => {
+  for (const modelId of escalationOrder) {
     if (!(modelId in models)) {
-      throw new Error(`Model '${modelId}' in order array is not defined in models`);
+      throw new Error(`Model '${modelId}' in escalationOrder is not defined in models`);
     }
   }
 };
-
-/** Get order from config (supports both 'order' and 'escalationOrder' aliases) */
-const getOrderFromConfig = (config: LLMRateLimiterConfig): readonly string[] | undefined =>
-  config.order ?? config.escalationOrder;
 
 export const validateMultiModelConfig = (config: LLMRateLimiterConfig): void => {
   const modelIds = Object.keys(config.models);
   if (modelIds.length === ZERO) {
     throw new Error('At least one model must be configured in models');
   }
-  const order = getOrderFromConfig(config);
-  if (order !== undefined) {
-    validateOrderArray(order, config.models);
+  const { escalationOrder } = config;
+  if (escalationOrder !== undefined) {
+    validateEscalationOrder(escalationOrder, config.models);
   }
-  if (modelIds.length > ONE && order === undefined) {
-    throw new Error('order (or escalationOrder) is required when multiple models are configured');
+  if (modelIds.length > ONE && escalationOrder === undefined) {
+    throw new Error('escalationOrder is required when multiple models are configured');
   }
 };
 
-/** Get effective order (supports both 'order' and 'escalationOrder' aliases) */
+/** Get effective escalation order */
 export const getEffectiveOrder = (config: LLMRateLimiterConfig): readonly string[] =>
-  getOrderFromConfig(config) ?? Object.keys(config.models);
+  config.escalationOrder ?? Object.keys(config.models);
 
-/** Get resourcesPerJob (supports both 'resourcesPerJob' and 'estimates' aliases) */
-export const getEffectiveResourcesPerJob = (config: LLMRateLimiterConfig): ResourcesPerJob | undefined =>
-  config.resourcesPerJob ?? config.estimates;
+/** Get resource estimations per job */
+export const getEffectiveResourceEstimationsPerJob = (
+  config: LLMRateLimiterConfig
+): ResourceEstimationsPerJob => config.resourceEstimationsPerJob;
+
+/** Estimated resources for internal limiter */
+interface EstimatedResourcesInput {
+  estimatedUsedMemoryKB: number;
+  estimatedUsedTokens: number;
+  estimatedNumberOfRequests: number;
+}
 
 export const buildModelLimiterConfig = (
   modelId: string,
   modelConfig: InternalLimiterConfig,
   parentLabel: string,
-  onLog?: (message: string, data?: Record<string, unknown>) => void
+  onLog?: (message: string, data?: Record<string, unknown>) => void,
+  estimatedResources?: EstimatedResourcesInput
 ): InternalLimiterConfig => ({
   requestsPerMinute: modelConfig.requestsPerMinute,
   requestsPerDay: modelConfig.requestsPerDay,
@@ -53,4 +58,7 @@ export const buildModelLimiterConfig = (
   maxConcurrentRequests: modelConfig.maxConcurrentRequests,
   label: `${parentLabel}/${modelId}`,
   onLog,
+  estimatedNumberOfRequests: estimatedResources?.estimatedNumberOfRequests,
+  estimatedUsedTokens: estimatedResources?.estimatedUsedTokens,
+  estimatedUsedMemoryKB: estimatedResources?.estimatedUsedMemoryKB,
 });

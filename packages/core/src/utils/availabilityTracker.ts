@@ -117,29 +117,19 @@ export class AvailabilityTracker {
   /** Calculate current availability from stats, respecting distributed allocation */
   calculateAvailability(): Availability {
     const { models, memory } = this.getStats();
-    const localTPM = getMinRemaining(models, (s) => s.tokensPerMinute?.remaining);
-    const localTPD = getMinRemaining(models, (s) => s.tokensPerDay?.remaining);
-    const localRPM = getMinRemaining(models, (s) => s.requestsPerMinute?.remaining);
-    const localRPD = getMinRemaining(models, (s) => s.requestsPerDay?.remaining);
+    // Local stats already reflect per-instance limits (set via setRateLimits from allocation)
+    const tokensPerMinute = getMinRemaining(models, (s) => s.tokensPerMinute?.remaining);
+    const tokensPerDay = getMinRemaining(models, (s) => s.tokensPerDay?.remaining);
+    const requestsPerMinute = getMinRemaining(models, (s) => s.requestsPerMinute?.remaining);
+    const requestsPerDay = getMinRemaining(models, (s) => s.requestsPerDay?.remaining);
     const concurrentRequests = getMinRemaining(models, (s) => s.concurrency?.available);
     const memoryKB = memory?.availableKB ?? null;
 
-    // Apply distributed allocation constraints (use min of local and distributed)
-    const { distributedAllocation } = this;
-    const tokensPerMinute =
-      distributedAllocation !== null && localTPM !== null
-        ? Math.min(localTPM, distributedAllocation.tokensPerMinute)
-        : localTPM;
-    const requestsPerMinute =
-      distributedAllocation !== null && localRPM !== null
-        ? Math.min(localRPM, distributedAllocation.requestsPerMinute)
-        : localRPM;
-
     const partialAvailability = {
       tokensPerMinute,
-      tokensPerDay: localTPD,
+      tokensPerDay,
       requestsPerMinute,
-      requestsPerDay: localRPD,
+      requestsPerDay,
       concurrentRequests,
       memoryKB,
     };
@@ -148,6 +138,7 @@ export class AvailabilityTracker {
     const localSlots = calculateSlots({ ...partialAvailability, slots: ZERO }, this.estimated);
 
     // Apply distributed slot allocation (use min of local and distributed)
+    const { distributedAllocation } = this;
     const slots =
       distributedAllocation === null ? localSlots : Math.min(localSlots, distributedAllocation.slots);
 

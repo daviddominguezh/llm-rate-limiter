@@ -39,10 +39,15 @@ const sleep = (ms: number): Promise<void> => new Promise((resolve) => setTimeout
 export const processJob = async (params: ProcessJobParams): Promise<JobResult<JobData>> => {
   const { jobId, jobType, payload, modelId } = params;
 
+  // Debug: log the raw payload to see what we receive
+  console.log(`[DEBUG] Job ${jobId} payload:`, JSON.stringify(payload));
+
   logger.info(`Processing job ${jobId}`, { modelId, jobType, payload });
 
   // If durationMs is specified in payload, simulate processing time
   const durationMs = typeof payload.durationMs === 'number' ? payload.durationMs : 0;
+  console.log(`[DEBUG] Job ${jobId} durationMs: ${durationMs}`);
+
   if (durationMs > 0) {
     logger.info(`Job ${jobId} simulating ${durationMs}ms processing time`);
     await sleep(durationMs);

@@ -40,6 +40,9 @@ const getOutputPath = (suiteName: string): string => {
   return join(getOutputDir(), `${suiteName}.json`);
 };
 
+/** Delay to allow distributed allocation to propagate after instance registration */
+const ALLOCATION_PROPAGATION_DELAY_MS = 500;
+
 /** Reset all server instances */
 const resetAllInstances = async (instanceUrls: string[]): Promise<void> => {
   let isFirst = true;
@@ -50,6 +53,8 @@ const resetAllInstances = async (instanceUrls: string[]): Promise<void> => {
     }
     isFirst = false;
   }
+  // Wait for distributed allocation to propagate to all instances
+  await sleep(ALLOCATION_PROPAGATION_DELAY_MS);
 };
 
 /**

@@ -8,6 +8,12 @@
  * - First 50 jobs complete within rate limit
  * - 51st job waits for capacity (not rejected)
  * - 51st job completes AFTER the rate limit window resets (next minute)
+ *
+ * This test validates DISTRIBUTED rate limiting:
+ * - 2 instances share 500,000 TPM total
+ * - Each instance gets 250,000 TPM allocation from Redis
+ * - 51 jobs × 10,000 tokens = 510,000 tokens exceeds capacity
+ * - The rate limiter coordinates across instances via Redis allocation
  */
 import type { JobRecord, TestData } from '@llm-rate-limiter/e2e-test-results';
 

@@ -20,8 +20,10 @@ export const DEFAULT_ESTIMATED_TOKENS = 1000;
 export const DEFAULT_ESTIMATED_REQUESTS = 1;
 export const DEFAULT_JOB_TYPE_RATIO = 1.0;
 
-export const MOCK_INPUT_TOKENS = 100;
-export const MOCK_OUTPUT_TOKENS = 50;
+// Mock tokens should match the estimated tokens for summary jobs (10,000 total)
+// to properly test rate limiting behavior
+export const MOCK_INPUT_TOKENS = 7000;
+export const MOCK_OUTPUT_TOKENS = 3000;
 export const MOCK_REQUEST_COUNT = 1;
 
 export const EXIT_SUCCESS = 0;

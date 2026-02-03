@@ -268,6 +268,17 @@ class LLMRateLimiter implements InternalLimiterInstance {
     }
   }
 
+  setRateLimits(update: { tokensPerMinute?: number; requestsPerMinute?: number }): void {
+    if (update.tokensPerMinute !== undefined && this.tpmCounter !== null) {
+      this.tpmCounter.setLimit(update.tokensPerMinute);
+      this.log('Updated TPM limit', { newLimit: update.tokensPerMinute });
+    }
+    if (update.requestsPerMinute !== undefined && this.rpmCounter !== null) {
+      this.rpmCounter.setLimit(update.requestsPerMinute);
+      this.log('Updated RPM limit', { newLimit: update.requestsPerMinute });
+    }
+  }
+
   stop(): void {
     if (this.memoryRecalculationIntervalId !== null) {
       clearInterval(this.memoryRecalculationIntervalId);

@@ -115,21 +115,27 @@ export interface BackendRegistrationResult {
   allocation: AllocationInfo | null;
 }
 
+/** Callback for applying allocation to rate limiters */
+export type AllocationApplyCallback = (allocation: AllocationInfo) => void;
+
 /**
  * Register with backend.
  */
 export const registerWithBackend = async (
   backend: BackendConfig | undefined,
   instanceId: string,
-  availabilityTracker: AvailabilityTracker | null
+  availabilityTracker: AvailabilityTracker | null,
+  onAllocationChange?: AllocationApplyCallback
 ): Promise<BackendRegistrationResult> => {
   if (backend === undefined) {
     return { unsubscribe: null, allocation: null };
   }
   const allocation = await backend.register(instanceId);
   availabilityTracker?.setDistributedAllocation(allocation);
+  onAllocationChange?.(allocation);
   const unsubscribe = backend.subscribe(instanceId, (alloc: AllocationInfo) => {
     availabilityTracker?.setDistributedAllocation(alloc);
+    onAllocationChange?.(alloc);
   });
   return { unsubscribe, allocation };
 };

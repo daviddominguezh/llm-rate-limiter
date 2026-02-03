@@ -36,19 +36,15 @@ local function recalculateAllocations(instancesKey, allocationsKey, channel, tot
 
   local available = math.max(0, totalCapacity - totalInFlight)
 
-  -- Calculate per-instance rates
-  local tokensPerInstance = math.floor(tokensPerMinute / instanceCount)
-  local requestsPerInstance = math.floor(requestsPerMinute / instanceCount)
-
   for _, n in ipairs(needs) do
     local allocation = 0
     if totalNeed > 0 then
       allocation = math.floor((n.need / totalNeed) * available)
     end
+    -- Include instanceCount so clients can divide their model-specific limits
     local allocData = cjson.encode({
       slots=allocation,
-      tokensPerMinute=tokensPerInstance,
-      requestsPerMinute=requestsPerInstance
+      instanceCount=instanceCount
     })
     redis.call('HSET', allocationsKey, n.id, allocData)
     -- Publish update to subscribers

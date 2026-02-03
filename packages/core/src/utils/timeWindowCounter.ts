@@ -14,7 +14,7 @@ export class TimeWindowCounter {
   private count = ZERO;
   private windowStart: number;
   private readonly windowMs: number;
-  private readonly limit: number;
+  private limit: number;
   private readonly name: string;
   private readonly onLog?: (message: string, data?: Record<string, unknown>) => void;
 
@@ -29,6 +29,18 @@ export class TimeWindowCounter {
     this.name = name;
     this.onLog = onLog;
     this.windowStart = this.getCurrentWindowStart();
+  }
+
+  /**
+   * Update the limit dynamically.
+   * Used when distributed allocation changes (e.g., instances join/leave).
+   */
+  setLimit(newLimit: number): void {
+    console.log(`[DEBUG] ${this.name} setLimit called: oldLimit=${this.limit}, newLimit=${newLimit}`);
+    if (newLimit !== this.limit) {
+      this.log(`Limit changed`, { oldLimit: this.limit, newLimit });
+      this.limit = newLimit;
+    }
   }
 
   private getCurrentWindowStart(): number {

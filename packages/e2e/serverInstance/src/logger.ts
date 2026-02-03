@@ -1,9 +1,14 @@
 import { existsSync, mkdirSync } from 'node:fs';
 import winston from 'winston';
 
-import { EMPTY_LENGTH, LOG_DIR, LOG_FILE_COMBINED, LOG_FILE_ERROR } from './constants.js';
+import { DEFAULT_PRIMARY_PORT, EMPTY_LENGTH, LOG_DIR } from './constants.js';
 
 if (!existsSync(LOG_DIR)) mkdirSync(LOG_DIR, { recursive: true });
+
+// Use PORT to differentiate log files per instance
+const port = process.env.PORT ?? String(DEFAULT_PRIMARY_PORT);
+const logFileError = `${LOG_DIR}/error-${port}.log`;
+const logFileCombined = `${LOG_DIR}/combined-${port}.log`;
 
 const { format } = winston;
 const { combine, timestamp, printf, colorize } = format;
@@ -25,11 +30,11 @@ export const logger = winston.createLogger({
       format: combine(colorize(), timestamp(timestampFormat), logFormat),
     }),
     new winston.transports.File({
-      filename: LOG_FILE_ERROR,
+      filename: logFileError,
       level: 'error',
     }),
     new winston.transports.File({
-      filename: LOG_FILE_COMBINED,
+      filename: logFileCombined,
     }),
   ],
 });

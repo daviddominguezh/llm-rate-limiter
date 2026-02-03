@@ -169,6 +169,14 @@ export interface InternalLimiterStats {
 // Instance Type
 // =============================================================================
 
+/** Options for updating rate limits dynamically */
+export interface RateLimitUpdate {
+  /** New tokens per minute limit */
+  tokensPerMinute?: number;
+  /** New requests per minute limit */
+  requestsPerMinute?: number;
+}
+
 /**
  * Internal rate limiter instance returned by internal createLLMRateLimiter().
  */
@@ -181,4 +189,6 @@ export interface InternalLimiterInstance {
   hasCapacity: () => boolean;
   /** Get current statistics */
   getStats: () => InternalLimiterStats;
+  /** Update rate limits dynamically (for distributed coordination) */
+  setRateLimits: (update: RateLimitUpdate) => void;
 }

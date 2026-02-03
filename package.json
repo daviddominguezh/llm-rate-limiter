@@ -21,10 +21,13 @@
     "test:redis": "npm run test -w @llm-rate-limiter/redis",
     "test:redis-e2e": "npm run test:e2e -w @llm-rate-limiter/redis",
     "e2e:proxy": "npm run dev -w @llm-rate-limiter/e2e-proxy",
+    "e2e:proxy:single": "TARGET_PORTS=3001 npm run dev -w @llm-rate-limiter/e2e-proxy",
     "e2e:instance1": "PORT=3001 npm run dev -w @llm-rate-limiter/e2e-server-instance",
     "e2e:instance2": "PORT=3002 npm run dev -w @llm-rate-limiter/e2e-server-instance",
     "e2e:setup": "npm run e2e:instance1 & npm run e2e:instance2 & npm run e2e:proxy",
-    "e2e:test": "npm run test -w @llm-rate-limiter/e2e-test-runner"
+    "e2e:setup:single": "npm run e2e:instance1 & npm run e2e:proxy:single",
+    "e2e:test": "npm run test -w @llm-rate-limiter/e2e-test-runner",
+    "e2e:test:capacity": "npm run test -w @llm-rate-limiter/e2e-test-runner -- --testPathPattern=capacityPlusOne"
   },
   "devDependencies": {
     "@eslint/js": "^9.28.0",

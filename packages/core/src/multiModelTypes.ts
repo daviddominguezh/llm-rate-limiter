@@ -403,8 +403,8 @@ export interface BackendActualResources {
 /** Allocation info for a specific instance from the distributed backend */
 export interface AllocationInfo {
   slots: number;
-  tokensPerMinute: number;
-  requestsPerMinute: number;
+  /** Number of active instances sharing the rate limits */
+  instanceCount: number;
 }
 
 /** Callback for allocation updates from distributed backend */

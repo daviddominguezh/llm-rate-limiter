@@ -172,10 +172,8 @@ export interface InstanceData {
 export interface AllocationData {
   /** Allocated slots */
   slots: number;
-  /** Allocated tokens per minute */
-  tokensPerMinute: number;
-  /** Allocated requests per minute */
-  requestsPerMinute: number;
+  /** Number of active instances sharing the rate limits */
+  instanceCount: number;
 }
 
 /**

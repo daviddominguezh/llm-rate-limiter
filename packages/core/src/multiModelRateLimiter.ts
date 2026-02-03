@@ -3,6 +3,7 @@ import type { BackendFactoryInstance, DistributedBackendFactory } from './backen
 import type { JobTypeStats, ResourceEstimationsPerJob } from './jobTypeTypes.js';
 import type {
   ActiveJobInfo,
+  AllocationInfo,
   ArgsWithoutModelId,
   AvailabilityChangeReason,
   BackendConfig,
@@ -74,6 +75,7 @@ class LLMRateLimiter implements LLMRateLimiterInstance<string> {
   private backendUnsubscribe: Unsubscribe | null = null;
   private backendFactoryInstance: BackendFactoryInstance | null = null;
   private resolvedBackend: BackendConfig | undefined;
+  private currentInstanceCount = 0;
 
   constructor(config: LLMRateLimiterConfig) {
     validateMultiModelConfig(config);
@@ -127,11 +129,59 @@ class LLMRateLimiter implements LLMRateLimiterInstance<string> {
     const { unsubscribe, allocation } = await registerWithBackend(
       this.resolvedBackend,
       this.instanceId,
-      this.availabilityTracker
+      this.availabilityTracker,
+      (alloc) => {
+        this.applyAllocationToLimiters(alloc);
+      }
     );
     this.backendUnsubscribe = unsubscribe;
     if (allocation !== null) {
       this.log('Registered with backend', { instanceId: this.instanceId, slots: allocation.slots });
+    }
+  }
+
+  /**
+   * Apply distributed allocation limits to all model limiters.
+   * Divides each model's configured TPM/RPM by the number of instances.
+   * Only applies if instanceCount >= current to avoid race conditions.
+   */
+  private applyAllocationToLimiters(allocation: AllocationInfo): void {
+    const { instanceCount } = allocation;
+    // Debug: log raw allocation
+    console.log(`[DEBUG] applyAllocationToLimiters called:`, JSON.stringify(allocation));
+
+    if (instanceCount <= 0) {
+      console.log(`[DEBUG] instanceCount <= 0, skipping`);
+      return;
+    }
+
+    // Only apply if instanceCount >= current (avoid stale allocation overwriting newer one)
+    if (instanceCount < this.currentInstanceCount) {
+      console.log(
+        `[DEBUG] Skipping stale allocation: received instanceCount=${instanceCount}, current=${this.currentInstanceCount}`
+      );
+      return;
+    }
+
+    this.currentInstanceCount = instanceCount;
+    this.log('Applying distributed allocation', { instanceCount });
+
+    for (const [modelId, limiter] of this.modelLimiters) {
+      const modelConfig = this.config.models[modelId];
+      if (modelConfig === undefined) continue;
+
+      const originalTPM = modelConfig.tokensPerMinute;
+      const perInstanceTPM =
+        originalTPM !== undefined ? Math.floor(originalTPM / instanceCount) : undefined;
+      const originalRPM = modelConfig.requestsPerMinute;
+      const perInstanceRPM =
+        originalRPM !== undefined ? Math.floor(originalRPM / instanceCount) : undefined;
+
+      console.log(
+        `[DEBUG] Model ${modelId}: originalTPM=${originalTPM}, instanceCount=${instanceCount}, perInstanceTPM=${perInstanceTPM}`
+      );
+      this.log(`Model ${modelId} limits`, { perInstanceTPM, perInstanceRPM });
+      limiter.setRateLimits({ tokensPerMinute: perInstanceTPM, requestsPerMinute: perInstanceRPM });
     }
   }
 

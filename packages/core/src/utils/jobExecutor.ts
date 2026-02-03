@@ -5,8 +5,10 @@ import type {
   ArgsWithoutModelId,
   JobCallbackContext,
   JobExecutionContext,
+  JobResult,
   JobUsage,
   LLMJobResult,
+  TokenUsageEntry,
   UsageEntry,
 } from '../multiModelTypes.js';
 import type { InternalJobResult, InternalLimiterInstance } from '../types.js';
@@ -14,20 +16,20 @@ import { DelegationError, buildJobArgs, calculateTotalCost } from './jobExecutio
 
 /** Mutable state for job execution callbacks */
 export interface JobExecutionState {
-  callbackCalled: boolean;
+  rejected: boolean;
   shouldDelegate: boolean;
   rejectedWithoutDelegation: boolean;
 }
 
 /** Create initial job execution state */
 export const createJobExecutionState = (): JobExecutionState => ({
-  callbackCalled: false,
+  rejected: false,
   shouldDelegate: false,
   rejectedWithoutDelegation: false,
 });
 
 /** Context for job execution on a specific model */
-export interface ModelJobContext<T extends InternalJobResult, Args extends ArgsWithoutModelId> {
+export interface ModelJobContext<T, Args extends ArgsWithoutModelId = ArgsWithoutModelId> {
   ctx: JobExecutionContext<T, Args>;
   modelId: string;
   limiter: InternalLimiterInstance;
@@ -36,24 +38,6 @@ export interface ModelJobContext<T extends InternalJobResult, Args extends ArgsW
   emitJobAdjustment: (jobType: string, result: InternalJobResult, modelId: string) => void;
   releaseResources: (result: InternalJobResult) => void;
 }
-
-/** Resolve handler context */
-interface ResolveHandlerContext {
-  stateRef: JobExecutionState;
-  ctx: { usage: JobUsage };
-  modelId: string;
-  addUsageWithCost: (ctx: { usage: JobUsage }, modelId: string, usage: UsageEntry) => void;
-}
-
-/** Create resolve handler for job execution */
-const createResolveHandler = (handlerCtx: ResolveHandlerContext): ((usage: UsageEntry) => void) => {
-  const { stateRef, ctx, modelId, addUsageWithCost } = handlerCtx;
-  const mutableState = stateRef;
-  return (usage) => {
-    mutableState.callbackCalled = true;
-    addUsageWithCost(ctx, modelId, usage);
-  };
-};
 
 /** Reject handler context */
 interface RejectHandlerContext {
@@ -66,12 +50,13 @@ interface RejectHandlerContext {
 /** Create reject handler for job execution */
 const createRejectHandler = (
   handlerCtx: RejectHandlerContext
-): ((usage: UsageEntry, opts?: { delegate?: boolean }) => void) => {
+): ((usage: TokenUsageEntry, opts?: { delegate?: boolean }) => void) => {
   const { stateRef, ctx, modelId, addUsageWithCost } = handlerCtx;
   const mutableState = stateRef;
   return (usage, opts) => {
-    mutableState.callbackCalled = true;
-    addUsageWithCost(ctx, modelId, usage);
+    mutableState.rejected = true;
+    const usageEntry: UsageEntry = { modelId, ...usage };
+    addUsageWithCost(ctx, modelId, usageEntry);
     mutableState.shouldDelegate = opts?.delegate !== false;
     if (!mutableState.shouldDelegate) {
       mutableState.rejectedWithoutDelegation = true;
@@ -79,11 +64,8 @@ const createRejectHandler = (
   };
 };
 
-/** Validate job callback was called and handle delegation */
-const validateJobExecution = (state: JobExecutionState): void => {
-  if (!state.callbackCalled) {
-    throw new Error('Job must call resolve() or reject()');
-  }
+/** Check if job was rejected and handle delegation */
+const checkRejection = (state: JobExecutionState): void => {
   if (state.rejectedWithoutDelegation) {
     throw new Error('Job rejected without delegation');
   }
@@ -92,13 +74,39 @@ const validateJobExecution = (state: JobExecutionState): void => {
   }
 };
 
+/** Build InternalJobResult from job result */
+const buildInternalJobResult = <T>(result: JobResult<T>): InternalJobResult => ({
+  requestCount: result.requestCount,
+  usage: {
+    input: result.inputTokens,
+    output: result.outputTokens,
+    cached: result.cachedTokens,
+  },
+});
+
+/** Add usage from successful job result */
+const addSuccessUsage = <T>(
+  result: JobResult<T>,
+  modelId: string,
+  ctx: { usage: JobUsage },
+  addUsageWithCost: (ctx: { usage: JobUsage }, modelId: string, usage: UsageEntry) => void
+): void => {
+  const usageEntry: UsageEntry = {
+    modelId,
+    inputTokens: result.inputTokens,
+    cachedTokens: result.cachedTokens,
+    outputTokens: result.outputTokens,
+  };
+  addUsageWithCost(ctx, modelId, usageEntry);
+};
+
 /** Build final result with callback context */
-export const buildFinalResult = <T extends InternalJobResult, Args extends ArgsWithoutModelId>(
-  result: T,
+export const buildFinalResult = <T, Args extends ArgsWithoutModelId = ArgsWithoutModelId>(
+  data: T,
   modelId: string,
   ctx: JobExecutionContext<T, Args>
 ): LLMJobResult<T> => {
-  const finalResult = { ...result, modelUsed: modelId };
+  const finalResult: LLMJobResult<T> = { data, modelUsed: modelId };
   const callbackContext: JobCallbackContext = {
     jobId: ctx.jobId,
     totalCost: calculateTotalCost(ctx.usage),
@@ -111,33 +119,31 @@ export const buildFinalResult = <T extends InternalJobResult, Args extends ArgsW
 };
 
 /** Execute job on a specific model with all the callback handling */
-export const executeJobWithCallbacks = async <T extends InternalJobResult, Args extends ArgsWithoutModelId>(
+export const executeJobWithCallbacks = async <T, Args extends ArgsWithoutModelId = ArgsWithoutModelId>(
   jobContext: ModelJobContext<T, Args>
 ): Promise<LLMJobResult<T>> => {
-  const {
-    ctx,
-    modelId,
-    limiter,
-    addUsageWithCost,
-    emitAvailabilityChange,
-    emitJobAdjustment,
-    releaseResources,
-  } = jobContext;
+  const { ctx, modelId, limiter, addUsageWithCost, emitAvailabilityChange, emitJobAdjustment, releaseResources } =
+    jobContext;
 
   const state = createJobExecutionState();
   const handlerCtx = { stateRef: state, ctx, modelId, addUsageWithCost };
-  const handleResolve = createResolveHandler(handlerCtx);
   const handleReject = createRejectHandler(handlerCtx);
 
   emitAvailabilityChange(modelId);
-  const result = await limiter.queueJob(async () => {
+  let resultData: T | undefined;
+  const internalResult = await limiter.queueJob(async () => {
     const jobArgs = buildJobArgs<Args>(modelId, ctx.args);
-    const jobResult = await ctx.job(jobArgs, handleResolve, handleReject);
-    validateJobExecution(state);
-    return jobResult;
+    const result = await ctx.job(jobArgs, handleReject);
+    checkRejection(state);
+    resultData = result.data;
+    addSuccessUsage(result, modelId, ctx, addUsageWithCost);
+    return buildInternalJobResult(result);
   });
 
-  emitJobAdjustment(ctx.jobType, result, modelId);
-  releaseResources(result);
-  return buildFinalResult(result, modelId, ctx);
+  emitJobAdjustment(ctx.jobType, internalResult, modelId);
+  releaseResources(internalResult);
+  if (resultData === undefined) {
+    throw new Error('Job did not return a result');
+  }
+  return buildFinalResult(resultData, modelId, ctx);
 };

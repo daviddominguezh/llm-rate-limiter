@@ -175,10 +175,10 @@ class LLMRateLimiter implements LLMRateLimiterInstance {
     return this.escalationOrder.find((m) => !excludeModels.has(m) && this.hasCapacityForModel(m)) ?? null;
   }
 
-  async queueJob<T extends InternalJobResult, Args extends ArgsWithoutModelId = ArgsWithoutModelId>(
+  async queueJob<T, Args extends ArgsWithoutModelId = ArgsWithoutModelId>(
     options: QueueJobOptions<T, Args>
   ): Promise<LLMJobResult<T>> {
-    const { jobType } = options;
+    const { jobType, job } = options;
     const { jobTypeManager: manager, resourceEstimationsPerJob: cfg } = this;
     validateJobTypeExists(jobType, cfg);
     const acquired = await acquireJobTypeSlot({
@@ -189,7 +189,7 @@ class LLMRateLimiter implements LLMRateLimiterInstance {
     const ctx: JobExecutionContext<T, Args> = {
       jobId: options.jobId,
       jobType,
-      job: options.job,
+      job,
       args: options.args,
       triedModels: new Set<string>(),
       usage: [],
@@ -203,7 +203,7 @@ class LLMRateLimiter implements LLMRateLimiterInstance {
     }
   }
 
-  private async executeJobWithDelegation<T extends InternalJobResult, Args extends ArgsWithoutModelId>(
+  private async executeJobWithDelegation<T, Args extends ArgsWithoutModelId = ArgsWithoutModelId>(
     ctx: JobExecutionContext<T, Args>
   ): Promise<LLMJobResult<T>> {
     const { modelId: selectedModel, allModelsExhausted } = await selectModelWithWait({
@@ -238,7 +238,7 @@ class LLMRateLimiter implements LLMRateLimiterInstance {
     }
   }
 
-  private async handleExecutionError<T extends InternalJobResult, Args extends ArgsWithoutModelId>(
+  private async handleExecutionError<T, Args extends ArgsWithoutModelId = ArgsWithoutModelId>(
     ctx: JobExecutionContext<T, Args>,
     modelId: string,
     error: unknown
@@ -254,7 +254,7 @@ class LLMRateLimiter implements LLMRateLimiterInstance {
     throw errorObj;
   }
 
-  private async executeJobOnModel<T extends InternalJobResult, Args extends ArgsWithoutModelId>(
+  private async executeJobOnModel<T, Args extends ArgsWithoutModelId = ArgsWithoutModelId>(
     ctx: JobExecutionContext<T, Args>,
     modelId: string
   ): Promise<LLMJobResult<T>> {

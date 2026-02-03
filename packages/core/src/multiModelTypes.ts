@@ -167,18 +167,35 @@ export interface LLMRateLimiterConfig {
 // =============================================================================
 
 /**
- * Usage entry for a single model attempt (provided by the job to resolve/reject).
- * Each model that processes the job (even if it fails) should report its token usage.
+ * Token usage for resolve/reject callbacks (modelId is injected automatically).
  */
-export interface UsageEntry {
-  /** The model that was used */
-  modelId: string;
+export interface TokenUsageEntry {
   /** Number of input tokens consumed */
   inputTokens: number;
   /** Number of cached tokens (from prompt caching) */
   cachedTokens: number;
   /** Number of output tokens generated */
   outputTokens: number;
+}
+
+/**
+ * Job result containing usage info and data.
+ * Return this from your job function for proper type inference.
+ * @typeParam T - The type of the data property
+ */
+export interface JobResult<T> extends TokenUsageEntry {
+  /** Actual number of LLM API calls made by this job */
+  requestCount: number;
+  /** The result data from the job */
+  data: T;
+}
+
+/**
+ * Usage entry for a single model attempt (stored internally with modelId).
+ */
+export interface UsageEntry extends TokenUsageEntry {
+  /** The model that was used */
+  modelId: string;
 }
 
 /**
@@ -216,17 +233,19 @@ export type ArgsWithoutModelId = Record<string, unknown> & { modelId?: never };
 export type JobArgs<Args extends ArgsWithoutModelId> = { modelId: string } & Omit<Args, 'modelId'>;
 
 /**
- * Job function signature with resolve/reject callbacks for delegation support.
+ * Job function signature for LLM rate limiter.
+ *
+ * Return a JobResult with your data for successful completion.
+ * Call reject() to delegate to another model or fail.
  *
  * @param args - Combined args with modelId injected by rate limiter
- * @param resolve - Call when job succeeds, must provide usage for this model
- * @param reject - Call when job fails, must provide usage for this model
+ * @param reject - Call when job fails, optionally delegate to next model
+ * @typeParam T - The type of the data (inferred from return value)
  */
-export type LLMJob<T extends InternalJobResult, Args extends ArgsWithoutModelId = ArgsWithoutModelId> = (
+export type LLMJob<T, Args extends ArgsWithoutModelId = ArgsWithoutModelId> = (
   args: JobArgs<Args>,
-  resolve: (usage: UsageEntry) => void,
-  reject: (usage: UsageEntry, opts?: JobRejectOptions) => void
-) => Promise<T> | T;
+  reject: (usage: TokenUsageEntry, opts?: JobRejectOptions) => void
+) => JobResult<T> | Promise<JobResult<T>>;
 
 /**
  * Callback context for onComplete and onError handlers.
@@ -242,9 +261,10 @@ export interface JobCallbackContext {
 
 /**
  * Options for queueJob with delegation support.
+ * @typeParam T - The type of the data (inferred from job return value)
  */
 export interface QueueJobOptions<
-  T extends InternalJobResult,
+  T = unknown,
   Args extends ArgsWithoutModelId = ArgsWithoutModelId,
   JobType extends string = string,
 > {
@@ -256,12 +276,12 @@ export interface QueueJobOptions<
    * Determines which capacity pool the job uses.
    */
   jobType: JobType;
-  /** Job function that receives args with modelId, and resolve/reject callbacks */
+  /** Job function that returns JobResult with usage and data */
   job: LLMJob<T, Args>;
   /** User-defined args passed to job (modelId is injected automatically) */
   args?: Args;
   /** Called when job completes successfully on any model */
-  onComplete?: (result: LLMJobResult<T>, context: JobCallbackContext) => void;
+  onComplete?: (result: LLMJobResult<NoInfer<T>>, context: JobCallbackContext) => void;
   /** Called when job fails without delegation or all models exhausted */
   onError?: (error: Error, context: JobCallbackContext) => void;
 }
@@ -271,12 +291,15 @@ export interface QueueJobOptions<
 // =============================================================================
 
 /**
- * Result type for jobs that includes which model was used.
+ * Result type for jobs that includes the data and which model was used.
+ * @typeParam T - The type of the data returned via resolve
  */
-export type LLMJobResult<T extends InternalJobResult> = T & {
+export interface LLMJobResult<T = unknown> {
+  /** The result data from the job */
+  data: T;
   /** The model ID that was used to execute this job */
   modelUsed: string;
-};
+}
 
 // =============================================================================
 // Statistics Types
@@ -491,8 +514,9 @@ export interface DistributedAvailability {
 
 /**
  * Internal context for tracking job execution state during delegation.
+ * @typeParam T - The type of the data returned via resolve
  */
-export interface JobExecutionContext<T extends InternalJobResult, Args extends ArgsWithoutModelId> {
+export interface JobExecutionContext<T = unknown, Args extends ArgsWithoutModelId = ArgsWithoutModelId> {
   jobId: string;
   /** Job type for capacity allocation (required) */
   jobType: string;
@@ -519,13 +543,15 @@ export interface LLMRateLimiterInstance<JobType extends string = string> {
    *
    * The job function receives:
    * - args: User args merged with { modelId } injected by the rate limiter
-   * - resolve: Call when job succeeds
-   * - reject: Call when job fails, with optional { delegate: boolean }
+   * - reject: Call to delegate to next model or fail
+   *
+   * Return a JobResult with usage info and data for successful completion.
    *
    * @param options - Job options including job function, args, and callbacks
-   * @returns Promise resolving to job result with modelUsed property
+   * @returns Promise resolving to job result with data and modelUsed properties
+   * @typeParam T - The type of the data (inferred from job return value)
    */
-  queueJob: <T extends InternalJobResult, Args extends ArgsWithoutModelId = ArgsWithoutModelId>(
+  queueJob: <T, Args extends ArgsWithoutModelId = ArgsWithoutModelId>(
     options: QueueJobOptions<T, Args, JobType>
   ) => Promise<LLMJobResult<T>>;
 

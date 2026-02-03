@@ -270,5 +270,8 @@ export const selectModelWithWait = async (params: SelectModelWithWaitParams): Pr
   }
 
   // All models exhausted
-  return { modelId: null, allModelsExhausted: modelsAttempted > ZERO || triedModels.size >= escalationOrder.length };
+  return {
+    modelId: null,
+    allModelsExhausted: modelsAttempted > ZERO || triedModels.size >= escalationOrder.length,
+  };
 };

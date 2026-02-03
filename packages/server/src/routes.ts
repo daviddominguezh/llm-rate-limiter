@@ -15,38 +15,13 @@ interface QueueJobToLimiterParams {
   payload: Record<string, unknown>;
 }
 
-const createQueueJobHandler =
-  (rateLimiter: ServerRateLimiter) =>
-  (req: Request, res: Response<QueueJobResponse | ErrorResponse>): void => {
-    const validation = validateQueueJobRequest(req.body);
-
-    if (!validation.valid) {
-      res.status(HTTP_STATUS_BAD_REQUEST).json({
-        success: false,
-        error: validation.error,
-      });
-      return;
-    }
-
-    const { data } = validation;
-    const { jobId, jobType, payload } = data;
-
-    queueJobToLimiter({ rateLimiter, jobId, jobType, payload });
-
-    res.status(HTTP_STATUS_ACCEPTED).json({
-      success: true,
-      jobId,
-      message: 'Job queued successfully',
-    });
-  };
-
 const queueJobToLimiter = (params: QueueJobToLimiterParams): void => {
   const { rateLimiter, jobId, jobType, payload } = params;
 
   rateLimiter
     .queueJob({
       jobId,
-      jobType: 'default',
+      jobType,
       job: (args) => processJob({ jobId, jobType, payload, modelId: args.modelId }),
       onComplete: (result, context) => {
         handleJobComplete({
@@ -71,6 +46,21 @@ const queueJobToLimiter = (params: QueueJobToLimiterParams): void => {
 
 export const createRoutes = (rateLimiter: ServerRateLimiter): Router => {
   const router = createRouter();
-  router.post('/queue-job', createQueueJobHandler(rateLimiter));
+
+  router.post('/queue-job', (req: Request, res: Response<QueueJobResponse | ErrorResponse>): void => {
+    const validation = validateQueueJobRequest(req.body);
+
+    if (!validation.valid) {
+      res.status(HTTP_STATUS_BAD_REQUEST).json({ error: validation.error });
+      return;
+    }
+
+    const { data } = validation;
+
+    queueJobToLimiter({ ...data, rateLimiter });
+
+    res.status(HTTP_STATUS_ACCEPTED).json({ jobId: data.jobId });
+  });
+
   return router;
 };

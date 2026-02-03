@@ -15,7 +15,7 @@ const logFormat = printf(({ level, message, timestamp: ts, ...meta }) => {
   return `${timestampStr} [${level}] ${messageStr}${metaStr}`;
 });
 
-const timestampFormat = { format: 'YYYY-MM-DD HH:mm:ss' };
+const timestampFormat = { format: 'YYYY-MM-DD HH:mm:ss.SSS' };
 
 export const logger = winston.createLogger({
   level: process.env.LOG_LEVEL ?? 'info',

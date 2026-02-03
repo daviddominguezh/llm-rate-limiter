@@ -19,6 +19,7 @@
     { "path": "./packages/redis" },
     { "path": "./packages/e2e/proxy" },
     { "path": "./packages/e2e/serverInstance" },
+    { "path": "./packages/e2e/testResults" },
     { "path": "./packages/e2e/testRunner" }
   ],
   "files": []

@@ -22,8 +22,5 @@
   },
   "include": ["src/**/*.ts"],
   "exclude": ["node_modules", "dist"],
-  "references": [
-    { "path": "../../core" },
-    { "path": "../../redis" }
-  ]
+  "references": [{ "path": "../../core" }, { "path": "../../redis" }]
 }

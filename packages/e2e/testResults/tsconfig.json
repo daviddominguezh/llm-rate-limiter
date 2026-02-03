@@ -1,5 +1,5 @@
 {
-  "$schema": "https://json.schemastore.org/tsconfig",
+  "$schema": "https://json-schema.org/draft/tsconfig",
   "compilerOptions": {
     "target": "ES2024",
     "lib": ["ES2024"],
@@ -21,6 +21,5 @@
     "types": ["node"]
   },
   "include": ["src/**/*.ts"],
-  "exclude": ["node_modules", "dist"],
-  "references": [{ "path": "../testResults" }]
+  "exclude": ["node_modules", "dist"]
 }

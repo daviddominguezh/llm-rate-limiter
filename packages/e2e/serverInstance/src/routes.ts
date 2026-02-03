@@ -2,24 +2,19 @@ import type { Request, Response, Router } from 'express';
 import { Router as createRouter } from 'express';
 
 import { HTTP_STATUS_ACCEPTED, HTTP_STATUS_BAD_REQUEST } from './constants.js';
-import type { DebugEventEmitter, JobHistoryTracker } from './debug/index.js';
 import { handleJobComplete, handleJobError, processJob } from './jobHandler.js';
 import { logger } from './logger.js';
-import type { ServerRateLimiter } from './rateLimiterSetup.js';
+import type { ServerState } from './serverState.js';
 import type { ErrorResponse, QueueJobResponse } from './types.js';
 import { validateQueueJobRequest } from './validation.js';
 
 /** Dependencies for routes */
 export interface RoutesDeps {
-  rateLimiter: ServerRateLimiter;
-  eventEmitter: DebugEventEmitter;
-  jobHistoryTracker: JobHistoryTracker;
+  state: ServerState;
 }
 
 interface QueueJobToLimiterParams {
-  rateLimiter: ServerRateLimiter;
-  eventEmitter: DebugEventEmitter;
-  jobHistoryTracker: JobHistoryTracker;
+  state: ServerState;
   jobId: string;
   jobType: string;
   payload: Record<string, unknown>;
@@ -33,7 +28,8 @@ interface JobTrackingInfo {
 }
 
 const queueJobToLimiter = (params: QueueJobToLimiterParams): void => {
-  const { rateLimiter, eventEmitter, jobHistoryTracker, jobId, jobType, payload } = params;
+  const { state, jobId, jobType, payload } = params;
+  const { rateLimiter, eventEmitter, jobHistoryTracker } = state;
 
   // Track timing info
   const tracking: JobTrackingInfo = {
@@ -147,7 +143,7 @@ const queueJobToLimiter = (params: QueueJobToLimiterParams): void => {
 };
 
 export const createRoutes = (deps: RoutesDeps): Router => {
-  const { rateLimiter, eventEmitter, jobHistoryTracker } = deps;
+  const { state } = deps;
   const router = createRouter();
 
   router.post('/queue-job', (req: Request, res: Response<QueueJobResponse | ErrorResponse>): void => {
@@ -162,9 +158,7 @@ export const createRoutes = (deps: RoutesDeps): Router => {
 
     queueJobToLimiter({
       ...data,
-      rateLimiter,
-      eventEmitter,
-      jobHistoryTracker,
+      state,
     });
 
     res.status(HTTP_STATUS_ACCEPTED).json({ jobId: data.jobId });

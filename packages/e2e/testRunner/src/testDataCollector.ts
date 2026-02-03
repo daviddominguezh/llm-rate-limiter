@@ -1,68 +1,71 @@
 import { writeFile } from 'node:fs/promises';
 import { request } from 'node:http';
 
+import type { TestData } from '@llm-rate-limiter/e2e-test-results';
+
 import type { InstanceState } from './stateAggregator.js';
+import { type RawTestData, transformTestData } from './testDataTransform.js';
+
+export type { TestData } from '@llm-rate-limiter/e2e-test-results';
 
 const HTTP_OK = 200;
 
 /** A single event captured from SSE */
-export interface CapturedEvent {
-  /** Timestamp when event was received */
+interface CapturedEvent {
   receivedAt: number;
-  /** Instance URL the event came from */
   sourceUrl: string;
-  /** The parsed event data */
   event: unknown;
 }
 
 /** A state snapshot at a point in time */
-export interface StateSnapshot {
-  /** Timestamp of the snapshot */
+interface RawSnapshot {
   timestamp: number;
-  /** Label describing when this snapshot was taken */
   label: string;
-  /** State from each instance */
   instances: InstanceState[];
 }
 
-/** Job history from an instance */
-export interface InstanceJobHistory {
-  instanceId: string;
-  history: unknown[];
-  summary: { completed: number; failed: number; total: number };
+/** Job sent record */
+interface JobSent {
+  jobId: string;
+  jobType: string;
+  sentAt: number;
+  targetUrl: string;
 }
 
-/** Complete test data collected during a run */
-export interface TestData {
-  /** When the test started */
-  startTime: number;
-  /** When the test ended */
-  endTime: number;
-  /** Duration in milliseconds */
-  durationMs: number;
-  /** Instance URLs that were monitored */
-  instanceUrls: string[];
-  /** All events captured from SSE streams */
-  events: CapturedEvent[];
-  /** State snapshots taken during the test */
-  snapshots: StateSnapshot[];
-  /** Job history from each instance at the end */
-  jobHistory: InstanceJobHistory[];
-  /** Jobs that were sent during the test */
-  jobsSent: Array<{ jobId: string; jobType: string; sentAt: number; targetUrl: string }>;
-  /** Test results summary */
-  summary: {
-    totalJobsSent: number;
-    totalEventsReceived: number;
-    totalSnapshots: number;
+/** Parsed job event from SSE */
+export interface JobEvent {
+  type: 'job:queued' | 'job:started' | 'job:completed' | 'job:failed';
+  instanceId: string;
+  jobId: string;
+  jobType: string;
+}
+
+/** Event types that trigger snapshots */
+const SNAPSHOT_EVENT_TYPES = new Set(['job:queued', 'job:completed', 'job:failed']);
+
+/** Parse a job event from raw SSE data */
+const parseJobEvent = (eventData: unknown): JobEvent | null => {
+  if (typeof eventData !== 'object' || eventData === null) {
+    return null;
+  }
+  const data = eventData as Record<string, unknown>;
+  const eventType = data.type as string | undefined;
+  if (!eventType || !SNAPSHOT_EVENT_TYPES.has(eventType)) {
+    return null;
+  }
+  const payload = data.payload as Record<string, unknown> | undefined;
+  return {
+    type: eventType as JobEvent['type'],
+    instanceId: data.instanceId as string,
+    jobId: payload?.jobId as string,
+    jobType: payload?.jobType as string,
   };
-}
+};
 
-/** Response from job history endpoint */
-interface JobHistoryResponse {
-  instanceId: string;
-  history: unknown[];
-  summary: { completed: number; failed: number; total: number };
+/** Options for TestDataCollector */
+export interface TestDataCollectorOptions {
+  /** Callback when a job event (queued/completed/failed) is received */
+  onJobEvent?: (event: JobEvent) => void;
 }
 
 /**
@@ -71,14 +74,16 @@ interface JobHistoryResponse {
 export class TestDataCollector {
   private readonly instanceUrls: string[];
   private readonly events: CapturedEvent[] = [];
-  private readonly snapshots: StateSnapshot[] = [];
-  private readonly jobsSent: TestData['jobsSent'] = [];
+  private readonly snapshots: RawSnapshot[] = [];
+  private readonly jobsSent: JobSent[] = [];
   private readonly startTime: number;
   private readonly sseConnections: Map<string, { close: () => void }> = new Map();
+  private readonly onJobEvent?: (event: JobEvent) => void;
 
-  constructor(instanceUrls: string[]) {
+  constructor(instanceUrls: string[], options: TestDataCollectorOptions = {}) {
     this.instanceUrls = instanceUrls;
     this.startTime = Date.now();
+    this.onJobEvent = options.onJobEvent;
   }
 
   /**
@@ -124,6 +129,14 @@ export class TestDataCollector {
                   sourceUrl: baseUrl,
                   event: eventData,
                 });
+
+                // Notify callback if this is a job event
+                if (this.onJobEvent !== undefined) {
+                  const jobEvent = parseJobEvent(eventData);
+                  if (jobEvent !== null) {
+                    this.onJobEvent(jobEvent);
+                  }
+                }
               } catch {
                 // Ignore parse errors
               }
@@ -180,97 +193,28 @@ export class TestDataCollector {
   }
 
   /**
-   * Fetch job history from all instances.
+   * Get all collected data in the improved format.
    */
-  async fetchJobHistory(): Promise<InstanceJobHistory[]> {
-    const results = await Promise.all(
-      this.instanceUrls.map(async (url) => {
-        const response = await this.fetchJson<JobHistoryResponse>(`${url}/api/debug/job-history`);
-        if (response === null) {
-          return {
-            instanceId: 'unknown',
-            history: [],
-            summary: { completed: 0, failed: 0, total: 0 },
-          };
-        }
-        return {
-          instanceId: response.instanceId,
-          history: response.history,
-          summary: response.summary,
-        };
-      })
-    );
-    return results;
-  }
-
-  private async fetchJson<T>(url: string): Promise<T | null> {
-    return new Promise((resolve) => {
-      const urlObj = new URL(url);
-
-      const req = request(
-        {
-          hostname: urlObj.hostname,
-          port: urlObj.port,
-          path: urlObj.pathname,
-          method: 'GET',
-        },
-        (res) => {
-          if (res.statusCode !== HTTP_OK) {
-            resolve(null);
-            return;
-          }
-
-          let body = '';
-          res.on('data', (chunk: Buffer) => {
-            body += chunk.toString();
-          });
-          res.on('end', () => {
-            try {
-              resolve(JSON.parse(body) as T);
-            } catch {
-              resolve(null);
-            }
-          });
-        }
-      );
-
-      req.on('error', () => {
-        resolve(null);
-      });
-
-      req.end();
-    });
-  }
-
-  /**
-   * Get all collected data.
-   */
-  async getData(): Promise<TestData> {
+  getData(): TestData {
     const endTime = Date.now();
-    const jobHistory = await this.fetchJobHistory();
 
-    return {
+    const rawData: RawTestData = {
       startTime: this.startTime,
       endTime,
-      durationMs: endTime - this.startTime,
       instanceUrls: this.instanceUrls,
-      events: this.events,
+      events: this.events as RawTestData['events'],
       snapshots: this.snapshots,
-      jobHistory,
       jobsSent: this.jobsSent,
-      summary: {
-        totalJobsSent: this.jobsSent.length,
-        totalEventsReceived: this.events.length,
-        totalSnapshots: this.snapshots.length,
-      },
     };
+
+    return transformTestData(rawData);
   }
 
   /**
    * Save all collected data to a file.
    */
   async saveToFile(filePath: string): Promise<void> {
-    const data = await this.getData();
+    const data = this.getData();
     const json = JSON.stringify(data, null, 2);
     await writeFile(filePath, json, 'utf-8');
   }

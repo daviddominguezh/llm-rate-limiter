@@ -1,23 +1,24 @@
 import { mkdir } from 'node:fs/promises';
-import { dirname } from 'node:path';
+import { dirname, join } from 'node:path';
+import { fileURLToPath } from 'node:url';
 
-import { cleanupRedis } from './redisCleanup.js';
+import { resetInstance } from './resetInstance.js';
 import { StateAggregator } from './stateAggregator.js';
 import { TestDataCollector } from './testDataCollector.js';
-import { createJobs, log, logError, sendJob, sleep, summarizeResults } from './testUtils.js';
+import { log, logError, sendJob, sleep, summarizeResults } from './testUtils.js';
 
-const REDIS_URL = 'redis://localhost:6379';
 const PROXY_URL = 'http://localhost:3000';
 const INSTANCE_URLS = ['http://localhost:3001', 'http://localhost:3002'];
 const NUM_JOBS = 10;
 const EXIT_FAILURE = 1;
 const ZERO = 0;
 
-// Output file for test data
-const OUTPUT_DIR = './test-results';
+// Output file for test data - save to shared testResults package
+const getCurrentDir = (): string => dirname(fileURLToPath(import.meta.url));
+const OUTPUT_DIR = join(getCurrentDir(), '../../testResults/src/data');
 const getOutputFilePath = (): string => {
   const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
-  return `${OUTPUT_DIR}/test-run-${timestamp}.json`;
+  return join(OUTPUT_DIR, `test-run-${timestamp}.json`);
 };
 
 const JOB_TYPES = ['summary', 'VacationPlanning', 'ImageCreation', 'BudgetCalculation', 'WeatherForecast'];
@@ -27,26 +28,50 @@ const getRandomJobType = (): string => {
   return JOB_TYPES[randomIndex] ?? 'summary';
 };
 
+const resetAllInstances = async (): Promise<void> => {
+  log('Resetting all server instances...');
+
+  let isFirst = true;
+  for (const url of INSTANCE_URLS) {
+    // Only clean Redis on the first instance to avoid wiping other instances' registrations
+    const result = await resetInstance(url, { cleanRedis: isFirst });
+    if (result.success) {
+      const cleanMsg = isFirst ? `${result.keysDeleted} keys deleted, ` : '';
+      log(`  - ${url}: Reset OK (${cleanMsg}new ID: ${result.newInstanceId})`);
+    } else {
+      logError(`  - ${url}: Reset FAILED - ${result.error}`);
+    }
+    isFirst = false;
+  }
+};
+
 const runTests = async (): Promise<void> => {
   log('=== E2E Test Runner ===');
   log(`Proxy URL: ${PROXY_URL}`);
   log(`Instance URLs: ${INSTANCE_URLS.join(', ')}`);
   log('');
 
-  // Clean Redis before starting
-  log('Cleaning Redis state...');
-  const cleanupResult = await cleanupRedis({ url: REDIS_URL });
-  log(`Cleaned ${cleanupResult.totalKeysDeleted} keys in ${cleanupResult.durationMs}ms`);
-  for (const [prefix, count] of Object.entries(cleanupResult.keysPerPrefix)) {
-    if (count > ZERO) {
-      log(`  - ${prefix}*: ${count} keys`);
-    }
-  }
+  // Reset all instances (cleans Redis and creates new rate limiters)
+  await resetAllInstances();
   log('');
 
   // Initialize collectors
   const aggregator = new StateAggregator(INSTANCE_URLS);
-  const collector = new TestDataCollector(INSTANCE_URLS);
+
+  // Create collector with callback to take snapshots on job events
+  const collector = new TestDataCollector(INSTANCE_URLS, {
+    onJobEvent: (event) => {
+      // Take a snapshot asynchronously when a job event occurs
+      aggregator
+        .fetchState()
+        .then((states) => {
+          collector.addSnapshot(`${event.type}:${event.jobId}`, states);
+        })
+        .catch(() => {
+          // Ignore snapshot errors
+        });
+    },
+  });
 
   // Start listening to SSE events
   log('Starting event listeners...');
@@ -117,31 +142,37 @@ const runTests = async (): Promise<void> => {
   collector.stopEventListeners();
 
   // Get collected data summary
-  const data = await collector.getData();
+  const data = collector.getData();
   log('');
   log('=== Data Collection Summary ===');
-  log(`Duration: ${data.durationMs}ms`);
-  log(`Events captured: ${data.summary.totalEventsReceived}`);
-  log(`Snapshots taken: ${data.summary.totalSnapshots}`);
-  log(`Jobs sent: ${data.summary.totalJobsSent}`);
+  log(`Duration: ${data.metadata.durationMs}ms`);
+  log(`Timeline events: ${data.timeline.length}`);
+  log(`Snapshots taken: ${data.snapshots.length}`);
+  log(`Jobs: ${data.summary.totalJobs} total, ${data.summary.completed} completed, ${data.summary.failed} failed`);
+  if (data.summary.avgDurationMs !== null) {
+    log(`Avg job duration: ${data.summary.avgDurationMs.toFixed(1)}ms`);
+  }
 
-  // Log event breakdown
+  // Log event breakdown from timeline
   const eventTypes = new Map<string, number>();
-  for (const event of data.events) {
-    const type = (event.event as { type?: string })?.type ?? 'unknown';
-    eventTypes.set(type, (eventTypes.get(type) ?? 0) + 1);
+  for (const event of data.timeline) {
+    eventTypes.set(event.event, (eventTypes.get(event.event) ?? 0) + 1);
   }
   log('Event breakdown:');
   for (const [type, count] of eventTypes) {
     log(`  - ${type}: ${count}`);
   }
 
-  // Log job history summary
-  log('Job history per instance:');
-  for (const history of data.jobHistory) {
-    log(
-      `  - ${history.instanceId}: ${history.summary.completed} completed, ${history.summary.failed} failed`
-    );
+  // Log by instance
+  log('By instance:');
+  for (const [instanceId, stats] of Object.entries(data.summary.byInstance)) {
+    log(`  - ${instanceId}: ${stats.completed} completed, ${stats.failed} failed`);
+  }
+
+  // Log by model
+  log('By model:');
+  for (const [modelId, stats] of Object.entries(data.summary.byModel)) {
+    log(`  - ${modelId}: ${stats.completed} completed, ${stats.failed} failed`);
   }
 
   // Save to file

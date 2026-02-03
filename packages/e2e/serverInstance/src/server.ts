@@ -2,26 +2,24 @@ import express, { type Express } from 'express';
 import type { Server } from 'node:http';
 import { promisify } from 'node:util';
 
-import { DebugEventEmitter, JobHistoryTracker, createDebugRoutes } from './debug/index.js';
+import { createDebugRoutes } from './debug/index.js';
 import { env } from './env.js';
 import { logger } from './logger.js';
 import { findAvailablePort } from './portUtils.js';
-import { type ServerRateLimiter, createRateLimiterInstance } from './rateLimiterSetup.js';
 import { createRoutes } from './routes.js';
+import { type ResetOptions, type ServerState, createServerState, resetServerState } from './serverState.js';
 import type { ServerConfig } from './types.js';
 
 interface CloseServerParams {
   server: Server;
-  rateLimiter: ServerRateLimiter;
-  eventEmitter: DebugEventEmitter;
-  jobHistoryTracker: JobHistoryTracker;
+  state: ServerState;
 }
 
 type ServerCloseCallback = (err?: Error) => void;
 
 interface ServerInstance {
   app: Express;
-  rateLimiter: ServerRateLimiter;
+  state: ServerState;
   port: number;
   close: () => Promise<void>;
 }
@@ -31,51 +29,50 @@ export const createServer = async (config: ServerConfig = {}): Promise<ServerIns
 
   const port = await findAvailablePort([primaryPort, fallbackPort]);
 
-  // Create debug components first (need instanceId from rate limiter)
-  const jobHistoryTracker = new JobHistoryTracker();
+  // Create mutable server state
+  const state = createServerState(redisUrl);
 
-  // Create rate limiter with availability change callback
-  const rateLimiter = createRateLimiterInstance(redisUrl);
-
-  // Create event emitter with instance ID
-  const eventEmitter = new DebugEventEmitter(rateLimiter.getInstanceId());
-
-  await rateLimiter.start();
+  // Start the rate limiter
+  await state.rateLimiter.start();
   logger.info('Rate limiter started');
 
   const app = express();
 
   app.use(express.json());
 
-  // Mount main routes with debug components
-  app.use('/api', createRoutes({ rateLimiter, eventEmitter, jobHistoryTracker }));
+  // Create reset function that captures redisUrl
+  const resetServer = async (options?: ResetOptions) => resetServerState(state, redisUrl, options);
 
-  // Mount debug routes
-  app.use('/api/debug', createDebugRoutes({ rateLimiter, eventEmitter, jobHistoryTracker }));
+  // Mount main routes with state
+  app.use('/api', createRoutes({ state }));
+
+  // Mount debug routes with state and reset function
+  app.use('/api/debug', createDebugRoutes({ state, resetServer }));
 
   const server = app.listen(port, () => {
     logger.info(`Server running on http://localhost:${port}`);
     logger.info(`Queue endpoint: POST http://localhost:${port}/api/queue-job`);
     logger.info(`Debug SSE: GET http://localhost:${port}/api/debug/events`);
+    logger.info(`Reset endpoint: POST http://localhost:${port}/api/debug/reset`);
   });
 
-  const close = createCloseHandler({ server, rateLimiter, eventEmitter, jobHistoryTracker });
+  const close = createCloseHandler({ server, state });
 
-  return { app, rateLimiter, port, close };
+  return { app, state, port, close };
 };
 
 export const createCloseHandler = (params: CloseServerParams): (() => Promise<void>) => {
-  const { server, rateLimiter, eventEmitter, jobHistoryTracker } = params;
+  const { server, state } = params;
 
   return async (): Promise<void> => {
     // Close SSE connections first
-    eventEmitter.closeAll();
+    state.eventEmitter.closeAll();
     logger.info('SSE connections closed');
 
     // Stop job history tracker cleanup interval
-    jobHistoryTracker.stop();
+    state.jobHistoryTracker.stop();
 
-    rateLimiter.stop();
+    state.rateLimiter.stop();
     logger.info('Rate limiter stopped');
 
     const closeAsync = promisify((callback: ServerCloseCallback) => {

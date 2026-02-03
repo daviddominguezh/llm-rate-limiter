@@ -1,24 +1,37 @@
 import type { Request, Response, Router } from 'express';
 import { Router as createRouter } from 'express';
 
-import type { ServerRateLimiter } from '../rateLimiterSetup.js';
+import type { ResetOptions, ResetResult, ServerState } from '../serverState.js';
 import type { DebugEventEmitter } from './eventEmitter.js';
 import type { JobHistoryTracker } from './jobHistoryTracker.js';
 
 const HTTP_STATUS_OK = 200;
+const HTTP_STATUS_INTERNAL_ERROR = 500;
 
 /** Dependencies for debug routes */
 export interface DebugRouteDeps {
-  rateLimiter: ServerRateLimiter;
+  state: ServerState;
+  resetServer: (options?: ResetOptions) => Promise<ResetResult>;
+}
+
+/** Get current state components (for convenience) */
+const getStateComponents = (
+  state: ServerState
+): {
+  rateLimiter: ServerState['rateLimiter'];
   eventEmitter: DebugEventEmitter;
   jobHistoryTracker: JobHistoryTracker;
-}
+} => ({
+  rateLimiter: state.rateLimiter,
+  eventEmitter: state.eventEmitter,
+  jobHistoryTracker: state.jobHistoryTracker,
+});
 
 /**
  * Create debug routes for observability and testing.
  */
 export const createDebugRoutes = (deps: DebugRouteDeps): Router => {
-  const { rateLimiter, eventEmitter, jobHistoryTracker } = deps;
+  const { state, resetServer } = deps;
   const router = createRouter();
 
   /**
@@ -26,6 +39,7 @@ export const createDebugRoutes = (deps: DebugRouteDeps): Router => {
    * Returns full rate limiter stats including models, job types, and memory.
    */
   router.get('/stats', (_req: Request, res: Response): void => {
+    const { rateLimiter } = getStateComponents(state);
     const stats = rateLimiter.getStats();
     const instanceId = rateLimiter.getInstanceId();
 
@@ -41,6 +55,7 @@ export const createDebugRoutes = (deps: DebugRouteDeps): Router => {
    * Returns all active jobs (waiting or processing) from the rate limiter.
    */
   router.get('/active-jobs', (_req: Request, res: Response): void => {
+    const { rateLimiter } = getStateComponents(state);
     const activeJobs = rateLimiter.getActiveJobs();
     const instanceId = rateLimiter.getInstanceId();
 
@@ -57,6 +72,7 @@ export const createDebugRoutes = (deps: DebugRouteDeps): Router => {
    * Returns historical completed and failed jobs.
    */
   router.get('/job-history', (_req: Request, res: Response): void => {
+    const { rateLimiter, jobHistoryTracker } = getStateComponents(state);
     const history = jobHistoryTracker.getHistory();
     const summary = jobHistoryTracker.getSummary();
     const instanceId = rateLimiter.getInstanceId();
@@ -70,10 +86,38 @@ export const createDebugRoutes = (deps: DebugRouteDeps): Router => {
   });
 
   /**
+   * POST /debug/reset
+   * Reset the server: optionally clean Redis, create new rate limiter instance.
+   * Body: { cleanRedis?: boolean } - defaults to true
+   */
+  router.post('/reset', (req: Request, res: Response): void => {
+    const body = req.body as { cleanRedis?: boolean } | undefined;
+    const options: ResetOptions = { cleanRedis: body?.cleanRedis ?? true };
+
+    resetServer(options)
+      .then((result) => {
+        res.status(HTTP_STATUS_OK).json({
+          ...result,
+          timestamp: Date.now(),
+        });
+      })
+      .catch((error: unknown) => {
+        const message = error instanceof Error ? error.message : String(error);
+        res.status(HTTP_STATUS_INTERNAL_ERROR).json({
+          success: false,
+          error: message,
+          timestamp: Date.now(),
+        });
+      });
+  });
+
+  /**
    * GET /debug/events
    * SSE endpoint for real-time event streaming.
    */
   router.get('/events', (req: Request, res: Response): void => {
+    const { rateLimiter, eventEmitter } = getStateComponents(state);
+
     // Set SSE headers
     res.setHeader('Content-Type', 'text/event-stream');
     res.setHeader('Cache-Control', 'no-cache');

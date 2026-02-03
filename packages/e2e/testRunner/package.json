@@ -14,7 +14,7 @@
   "license": "MIT",
   "dependencies": {
     "@llm-rate-limiter/core": "^1.0.0",
-    "ioredis": "^5.4.1"
+    "@llm-rate-limiter/e2e-test-results": "^1.0.0"
   },
   "engines": {
     "node": ">=18.0.0"

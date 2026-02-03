@@ -17,6 +17,7 @@
     "@llm-rate-limiter/redis": "^1.0.0",
     "dotenv": "^17.2.3",
     "express": "^5.0.0",
+    "ioredis": "^5.4.1",
     "winston": "^3.19.0",
     "zod": "^4.3.6"
   },

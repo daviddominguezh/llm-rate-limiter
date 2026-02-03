@@ -65,7 +65,11 @@ class LLMRateLimiter implements InternalLimiterInstance {
     this.initializeMemoryLimiter();
     this.initializeConcurrencyLimiter();
     this.initializeTimeWindowCounters();
-    this.log('Initialized');
+    this.log('Initialized', {
+      estimatedUsedTokens: this.estimatedUsedTokens,
+      estimatedNumberOfRequests: this.estimatedNumberOfRequests,
+      tokensPerMinute: this.config.tokensPerMinute,
+    });
   }
 
   private log(message: string, data?: Record<string, unknown>): void {
@@ -136,15 +140,40 @@ class LLMRateLimiter implements InternalLimiterInstance {
   }
 
   private async waitForTimeWindowCapacity(): Promise<void> {
+    // Debug: log current state
+    const tpmStats = this.tpmCounter?.getStats();
+    this.log('[DEBUG] waitForTimeWindowCapacity', {
+      estimatedUsedTokens: this.estimatedUsedTokens,
+      estimatedNumberOfRequests: this.estimatedNumberOfRequests,
+      tpmCurrent: tpmStats?.current,
+      tpmLimit: tpmStats?.limit,
+      tpmRemaining: tpmStats?.remaining,
+    });
+
     // When estimates are 0, don't wait - we'll record actual usage after the job
     if (this.estimatedNumberOfRequests === ZERO && this.estimatedUsedTokens === ZERO) {
+      this.log('Skipping capacity wait - estimates are 0');
       return;
     }
     const { promise, resolve } = Promise.withResolvers<undefined>();
+    let waitCount = 0;
     const checkCapacity = (): void => {
       if (this.hasTimeWindowCapacityForEstimates()) {
+        if (waitCount > 0) {
+          this.log('Capacity available after waiting', { waitCount });
+        }
         resolve(undefined);
         return;
+      }
+      waitCount++;
+      if (waitCount === 1) {
+        const stats = this.tpmCounter?.getStats();
+        this.log('Waiting for capacity', {
+          tpmCurrent: stats?.current,
+          tpmLimit: stats?.limit,
+          tpmRemaining: stats?.remaining,
+          estimatedTokens: this.estimatedUsedTokens,
+        });
       }
       const waitTime = this.getMinTimeUntilCapacity();
       setTimeout(checkCapacity, Math.min(waitTime, DEFAULT_POLL_INTERVAL_MS));

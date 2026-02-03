@@ -285,18 +285,11 @@ const tryModelAtIndex = async (
 /**
  * Select a model with maxWaitMS support.
  * Tries each model in escalation order, waiting up to maxWaitMS for each.
+ * Only escalates to the next model after waiting on the current one.
  * @returns The selected model ID, or null if all models exhausted
  */
 export const selectModelWithWait = async (params: SelectModelWithWaitParams): Promise<SelectModelResult> => {
-  const { escalationOrder, triedModels, hasCapacityForModel } = params;
-
-  // First pass: find any model with immediate capacity (not in triedModels)
-  for (const modelId of escalationOrder) {
-    if (!triedModels.has(modelId) && hasCapacityForModel(modelId)) {
-      return { modelId, allModelsExhausted: false };
-    }
-  }
-
-  // Second pass: try each model recursively, waiting up to maxWaitMS
+  // Try each model in order, waiting on each before moving to the next
+  // This ensures we wait for capacity on preferred models before escalating
   return await tryModelAtIndex(params, ZERO, ZERO);
 };

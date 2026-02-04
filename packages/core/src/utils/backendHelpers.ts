@@ -29,22 +29,22 @@ export interface BackendOperationContext {
   jobType: string;
 }
 
-/** Acquire backend slot */
+/** Acquire backend slot (pool-based: no jobType sent to Redis) */
 export const acquireBackend = async (ctx: BackendOperationContext): Promise<boolean> => {
   const { backend, resourceEstimationsPerJob, instanceId, modelId, jobId, jobType } = ctx;
   if (backend === undefined) {
     return true;
   }
+  // Pool-based: only modelId sent to Redis, jobType used locally for resource estimation
   return await backend.acquire({
     instanceId,
     modelId,
     jobId,
-    jobType,
     estimated: getEstimatedResourcesForBackend(resourceEstimationsPerJob, jobType),
   });
 };
 
-/** Release backend slot */
+/** Release backend slot (pool-based: no jobType sent to Redis) */
 export const releaseBackend = (
   ctx: BackendOperationContext,
   actual: { requests: number; tokens: number },
@@ -54,12 +54,12 @@ export const releaseBackend = (
   if (backend === undefined) {
     return;
   }
+  // Pool-based: only modelId sent to Redis, jobType used locally for resource estimation
   backend
     .release({
       instanceId,
       modelId,
       jobId,
-      jobType,
       estimated: getEstimatedResourcesForBackend(resourceEstimationsPerJob, jobType),
       actual,
       windowStarts,

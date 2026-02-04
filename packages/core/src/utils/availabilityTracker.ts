@@ -8,8 +8,8 @@ import type {
   AvailabilityChangeReason,
   LLMRateLimiterStats,
   OnAvailableSlotsChange,
+  Pools,
   RelativeAvailabilityAdjustment,
-  SlotsByJobTypeAndModel,
 } from '../multiModelTypes.js';
 import type { InternalLimiterStats } from '../types.js';
 
@@ -85,47 +85,35 @@ const addSlotCandidate = (slots: number[], value: number | null, divisor: number
   if (value !== null && divisor > ZERO) slots.push(Math.floor(value / divisor));
 };
 
-/** Sum slots across all job types and models from distributed allocation */
-const sumDistributedSlots = (slotsByJobTypeAndModel: SlotsByJobTypeAndModel): number => {
+/** Sum total slots across all model pools from distributed allocation */
+const sumPoolSlots = (pools: Pools): number => {
   let total = ZERO;
-  for (const jobTypeAlloc of Object.values(slotsByJobTypeAndModel)) {
-    total += sumModelSlots(jobTypeAlloc);
-  }
-  return total;
-};
-
-/** Sum slots for a single job type across all models (without clamping) */
-const sumModelSlots = (modelAllocations: Record<string, { slots: number }> | undefined): number => {
-  if (modelAllocations === undefined) return ZERO;
-  let total = ZERO;
-  for (const modelAlloc of Object.values(modelAllocations)) {
-    total += modelAlloc.slots;
+  for (const pool of Object.values(pools)) {
+    total += pool.totalSlots;
   }
   return total;
 };
 
 /**
- * Apply memory constraint (scaling) and then per-model clamping.
+ * Apply memory constraint (scaling) and then per-model clamping to pools.
  * Flow:
- *   1. Sum distributed slots (no clamping) to get distributedTotal
- *   2. constrainedTotal = min(distributedTotal, memorySlots)
- *   3. scaleFactor = constrainedTotal / distributedTotal
- *   4. For each model: clamp(floor(slots * scaleFactor), minCapacity, maxCapacity)
+ *   1. Sum pool slots (no clamping) to get poolTotal
+ *   2. constrainedTotal = min(poolTotal, memorySlots)
+ *   3. scaleFactor = constrainedTotal / poolTotal
+ *   4. For each model: clamp(floor(totalSlots * scaleFactor), minCapacity, maxCapacity)
  *   5. Return sum of clamped values
  */
 const applyMemoryConstraintAndClamping = (
-  modelAllocations: Record<string, { slots: number }> | undefined,
+  pools: Pools,
   memorySlots: number,
   bounds: ModelCapacityBounds | undefined
 ): number => {
-  if (modelAllocations === undefined) return ZERO;
-
-  // Step 1: Sum distributed slots without clamping
-  const distributedTotal = sumModelSlots(modelAllocations);
-  if (distributedTotal === ZERO) {
-    // No distributed slots - apply minCapacity for each model
+  // Step 1: Sum pool slots without clamping
+  const poolTotal = sumPoolSlots(pools);
+  if (poolTotal === ZERO) {
+    // No pool slots - apply minCapacity for each model
     let total = ZERO;
-    for (const modelId of Object.keys(modelAllocations)) {
+    for (const modelId of Object.keys(pools)) {
       const minCap = bounds?.[modelId]?.minCapacity ?? ZERO;
       total += minCap;
     }
@@ -133,13 +121,13 @@ const applyMemoryConstraintAndClamping = (
   }
 
   // Step 2-3: Calculate scale factor from memory constraint
-  const constrainedTotal = Math.min(distributedTotal, memorySlots);
-  const scaleFactor = constrainedTotal / distributedTotal;
+  const constrainedTotal = Math.min(poolTotal, memorySlots);
+  const scaleFactor = constrainedTotal / poolTotal;
 
   // Step 4-5: Scale each model's slots, then clamp, then sum
   let total = ZERO;
-  for (const [modelId, modelAlloc] of Object.entries(modelAllocations)) {
-    const scaledSlots = Math.floor(modelAlloc.slots * scaleFactor);
+  for (const [modelId, pool] of Object.entries(pools)) {
+    const scaledSlots = Math.floor(pool.totalSlots * scaleFactor);
     const modelBounds = bounds?.[modelId];
     const minCap = modelBounds?.minCapacity ?? ZERO;
     const maxCap = modelBounds?.maxCapacity ?? Number.POSITIVE_INFINITY;
@@ -232,16 +220,17 @@ export class AvailabilityTracker {
   }
 
   /**
-   * Calculate total slots applying per-job-type memory constraint and per-model clamping.
+   * Calculate total slots applying memory constraint and per-model clamping to pools.
    * Memory is LOCAL - each instance applies its own memory limit.
    *
-   * For each job type:
-   *   1. Calculate memory slots: floor((totalMemory × ratio) / estimatedMemoryKB)
-   *   2. Apply memory constraint to distributed slots (scale down proportionally)
-   *   3. Clamp each model's scaled slots using minCapacity/maxCapacity
-   *   4. Sum clamped slots
+   * Pool-based calculation:
+   *   1. Sum pool slots from distributed allocation (per-model)
+   *   2. Calculate memory slots based on estimated memory per job
+   *   3. Apply memory constraint (scale down proportionally if needed)
+   *   4. Clamp each model's scaled slots using minCapacity/maxCapacity
+   *   5. Return sum of clamped slots
    *
-   * Clamping happens AFTER memory constraint, so minCapacity can override memory limits.
+   * Note: Job type distribution is handled locally by JobTypeManager, not here.
    */
   private calculateSlotsWithMemoryConstraint(
     availability: Omit<Availability, 'slots'>,
@@ -255,45 +244,35 @@ export class AvailabilityTracker {
     }
 
     const { modelCapacityBounds } = this;
+    const { pools } = allocation;
 
-    // No per-job-type config - no memory constraint, just sum with clamping
-    if (resourcesPerJob === undefined) {
-      let total = ZERO;
-      for (const jobTypeAlloc of Object.values(allocation.slotsByJobTypeAndModel)) {
-        // No memory config means unlimited memory slots
-        total += applyMemoryConstraintAndClamping(jobTypeAlloc, Number.POSITIVE_INFINITY, modelCapacityBounds);
+    // Calculate memory slots based on average estimated memory across job types
+    let memorySlots = Number.POSITIVE_INFINITY;
+    if (totalMemoryKB !== null && resourcesPerJob !== undefined) {
+      const avgEstimatedMemoryKB = this.getAverageEstimatedMemory(resourcesPerJob);
+      if (avgEstimatedMemoryKB > ZERO) {
+        memorySlots = Math.floor(totalMemoryKB / avgEstimatedMemoryKB);
       }
-      return total;
     }
 
-    // Calculate per-job-type slots with memory constraint and per-model clamping
-    let totalSlots = ZERO;
-    const jobTypeIds = Object.keys(allocation.slotsByJobTypeAndModel);
-    const jobTypeCount = jobTypeIds.length;
+    // Apply memory constraint and per-model clamping to pools
+    return applyMemoryConstraintAndClamping(pools, memorySlots, modelCapacityBounds);
+  }
 
-    for (const jobTypeId of jobTypeIds) {
-      const jobTypeAlloc = allocation.slotsByJobTypeAndModel[jobTypeId];
-      const jobTypeConfig = resourcesPerJob[jobTypeId];
+  /** Calculate average estimated memory across all job types */
+  private getAverageEstimatedMemory(resourcesPerJob: ResourceEstimationsPerJob): number {
+    const jobTypes = Object.values(resourcesPerJob);
+    if (jobTypes.length === ZERO) return ZERO;
 
-      // Get ratio for this job type (default to even distribution)
-      const ratio = jobTypeConfig?.ratio?.initialValue ?? DEFAULT_RATIO / jobTypeCount;
-
-      // Get estimated memory for this job type
-      const estimatedMemoryKB = jobTypeConfig?.estimatedUsedMemoryKB ?? ZERO;
-
-      // Calculate local memory slots for this job type
-      let memorySlots = Number.POSITIVE_INFINITY;
-      if (totalMemoryKB !== null && estimatedMemoryKB > ZERO) {
-        const memoryForJobType = totalMemoryKB * ratio;
-        memorySlots = Math.floor(memoryForJobType / estimatedMemoryKB);
+    let total = ZERO;
+    let count = ZERO;
+    for (const config of jobTypes) {
+      if (config?.estimatedUsedMemoryKB !== undefined && config.estimatedUsedMemoryKB > ZERO) {
+        total += config.estimatedUsedMemoryKB;
+        count += ONE;
       }
-
-      // Apply memory constraint first, then clamp per model
-      const finalSlotsForJobType = applyMemoryConstraintAndClamping(jobTypeAlloc, memorySlots, modelCapacityBounds);
-      totalSlots += finalSlotsForJobType;
     }
-
-    return totalSlots;
+    return count > ZERO ? Math.floor(total / count) : ZERO;
   }
 
   /** Check for changes and emit callback if availability changed */

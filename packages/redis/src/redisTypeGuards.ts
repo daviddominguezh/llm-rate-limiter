@@ -11,8 +11,8 @@ export const isAllocationData = (d: unknown): d is AllocationData =>
   isObject(d) &&
   'instanceCount' in d &&
   typeof d.instanceCount === 'number' &&
-  'slotsByJobTypeAndModel' in d &&
-  isObject(d.slotsByJobTypeAndModel);
+  'pools' in d &&
+  isObject(d.pools);
 
 export const isParsedMessage = (d: unknown): d is { instanceId: string; allocation: string } =>
   isObject(d) && 'instanceId' in d && typeof d.instanceId === 'string';
@@ -39,7 +39,7 @@ export const isDynamicLimits = (d: unknown): d is DynamicLimits => {
 const DEFAULT_INSTANCE_COUNT = 1;
 const defaultAlloc: AllocationInfo = {
   instanceCount: DEFAULT_INSTANCE_COUNT,
-  slotsByJobTypeAndModel: {},
+  pools: {},
 };
 
 export const parseAllocation = (json: string | null): AllocationInfo => {
@@ -50,7 +50,7 @@ export const parseAllocation = (json: string | null): AllocationInfo => {
     if (isAllocationData(parsed)) {
       const result: AllocationInfo = {
         instanceCount: parsed.instanceCount,
-        slotsByJobTypeAndModel: parsed.slotsByJobTypeAndModel,
+        pools: parsed.pools,
       };
       // Include dynamicLimits if present and valid
       if ('dynamicLimits' in parsed && isDynamicLimits(parsed.dynamicLimits)) {

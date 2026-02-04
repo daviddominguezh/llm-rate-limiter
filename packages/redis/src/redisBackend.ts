@@ -240,11 +240,12 @@ class RedisBackendImpl {
     const { keys, redis } = this;
     const { instances, allocations } = keys;
     try {
+      // Pool-based: only pass modelId (no jobType - that's handled locally)
       const result = await evalScript(
         redis,
         ACQUIRE_SCRIPT,
         [instances, allocations],
-        [context.instanceId, String(Date.now()), context.jobType, context.modelId]
+        [context.instanceId, String(Date.now()), context.modelId]
       );
       return result === SUCCESS_RESULT;
     } catch {
@@ -257,6 +258,7 @@ class RedisBackendImpl {
     const { keys, redis } = this;
     const { instances, allocations, channel, modelCapacities, jobTypeResources } = keys;
     const windowStarts = context.windowStarts ?? {};
+    // Pool-based: no jobType parameter (that's handled locally)
     await evalScript(
       redis,
       RELEASE_SCRIPT,
@@ -264,7 +266,6 @@ class RedisBackendImpl {
       [
         context.instanceId,
         String(Date.now()),
-        context.jobType,
         context.modelId,
         String(context.actual.tokens),
         String(context.actual.requests),

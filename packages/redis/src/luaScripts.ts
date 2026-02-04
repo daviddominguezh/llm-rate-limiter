@@ -1,13 +1,14 @@
 /**
  * Lua scripts for atomic Redis operations.
- * These scripts implement the multi-dimensional fair distribution algorithm.
+ * These scripts implement pool-based slot allocation where Redis tracks per-model
+ * capacity and local instances distribute across job types using local ratios.
  */
 
 /**
- * Multi-dimensional reallocation logic.
- * Calculates per-job-type per-model slot allocations.
+ * Pool-based reallocation logic.
+ * Calculates per-model pool allocations (no job type dimension in Redis).
  *
- * Formula: slots[jobType][model] = floor((modelCapacity / estimatedResource) / instanceCount * ratio)
+ * Formula: pools[model].totalSlots = floor((modelCapacity / avgEstimatedResource) / instanceCount)
  *
  * Config keys used:
  * - {prefix}:model-capacities - Hash of modelId -> JSON {tokensPerMinute, requestsPerMinute, maxConcurrentRequests, tokensPerDay, requestsPerDay}
@@ -34,7 +35,23 @@ local function getGlobalUsage(prefix, modelId, timestamp)
   }
 end
 
--- Calculate multi-dimensional slot allocations
+-- Helper: Get average estimated resources across all job types
+local function getAverageEstimates(jobTypeResources)
+  local totalTokens = 0
+  local totalRequests = 0
+  local count = 0
+  for _, jt in pairs(jobTypeResources) do
+    totalTokens = totalTokens + (jt.estimatedUsedTokens or 1)
+    totalRequests = totalRequests + (jt.estimatedNumberOfRequests or 1)
+    count = count + 1
+  end
+  return {
+    tokens = count > 0 and math.floor(totalTokens / count) or 1,
+    requests = count > 0 and math.floor(totalRequests / count) or 1
+  }
+end
+
+-- Calculate pool-based slot allocations (per-model, no job type dimension)
 local function recalculateAllocations(instancesKey, allocationsKey, channel, modelCapacitiesKey, jobTypeResourcesKey)
   -- Get instance count
   local instancesData = redis.call('HGETALL', instancesKey)
@@ -59,123 +76,110 @@ local function recalculateAllocations(instancesKey, allocationsKey, channel, mod
     modelCapacities[modelId] = cjson.decode(modelCapacitiesData[i+1])
   end
 
-  -- Get job type resources
+  -- Get job type resources (for average estimate calculation only)
   local jobTypeResourcesData = redis.call('HGETALL', jobTypeResourcesKey)
   local jobTypeResources = {}
-  local jobTypeIds = {}
   for i = 1, #jobTypeResourcesData, 2 do
     local jobTypeId = jobTypeResourcesData[i]
-    table.insert(jobTypeIds, jobTypeId)
     jobTypeResources[jobTypeId] = cjson.decode(jobTypeResourcesData[i+1])
   end
+
+  -- Calculate average estimates across all job types
+  local avgEstimates = getAverageEstimates(jobTypeResources)
 
   -- Extract prefix from instancesKey (e.g., "myprefix:instances" -> "myprefix:")
   local prefix = string.match(instancesKey, '^(.-)instances$') or ''
   local timestamp = tonumber(redis.call('TIME')[1]) * 1000
 
-  -- Build dynamicLimits based on remaining global capacity after actual usage
+  -- Build dynamicLimits and pools based on remaining global capacity
   local dynamicLimits = {}
+  local pools = {}
+
   for _, modelId in ipairs(modelIds) do
     local model = modelCapacities[modelId]
     local usage = getGlobalUsage(prefix, modelId, timestamp)
     dynamicLimits[modelId] = {}
 
-    -- Calculate remaining capacity: (globalLimit - actualUsage) / instanceCount
+    -- Calculate remaining capacity per instance: (globalLimit - actualUsage) / instanceCount
+    local tpm = 0
+    local rpm = 0
+    local tpd = 0
+    local rpd = 0
+
     if model.tokensPerMinute then
       local remaining = math.max(0, model.tokensPerMinute - usage.tpmUsed)
-      dynamicLimits[modelId].tokensPerMinute = math.floor(remaining / instanceCount)
+      tpm = math.floor(remaining / instanceCount)
+      dynamicLimits[modelId].tokensPerMinute = tpm
     end
     if model.requestsPerMinute then
       local remaining = math.max(0, model.requestsPerMinute - usage.rpmUsed)
-      dynamicLimits[modelId].requestsPerMinute = math.floor(remaining / instanceCount)
+      rpm = math.floor(remaining / instanceCount)
+      dynamicLimits[modelId].requestsPerMinute = rpm
     end
     if model.tokensPerDay then
       local remaining = math.max(0, model.tokensPerDay - usage.tpdUsed)
-      dynamicLimits[modelId].tokensPerDay = math.floor(remaining / instanceCount)
+      tpd = math.floor(remaining / instanceCount)
+      dynamicLimits[modelId].tokensPerDay = tpd
     end
     if model.requestsPerDay then
       local remaining = math.max(0, model.requestsPerDay - usage.rpdUsed)
-      dynamicLimits[modelId].requestsPerDay = math.floor(remaining / instanceCount)
+      rpd = math.floor(remaining / instanceCount)
+      dynamicLimits[modelId].requestsPerDay = rpd
     end
-  end
 
-  -- Calculate slots for each instance
-  for _, instId in ipairs(instanceIds) do
-    local slotsByJobTypeAndModel = {}
+    -- Calculate pool slots (no ratio - that's applied locally)
+    local slotCandidates = {}
 
-    for _, jobTypeId in ipairs(jobTypeIds) do
-      local jobType = jobTypeResources[jobTypeId]
-      local ratio = jobType.ratio or (1 / #jobTypeIds)
-      slotsByJobTypeAndModel[jobTypeId] = {}
+    -- Concurrent-based slots
+    if model.maxConcurrentRequests and model.maxConcurrentRequests > 0 then
+      table.insert(slotCandidates, math.floor(model.maxConcurrentRequests / instanceCount))
+    end
 
-      for _, modelId in ipairs(modelIds) do
-        local model = modelCapacities[modelId]
-        local estimatedTokens = jobType.estimatedUsedTokens or 1
-        local estimatedRequests = jobType.estimatedNumberOfRequests or 1
-        local modelDynamic = dynamicLimits[modelId] or {}
+    -- TPM-based slots using average estimated tokens
+    if tpm > 0 then
+      table.insert(slotCandidates, math.floor(tpm / avgEstimates.tokens))
+    end
 
-        -- Calculate slot candidates from each limit type using REMAINING capacity
-        local slotCandidates = {}
-        local tpm = modelDynamic.tokensPerMinute or 0
-        local rpm = modelDynamic.requestsPerMinute or 0
-        local tpd = modelDynamic.tokensPerDay or 0
-        local rpd = modelDynamic.requestsPerDay or 0
+    -- RPM-based slots using average estimated requests
+    if rpm > 0 then
+      table.insert(slotCandidates, math.floor(rpm / avgEstimates.requests))
+    end
 
-        -- Concurrent-based slots (direct capacity, no resource division)
-        if model.maxConcurrentRequests and model.maxConcurrentRequests > 0 then
-          local concurrentSlots = math.floor(model.maxConcurrentRequests / instanceCount * ratio)
-          table.insert(slotCandidates, concurrentSlots)
+    -- TPD-based slots
+    if tpd > 0 then
+      table.insert(slotCandidates, math.floor(tpd / avgEstimates.tokens))
+    end
+
+    -- RPD-based slots
+    if rpd > 0 then
+      table.insert(slotCandidates, math.floor(rpd / avgEstimates.requests))
+    end
+
+    -- Use minimum of all candidates or fallback to 100
+    local totalSlots = 100
+    if #slotCandidates > 0 then
+      totalSlots = slotCandidates[1]
+      for _, candidate in ipairs(slotCandidates) do
+        if candidate < totalSlots then
+          totalSlots = candidate
         end
-
-        -- TPM-based slots using remaining capacity
-        if tpm > 0 then
-          local tpmSlots = math.floor(tpm / estimatedTokens * ratio)
-          table.insert(slotCandidates, tpmSlots)
-        end
-
-        -- RPM-based slots using remaining capacity
-        if rpm > 0 then
-          local rpmSlots = math.floor(rpm / estimatedRequests * ratio)
-          table.insert(slotCandidates, rpmSlots)
-        end
-
-        -- TPD-based slots using remaining capacity
-        if tpd > 0 then
-          local tpdSlots = math.floor(tpd / estimatedTokens * ratio)
-          table.insert(slotCandidates, tpdSlots)
-        end
-
-        -- RPD-based slots using remaining capacity
-        if rpd > 0 then
-          local rpdSlots = math.floor(rpd / estimatedRequests * ratio)
-          table.insert(slotCandidates, rpdSlots)
-        end
-
-        -- Use minimum of all candidates (most restrictive limit) or fallback to 100
-        local slots = 100
-        if #slotCandidates > 0 then
-          slots = slotCandidates[1]
-          for _, candidate in ipairs(slotCandidates) do
-            if candidate < slots then
-              slots = candidate
-            end
-          end
-        end
-
-        slotsByJobTypeAndModel[jobTypeId][modelId] = {
-          slots = slots,
-          tokensPerMinute = tpm,
-          requestsPerMinute = rpm,
-          tokensPerDay = tpd,
-          requestsPerDay = rpd
-        }
       end
     end
 
-    -- Store allocation with dynamicLimits for instances to update local rate limiters
+    pools[modelId] = {
+      totalSlots = totalSlots,
+      tokensPerMinute = tpm,
+      requestsPerMinute = rpm,
+      tokensPerDay = tpd,
+      requestsPerDay = rpd
+    }
+  end
+
+  -- Store allocation for each instance (same pools for all instances)
+  for _, instId in ipairs(instanceIds) do
     local allocData = cjson.encode({
       instanceCount = instanceCount,
-      slotsByJobTypeAndModel = slotsByJobTypeAndModel,
+      pools = pools,
       dynamicLimits = dynamicLimits
     })
     redis.call('HSET', allocationsKey, instId, allocData)
@@ -231,10 +235,10 @@ local jobTypeResourcesKey = KEYS[5]
 local instanceId = ARGV[1]
 local timestamp = tonumber(ARGV[2])
 
--- Add instance with 0 in-flight
+-- Add instance with 0 in-flight (pool-based: track by model only)
 local instanceData = {
   lastHeartbeat = timestamp,
-  inFlightByJobTypeAndModel = {}
+  inFlightByModel = {}
 }
 redis.call('HSET', instancesKey, instanceId, cjson.encode(instanceData))
 
@@ -243,7 +247,7 @@ recalculateAllocations(instancesKey, allocationsKey, channel, modelCapacitiesKey
 
 -- Return this instance's allocation
 local allocJson = redis.call('HGET', allocationsKey, instanceId)
-return allocJson or cjson.encode({slots=0, instanceCount=0, slotsByJobTypeAndModel={}})
+return allocJson or cjson.encode({instanceCount=0, pools={}})
 `;
 
 /**
@@ -273,9 +277,9 @@ return 'OK'
 `;
 
 /**
- * Acquire a slot for a specific job type and model.
+ * Acquire a slot from a model's pool (pool-based: no job type dimension).
  * KEYS: [instances, allocations]
- * ARGV: [instanceId, timestamp, jobType, modelId]
+ * ARGV: [instanceId, timestamp, modelId]
  * Returns: "1" (success) or "0" (no capacity)
  */
 export const ACQUIRE_SCRIPT = `
@@ -283,8 +287,7 @@ local instancesKey = KEYS[1]
 local allocationsKey = KEYS[2]
 local instanceId = ARGV[1]
 local timestamp = tonumber(ARGV[2])
-local jobType = ARGV[3]
-local modelId = ARGV[4]
+local modelId = ARGV[3]
 
 -- Check allocation
 local allocJson = redis.call('HGET', allocationsKey, instanceId)
@@ -292,15 +295,13 @@ if not allocJson then return "0" end
 
 local alloc = cjson.decode(allocJson)
 
--- Check multi-dimensional slots
-if not alloc.slotsByJobTypeAndModel then return "0" end
-local jobTypeAlloc = alloc.slotsByJobTypeAndModel[jobType]
-if not jobTypeAlloc then return "0" end
-local modelAlloc = jobTypeAlloc[modelId]
-if not modelAlloc or modelAlloc.slots <= 0 then return "0" end
+-- Check pool slots (pool-based: per-model only)
+if not alloc.pools then return "0" end
+local poolAlloc = alloc.pools[modelId]
+if not poolAlloc or poolAlloc.totalSlots <= 0 then return "0" end
 
--- Decrement slot
-modelAlloc.slots = modelAlloc.slots - 1
+-- Decrement pool slot
+poolAlloc.totalSlots = poolAlloc.totalSlots - 1
 redis.call('HSET', allocationsKey, instanceId, cjson.encode(alloc))
 
 -- Increment in-flight
@@ -310,15 +311,12 @@ if not instJson then return "0" end
 local inst = cjson.decode(instJson)
 inst.lastHeartbeat = timestamp
 
--- Track in-flight by job type and model
-if not inst.inFlightByJobTypeAndModel then
-  inst.inFlightByJobTypeAndModel = {}
+-- Track in-flight by model (pool-based: no job type dimension)
+if not inst.inFlightByModel then
+  inst.inFlightByModel = {}
 end
-if not inst.inFlightByJobTypeAndModel[jobType] then
-  inst.inFlightByJobTypeAndModel[jobType] = {}
-end
-local current = inst.inFlightByJobTypeAndModel[jobType][modelId] or 0
-inst.inFlightByJobTypeAndModel[jobType][modelId] = current + 1
+local current = inst.inFlightByModel[modelId] or 0
+inst.inFlightByModel[modelId] = current + 1
 
 redis.call('HSET', instancesKey, instanceId, cjson.encode(inst))
 
@@ -326,9 +324,9 @@ return "1"
 `;
 
 /**
- * Release a slot and recalculate allocations.
+ * Release a slot and recalculate allocations (pool-based: no job type dimension).
  * KEYS: [instances, allocations, channel, modelCapacities, jobTypeResources]
- * ARGV: [instanceId, timestamp, jobType, modelId, actualTokens, actualRequests,
+ * ARGV: [instanceId, timestamp, modelId, actualTokens, actualRequests,
  *        tpmWindowStart, rpmWindowStart, tpdWindowStart, rpdWindowStart]
  * Returns: "OK"
  */
@@ -342,16 +340,15 @@ local modelCapacitiesKey = KEYS[4]
 local jobTypeResourcesKey = KEYS[5]
 local instanceId = ARGV[1]
 local timestamp = tonumber(ARGV[2])
-local jobType = ARGV[3]
-local modelId = ARGV[4]
+local modelId = ARGV[3]
 
 -- Parse actual usage and window starts for distributed usage tracking
-local actualTokens = tonumber(ARGV[5]) or 0
-local actualRequests = tonumber(ARGV[6]) or 0
-local tpmWindowStart = ARGV[7] or ''
-local rpmWindowStart = ARGV[8] or ''
-local tpdWindowStart = ARGV[9] or ''
-local rpdWindowStart = ARGV[10] or ''
+local actualTokens = tonumber(ARGV[4]) or 0
+local actualRequests = tonumber(ARGV[5]) or 0
+local tpmWindowStart = ARGV[6] or ''
+local rpmWindowStart = ARGV[7] or ''
+local tpdWindowStart = ARGV[8] or ''
+local rpdWindowStart = ARGV[9] or ''
 
 -- Update global usage counters (for distributed capacity tracking)
 local prefix = string.match(instancesKey, '^(.-)instances$') or ''
@@ -390,17 +387,17 @@ if actualRequests > 0 then
   end
 end
 
--- Decrement in-flight
+-- Decrement in-flight (pool-based: by model only)
 local instJson = redis.call('HGET', instancesKey, instanceId)
 if not instJson then return 'OK' end
 
 local inst = cjson.decode(instJson)
 inst.lastHeartbeat = timestamp
 
--- Track in-flight by job type and model
-if inst.inFlightByJobTypeAndModel and inst.inFlightByJobTypeAndModel[jobType] then
-  local current = inst.inFlightByJobTypeAndModel[jobType][modelId] or 0
-  inst.inFlightByJobTypeAndModel[jobType][modelId] = math.max(0, current - 1)
+-- Track in-flight by model (pool-based: no job type dimension)
+if inst.inFlightByModel then
+  local current = inst.inFlightByModel[modelId] or 0
+  inst.inFlightByModel[modelId] = math.max(0, current - 1)
 end
 
 redis.call('HSET', instancesKey, instanceId, cjson.encode(inst))
@@ -468,7 +465,7 @@ return removed
 `;
 
 /**
- * Get all instances data for stats.
+ * Get all instances data for stats (pool-based).
  * KEYS: [instances, allocations]
  * Returns: JSON array of instance stats
  */
@@ -486,20 +483,23 @@ for i = 1, #instancesData, 2 do
   local instData = cjson.decode(instancesData[i+1])
   local allocJson = redis.call('HGET', allocationsKey, instId)
   local allocation = 0
-  local slotsByJobTypeAndModel = nil
+  local pools = nil
   if allocJson then
     local allocData = cjson.decode(allocJson)
-    allocation = allocData.slots
-    slotsByJobTypeAndModel = allocData.slotsByJobTypeAndModel
+    pools = allocData.pools
+    -- Sum total slots across all pools
+    if pools then
+      for _, pool in pairs(pools) do
+        allocation = allocation + (pool.totalSlots or 0)
+      end
+    end
   end
 
-  -- Count total in-flight from multi-dimensional tracking
+  -- Count total in-flight from pool-based tracking (by model)
   local inFlight = 0
-  if instData.inFlightByJobTypeAndModel then
-    for _, jobTypeInFlight in pairs(instData.inFlightByJobTypeAndModel) do
-      for _, count in pairs(jobTypeInFlight) do
-        inFlight = inFlight + count
-      end
+  if instData.inFlightByModel then
+    for _, count in pairs(instData.inFlightByModel) do
+      inFlight = inFlight + count
     end
   end
 
@@ -509,9 +509,9 @@ for i = 1, #instancesData, 2 do
   table.insert(stats, {
     id = instId,
     inFlight = inFlight,
-    inFlightByJobTypeAndModel = instData.inFlightByJobTypeAndModel,
+    inFlightByModel = instData.inFlightByModel,
     allocation = allocation,
-    slotsByJobTypeAndModel = slotsByJobTypeAndModel,
+    pools = pools,
     lastHeartbeat = instData.lastHeartbeat
   })
 end

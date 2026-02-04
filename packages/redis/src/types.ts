@@ -175,11 +175,12 @@ export interface RedisBackendInstance {
 }
 
 /**
- * Per-model slot allocation within a job type (stored in Redis).
+ * Per-model pool allocation (stored in Redis).
+ * Pool-based: Redis tracks per-model capacity, local instances distribute across job types.
  */
-export interface ModelSlotAllocationData {
-  /** Number of slots available for this job type on this model */
-  slots: number;
+export interface ModelPoolAllocationData {
+  /** Total slots available for this model in this instance's pool */
+  totalSlots: number;
   /** Per-instance tokens per minute limit for this model */
   tokensPerMinute: number;
   /** Per-instance requests per minute limit for this model */
@@ -191,14 +192,14 @@ export interface ModelSlotAllocationData {
 }
 
 /**
- * Multi-dimensional slot allocation by job type and model (stored in Redis).
+ * Pool allocation by model ID (stored in Redis).
  */
-export type SlotsByJobTypeAndModelData = Record<string, Record<string, ModelSlotAllocationData>>;
+export type PoolsData = Record<string, ModelPoolAllocationData>;
 
 /**
- * In-flight tracking by job type and model.
+ * In-flight tracking by model (pool-based).
  */
-export type InFlightByJobTypeAndModel = Record<string, Record<string, number>>;
+export type InFlightByModel = Record<string, number>;
 
 /**
  * Internal instance data stored in Redis.
@@ -206,8 +207,8 @@ export type InFlightByJobTypeAndModel = Record<string, Record<string, number>>;
 export interface InstanceData {
   /** Last heartbeat timestamp (ms since epoch) */
   lastHeartbeat: number;
-  /** In-flight by job type and model */
-  inFlightByJobTypeAndModel: InFlightByJobTypeAndModel;
+  /** In-flight count per model (pool-based tracking) */
+  inFlightByModel: InFlightByModel;
 }
 
 /**
@@ -216,8 +217,8 @@ export interface InstanceData {
 export interface AllocationData {
   /** Number of active instances sharing the rate limits */
   instanceCount: number;
-  /** Slot allocation by job type and model */
-  slotsByJobTypeAndModel: SlotsByJobTypeAndModelData;
+  /** Pool allocation per model (pool-based slot allocation) */
+  pools: PoolsData;
 }
 
 /**

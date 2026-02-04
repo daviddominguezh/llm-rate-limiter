@@ -406,10 +406,10 @@ export interface BackendActualResources {
   tokens: number;
 }
 
-/** Per-model slot allocation within a job type */
-export interface ModelSlotAllocation {
-  /** Number of slots available for this job type on this model */
-  slots: number;
+/** Per-model pool allocation (pool-based slot allocation) */
+export interface ModelPoolAllocation {
+  /** Total slots available for this model in this instance's pool */
+  totalSlots: number;
   /** Per-instance tokens per minute limit for this model */
   tokensPerMinute: number;
   /** Per-instance requests per minute limit for this model */
@@ -420,8 +420,8 @@ export interface ModelSlotAllocation {
   requestsPerDay: number;
 }
 
-/** Multi-dimensional slot allocation by job type and model */
-export type SlotsByJobTypeAndModel = Record<string, Record<string, ModelSlotAllocation>>;
+/** Pool allocation by model ID */
+export type Pools = Record<string, ModelPoolAllocation>;
 
 /**
  * Dynamic limits per model based on remaining global capacity after actual usage.
@@ -445,10 +445,11 @@ export interface AllocationInfo {
   /** Number of active instances sharing the rate limits */
   instanceCount: number;
   /**
-   * Slot allocation by job type and model.
-   * Structure: { [jobType]: { [modelId]: { slots, tokensPerMinute, requestsPerMinute } } }
+   * Pool allocation per model (pool-based slot allocation).
+   * Redis tracks capacity per-model only; local instances distribute across job types.
+   * Structure: { [modelId]: { totalSlots, tokensPerMinute, requestsPerMinute, ... } }
    */
-  slotsByJobTypeAndModel: SlotsByJobTypeAndModel;
+  pools: Pools;
   /**
    * Dynamic limits per model based on remaining global capacity after actual usage.
    * When present, instances should use these limits instead of dividing config by instanceCount.
@@ -469,8 +470,6 @@ export interface BackendAcquireContext {
   modelId: string;
   /** Job identifier */
   jobId: string;
-  /** Job type for capacity allocation */
-  jobType: string;
   /** Estimated resources for this job */
   estimated: BackendEstimatedResources;
 }
@@ -483,8 +482,6 @@ export interface BackendReleaseContext {
   modelId: string;
   /** Job identifier */
   jobId: string;
-  /** Job type for capacity allocation */
-  jobType: string;
   /** Estimated resources that were reserved */
   estimated: BackendEstimatedResources;
   /** Actual resources used (zero if job failed before execution) */

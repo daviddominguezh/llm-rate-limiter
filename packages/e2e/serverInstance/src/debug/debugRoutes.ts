@@ -129,7 +129,7 @@ export const createDebugRoutes = (deps: DebugRouteDeps): Router => {
 
   /**
    * GET /debug/allocation
-   * Returns the current allocation info including slotsByJobTypeAndModel.
+   * Returns the current allocation info including pools (per-model capacity).
    */
   router.get('/allocation', (_req: Request, res: Response): void => {
     const { rateLimiter } = getStateComponents(state);

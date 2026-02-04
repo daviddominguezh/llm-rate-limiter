@@ -1,17 +1,22 @@
 /**
- * Test suite: Dynamic Ratio is Local Only
+ * Test suite: Dynamic Ratio is Local Only (Pool-Based)
  *
  * Verifies that dynamic ratio adjustments are NOT shared across instances.
- * Each instance maintains its own local ratio state.
+ * Each instance maintains its own local ratio state for job type distribution.
+ *
+ * With pool-based allocation:
+ * - Redis provides per-model pools to each instance
+ * - Each instance locally distributes pool capacity across job types using ratios
+ * - Ratio adjustments on one instance don't affect other instances' allocations
  *
  * Uses the flexibleRatio config preset:
  * - flex-model: 100K TPM
- * - flexJobA, flexJobB, flexJobC: 10K tokens each, ratio ~0.33 each, all flexible
+ * - flexJobA, flexJobB, flexJobC: Each gets a share of the pool locally
  *
  * Key behavior to verify:
- * - Instance A's ratio adjustments don't affect Instance B
+ * - Instance A's ratio adjustments don't affect Instance B's pools
  * - Each instance independently manages its own load balance
- * - Heavy load on Instance A doesn't reduce Instance B's capacity
+ * - Heavy load on Instance A doesn't reduce Instance B's pool capacity
  */
 import type { AllocationInfo } from '@llm-rate-limiter/core';
 import type { TestData } from '@llm-rate-limiter/e2e-test-results';
@@ -20,10 +25,25 @@ import { type ConfigPresetName, resetInstance } from '../resetInstance.js';
 import { generateJobsOfType, runSuite } from '../suiteRunner.js';
 import { sleep } from '../testUtils.js';
 
+interface ModelPoolAllocation {
+  totalSlots: number;
+  tokensPerMinute: number;
+  requestsPerMinute: number;
+  tokensPerDay: number;
+  requestsPerDay: number;
+}
+
+interface PoolsData {
+  [modelId: string]: ModelPoolAllocation;
+}
+
 interface AllocationResponse {
   instanceId: string;
   timestamp: number;
-  allocation: AllocationInfo | null;
+  allocation: {
+    instanceCount: number;
+    pools: PoolsData;
+  } | null;
 }
 
 /**
@@ -39,10 +59,6 @@ const INSTANCE_A_URL = 'http://localhost:3001';
 const INSTANCE_B_URL = 'http://localhost:3002';
 const INSTANCE_URLS = [INSTANCE_A_URL, INSTANCE_B_URL];
 
-// With flexibleRatio config and 2 instances:
-// Each job type starts with ~0.33 ratio = floor((100K/10K) / 2 * 0.33) = ~1-2 slots per instance
-const INITIAL_SLOTS_PER_TYPE_PER_INSTANCE = 1; // Conservative estimate
-
 const JOB_DURATION_MS = 100;
 const LONG_JOB_DURATION_MS = 3000; // Long enough to trigger ratio adjustment
 const WAIT_TIMEOUT_MS = 120000;
@@ -50,19 +66,19 @@ const BEFORE_ALL_TIMEOUT_MS = 240000;
 const ALLOCATION_PROPAGATION_MS = 1000;
 const CONFIG_PRESET: ConfigPresetName = 'flexibleRatio';
 
-describe('Dynamic Ratio is Local Only', () => {
+describe('Dynamic Ratio is Local Only (Pool-Based)', () => {
   describe('Independent Instance Ratio Management', () => {
     /**
      * Scenario:
-     * 1. Both instances start with equal ratios
-     * 2. Send heavy load of flexJobA to Instance A (should trigger ratio adjustment on A)
+     * 1. Both instances start with equal pool allocations
+     * 2. Send heavy load of flexJobA to Instance A (may trigger local ratio adjustment on A)
      * 3. Send flexJobB jobs to Instance B
-     * 4. Instance B's flexJobB capacity should NOT be affected by A's ratio changes
+     * 4. Instance B's pool capacity should NOT be affected by A's ratio changes
      *
      * Expected:
-     * - Instance A adjusts its ratios due to high flexJobA load
-     * - Instance B maintains its original ratios
-     * - Instance B can still handle flexJobB jobs at its initial capacity
+     * - Instance A adjusts its local ratios due to high flexJobA load
+     * - Instance B maintains its pool allocation from Redis
+     * - Instance B can still handle flexJobB jobs at its pool capacity
      */
     let dataA: TestData;
     let dataB: TestData;
@@ -112,7 +128,7 @@ describe('Dynamic Ratio is Local Only', () => {
       });
 
       // Phase 2: While A is busy, send jobs to Instance B
-      // B's ratio should be independent of A's adjustments
+      // B's pool allocation should be independent of A's local adjustments
       await fetch(`${PROXY_URL}/proxy/ratio`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -141,7 +157,7 @@ describe('Dynamic Ratio is Local Only', () => {
 
     it('should complete Instance B jobs independently', () => {
       const completedB = Object.values(dataB.jobs).filter((j) => j.status === 'completed');
-      // B should complete its jobs because its ratios are not affected by A's load
+      // B should complete its jobs because its pools are not affected by A's load
       expect(completedB.length).toBe(3);
     });
 
@@ -164,13 +180,15 @@ describe('Dynamic Ratio is Local Only', () => {
     });
   });
 
-  describe('Allocation Verification - Ratios Are Local', () => {
+  describe('Pool Allocation Verification - Pools Are Shared, Ratios Are Local', () => {
     /**
-     * Direct verification that each instance maintains its own allocation state.
+     * Direct verification that each instance receives the same pool allocation from Redis.
      * After heavy load on Instance A, we verify that:
-     * 1. Both instances have valid allocation data
-     * 2. Each instance tracks its own allocation independently
-     * 3. Instance B's allocation is not reduced by Instance A's load
+     * 1. Both instances have valid pool allocation data
+     * 2. Both instances receive the same pools from Redis
+     * 3. Instance B's pools are not reduced by Instance A's load
+     *
+     * Note: Local ratio distribution happens within each instance independently.
      */
     beforeAll(async () => {
       // Reset proxy
@@ -191,12 +209,14 @@ describe('Dynamic Ratio is Local Only', () => {
       await sleep(ALLOCATION_PROPAGATION_MS);
     }, BEFORE_ALL_TIMEOUT_MS);
 
-    it('should have allocation data on both instances', async () => {
+    it('should have pool allocation data on both instances', async () => {
       const allocA = await fetchAllocation(INSTANCE_A_URL);
       const allocB = await fetchAllocation(INSTANCE_B_URL);
 
       expect(allocA.allocation).not.toBeNull();
       expect(allocB.allocation).not.toBeNull();
+      expect(allocA.allocation?.pools).toBeDefined();
+      expect(allocB.allocation?.pools).toBeDefined();
     });
 
     it('should report same instance count on both instances', async () => {
@@ -207,27 +227,24 @@ describe('Dynamic Ratio is Local Only', () => {
       expect(allocB.allocation?.instanceCount).toBe(2);
     });
 
-    it('should have slot allocations for all job types', async () => {
+    it('should have pool allocation for flex-model', async () => {
       const allocA = await fetchAllocation(INSTANCE_A_URL);
       const allocB = await fetchAllocation(INSTANCE_B_URL);
 
-      // Verify all job types have allocations on both instances
-      const jobTypes = ['flexJobA', 'flexJobB', 'flexJobC'];
-      for (const jobType of jobTypes) {
-        const slotsA = allocA.allocation?.slotsByJobTypeAndModel?.[jobType]?.['flex-model']?.slots;
-        const slotsB = allocB.allocation?.slotsByJobTypeAndModel?.[jobType]?.['flex-model']?.slots;
+      // Both instances should have the same pool allocation from Redis
+      const poolA = allocA.allocation?.pools?.['flex-model'];
+      const poolB = allocB.allocation?.pools?.['flex-model'];
 
-        expect(slotsA).toBeDefined();
-        expect(slotsB).toBeDefined();
-        // Initial allocation should be the same (before any load)
-        expect(slotsA).toBe(slotsB);
-      }
+      expect(poolA).toBeDefined();
+      expect(poolB).toBeDefined();
+      expect(poolA?.totalSlots).toBe(poolB?.totalSlots);
+      expect(poolA?.tokensPerMinute).toBe(poolB?.tokensPerMinute);
     });
 
-    it('Instance B should maintain allocation after Instance A processes heavy load', async () => {
-      // Get baseline allocation for Instance B
+    it('Instance B should maintain pool allocation after Instance A processes heavy load', async () => {
+      // Get baseline pool allocation for Instance B
       const baselineB = await fetchAllocation(INSTANCE_B_URL);
-      const baselineSlotsB = baselineB.allocation?.slotsByJobTypeAndModel?.flexJobB?.['flex-model']?.slots;
+      const baselinePoolB = baselineB.allocation?.pools?.['flex-model'];
 
       // Send heavy load to Instance A only
       await fetch(`${PROXY_URL}/proxy/ratio`, {
@@ -250,13 +267,13 @@ describe('Dynamic Ratio is Local Only', () => {
         sendJobsInParallel: true,
       });
 
-      // After heavy load on A, verify B's allocation is NOT reduced
+      // After heavy load on A, verify B's pool allocation is NOT reduced
       const afterLoadB = await fetchAllocation(INSTANCE_B_URL);
-      const afterSlotsB = afterLoadB.allocation?.slotsByJobTypeAndModel?.flexJobB?.['flex-model']?.slots;
+      const afterPoolB = afterLoadB.allocation?.pools?.['flex-model'];
 
-      // Instance B's allocation should be unchanged (ratios are local)
-      // The slots should be the same or higher (not reduced by A's load)
-      expect(afterSlotsB).toBeGreaterThanOrEqual(baselineSlotsB ?? 0);
+      // Instance B's pool allocation should be unchanged (ratios are local)
+      // Pool slots might change due to dynamic limits, but shouldn't decrease due to A's local load
+      expect(afterPoolB?.totalSlots).toBeGreaterThanOrEqual(baselinePoolB?.totalSlots ?? 0);
     }, BEFORE_ALL_TIMEOUT_MS);
   });
 
@@ -266,7 +283,7 @@ describe('Dynamic Ratio is Local Only', () => {
      * 1. Both instances receive different types of load simultaneously
      * 2. Instance A: heavy flexJobA load
      * 3. Instance B: heavy flexJobB load
-     * 4. Each instance should handle its load independently
+     * 4. Each instance should handle its load using its local ratio distribution
      */
     let data: TestData;
 

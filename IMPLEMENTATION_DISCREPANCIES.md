@@ -6,18 +6,17 @@ This document summarizes discrepancies between the design documentation and actu
 
 ## Summary Table
 
-| Document | Status | Critical Issues |
-|----------|--------|-----------------|
-| memory-based-slot-calculation.md | ⚠️ Partial | Memory limits not enforced per-job-type |
-| e2e-distributed-slots-tests.md | ✅ Aligned | None |
-| maxWaitMS-design.md | ✅ 98% Aligned | Minor undocumented enhancements |
-| distributed-slots-design.md | ⚠️ Significant | Ratios not local as documented |
-| actual-usage-adjustment-design.md | ⚠️ 85-90% | `reject()` missing `requestCount` |
-| distributed-capacity-tracking-design.md | ⚠️ Mismatches | Field names, TTL values differ |
+| Issue | Status | Severity | Document |
+|-------|--------|----------|----------|
+| `reject()` missing `requestCount` | 🔴 OPEN | High | actual-usage-adjustment-design.md |
+| Ratios not local as documented | 🔴 OPEN | High | distributed-slots-design.md |
+| Memory not enforced per-job-type | 🔴 OPEN | Medium | memory-based-slot-calculation.md |
+| Redis field names differ | ✅ RESOLVED | Medium | distributed-capacity-tracking-design.md |
+| Daily TTL mismatch | ✅ RESOLVED | Low | distributed-capacity-tracking-design.md |
 
 ---
 
-## Critical Issues
+## 🔴 Open Issues
 
 ### 1. `reject()` Callback Missing `requestCount` Parameter
 
@@ -102,47 +101,27 @@ The `JobTypeManager` (packages/core/src/utils/jobTypeManager.ts:216-241) does ad
 
 ---
 
-## Medium Issues
+## ✅ Resolved Issues
 
-### 4. Redis Hash Field Names Differ from Design
+### 4. Redis Hash Field Names ~~Differ from Design~~ (FIXED)
 
 **Document**: `docs/distributed-capacity-tracking-design.md`
-**Severity**: Medium
-**Location**: `packages/redis/src/luaScripts.ts:365-384`
+**Resolved**: 2024-02-04
 
-**Design Specification** (lines 250-266):
-- TPM/RPM hash fields: `actualTokens`, `actualRequests`, `lastUpdate`
+**Original Issue**: Implementation used `tokens`/`requests` instead of `actualTokens`/`actualRequests`, and `lastUpdate` field was missing.
 
-**Actual Implementation**:
-```lua
--- luaScripts.ts:365
-redis.call('HINCRBY', tpmKey, 'tokens', actualTokens)  -- NOT 'actualTokens'
--- luaScripts.ts:379
-redis.call('HINCRBY', rpmKey, 'requests', actualRequests)  -- NOT 'actualRequests'
-```
-
-**Impact**: Documentation doesn't match implementation. The `lastUpdate` field is completely missing.
-
-**Fix Required**: Update documentation to match implementation (preferred) or rename fields.
+**Resolution**: Updated `packages/redis/src/luaScripts.ts` to use correct field names (`actualTokens`, `actualRequests`) and added `lastUpdate` timestamp field.
 
 ---
 
-### 5. Daily Window TTL Mismatch
+### 5. Daily Window TTL ~~Mismatch~~ (FIXED)
 
 **Document**: `docs/distributed-capacity-tracking-design.md`
-**Severity**: Low
-**Location**: `packages/redis/src/luaScripts.ts:358-359`
+**Resolved**: 2024-02-04
 
-**Design Specification** (line 268): TPD/RPD TTL should be 25 hours (90,000 seconds)
+**Original Issue**: Implementation used `DAY_TTL = 172800` (48 hours) instead of design spec of 25 hours (90,000 seconds).
 
-**Actual Implementation**:
-```lua
-local DAY_TTL = 172800   -- 48 hours (2 days)
-```
-
-**Impact**: Redis keys persist longer than documented, consuming more memory but reducing risk of premature expiration.
-
-**Fix Required**: Decide on correct value and align documentation with code.
+**Resolution**: Updated `packages/redis/src/luaScripts.ts` to use `DAY_TTL = 90000` (25 hours) as specified in design.
 
 ---
 
@@ -165,9 +144,12 @@ Core features correctly implemented:
 - Type-safe configuration
 - Active job tracking with `waitStartedAt`, `maxWaitMS`, `timeoutAt`
 
-**Undocumented enhancements** (working correctly, should be documented):
-- Window reset notification scheduling (`rateLimiter.ts:305-319`)
-- Double resolution prevention in `CapacityWaitQueue`
+### distributed-capacity-tracking-design.md
+Core features correctly implemented:
+- Global usage tracking in Redis per model per time window
+- Dynamic limits calculation based on remaining capacity
+- Pub/Sub broadcast of allocations with `dynamicLimits`
+- Instances update local rate limiters via `setRateLimits()`
 
 ---
 
@@ -178,25 +160,21 @@ Core features correctly implemented:
 2. **Update distributed-slots documentation** - Clarify that ratios are NOT local in distributed mode
 
 ### Documentation Updates
-3. Update `distributed-capacity-tracking-design.md` with correct field names (`tokens`/`requests`)
-4. Document the global memory semaphore approach vs. per-job-type calculation
-5. Add documentation for window reset notification feature in maxWaitMS
+3. Document the global memory semaphore approach vs. per-job-type calculation
+4. Add documentation for window reset notification feature in maxWaitMS
 
 ### Future Consideration
-6. Evaluate whether per-instance local ratios should be implemented as designed, or if the current global ratio approach is acceptable
-7. Consider implementing per-job-type memory semaphores if isolation is required
+5. Evaluate whether per-instance local ratios should be implemented as designed, or if the current global ratio approach is acceptable
+6. Consider implementing per-job-type memory semaphores if isolation is required
 
 ---
 
 ## File References
 
-| Issue | Primary Files | Key Lines |
-|-------|---------------|-----------|
-| reject() requestCount | `packages/core/src/utils/jobExecutor.ts` | 56-74 |
-| | `packages/core/src/multiModelTypes.ts` | 248 |
-| Local ratios | `packages/redis/src/luaScripts.ts` | 101-122 |
-| | `packages/core/src/utils/jobTypeManager.ts` | 216-241 |
-| Memory per-job-type | `packages/core/src/utils/memoryManager.ts` | 45-49 |
-| | `packages/core/src/utils/availabilityTracker.ts` | 246-297 |
-| Redis field names | `packages/redis/src/luaScripts.ts` | 365, 370, 379, 384 |
-| Daily TTL | `packages/redis/src/luaScripts.ts` | 358-359 |
+| Issue | Status | Primary Files | Key Lines |
+|-------|--------|---------------|-----------|
+| reject() requestCount | 🔴 OPEN | `packages/core/src/utils/jobExecutor.ts` | 56-74 |
+| Local ratios | 🔴 OPEN | `packages/redis/src/luaScripts.ts` | 101-122 |
+| Memory per-job-type | 🔴 OPEN | `packages/core/src/utils/memoryManager.ts` | 45-49 |
+| Redis field names | ✅ RESOLVED | `packages/redis/src/luaScripts.ts` | 365-387 |
+| Daily TTL | ✅ RESOLVED | `packages/redis/src/luaScripts.ts` | 359 |

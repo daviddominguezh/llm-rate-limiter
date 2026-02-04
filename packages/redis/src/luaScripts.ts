@@ -27,10 +27,10 @@ local function getGlobalUsage(prefix, modelId, timestamp)
   local rpdKey = prefix .. 'usage:' .. modelId .. ':rpd:' .. dayWindow
 
   return {
-    tpmUsed = tonumber(redis.call('HGET', tpmKey, 'tokens')) or 0,
-    rpmUsed = tonumber(redis.call('HGET', rpmKey, 'requests')) or 0,
-    tpdUsed = tonumber(redis.call('HGET', tpdKey, 'tokens')) or 0,
-    rpdUsed = tonumber(redis.call('HGET', rpdKey, 'requests')) or 0
+    tpmUsed = tonumber(redis.call('HGET', tpmKey, 'actualTokens')) or 0,
+    rpmUsed = tonumber(redis.call('HGET', rpmKey, 'actualRequests')) or 0,
+    tpdUsed = tonumber(redis.call('HGET', tpdKey, 'actualTokens')) or 0,
+    rpdUsed = tonumber(redis.call('HGET', rpdKey, 'actualRequests')) or 0
   }
 end
 
@@ -356,18 +356,20 @@ local rpdWindowStart = ARGV[10] or ''
 -- Update global usage counters (for distributed capacity tracking)
 local prefix = string.match(instancesKey, '^(.-)instances$') or ''
 local MINUTE_TTL = 120   -- 2 minutes
-local DAY_TTL = 172800   -- 2 days
+local DAY_TTL = 90000    -- 25 hours
 
 -- Track token usage (TPM and TPD)
 if actualTokens > 0 then
   if tpmWindowStart ~= '' then
     local tpmKey = prefix .. 'usage:' .. modelId .. ':tpm:' .. tpmWindowStart
-    redis.call('HINCRBY', tpmKey, 'tokens', actualTokens)
+    redis.call('HINCRBY', tpmKey, 'actualTokens', actualTokens)
+    redis.call('HSET', tpmKey, 'lastUpdate', timestamp)
     redis.call('EXPIRE', tpmKey, MINUTE_TTL)
   end
   if tpdWindowStart ~= '' then
     local tpdKey = prefix .. 'usage:' .. modelId .. ':tpd:' .. tpdWindowStart
-    redis.call('HINCRBY', tpdKey, 'tokens', actualTokens)
+    redis.call('HINCRBY', tpdKey, 'actualTokens', actualTokens)
+    redis.call('HSET', tpdKey, 'lastUpdate', timestamp)
     redis.call('EXPIRE', tpdKey, DAY_TTL)
   end
 end
@@ -376,12 +378,14 @@ end
 if actualRequests > 0 then
   if rpmWindowStart ~= '' then
     local rpmKey = prefix .. 'usage:' .. modelId .. ':rpm:' .. rpmWindowStart
-    redis.call('HINCRBY', rpmKey, 'requests', actualRequests)
+    redis.call('HINCRBY', rpmKey, 'actualRequests', actualRequests)
+    redis.call('HSET', rpmKey, 'lastUpdate', timestamp)
     redis.call('EXPIRE', rpmKey, MINUTE_TTL)
   end
   if rpdWindowStart ~= '' then
     local rpdKey = prefix .. 'usage:' .. modelId .. ':rpd:' .. rpdWindowStart
-    redis.call('HINCRBY', rpdKey, 'requests', actualRequests)
+    redis.call('HINCRBY', rpdKey, 'actualRequests', actualRequests)
+    redis.call('HSET', rpdKey, 'lastUpdate', timestamp)
     redis.call('EXPIRE', rpdKey, DAY_TTL)
   end
 end

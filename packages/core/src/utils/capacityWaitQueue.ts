@@ -129,6 +129,13 @@ export class CapacityWaitQueue<T = unknown> {
   }
 
   /**
+   * Check if there are any waiters in the queue.
+   */
+  hasWaiters(): boolean {
+    return this.queue.length > ZERO;
+  }
+
+  /**
    * Clear all waiters from the queue (used during shutdown).
    * All waiters are resolved with null.
    */

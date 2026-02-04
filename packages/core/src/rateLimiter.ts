@@ -56,6 +56,7 @@ class LLMRateLimiter implements InternalLimiterInstance {
   private tpmCounter: TimeWindowCounter | null = null;
   private tpdCounter: TimeWindowCounter | null = null;
   private readonly capacityWaitQueue: CapacityWaitQueue<ReservationContext>;
+  private windowResetTimerId: ReturnType<typeof setTimeout> | null = null;
 
   constructor(config: InternalLimiterConfig) {
     validateConfig(config);
@@ -259,6 +260,39 @@ class LLMRateLimiter implements InternalLimiterInstance {
   }
 
   /**
+   * Get the minimum time until any time window resets.
+   * Used to schedule proactive notifications when windows reset.
+   */
+  private getTimeUntilNextWindowReset(): number {
+    const counters = [this.rpmCounter, this.rpdCounter, this.tpmCounter, this.tpdCounter].filter(
+      (c): c is TimeWindowCounter => c !== null
+    );
+    if (counters.length === ZERO) return Infinity;
+    const times = counters.map((c) => c.getTimeUntilReset());
+    return Math.min(...times);
+  }
+
+  /**
+   * Schedule a notification at the next window reset boundary.
+   * Only schedules if there are waiters in the queue and no timer is already active.
+   */
+  private scheduleWindowResetNotification(): void {
+    // Don't schedule if already scheduled
+    if (this.windowResetTimerId !== null) return;
+
+    // Don't schedule if no waiters
+    if (!this.capacityWaitQueue.hasWaiters()) return;
+
+    const timeUntilReset = this.getTimeUntilNextWindowReset();
+    if (timeUntilReset === Infinity || timeUntilReset <= ZERO) return;
+
+    this.windowResetTimerId = setTimeout(() => {
+      this.windowResetTimerId = null;
+      this.notifyCapacityAvailable();
+    }, timeUntilReset);
+  }
+
+  /**
    * Record actual request usage with time-window awareness.
    * Only refunds unused capacity if still within the same time window.
    */
@@ -367,6 +401,10 @@ class LLMRateLimiter implements InternalLimiterInstance {
     if (this.memoryRecalculationIntervalId !== null) {
       clearInterval(this.memoryRecalculationIntervalId);
       this.memoryRecalculationIntervalId = null;
+    }
+    if (this.windowResetTimerId !== null) {
+      clearTimeout(this.windowResetTimerId);
+      this.windowResetTimerId = null;
     }
     this.log('Stopped');
   }
@@ -498,9 +536,13 @@ class LLMRateLimiter implements InternalLimiterInstance {
   /**
    * Notify the wait queue that capacity may be available.
    * Called after releasing capacity to wake waiting jobs.
+   * Also schedules a notification at the next window reset if waiters remain.
    */
   private notifyCapacityAvailable(): void {
     this.capacityWaitQueue.notifyCapacityAvailable(() => this.tryReserve());
+
+    // Schedule notification at next window reset if waiters remain
+    this.scheduleWindowResetNotification();
   }
 
   /**

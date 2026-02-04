@@ -46,25 +46,20 @@ Requests Per Day limit is not included in the distributed backend Lua scripts. D
 
 ### Issue #3: Rate limit window reset should wake queued jobs
 
-**Status:** Open
+**Status:** RESOLVED
 
 **Description:**
 Jobs waiting in the `CapacityWaitQueue` are NOT proactively woken when TPM/RPM counters reset at minute boundaries. Jobs rely on other job completions or their individual timeouts to be processed.
 
 **Impact:** Medium - Jobs may wait longer than necessary under low-traffic conditions
 
-**Files to modify:**
-- `packages/core/src/utils/capacityWaitQueue.ts`
-- `packages/core/src/rateLimiter.ts`
-
-**Current behavior:**
-- `notifyCapacityAvailable()` only called when jobs complete
-- No timer mechanism for minute boundary resets
-
-**Recommended fix:**
-1. Calculate time until next minute boundary
-2. Set timer to call `notifyCapacityAvailable()` at that time
-3. Repeat while waiters exist in queue
+**Resolution:**
+- Added `hasWaiters()` method to `packages/core/src/utils/capacityWaitQueue.ts`
+- Added `windowResetTimerId` field to track scheduled notifications
+- Added `getTimeUntilNextWindowReset()` to calculate minimum time until any window resets (RPM, RPD, TPM, TPD)
+- Added `scheduleWindowResetNotification()` to set timer at next window boundary
+- Updated `notifyCapacityAvailable()` to schedule timer after processing queue
+- Updated `stop()` to clear the timer on shutdown
 
 ---
 
@@ -193,8 +188,8 @@ this.recordTokenUsage(usage.input + usage.output, windowStarts);
 
 | Priority | Count | Issues |
 |----------|-------|--------|
-| High | 1 | #3 |
+| High | 0 | - |
 | Medium | 2 | #4, #5 |
 | Low | 4 | #6, #7, #8, #9 |
-| **Total Open** | **7** | |
-| **Resolved** | **2** | #1, #2 |
+| **Total Open** | **6** | |
+| **Resolved** | **3** | #1, #2, #3 |

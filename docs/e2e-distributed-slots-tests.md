@@ -1,0 +1,543 @@
+# E2E Tests for Distributed Slots
+
+This document describes the end-to-end test suites for verifying the multi-dimensional slot allocation system in the distributed rate limiter.
+
+## Overview
+
+The distributed slots feature implements per-job-type per-model slot calculation using the formula:
+
+```
+slots[jobType][model] = floor((modelCapacity / estimatedResourcePerJob) / instanceCount * jobTypeRatio)
+```
+
+These E2E tests verify that the implementation works correctly across multiple instances with various configurations.
+
+## Test Configuration Presets
+
+Tests use different configuration presets defined in `packages/e2e/serverInstance/src/rateLimiterConfigs.ts`:
+
+| Preset            | Models                      | Job Types                           | Purpose                          |
+| ----------------- | --------------------------- | ----------------------------------- | -------------------------------- |
+| `default`         | 3 (openai, xai, deepinfra)  | 5 (summary, VacationPlanning, etc.) | Original production-like config  |
+| `slotCalculation` | 2 (model-alpha, model-beta) | 2 (jobTypeA, jobTypeB)              | Simple verifiable slot math      |
+| `fixedRatio`      | 1 (test-model)              | 2 (fixedJobType, flexibleJobType)   | Fixed vs flexible ratio behavior |
+| `flexibleRatio`   | 1 (flex-model)              | 3 (flexJobA, flexJobB, flexJobC)    | Dynamic ratio adjustment         |
+| `instanceScaling` | 1 (scale-model)             | 1 (scaleJob)                        | Instance join/leave behavior     |
+
+---
+
+## Test Suites (Ordered by Complexity)
+
+---
+
+### 1. Slot Calculation (`slotCalculation.test.ts`)
+
+**Complexity:** Low
+
+**Purpose:** Check that the new available slot calculations work perfectly with different model, job type and instance combinations. This does not test load, does not queue any job, we only need to verify the initial slot allocation math works.
+
+**Approach:**
+1. Reset instances with a specific config preset
+2. Query the allocation endpoint (`GET /api/debug/allocation`) from each instance
+3. Compare `slotsByJobTypeAndModel` against mathematically calculated expected values
+4. Repeat for multiple config presets covering all limit type combinations
+
+**Test Configurations:**
+
+We must test ALL possible combinations of rate limit types:
+
+| Config Preset | Model Limits | Job Types | What It Tests |
+|---------------|--------------|-----------|---------------|
+| `slotCalc-tpm` | TPM only (100K) | 2 job types, different token estimates | TPM-based slot calculation |
+| `slotCalc-rpm` | RPM only (500) | 2 job types, different request estimates | RPM-based slot calculation |
+| `slotCalc-tpd` | TPD only (1M) | 2 job types | TPD-based slot calculation |
+| `slotCalc-rpd` | RPD only (10K) | 2 job types | RPD-based slot calculation |
+| `slotCalc-concurrent` | maxConcurrentRequests only (100) | 2 job types | Concurrency-based slot calculation |
+| `slotCalc-memory` | Memory limit (1GB) | 2 job types, different memory estimates | Memory-based slot calculation |
+| `slotCalc-tpm-rpm` | TPM (100K) + RPM (500) | 2 job types | Mixed limits (should use limiting factor) |
+| `slotCalc-multi-model` | Model A: TPM, Model B: concurrent | 2 job types | Different limit types per model |
+| `slotCalc-ratios` | TPM (100K) | 3 job types: ratio 0.5, 0.3, 0.2 | Different ratio combinations |
+| `slotCalc-uneven-ratios` | TPM (100K) | 4 job types: ratio 0.7, 0.1, 0.1, 0.1 | Uneven ratio distribution |
+
+**Slot Calculation Formula:**
+
+```
+For TPM-limited models:
+  slots[jobType][model] = floor((TPM / estimatedTokens) / instanceCount * ratio)
+
+For RPM-limited models:
+  slots[jobType][model] = floor((RPM / estimatedRequests) / instanceCount * ratio)
+
+For concurrent-limited models:
+  slots[jobType][model] = floor(maxConcurrent / instanceCount * ratio)
+
+For mixed limits:
+  slots = min(tpm_slots, rpm_slots, concurrent_slots, ...)
+```
+
+#### Test Case 1: TPM-Only Model (`slotCalc-tpm`)
+
+**Config:**
+```
+model-alpha: TPM = 100,000
+jobTypeA: estimatedTokens = 10,000, ratio = 0.6
+jobTypeB: estimatedTokens = 5,000, ratio = 0.4
+```
+
+| What We Check | What We Compare Against | Expected Result (2 instances) |
+|---------------|------------------------|-------------------------------|
+| `allocation.slotsByJobTypeAndModel.jobTypeA.model-alpha.slots` | `floor((100K / 10K) / 2 * 0.6)` | 3 |
+| `allocation.slotsByJobTypeAndModel.jobTypeB.model-alpha.slots` | `floor((100K / 5K) / 2 * 0.4)` | 4 |
+| `allocation.slotsByJobTypeAndModel.jobTypeA.model-alpha.tokensPerMinute` | `100K / 2` | 50,000 |
+
+#### Test Case 2: RPM-Only Model (`slotCalc-rpm`)
+
+**Config:**
+```
+model-beta: RPM = 500
+jobTypeA: estimatedRequests = 1, ratio = 0.6
+jobTypeB: estimatedRequests = 5, ratio = 0.4
+```
+
+| What We Check | What We Compare Against | Expected Result (2 instances) |
+|---------------|------------------------|-------------------------------|
+| `allocation.slotsByJobTypeAndModel.jobTypeA.model-beta.slots` | `floor((500 / 1) / 2 * 0.6)` | 150 |
+| `allocation.slotsByJobTypeAndModel.jobTypeB.model-beta.slots` | `floor((500 / 5) / 2 * 0.4)` | 20 |
+| `allocation.slotsByJobTypeAndModel.jobTypeA.model-beta.requestsPerMinute` | `500 / 2` | 250 |
+
+#### Test Case 3: Concurrent-Only Model (`slotCalc-concurrent`)
+
+**Config:**
+```
+model-gamma: maxConcurrentRequests = 100
+jobTypeA: ratio = 0.7
+jobTypeB: ratio = 0.3
+```
+
+| What We Check | What We Compare Against | Expected Result (2 instances) |
+|---------------|------------------------|-------------------------------|
+| `allocation.slotsByJobTypeAndModel.jobTypeA.model-gamma.slots` | `floor(100 / 2 * 0.7)` | 35 |
+| `allocation.slotsByJobTypeAndModel.jobTypeB.model-gamma.slots` | `floor(100 / 2 * 0.3)` | 15 |
+
+#### Test Case 4: Mixed Limits - Limiting Factor (`slotCalc-tpm-rpm`)
+
+**Config:**
+```
+model-delta: TPM = 100,000, RPM = 50
+jobTypeA: estimatedTokens = 10,000, estimatedRequests = 1, ratio = 0.5
+```
+
+| What We Check | What We Compare Against | Expected Result (2 instances) |
+|---------------|------------------------|-------------------------------|
+| TPM-based slots | `floor((100K / 10K) / 2 * 0.5)` | 2 (from TPM) |
+| RPM-based slots | `floor((50 / 1) / 2 * 0.5)` | 12 (from RPM) |
+| `allocation.slotsByJobTypeAndModel.jobTypeA.model-delta.slots` | `min(2, 12)` | 2 (TPM is limiting) |
+
+#### Test Case 5: Multiple Models with Different Limit Types (`slotCalc-multi-model`)
+
+**Config:**
+```
+model-tpm: TPM = 100,000
+model-concurrent: maxConcurrentRequests = 50
+jobTypeA: estimatedTokens = 10,000, ratio = 0.5
+```
+
+| What We Check | What We Compare Against | Expected Result (2 instances) |
+|---------------|------------------------|-------------------------------|
+| `allocation.slotsByJobTypeAndModel.jobTypeA.model-tpm.slots` | `floor((100K / 10K) / 2 * 0.5)` | 2 |
+| `allocation.slotsByJobTypeAndModel.jobTypeA.model-concurrent.slots` | `floor(50 / 2 * 0.5)` | 12 |
+
+#### Test Case 6: Various Ratio Combinations (`slotCalc-ratios`)
+
+**Config:**
+```
+model-alpha: TPM = 100,000
+jobTypeA: estimatedTokens = 10,000, ratio = 0.5
+jobTypeB: estimatedTokens = 10,000, ratio = 0.3
+jobTypeC: estimatedTokens = 10,000, ratio = 0.2
+```
+
+| What We Check | What We Compare Against | Expected Result (2 instances) |
+|---------------|------------------------|-------------------------------|
+| jobTypeA slots | `floor((100K / 10K) / 2 * 0.5)` | 2 |
+| jobTypeB slots | `floor((100K / 10K) / 2 * 0.3)` | 1 |
+| jobTypeC slots | `floor((100K / 10K) / 2 * 0.2)` | 1 |
+| Sum of ratios | 0.5 + 0.3 + 0.2 | 1.0 (must equal 1) |
+
+#### Test Case 7: Instance Count Variations
+
+Run each config with 1, 2, and 3 instances to verify instance division:
+
+| Instance Count | Expected Slot Multiplier |
+|----------------|-------------------------|
+| 1 instance | Full capacity (slots × 1) |
+| 2 instances | Half per instance (slots ÷ 2) |
+| 3 instances | Third per instance (slots ÷ 3) |
+
+**Key Verification:** The allocation endpoint returns mathematically correct slot values for ALL combinations of limit types, ratios, and instance counts.
+
+---
+
+### 2. Fixed Ratio Isolation (`fixedRatioIsolation.test.ts`)
+
+**Complexity:** Low
+
+**Purpose:** Check that if there are two job types with fixed ratios, A and B, and one of them (job type A) is not flexible, then filling the capacity of B should not alter the capacity of A.
+
+**Config:** `fixedRatio`
+```
+test-model: 100K TPM
+fixedJobType: 10K tokens/job, ratio 0.5, flexible: false
+flexibleJobType: 10K tokens/job, ratio 0.5, flexible: true
+```
+
+**Calculated Expected Slots (2 instances):**
+```
+fixedJobType:    floor((100,000 / 10,000) / 2 * 0.5) = floor(5 * 0.5) = 2 per instance = 4 total
+flexibleJobType: floor((100,000 / 10,000) / 2 * 0.5) = floor(5 * 0.5) = 2 per instance = 4 total
+```
+
+#### Test Case 1: Fixed Job Type Maintains Capacity
+
+| What We Check               | What We Compare Against   | Expected Result                     |
+| --------------------------- | ------------------------- | ----------------------------------- |
+| fixedJobType completions    | fixedJobType slots (4)    | All 4 fixedJobType jobs complete    |
+| flexibleJobType completions | flexibleJobType slots (4) | All 4 flexibleJobType jobs complete |
+| Failed jobs                 | Zero                      | No jobs fail                        |
+
+#### Test Case 2: Fixed Ratio Not Affected by Flexible Overload
+
+| What We Check                                            | What We Compare Against       | Expected Result                                      |
+| -------------------------------------------------------- | ----------------------------- | ---------------------------------------------------- |
+| fixedJobType completions when flexibleJobType overloaded | fixedJobType capacity (4)     | All 4 fixedJobType jobs complete                     |
+| fixedJobType queue duration                              | Threshold (2 seconds)         | fixedJobType jobs complete quickly (< 2s queue time) |
+| flexibleJobType completions                              | flexibleJobType jobs sent (6) | All 6 eventually complete (some wait for capacity)   |
+| Failed jobs                                              | Zero                          | No jobs fail                                         |
+
+**Key Verification:** Even when flexibleJobType is overloaded (6 jobs for 4 slots), fixedJobType jobs complete immediately because their 4 slots are protected and cannot be borrowed.
+
+---
+
+### 3. Slots Evolve With Load (`slotsEvolveWithLoad.test.ts`)
+
+**Complexity:** Medium
+
+**Purpose:** Check that the calculated slots evolve properly over time, when load increases and decreases.
+
+**Config:** `slotCalculation` (same as test 1)
+
+**Expected Slots:** jobTypeA = 6 total, jobTypeB = 8 total
+
+#### Test Case 1: Sequential Acquire and Release
+
+| What We Check                | What We Compare Against | Expected Result                                |
+| ---------------------------- | ----------------------- | ---------------------------------------------- |
+| Batch 1 (6 jobs) completions | jobTypeA capacity       | All 6 complete                                 |
+| Batch 2 (6 jobs) completions | jobTypeA capacity       | All 6 complete (reusing freed slots)           |
+| Total completions            | 12 jobs sent            | All 12 complete                                |
+| Batch 1 queue duration       | Threshold (1 second)    | Batch 1 completes quickly (immediate capacity) |
+| Failed jobs                  | Zero                    | No jobs fail                                   |
+
+**Key Verification:** After Batch 1 completes and frees slots, Batch 2 can immediately use those freed slots.
+
+#### Test Case 2: Concurrent Load with Slot Reuse
+
+| What We Check              | What We Compare Against | Expected Result           |
+| -------------------------- | ----------------------- | ------------------------- |
+| Long jobs (3) completions  | Long jobs sent          | All 3 long jobs complete  |
+| Short jobs (6) completions | Short jobs sent         | All 6 short jobs complete |
+| Failed jobs                | Zero                    | No jobs fail              |
+
+**Key Verification:** Short jobs wait while long jobs occupy slots, then acquire slots as long jobs complete.
+
+#### Test Case 3: Multiple Job Types with Interleaved Load
+
+| What We Check        | What We Compare Against       | Expected Result           |
+| -------------------- | ----------------------------- | ------------------------- |
+| jobTypeA completions | 6 initial + 3 additional = 9  | All 9 complete            |
+| jobTypeB completions | 8 initial + 3 additional = 11 | All 11 complete           |
+| Jobs per instance    | Total / 2                     | Roughly even distribution |
+| Failed jobs          | Zero                          | No jobs fail              |
+
+**Key Verification:** Both job types independently manage their slot pools through multiple acquire/release cycles.
+
+---
+
+### 4. Instance Scaling (`instanceScaling.test.ts`)
+
+**Complexity:** Medium-High
+
+**Purpose:** Check that if instance B joins AFTER instance A has joined, A slots halve. Check that if instance B disconnects, A slots double.
+
+**Config:** `instanceScaling`
+```
+scale-model: 100K TPM
+scaleJob: 10K tokens/job, ratio 1.0
+```
+
+**Calculated Expected Slots:**
+```
+1 instance: floor((100,000 / 10,000) / 1 * 1.0) = 10 slots
+2 instances: floor((100,000 / 10,000) / 2 * 1.0) = 5 slots per instance
+```
+
+#### Test Case 1: Total Capacity Remains Constant
+
+| What We Check     | What We Compare Against | Expected Result                        |
+| ----------------- | ----------------------- | -------------------------------------- |
+| Total completions | Total capacity (10)     | All 10 jobs complete                   |
+| Jobs per instance | 10 / 2 = 5              | Each instance processes exactly 5 jobs |
+| Failed jobs       | Zero                    | No jobs fail                           |
+
+**Key Verification:** Total cluster capacity (10 slots) is preserved regardless of how many instances share it.
+
+#### Test Case 2: Instance Join Halves Slots
+
+| What We Check                   | What We Compare Against | Expected Result                 |
+| ------------------------------- | ----------------------- | ------------------------------- |
+| Instance A starts alone         | N/A                     | A registers and gets allocation |
+| Instance B joins                | N/A                     | Both instances re-register      |
+| Total completions               | Total capacity (10)     | All 10 jobs complete            |
+| Jobs per instance after B joins | 10 / 2 = 5              | Each instance processes 5 jobs  |
+| Failed jobs                     | Zero                    | No jobs fail                    |
+
+**Key Verification:** When Instance B joins, Instance A's slots reduce from 10 to 5, and B gets 5 slots.
+
+#### Test Case 3: Instance Leave Doubles Slots
+
+| What We Check             | What We Compare Against       | Expected Result                |
+| ------------------------- | ----------------------------- | ------------------------------ |
+| Only Instance A running   | N/A                           | A is sole instance             |
+| Instance A completions    | Single-instance capacity (10) | All 10 jobs complete on A      |
+| Instance count in results | 1                             | Only 1 instance processed jobs |
+| Failed jobs               | Zero                          | No jobs fail                   |
+
+**Key Verification:** When only A is running, it gets the full 10 slots (not limited to 5).
+
+---
+
+### 5. Flexible Ratio Adjustment (`flexibleRatioAdjustment.test.ts`)
+
+**Complexity:** High
+
+**Purpose:** Check that if there are several job types and they have flexible behavior, their ratios are adjusted depending on the load.
+
+**Config:** `flexibleRatio`
+```
+flex-model: 100K TPM
+flexJobA: 10K tokens/job, ratio ~0.33, flexible: true
+flexJobB: 10K tokens/job, ratio ~0.33, flexible: true
+flexJobC: 10K tokens/job, ratio ~0.33, flexible: true
+```
+
+**Initial Expected Slots (2 instances):**
+```
+Each job type: floor((100,000 / 10,000) / 2 * 0.33) ≈ 1-2 per instance ≈ 3 total
+```
+
+#### Test Case 1: All Flexible Job Types Complete (Baseline)
+
+| What We Check        | What We Compare Against | Expected Result |
+| -------------------- | ----------------------- | --------------- |
+| flexJobA completions | Jobs sent (3)           | All 3 complete  |
+| flexJobB completions | Jobs sent (3)           | All 3 complete  |
+| flexJobC completions | Jobs sent (3)           | All 3 complete  |
+| Failed jobs          | Zero                    | No jobs fail    |
+
+**Key Verification:** With equal load, all job types complete within their initial allocations.
+
+#### Test Case 2: Load Imbalance Handling
+
+| What We Check                       | What We Compare Against | Expected Result |
+| ----------------------------------- | ----------------------- | --------------- |
+| flexJobA completions (heavy load)   | Jobs sent (6)           | All 6 complete  |
+| flexJobB completions (minimal load) | Jobs sent (1)           | 1 completes     |
+| flexJobC completions (minimal load) | Jobs sent (1)           | 1 completes     |
+| Failed jobs                         | Zero                    | No jobs fail    |
+
+**Key Verification:** flexJobA can complete 6 jobs (more than initial ~3 slots) because idle flexJobB and flexJobC donate capacity through ratio adjustment.
+
+#### Test Case 3: Ratio Adjustment Under Concurrent Load
+
+| What We Check              | What We Compare Against | Expected Result |
+| -------------------------- | ----------------------- | --------------- |
+| Long flexJobB completions  | Jobs sent (3)           | All 3 complete  |
+| Short flexJobA completions | Jobs sent (6)           | All 6 complete  |
+| Total completions          | 9 jobs                  | All 9 complete  |
+| Failed jobs                | Zero                    | No jobs fail    |
+
+**Key Verification:** While flexJobB slots are occupied with long jobs, flexJobA gets extra capacity from idle flexJobC.
+
+---
+
+### 6. Local Ratio Only (`localRatioOnly.test.ts`)
+
+**Complexity:** Highest
+
+**Purpose:** Check that the dynamic ratio should NOT be shared across instances, it should be local only.
+
+**Config:** `flexibleRatio` (same as test 5)
+
+#### Test Case 1: Independent Instance Ratio Management
+
+**Scenario:**
+1. Both instances start with equal ratios (~0.33 each for flexJobA/B/C)
+2. Instance A receives heavy flexJobA load (triggers ratio adjustment on A)
+3. Instance B receives flexJobB jobs (should use B's unmodified ratios)
+
+| What We Check                     | What We Compare Against | Expected Result           |
+| --------------------------------- | ----------------------- | ------------------------- |
+| Instance A heavy load completions | Jobs sent to A (6)      | All 6 complete            |
+| Instance B jobs completions       | Jobs sent to B (3)      | All 3 complete            |
+| Instance B queue duration         | Threshold (5 seconds)   | B's jobs complete quickly |
+| Failed jobs (A)                   | Zero                    | No failures on A          |
+| Failed jobs (B)                   | Zero                    | No failures on B          |
+
+**Key Verification:** Instance A's ratio adjustment (giving more capacity to flexJobA) does NOT reduce Instance B's capacity for flexJobB.
+
+#### Test Case 2: Mixed Load Across Instances
+
+| What We Check     | What We Compare Against | Expected Result             |
+| ----------------- | ----------------------- | --------------------------- |
+| Total completions | 12 jobs (4 each type)   | All 12 complete             |
+| Instance count    | 2                       | Both instances process jobs |
+| Jobs per instance | > 0                     | Each instance has some jobs |
+| Failed jobs       | Zero                    | No jobs fail                |
+
+**Key Verification:** Both instances independently handle mixed load, each managing their own local ratios.
+
+---
+
+## Summary: What Each Test Proves
+
+| Test                      | What It Checks                                                                                                                                                         |
+| ------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Slot Calculation          | The new available slot calculations work perfectly with different model, job type and instance combinations                                                            |
+| Slots Evolve With Load    | The calculated slots evolve properly over time, when load increases and decreases                                                                                      |
+| Fixed Ratio Isolation     | If there are two job types with fixed ratios, A and B, and one of them (job type A) is not flexible, then filling the capacity of B should not alter the capacity of A |
+| Flexible Ratio Adjustment | If there are several job types and they have flexible behavior, their ratios are adjusted depending on the load                                                        |
+| Local Ratio Only          | The dynamic ratio should NOT be shared across instances, it should be local only                                                                                       |
+| Instance Scaling (Join)   | If instance B joins AFTER instance A has joined, A slots halve                                                                                                         |
+| Instance Scaling (Leave)  | If instance B disconnects, A slots double                                                                                                                              |
+
+---
+
+## Running the Tests
+
+### Prerequisites
+
+1. Start Redis:
+   ```bash
+   docker run -d -p 6379:6379 redis
+   ```
+
+2. Start the proxy:
+   ```bash
+   npm run e2e:proxy
+   ```
+
+3. Start server instances:
+   ```bash
+   npm run e2e:instance1  # Port 3001
+   npm run e2e:instance2  # Port 3002
+   ```
+
+### Execute Tests
+
+Run all distributed slots tests:
+```bash
+npm run test -- --testPathPattern="packages/e2e/testRunner/src/__tests__/(slotCalculation|fixedRatioIsolation|slotsEvolveWithLoad|instanceScaling|flexibleRatioAdjustment|localRatioOnly)"
+```
+
+Run individual test suites:
+```bash
+npm run test -- --testPathPattern="slotCalculation"
+npm run test -- --testPathPattern="instanceScaling"
+```
+
+### Recommended Execution Order
+
+For debugging, run tests in order of complexity:
+
+1. `slotCalculation` - Validates basic slot math
+2. `fixedRatioIsolation` - Validates ratio protection
+3. `slotsEvolveWithLoad` - Validates temporal behavior
+4. `instanceScaling` - Validates instance dynamics
+5. `flexibleRatioAdjustment` - Validates ratio algorithm
+6. `localRatioOnly` - Validates cross-instance isolation
+
+---
+
+## Test Infrastructure
+
+### Config Preset Selection
+
+Tests specify which config to use via the `configPreset` option in `runSuite()`:
+
+```typescript
+data = await runSuite({
+  suiteName: 'my-test',
+  proxyUrl: PROXY_URL,
+  instanceUrls: INSTANCE_URLS,
+  jobs: myJobs,
+  configPreset: 'slotCalculation',  // Use specific preset
+});
+```
+
+The preset is passed to each instance via the reset endpoint:
+```
+POST /api/debug/reset
+{ "cleanRedis": true, "configPreset": "slotCalculation" }
+```
+
+### Proxy Configuration
+
+The test proxy (`packages/e2e/proxy`) distributes jobs across instances. Tests can control distribution:
+
+```typescript
+// Equal distribution
+await fetch(`${PROXY_URL}/proxy/ratio`, {
+  method: 'POST',
+  body: JSON.stringify({ ratio: '1:1' }),
+});
+
+// All to instance A
+await fetch(`${PROXY_URL}/proxy/ratio`, {
+  method: 'POST',
+  body: JSON.stringify({ ratio: '1:0' }),
+});
+```
+
+### Test Data Collection
+
+Each test suite generates a JSON file in `packages/e2e/testResults/src/data/` containing:
+- Job events (queued, started, completed, failed)
+- Snapshots of instance state at key moments
+- Summary statistics (by instance, by model, by job type)
+
+---
+
+## Troubleshooting
+
+### "All models rejected by backend"
+
+This error indicates the backend has no available slots. Check:
+1. Instance count matches expected (slots are divided by instance count)
+2. Job type is configured in `resourceEstimationsPerJob`
+3. Model has capacity configured (TPM, RPM, or maxConcurrent)
+
+### Jobs timing out
+
+Increase `waitTimeoutMs` in the test configuration. Some tests with long-running jobs need 60-90 seconds.
+
+### Inconsistent slot counts
+
+Ensure Redis is clean between test runs. The first instance reset should use `cleanRedis: true`.
+
+### Ratio not adjusting
+
+The ratio adjustment algorithm only runs:
+- Periodically (based on `adjustmentIntervalMs`)
+- After N releases (based on `releasesPerAdjustment`)
+
+Ensure the test runs long enough for adjustments to trigger.

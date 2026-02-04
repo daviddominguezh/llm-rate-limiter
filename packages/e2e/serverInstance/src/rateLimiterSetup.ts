@@ -2,17 +2,24 @@ import { type LLMRateLimiterInstance, createLLMRateLimiter } from '@llm-rate-lim
 import { createRedisBackend } from '@llm-rate-limiter/redis';
 
 import { logger } from './logger.js';
-import { ESCALATION_ORDER, MODELS, RESOURCE_ESTIMATIONS } from './rateLimiterConfig.js';
+import { type ConfigPresetName, getConfigPreset } from './rateLimiterConfigs.js';
 
-export const createRateLimiterInstance = (redisUrl: string): LLMRateLimiterInstance<string> => {
+export const createRateLimiterInstance = (
+  redisUrl: string,
+  configPreset: ConfigPresetName = 'default'
+): LLMRateLimiterInstance<string> => {
+  const config = getConfigPreset(configPreset);
+
   logger.info('Creating rate limiter with config', {
-    models: Object.keys(MODELS),
-    resourceEstimations: RESOURCE_ESTIMATIONS,
+    preset: configPreset,
+    models: Object.keys(config.models),
+    jobTypes: Object.keys(config.resourceEstimations),
   });
+
   return createLLMRateLimiter({
-    models: MODELS,
-    escalationOrder: ESCALATION_ORDER,
-    resourceEstimationsPerJob: RESOURCE_ESTIMATIONS,
+    models: config.models,
+    escalationOrder: config.escalationOrder,
+    resourceEstimationsPerJob: config.resourceEstimations,
     backend: createRedisBackend(redisUrl),
     onLog: (message, data) => logger.info(message, data),
   });

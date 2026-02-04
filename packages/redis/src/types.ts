@@ -96,6 +96,18 @@ export interface RedisBackendConfig {
 }
 
 /**
+ * Per-model capacity configuration for slot calculation.
+ */
+export interface ModelCapacityConfig {
+  /** Tokens per minute limit (null if not configured) */
+  tokensPerMinute: number | null;
+  /** Requests per minute limit (null if not configured) */
+  requestsPerMinute: number | null;
+  /** Maximum concurrent requests (null if not configured) */
+  maxConcurrentRequests: number | null;
+}
+
+/**
  * Internal configuration for Redis backend implementation.
  * Built by the factory from model configs - not user-facing.
  */
@@ -106,8 +118,10 @@ export interface RedisBackendInternalConfig extends RedisBackendConfig {
   tokensPerMinute: number;
   /** Total requests per minute derived from model configs */
   requestsPerMinute: number;
-  /** Job type configuration */
+  /** Job type configuration (required for slot calculation) */
   resourceEstimationsPerJob?: ResourceEstimationsPerJob;
+  /** Per-model capacity configuration for slot calculation */
+  modelCapacities?: Record<string, ModelCapacityConfig>;
 }
 
 /**
@@ -157,23 +171,47 @@ export interface RedisBackendInstance {
 }
 
 /**
+ * Per-model slot allocation within a job type (stored in Redis).
+ */
+export interface ModelSlotAllocationData {
+  /** Number of slots available for this job type on this model */
+  slots: number;
+  /** Per-instance tokens per minute limit for this model */
+  tokensPerMinute: number;
+  /** Per-instance requests per minute limit for this model */
+  requestsPerMinute: number;
+}
+
+/**
+ * Multi-dimensional slot allocation by job type and model (stored in Redis).
+ */
+export type SlotsByJobTypeAndModelData = Record<string, Record<string, ModelSlotAllocationData>>;
+
+/**
+ * In-flight tracking by job type and model.
+ */
+export type InFlightByJobTypeAndModel = Record<string, Record<string, number>>;
+
+/**
  * Internal instance data stored in Redis.
  */
 export interface InstanceData {
-  /** Number of in-flight jobs */
-  inFlight: number;
   /** Last heartbeat timestamp (ms since epoch) */
   lastHeartbeat: number;
+  /** In-flight by job type and model */
+  inFlightByJobTypeAndModel: InFlightByJobTypeAndModel;
 }
 
 /**
  * Internal allocation data stored in Redis.
  */
 export interface AllocationData {
-  /** Allocated slots */
+  /** Total allocated slots (sum of all job-type/model slots) */
   slots: number;
   /** Number of active instances sharing the rate limits */
   instanceCount: number;
+  /** Slot allocation by job type and model */
+  slotsByJobTypeAndModel: SlotsByJobTypeAndModelData;
 }
 
 /**

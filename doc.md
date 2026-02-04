@@ -435,4 +435,56 @@ You must generate the data and the script to calculate the results BEFORE writin
 
 ---
 
+Ok, check the instances logs at packages/e2e/serverInstance/logs
+
+---
+
+Each job type has a ratio, which, if undefined, means equally divided.
+Each model has its own capacity.
+The instances should have an even distribution of capacity.
+
+So, imagine two job types, A and B, which use 5000 and 10000 tpm respectively (also, they could use different tpd, rpm, rpd, concurrent reqs, memory, etc., but we will only be focusing on tpm for making the example easier).
+
+Imagine two models X and Y, with 1M and 4M tpm respectively.
+Then, image two instances N and M.
+
+At the beginning, if we divide the capacity of the models by the job type estimates, we would have:
+Slots for job type A in model X = 1M/5000 = 200 slots
+Slots for job type A in model Y = 1M/5000 = 800 slots
+Slots for job type B in model X = 1M/10000 = 100 slots
+Slots for job type B in model Y = 1M/10000 = 400 slots
+
+Then, if we divide them by the number of instances (2, in this example):
+Slots for job type A in model X = 100 slots
+Slots for job type A in model Y = 400 slots
+Slots for job type B in model X = 50 slots
+Slots for job type B in model Y = 200 slots
+
+BUT, we also have to take into account the ratio of the job type, since in this example we did not specify it, then we would have a ratio of 0.5 for each, so we adjust again:
+Slots for job type A in model X = 50 slots
+Slots for job type A in model Y = 200 slots
+Slots for job type B in model X = 25 slots
+Slots for job type B in model Y = 100 slots
+
+(if the ratio were specified, we would distribute accordingly, per job type)
+
+Those are the initial calculations.
+Now, it could be possible that after some time, a new instance joins, so now we would have 3 instances, which would affect the slots per instance per model per job type. Also, it could be possible that one instance were killed. If that happens, we should adjust the slots, and that should be handled by the back-end, or, specifically, by redis. We should somehow detect that, and, somehow, we should notify the instances that they slot allocation changed.
+
+That's the requirement.
+We need the slots because in real-life, we must inform the user the availability, so the user can control the flow of the job ingestion. The user must know how many jobs he can allocate.
+
+---
+
+We need one test suite for each of these points:
+- Check that the new available slot calculations work perfectly with different model, job type and instance combinations (for this, we must extend the current instance server so it defines several configurations, with different models/jobTypes and then, the testRunner decides which configuration will be used for the current test)
+- Check that the calculated slots evolve properly over time, when load increases and decreases
+- Check f there are two job types with fixed ratios, A and B, and one of them (job type A) is not flexible, then filling the capacity of B should not alter the capacity of A
+- Check f there are several job types and they have flexible behavior, we should see that their ratios are adjusted depending on the load
+- The dynamic ratio should NOT be shared across instances, it should be local only
+- Check that if instance B joins AFTER instance A has joined, A slots halve
+- Check that if instance B disconnects, A slots double
+
+---
+
 

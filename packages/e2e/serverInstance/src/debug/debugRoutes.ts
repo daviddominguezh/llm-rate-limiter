@@ -1,11 +1,13 @@
 import type { Request, Response, Router } from 'express';
 import { Router as createRouter } from 'express';
 
+import { type ConfigPresetName, isValidPresetName } from '../rateLimiterConfigs.js';
 import type { ResetOptions, ResetResult, ServerState } from '../serverState.js';
 import type { DebugEventEmitter } from './eventEmitter.js';
 import type { JobHistoryTracker } from './jobHistoryTracker.js';
 
 const HTTP_STATUS_OK = 200;
+const HTTP_STATUS_BAD_REQUEST = 400;
 const HTTP_STATUS_INTERNAL_ERROR = 500;
 
 /** Dependencies for debug routes */
@@ -88,11 +90,25 @@ export const createDebugRoutes = (deps: DebugRouteDeps): Router => {
   /**
    * POST /debug/reset
    * Reset the server: optionally clean Redis, create new rate limiter instance.
-   * Body: { cleanRedis?: boolean } - defaults to true
+   * Body: { cleanRedis?: boolean, configPreset?: ConfigPresetName } - defaults to true, keep current
    */
   router.post('/reset', (req: Request, res: Response): void => {
-    const body = req.body as { cleanRedis?: boolean } | undefined;
+    const body = req.body as { cleanRedis?: boolean; configPreset?: string } | undefined;
     const options: ResetOptions = { cleanRedis: body?.cleanRedis ?? true };
+
+    // Validate and set configPreset if provided
+    if (body?.configPreset !== undefined) {
+      if (isValidPresetName(body.configPreset)) {
+        options.configPreset = body.configPreset as ConfigPresetName;
+      } else {
+        res.status(HTTP_STATUS_BAD_REQUEST).json({
+          success: false,
+          error: `Invalid configPreset: ${body.configPreset}`,
+          timestamp: Date.now(),
+        });
+        return;
+      }
+    }
 
     resetServer(options)
       .then((result) => {

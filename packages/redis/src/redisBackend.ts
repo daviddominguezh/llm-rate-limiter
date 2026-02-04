@@ -1,5 +1,5 @@
 /**
- * Redis distributed backend implementation with fair slot distribution.
+ * Redis distributed backend implementation with multi-dimensional slot distribution.
  */
 import type {
   AllocationCallback,
@@ -25,6 +25,7 @@ import {
   CLEANUP_SCRIPT,
   GET_STATS_SCRIPT,
   HEARTBEAT_SCRIPT,
+  INIT_CONFIG_SCRIPT,
   REGISTER_SCRIPT,
   RELEASE_SCRIPT,
   UNREGISTER_SCRIPT,
@@ -56,6 +57,7 @@ class RedisBackendImpl {
   private setupSubscriberPromise: Promise<void> | null = null;
   private readonly jobTypeOps: RedisJobTypeOps;
   private stopPromise: Promise<void> | null = null;
+  private configInitPromise: Promise<void> | null = null;
 
   constructor(redisConfig: RedisBackendInternalConfig) {
     this.ownClient = !isRedisClient(redisConfig.redis);
@@ -81,6 +83,49 @@ class RedisBackendImpl {
       redisConfig.resourceEstimationsPerJob,
       redisConfig.totalCapacity
     );
+    // Initialize config in Redis
+    this.configInitPromise = this.initConfig(
+      redisConfig.modelCapacities,
+      redisConfig.resourceEstimationsPerJob
+    );
+  }
+
+  /** Initialize config in Redis (model capacities and job type resources) */
+  private async initConfig(
+    modelCapacities: RedisBackendInternalConfig['modelCapacities'],
+    resourceEstimationsPerJob: RedisBackendInternalConfig['resourceEstimationsPerJob']
+  ): Promise<void> {
+    if (modelCapacities === undefined || resourceEstimationsPerJob === undefined) return;
+    const { keys, redis } = this;
+    // Build job type resources with ratios
+    const jobTypeResources: Record<string, { estimatedUsedTokens: number; estimatedNumberOfRequests: number; ratio: number }> = {};
+    const jobTypeIds = Object.keys(resourceEstimationsPerJob);
+    let specifiedTotal = 0;
+    const specifiedRatios = new Map<string, number>();
+    for (const id of jobTypeIds) {
+      const config = resourceEstimationsPerJob[id];
+      if (config?.ratio?.initialValue !== undefined) {
+        specifiedRatios.set(id, config.ratio.initialValue);
+        specifiedTotal += config.ratio.initialValue;
+      }
+    }
+    const remainingRatio = 1 - specifiedTotal;
+    const unspecifiedCount = jobTypeIds.length - specifiedRatios.size;
+    const evenShare = unspecifiedCount > 0 ? remainingRatio / unspecifiedCount : 0;
+    for (const id of jobTypeIds) {
+      const config = resourceEstimationsPerJob[id];
+      jobTypeResources[id] = {
+        estimatedUsedTokens: config?.estimatedUsedTokens ?? 1,
+        estimatedNumberOfRequests: config?.estimatedNumberOfRequests ?? 1,
+        ratio: specifiedRatios.get(id) ?? evenShare,
+      };
+    }
+    await evalScript(
+      redis,
+      INIT_CONFIG_SCRIPT,
+      [keys.modelCapacities, keys.jobTypeResources],
+      [JSON.stringify(modelCapacities), JSON.stringify(jobTypeResources)]
+    );
   }
 
   private setupSubscriberReconnection(): void {
@@ -97,12 +142,15 @@ class RedisBackendImpl {
   private startCleanupInterval(): void {
     const { config, keys, redis } = this;
     const { instanceTimeoutMs } = config;
-    const { instances, allocations, config: configKey, channel } = keys;
+    const { instances, allocations, channel, modelCapacities, jobTypeResources } = keys;
     this.cleanupInterval = setInterval(() => {
       const cutoff = Date.now() - instanceTimeoutMs;
-      evalScript(redis, CLEANUP_SCRIPT, [instances, allocations, configKey, channel], [String(cutoff)]).catch(
-        ignoreError
-      );
+      evalScript(
+        redis,
+        CLEANUP_SCRIPT,
+        [instances, allocations, channel, modelCapacities, jobTypeResources],
+        [String(cutoff)]
+      ).catch(ignoreError);
     }, DEFAULT_CLEANUP_INTERVAL_MS);
   }
 
@@ -143,16 +191,13 @@ class RedisBackendImpl {
   }
 
   private handleMessage(_channel: string, message: string): void {
-    console.log(`[DEBUG] handleMessage received:`, message);
     try {
       const parsed: unknown = JSON.parse(message);
       /* istanbul ignore if -- Defensive: Lua script sends valid messages */
       if (!isParsedMessage(parsed)) return;
       const callback = this.subscriptions.get(parsed.instanceId);
-      console.log(`[DEBUG] Message for ${parsed.instanceId}, callback exists: ${callback !== undefined}`);
       if (callback !== undefined) {
         const allocation = parseAllocation(parsed.allocation);
-        console.log(`[DEBUG] Calling callback with allocation:`, JSON.stringify(allocation));
         callback(allocation);
       }
     } catch {
@@ -161,20 +206,17 @@ class RedisBackendImpl {
   }
 
   readonly register = async (instanceId: string): Promise<AllocationInfo> => {
-    const { keys, config, redis } = this;
-    const { instances, allocations, config: configKey, channel } = keys;
-    const { totalCapacity, tokensPerMinute, requestsPerMinute } = config;
+    const { keys, redis } = this;
+    const { instances, allocations, channel, modelCapacities, jobTypeResources } = keys;
+    // Wait for config init if in progress
+    if (this.configInitPromise !== null) {
+      await this.configInitPromise;
+    }
     const result = await evalScript(
       redis,
       REGISTER_SCRIPT,
-      [instances, allocations, configKey, channel],
-      [
-        instanceId,
-        String(Date.now()),
-        String(totalCapacity),
-        String(tokensPerMinute),
-        String(requestsPerMinute),
-      ]
+      [instances, allocations, channel, modelCapacities, jobTypeResources],
+      [instanceId, String(Date.now())]
     );
     this.registeredInstances.add(instanceId);
     this.startHeartbeat();
@@ -185,8 +227,13 @@ class RedisBackendImpl {
     this.registeredInstances.delete(instanceId);
     this.subscriptions.delete(instanceId);
     const { keys, redis } = this;
-    const { instances, allocations, config: configKey, channel } = keys;
-    await evalScript(redis, UNREGISTER_SCRIPT, [instances, allocations, configKey, channel], [instanceId]);
+    const { instances, allocations, channel, modelCapacities, jobTypeResources } = keys;
+    await evalScript(
+      redis,
+      UNREGISTER_SCRIPT,
+      [instances, allocations, channel, modelCapacities, jobTypeResources],
+      [instanceId]
+    );
   };
 
   readonly acquire = async (context: BackendAcquireContext): Promise<boolean> => {
@@ -197,7 +244,7 @@ class RedisBackendImpl {
         redis,
         ACQUIRE_SCRIPT,
         [instances, allocations],
-        [context.instanceId, String(Date.now())]
+        [context.instanceId, String(Date.now()), context.jobType, context.modelId]
       );
       return result === SUCCESS_RESULT;
     } catch {
@@ -208,28 +255,20 @@ class RedisBackendImpl {
 
   readonly release = async (context: BackendReleaseContext): Promise<void> => {
     const { keys, redis } = this;
-    const { instances, allocations, config: configKey, channel } = keys;
+    const { instances, allocations, channel, modelCapacities, jobTypeResources } = keys;
     await evalScript(
       redis,
       RELEASE_SCRIPT,
-      [instances, allocations, configKey, channel],
-      [context.instanceId, String(Date.now())]
+      [instances, allocations, channel, modelCapacities, jobTypeResources],
+      [context.instanceId, String(Date.now()), context.jobType, context.modelId]
     );
   };
 
   readonly subscribe = (instanceId: string, callback: AllocationCallback): Unsubscribe => {
     this.subscriptions.set(instanceId, callback);
     // Setup subscriber and fetch allocation - both async but we track them
-    this.setupSubscriber()
-      .then(() => {
-        console.log(`[DEBUG] ${instanceId} subscription ready`);
-      })
-      .catch(() => {
-        console.log(`[DEBUG] ${instanceId} subscription failed`);
-      });
-    this.fetchAndCallbackAllocation(instanceId, callback).catch(() => {
-      // Ignore errors
-    });
+    this.setupSubscriber().catch(ignoreError);
+    this.fetchAndCallbackAllocation(instanceId, callback).catch(ignoreError);
     return () => {
       this.subscriptions.delete(instanceId);
     };
@@ -309,7 +348,7 @@ class RedisBackendImpl {
   }
 }
 
-/** Create a Redis distributed backend instance (legacy API with explicit config). */
+/** Create a Redis distributed backend instance. */
 export const createRedisBackend = (config: RedisBackendInternalConfig): RedisBackendInstance => {
   const impl = new RedisBackendImpl(config);
   return {

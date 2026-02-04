@@ -400,11 +400,30 @@ export interface BackendActualResources {
   tokens: number;
 }
 
+/** Per-model slot allocation within a job type */
+export interface ModelSlotAllocation {
+  /** Number of slots available for this job type on this model */
+  slots: number;
+  /** Per-instance tokens per minute limit for this model */
+  tokensPerMinute: number;
+  /** Per-instance requests per minute limit for this model */
+  requestsPerMinute: number;
+}
+
+/** Multi-dimensional slot allocation by job type and model */
+export type SlotsByJobTypeAndModel = Record<string, Record<string, ModelSlotAllocation>>;
+
 /** Allocation info for a specific instance from the distributed backend */
 export interface AllocationInfo {
+  /** Total slots (sum across all job types and models) */
   slots: number;
   /** Number of active instances sharing the rate limits */
   instanceCount: number;
+  /**
+   * Slot allocation by job type and model.
+   * Structure: { [jobType]: { [modelId]: { slots, tokensPerMinute, requestsPerMinute } } }
+   */
+  slotsByJobTypeAndModel: SlotsByJobTypeAndModel;
 }
 
 /** Callback for allocation updates from distributed backend */

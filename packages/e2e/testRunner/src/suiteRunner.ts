@@ -4,7 +4,7 @@ import { fileURLToPath } from 'node:url';
 
 import type { TestData } from '@llm-rate-limiter/e2e-test-results';
 
-import { resetInstance } from './resetInstance.js';
+import { type ConfigPresetName, resetInstance } from './resetInstance.js';
 import { StateAggregator } from './stateAggregator.js';
 import { TestDataCollector } from './testDataCollector.js';
 import { sendJob, sleep } from './testUtils.js';
@@ -53,6 +53,11 @@ export interface SuiteConfig {
    * Delay in ms before sending delayedJobs. Default: 500ms.
    */
   delayedJobsDelayMs?: number;
+  /**
+   * Configuration preset to use for the instances.
+   * If not set, uses 'default' preset.
+   */
+  configPreset?: ConfigPresetName;
 }
 
 /** Get the directory of this module */
@@ -105,10 +110,13 @@ const setProxyRatio = async (proxyUrl: string, ratio: string): Promise<void> => 
 };
 
 /** Reset all server instances */
-const resetAllInstances = async (instanceUrls: string[]): Promise<void> => {
+const resetAllInstances = async (
+  instanceUrls: string[],
+  configPreset?: ConfigPresetName
+): Promise<void> => {
   let isFirst = true;
   for (const url of instanceUrls) {
-    const result = await resetInstance(url, { cleanRedis: isFirst });
+    const result = await resetInstance(url, { cleanRedis: isFirst, configPreset });
     if (!result.success) {
       throw new Error(`Failed to reset instance ${url}: ${result.error}`);
     }
@@ -135,6 +143,7 @@ export const runSuite = async (config: SuiteConfig): Promise<TestData> => {
     sendJobsInParallel = false,
     delayedJobs = [],
     delayedJobsDelayMs = 500,
+    configPreset,
   } = config;
 
   // 1. Reset proxy and optionally set distribution ratio
@@ -144,7 +153,7 @@ export const runSuite = async (config: SuiteConfig): Promise<TestData> => {
   }
 
   // 2. Reset all instances (cleanRedis: true on first only)
-  await resetAllInstances(instanceUrls);
+  await resetAllInstances(instanceUrls, configPreset);
 
   // 3. Create StateAggregator + TestDataCollector
   const aggregator = new StateAggregator(instanceUrls);

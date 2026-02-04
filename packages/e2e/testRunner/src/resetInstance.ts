@@ -5,10 +5,20 @@ import { request } from 'node:http';
 
 const HTTP_OK = 200;
 
+/** Valid config preset names */
+export type ConfigPresetName =
+  | 'default'
+  | 'slotCalculation'
+  | 'fixedRatio'
+  | 'flexibleRatio'
+  | 'instanceScaling';
+
 /** Options for resetting an instance */
 export interface ResetOptions {
   /** Whether to clean Redis keys (default: true). Set to false when multiple instances share Redis. */
   cleanRedis?: boolean;
+  /** Configuration preset to use after reset */
+  configPreset?: ConfigPresetName;
 }
 
 /** Result of a reset operation */
@@ -25,8 +35,12 @@ export interface ResetResult {
  * @param options - Reset options (cleanRedis defaults to true)
  */
 export const resetInstance = async (baseUrl: string, options: ResetOptions = {}): Promise<ResetResult> => {
-  const { cleanRedis = true } = options;
-  const body = JSON.stringify({ cleanRedis });
+  const { cleanRedis = true, configPreset } = options;
+  const requestBody: { cleanRedis: boolean; configPreset?: ConfigPresetName } = { cleanRedis };
+  if (configPreset !== undefined) {
+    requestBody.configPreset = configPreset;
+  }
+  const body = JSON.stringify(requestBody);
 
   return new Promise((resolve) => {
     const urlObj = new URL(`${baseUrl}/api/debug/reset`);

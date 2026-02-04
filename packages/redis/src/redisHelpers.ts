@@ -9,9 +9,11 @@ import {
   KEY_SUFFIX_CHANNEL,
   KEY_SUFFIX_CONFIG,
   KEY_SUFFIX_INSTANCES,
+  KEY_SUFFIX_JOB_TYPE_RESOURCES,
   KEY_SUFFIX_JOB_TYPES,
   KEY_SUFFIX_JOB_TYPE_CHANNEL,
   KEY_SUFFIX_JOB_TYPE_INSTANCES,
+  KEY_SUFFIX_MODEL_CAPACITIES,
   ZERO,
 } from './constants.js';
 
@@ -24,6 +26,10 @@ export interface RedisKeys {
   jobTypes: string;
   jobTypeInstances: string;
   jobTypeChannel: string;
+  /** Key for multi-dimensional model capacities config */
+  modelCapacities: string;
+  /** Key for multi-dimensional job type resources config */
+  jobTypeResources: string;
 }
 
 /** Build all Redis keys from a prefix */
@@ -35,6 +41,8 @@ export const buildKeys = (prefix: string): RedisKeys => ({
   jobTypes: `${prefix}${KEY_SUFFIX_JOB_TYPES}`,
   jobTypeInstances: `${prefix}${KEY_SUFFIX_JOB_TYPE_INSTANCES}`,
   jobTypeChannel: `${prefix}${KEY_SUFFIX_JOB_TYPE_CHANNEL}`,
+  modelCapacities: `${prefix}${KEY_SUFFIX_MODEL_CAPACITIES}`,
+  jobTypeResources: `${prefix}${KEY_SUFFIX_JOB_TYPE_RESOURCES}`,
 });
 
 /** Configuration for backend operations */

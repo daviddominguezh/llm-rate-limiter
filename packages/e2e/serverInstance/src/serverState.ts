@@ -3,6 +3,7 @@
  */
 import { DebugEventEmitter, JobHistoryTracker } from './debug/index.js';
 import { logger } from './logger.js';
+import { type ConfigPresetName } from './rateLimiterConfigs.js';
 import { type ServerRateLimiter, createRateLimiterInstance } from './rateLimiterSetup.js';
 import { cleanupRedisKeys } from './redisCleanup.js';
 
@@ -11,15 +12,19 @@ export interface ServerState {
   rateLimiter: ServerRateLimiter;
   eventEmitter: DebugEventEmitter;
   jobHistoryTracker: JobHistoryTracker;
+  currentConfigPreset: ConfigPresetName;
 }
 
 /** Create initial server state */
-export const createServerState = (redisUrl: string): ServerState => {
+export const createServerState = (
+  redisUrl: string,
+  configPreset: ConfigPresetName = 'default'
+): ServerState => {
   const jobHistoryTracker = new JobHistoryTracker();
-  const rateLimiter = createRateLimiterInstance(redisUrl);
+  const rateLimiter = createRateLimiterInstance(redisUrl, configPreset);
   const eventEmitter = new DebugEventEmitter(rateLimiter.getInstanceId());
 
-  return { rateLimiter, eventEmitter, jobHistoryTracker };
+  return { rateLimiter, eventEmitter, jobHistoryTracker, currentConfigPreset: configPreset };
 };
 
 /** Result of a reset operation */
@@ -33,6 +38,8 @@ export interface ResetResult {
 export interface ResetOptions {
   /** Whether to clean Redis keys (default: true). Set to false when multiple instances share Redis. */
   cleanRedis?: boolean;
+  /** Configuration preset to use after reset (default: keep current) */
+  configPreset?: ConfigPresetName;
 }
 
 /**
@@ -44,8 +51,11 @@ export const resetServerState = async (
   redisUrl: string,
   options: ResetOptions = {}
 ): Promise<ResetResult> => {
-  const { cleanRedis = true } = options;
-  logger.info('Resetting server state...', { cleanRedis });
+  const { cleanRedis = true, configPreset } = options;
+  // Use specified preset or keep current
+  const presetToUse = configPreset ?? state.currentConfigPreset;
+
+  logger.info('Resetting server state...', { cleanRedis, configPreset: presetToUse });
 
   // Stop the old rate limiter
   state.rateLimiter.stop();
@@ -66,10 +76,10 @@ export const resetServerState = async (
   state.eventEmitter.closeAll();
   logger.info('SSE connections closed');
 
-  // Create new rate limiter
-  const newRateLimiter = createRateLimiterInstance(redisUrl);
+  // Create new rate limiter with specified preset
+  const newRateLimiter = createRateLimiterInstance(redisUrl, presetToUse);
   await newRateLimiter.start();
-  logger.info('New rate limiter started');
+  logger.info('New rate limiter started', { configPreset: presetToUse });
 
   // Create new event emitter with new instance ID
   const newEventEmitter = new DebugEventEmitter(newRateLimiter.getInstanceId());
@@ -77,6 +87,7 @@ export const resetServerState = async (
   // Update state references
   state.rateLimiter = newRateLimiter;
   state.eventEmitter = newEventEmitter;
+  state.currentConfigPreset = presetToUse;
 
   logger.info(`Server reset complete. New instance ID: ${newRateLimiter.getInstanceId()}`);
 

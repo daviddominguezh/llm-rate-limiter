@@ -67,6 +67,23 @@ const calculateTotalRequestsPerMinute = (models: RedisBackendInitConfig['models'
 };
 
 /**
+ * Extract model capacities for multi-dimensional slot calculation.
+ */
+const extractModelCapacities = (
+  models: RedisBackendInitConfig['models']
+): RedisBackendInternalConfig['modelCapacities'] => {
+  const capacities: NonNullable<RedisBackendInternalConfig['modelCapacities']> = {};
+  for (const [modelId, modelConfig] of Object.entries(models)) {
+    capacities[modelId] = {
+      tokensPerMinute: modelConfig.tokensPerMinute ?? null,
+      requestsPerMinute: modelConfig.requestsPerMinute ?? null,
+      maxConcurrentRequests: modelConfig.maxConcurrentRequests ?? null,
+    };
+  }
+  return capacities;
+};
+
+/**
  * Build backend config from user config, rate limiter init config, and pre-created Redis client.
  */
 const buildBackendConfigWithClient = (
@@ -78,6 +95,7 @@ const buildBackendConfigWithClient = (
   const totalCapacity = calculateTotalCapacity(models);
   const tokensPerMinute = calculateTotalTokensPerMinute(models);
   const requestsPerMinute = calculateTotalRequestsPerMinute(models);
+  const modelCapacities = extractModelCapacities(models);
 
   return {
     redis: redisClient,
@@ -88,6 +106,7 @@ const buildBackendConfigWithClient = (
     heartbeatIntervalMs: userConfig.heartbeatIntervalMs,
     instanceTimeoutMs: userConfig.instanceTimeoutMs,
     resourceEstimationsPerJob,
+    modelCapacities,
   };
 };
 

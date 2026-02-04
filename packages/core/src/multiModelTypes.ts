@@ -669,4 +669,12 @@ export interface LLMRateLimiterInstance<JobType extends string> {
    * @returns Array of active job info objects
    */
   getActiveJobs: () => ActiveJobInfo[];
+
+  /**
+   * Get the current distributed allocation info.
+   * Returns null if not using a distributed backend or not yet registered.
+   *
+   * @returns Current allocation info or null
+   */
+  getAllocation: () => AllocationInfo | null;
 }

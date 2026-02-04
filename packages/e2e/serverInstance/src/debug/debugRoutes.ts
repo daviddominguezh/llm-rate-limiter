@@ -128,6 +128,22 @@ export const createDebugRoutes = (deps: DebugRouteDeps): Router => {
   });
 
   /**
+   * GET /debug/allocation
+   * Returns the current allocation info including slotsByJobTypeAndModel.
+   */
+  router.get('/allocation', (_req: Request, res: Response): void => {
+    const { rateLimiter } = getStateComponents(state);
+    const allocation = rateLimiter.getAllocation();
+    const instanceId = rateLimiter.getInstanceId();
+
+    res.status(HTTP_STATUS_OK).json({
+      instanceId,
+      timestamp: Date.now(),
+      allocation,
+    });
+  });
+
+  /**
    * GET /debug/events
    * SSE endpoint for real-time event streaming.
    */

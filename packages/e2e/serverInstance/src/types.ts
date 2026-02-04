@@ -1,3 +1,5 @@
+import type { ConfigPresetName } from './rateLimiterConfigs.js';
+
 export type { QueueJobRequestBody } from './schemas.js';
 
 export interface QueueJobResponse {
@@ -12,6 +14,8 @@ export interface ServerConfig {
   primaryPort?: number;
   fallbackPort?: number;
   redisUrl?: string;
+  /** Configuration preset for the rate limiter */
+  configPreset?: ConfigPresetName;
 }
 
 export interface QueuedJob {

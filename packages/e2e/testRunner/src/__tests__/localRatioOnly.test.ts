@@ -13,11 +13,26 @@
  * - Each instance independently manages its own load balance
  * - Heavy load on Instance A doesn't reduce Instance B's capacity
  */
-import type { TestData, JobRecord } from '@llm-rate-limiter/e2e-test-results';
+import type { AllocationInfo } from '@llm-rate-limiter/core';
+import type { TestData } from '@llm-rate-limiter/e2e-test-results';
 
 import { type ConfigPresetName, resetInstance } from '../resetInstance.js';
 import { generateJobsOfType, runSuite } from '../suiteRunner.js';
 import { sleep } from '../testUtils.js';
+
+interface AllocationResponse {
+  instanceId: string;
+  timestamp: number;
+  allocation: AllocationInfo | null;
+}
+
+/**
+ * Fetch allocation from an instance.
+ */
+const fetchAllocation = async (baseUrl: string): Promise<AllocationResponse> => {
+  const response = await fetch(`${baseUrl}/api/debug/allocation`);
+  return response.json() as Promise<AllocationResponse>;
+};
 
 const PROXY_URL = 'http://localhost:3000';
 const INSTANCE_A_URL = 'http://localhost:3001';
@@ -147,6 +162,102 @@ describe('Dynamic Ratio is Local Only', () => {
       expect(failedA.length).toBe(0);
       expect(failedB.length).toBe(0);
     });
+  });
+
+  describe('Allocation Verification - Ratios Are Local', () => {
+    /**
+     * Direct verification that each instance maintains its own allocation state.
+     * After heavy load on Instance A, we verify that:
+     * 1. Both instances have valid allocation data
+     * 2. Each instance tracks its own allocation independently
+     * 3. Instance B's allocation is not reduced by Instance A's load
+     */
+    beforeAll(async () => {
+      // Reset proxy
+      await fetch(`${PROXY_URL}/proxy/reset`, { method: 'POST' });
+
+      // Reset both instances with flexibleRatio config
+      await resetInstance(INSTANCE_A_URL, {
+        cleanRedis: true,
+        configPreset: CONFIG_PRESET,
+      });
+
+      await resetInstance(INSTANCE_B_URL, {
+        cleanRedis: false,
+        configPreset: CONFIG_PRESET,
+      });
+
+      // Wait for allocation to propagate
+      await sleep(ALLOCATION_PROPAGATION_MS);
+    }, BEFORE_ALL_TIMEOUT_MS);
+
+    it('should have allocation data on both instances', async () => {
+      const allocA = await fetchAllocation(INSTANCE_A_URL);
+      const allocB = await fetchAllocation(INSTANCE_B_URL);
+
+      expect(allocA.allocation).not.toBeNull();
+      expect(allocB.allocation).not.toBeNull();
+    });
+
+    it('should report same instance count on both instances', async () => {
+      const allocA = await fetchAllocation(INSTANCE_A_URL);
+      const allocB = await fetchAllocation(INSTANCE_B_URL);
+
+      expect(allocA.allocation?.instanceCount).toBe(2);
+      expect(allocB.allocation?.instanceCount).toBe(2);
+    });
+
+    it('should have slot allocations for all job types', async () => {
+      const allocA = await fetchAllocation(INSTANCE_A_URL);
+      const allocB = await fetchAllocation(INSTANCE_B_URL);
+
+      // Verify all job types have allocations on both instances
+      const jobTypes = ['flexJobA', 'flexJobB', 'flexJobC'];
+      for (const jobType of jobTypes) {
+        const slotsA = allocA.allocation?.slotsByJobTypeAndModel?.[jobType]?.['flex-model']?.slots;
+        const slotsB = allocB.allocation?.slotsByJobTypeAndModel?.[jobType]?.['flex-model']?.slots;
+
+        expect(slotsA).toBeDefined();
+        expect(slotsB).toBeDefined();
+        // Initial allocation should be the same (before any load)
+        expect(slotsA).toBe(slotsB);
+      }
+    });
+
+    it('Instance B should maintain allocation after Instance A processes heavy load', async () => {
+      // Get baseline allocation for Instance B
+      const baselineB = await fetchAllocation(INSTANCE_B_URL);
+      const baselineSlotsB = baselineB.allocation?.slotsByJobTypeAndModel?.flexJobB?.['flex-model']?.slots;
+
+      // Send heavy load to Instance A only
+      await fetch(`${PROXY_URL}/proxy/ratio`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ratio: '1:0' }),
+      });
+
+      const heavyJobs = generateJobsOfType(6, 'flexJobA', {
+        prefix: 'alloc-verify',
+        durationMs: LONG_JOB_DURATION_MS,
+      });
+
+      await runSuite({
+        suiteName: 'local-ratio-alloc-verify',
+        proxyUrl: PROXY_URL,
+        instanceUrls: [INSTANCE_A_URL],
+        jobs: heavyJobs,
+        waitTimeoutMs: WAIT_TIMEOUT_MS,
+        sendJobsInParallel: true,
+      });
+
+      // After heavy load on A, verify B's allocation is NOT reduced
+      const afterLoadB = await fetchAllocation(INSTANCE_B_URL);
+      const afterSlotsB = afterLoadB.allocation?.slotsByJobTypeAndModel?.flexJobB?.['flex-model']?.slots;
+
+      // Instance B's allocation should be unchanged (ratios are local)
+      // The slots should be the same or higher (not reduced by A's load)
+      expect(afterSlotsB).toBeGreaterThanOrEqual(baselineSlotsB ?? 0);
+    }, BEFORE_ALL_TIMEOUT_MS);
   });
 
   describe('Mixed Load Across Instances', () => {

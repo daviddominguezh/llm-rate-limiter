@@ -222,14 +222,22 @@ describe('Slots Evolve With Load', () => {
       expect(failedJobs.length).toBe(0);
     });
 
-    it('should distribute across both instances', () => {
+    it('should distribute roughly evenly across both instances', () => {
       const instanceIds = Object.keys(data.summary.byInstance);
       expect(instanceIds.length).toBe(2);
 
-      // Each instance should have roughly half the jobs
+      // Calculate total jobs and expected per instance
+      const totalJobs = JOB_TYPE_A_TOTAL_SLOTS + 3 + JOB_TYPE_B_TOTAL_SLOTS + 3;
+      const expectedPerInstance = totalJobs / 2;
+      const tolerance = expectedPerInstance * 0.3; // Allow 30% variance
+
+      // Each instance should have roughly half the jobs (within tolerance)
       for (const instanceId of instanceIds) {
         const stats = data.summary.byInstance[instanceId];
-        expect(stats?.total).toBeGreaterThan(0);
+        const jobCount = stats?.total ?? 0;
+
+        expect(jobCount).toBeGreaterThan(expectedPerInstance - tolerance);
+        expect(jobCount).toBeLessThan(expectedPerInstance + tolerance);
       }
     });
   });

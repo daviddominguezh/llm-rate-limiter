@@ -11,7 +11,16 @@ export type ConfigPresetName =
   | 'slotCalculation'
   | 'fixedRatio'
   | 'flexibleRatio'
-  | 'instanceScaling';
+  | 'instanceScaling'
+  | 'slotCalc-tpm'
+  | 'slotCalc-rpm'
+  | 'slotCalc-tpd'
+  | 'slotCalc-rpd'
+  | 'slotCalc-concurrent'
+  | 'slotCalc-tpm-rpm'
+  | 'slotCalc-multi-model'
+  | 'slotCalc-ratios'
+  | 'slotCalc-uneven-ratios';
 
 /** Options for resetting an instance */
 export interface ResetOptions {

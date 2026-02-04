@@ -312,6 +312,11 @@ class LLMRateLimiter implements LLMRateLimiterInstance<string> {
   getActiveJobs(): ActiveJobInfo[] {
     return Array.from(this.activeJobs.values());
   }
+
+  getAllocation(): AllocationInfo | null {
+    return this.availabilityTracker?.getDistributedAllocation() ?? null;
+  }
+
   setDistributedAvailability(availability: DistributedAvailability): void {
     if (this.config.onAvailableSlotsChange !== undefined) {
       this.config.onAvailableSlotsChange(toFullAvailability(availability), 'distributed', '*', undefined);

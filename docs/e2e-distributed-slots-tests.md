@@ -20,7 +20,7 @@ Tests use different configuration presets defined in `packages/e2e/serverInstanc
 | ----------------- | --------------------------- | ----------------------------------- | -------------------------------- |
 | `default`         | 3 (openai, xai, deepinfra)  | 5 (summary, VacationPlanning, etc.) | Original production-like config  |
 | `slotCalculation` | 2 (model-alpha, model-beta) | 2 (jobTypeA, jobTypeB)              | Simple verifiable slot math      |
-| `fixedRatio`      | 1 (test-model)              | 2 (fixedJobType, flexibleJobType)   | Fixed vs flexible ratio behavior |
+| `fixedRatio`      | 1 (test-model)              | 3 (fixedJobType, flexibleJobTypeA, flexibleJobTypeB) | Fixed vs flexible ratio behavior |
 | `flexibleRatio`   | 1 (flex-model)              | 3 (flexJobA, flexJobB, flexJobC)    | Dynamic ratio adjustment         |
 | `instanceScaling` | 1 (scale-model)             | 1 (scaleJob)                        | Instance join/leave behavior     |
 
@@ -182,39 +182,52 @@ Run each config with 1, 2, and 3 instances to verify instance division:
 
 **Complexity:** Low
 
-**Purpose:** Check that if there are two job types with fixed ratios, A and B, and one of them (job type A) is not flexible, then filling the capacity of B should not alter the capacity of A.
+**Purpose:** Check that if there are three job types, and one of them (fixedJobType) is not flexible, then filling the capacity of the flexible types should not alter the capacity of the fixed type.
 
 **Config:** `fixedRatio`
 ```
 test-model: 100K TPM
-fixedJobType: 10K tokens/job, ratio 0.5, flexible: false
-flexibleJobType: 10K tokens/job, ratio 0.5, flexible: true
+fixedJobType: 10K tokens/job, ratio 0.4, flexible: false
+flexibleJobTypeA: 10K tokens/job, ratio 0.3, flexible: true
+flexibleJobTypeB: 10K tokens/job, ratio 0.3, flexible: true
 ```
 
 **Calculated Expected Slots (2 instances):**
 ```
-fixedJobType:    floor((100,000 / 10,000) / 2 * 0.5) = floor(5 * 0.5) = 2 per instance = 4 total
-flexibleJobType: floor((100,000 / 10,000) / 2 * 0.5) = floor(5 * 0.5) = 2 per instance = 4 total
+fixedJobType:     floor((100,000 / 10,000) / 2 * 0.4) = floor(5 * 0.4) = 2 per instance = 4 total
+flexibleJobTypeA: floor((100,000 / 10,000) / 2 * 0.3) = floor(5 * 0.3) = 1 per instance = 2 total
+flexibleJobTypeB: floor((100,000 / 10,000) / 2 * 0.3) = floor(5 * 0.3) = 1 per instance = 2 total
 ```
 
 #### Test Case 1: Fixed Job Type Maintains Capacity
 
-| What We Check               | What We Compare Against   | Expected Result                     |
-| --------------------------- | ------------------------- | ----------------------------------- |
-| fixedJobType completions    | fixedJobType slots (4)    | All 4 fixedJobType jobs complete    |
-| flexibleJobType completions | flexibleJobType slots (4) | All 4 flexibleJobType jobs complete |
-| Failed jobs                 | Zero                      | No jobs fail                        |
+| What We Check                | What We Compare Against    | Expected Result                      |
+| ---------------------------- | -------------------------- | ------------------------------------ |
+| fixedJobType completions     | fixedJobType slots (4)     | All 4 fixedJobType jobs complete     |
+| flexibleJobTypeA completions | flexibleJobTypeA slots (2) | All 2 flexibleJobTypeA jobs complete |
+| flexibleJobTypeB completions | flexibleJobTypeB slots (2) | All 2 flexibleJobTypeB jobs complete |
+| Failed jobs                  | Zero                       | No jobs fail                         |
 
 #### Test Case 2: Fixed Ratio Not Affected by Flexible Overload
 
-| What We Check                                            | What We Compare Against       | Expected Result                                      |
-| -------------------------------------------------------- | ----------------------------- | ---------------------------------------------------- |
-| fixedJobType completions when flexibleJobType overloaded | fixedJobType capacity (4)     | All 4 fixedJobType jobs complete                     |
-| fixedJobType queue duration                              | Threshold (2 seconds)         | fixedJobType jobs complete quickly (< 2s queue time) |
-| flexibleJobType completions                              | flexibleJobType jobs sent (6) | All 6 eventually complete (some wait for capacity)   |
-| Failed jobs                                              | Zero                          | No jobs fail                                         |
+| What We Check                                             | What We Compare Against        | Expected Result                                      |
+| --------------------------------------------------------- | ------------------------------ | ---------------------------------------------------- |
+| fixedJobType completions when flexible types overloaded   | fixedJobType capacity (4)      | All 4 fixedJobType jobs complete                     |
+| fixedJobType queue duration                               | Threshold (2 seconds)          | fixedJobType jobs complete quickly (< 2s queue time) |
+| flexibleJobTypeA completions                              | flexibleJobTypeA jobs sent (4) | All 4 eventually complete (some wait for capacity)   |
+| flexibleJobTypeB completions                              | flexibleJobTypeB jobs sent (4) | All 4 eventually complete (some wait for capacity)   |
+| Failed jobs                                               | Zero                           | No jobs fail                                         |
 
-**Key Verification:** Even when flexibleJobType is overloaded (6 jobs for 4 slots), fixedJobType jobs complete immediately because their 4 slots are protected and cannot be borrowed.
+#### Test Case 3: Flexible Types Can Borrow From Each Other But Not From Fixed
+
+| What We Check                                             | What We Compare Against        | Expected Result                                      |
+| --------------------------------------------------------- | ------------------------------ | ---------------------------------------------------- |
+| flexibleJobTypeA overloaded, flexibleJobTypeB idle        | N/A                            | flexibleJobTypeA borrows from flexibleJobTypeB       |
+| fixedJobType capacity during flexible rebalancing         | fixedJobType slots (4)         | fixedJobType still has exactly 4 slots               |
+| fixedJobType completions                                  | fixedJobType jobs sent (4)     | All 4 complete quickly                               |
+| Failed jobs                                               | Zero                           | No jobs fail                                         |
+
+**Key Verification:** Even when both flexible types are overloaded and rebalancing ratios between themselves, fixedJobType maintains its protected 4 slots and cannot donate or receive capacity.
 
 ---
 
@@ -269,6 +282,27 @@ flexibleJobType: floor((100,000 / 10,000) / 2 * 0.5) = floor(5 * 0.5) = 2 per in
 
 **Purpose:** Check that if instance B joins AFTER instance A has joined, A slots halve. Check that if instance B disconnects, A slots double.
 
+**Infrastructure Requirement:** The test runner must be able to **boot and kill server instances programmatically**, not just reset them. This requires:
+
+1. `bootInstance(port, configPreset)` - Spawns a new server instance on the given port
+2. `killInstance(port)` - Gracefully shuts down the instance on the given port
+3. `getInstanceAllocation(port)` - Queries the allocation from a running instance
+
+**Implementation Approach:**
+```typescript
+// Test runner spawns instances directly using the server module
+import { createServer } from '@llm-rate-limiter/e2e-server-instance';
+
+const instanceA = await createServer({ port: 3001, configPreset: 'instanceScaling' });
+// ... verify A has 10 slots ...
+
+const instanceB = await createServer({ port: 3002, configPreset: 'instanceScaling' });
+// ... verify both have 5 slots ...
+
+await instanceB.close();
+// ... verify A now has 10 slots again ...
+```
+
 **Config:** `instanceScaling`
 ```
 scale-model: 100K TPM
@@ -279,40 +313,53 @@ scaleJob: 10K tokens/job, ratio 1.0
 ```
 1 instance: floor((100,000 / 10,000) / 1 * 1.0) = 10 slots
 2 instances: floor((100,000 / 10,000) / 2 * 1.0) = 5 slots per instance
+3 instances: floor((100,000 / 10,000) / 3 * 1.0) = 3 slots per instance
 ```
 
-#### Test Case 1: Total Capacity Remains Constant
+#### Test Case 1: Instance A Starts Alone
 
-| What We Check     | What We Compare Against | Expected Result                        |
-| ----------------- | ----------------------- | -------------------------------------- |
-| Total completions | Total capacity (10)     | All 10 jobs complete                   |
-| Jobs per instance | 10 / 2 = 5              | Each instance processes exactly 5 jobs |
-| Failed jobs       | Zero                    | No jobs fail                           |
+| What We Check | What We Compare Against | Expected Result |
+|---------------|------------------------|-----------------|
+| Boot instance A | N/A | Instance A starts successfully |
+| Query A's allocation | Expected slots for 1 instance | `allocation.slots` = 10 |
+| `allocation.instanceCount` | 1 | Exactly 1 instance registered |
 
-**Key Verification:** Total cluster capacity (10 slots) is preserved regardless of how many instances share it.
+**Key Verification:** A single instance gets the full capacity.
 
-#### Test Case 2: Instance Join Halves Slots
+#### Test Case 2: Instance B Joins - A's Slots Halve
 
-| What We Check                   | What We Compare Against | Expected Result                 |
-| ------------------------------- | ----------------------- | ------------------------------- |
-| Instance A starts alone         | N/A                     | A registers and gets allocation |
-| Instance B joins                | N/A                     | Both instances re-register      |
-| Total completions               | Total capacity (10)     | All 10 jobs complete            |
-| Jobs per instance after B joins | 10 / 2 = 5              | Each instance processes 5 jobs  |
-| Failed jobs                     | Zero                    | No jobs fail                    |
+| What We Check | What We Compare Against | Expected Result |
+|---------------|------------------------|-----------------|
+| Boot instance B (while A running) | N/A | Instance B starts successfully |
+| Wait for allocation propagation | N/A | Both instances receive updated allocation |
+| Query A's allocation | Expected slots for 2 instances | `allocation.slots` = 5 |
+| Query B's allocation | Expected slots for 2 instances | `allocation.slots` = 5 |
+| `allocation.instanceCount` on both | 2 | Both see 2 instances registered |
 
-**Key Verification:** When Instance B joins, Instance A's slots reduce from 10 to 5, and B gets 5 slots.
+**Key Verification:** When B joins, A's allocation is reduced from 10 to 5 slots. B also gets 5 slots. Total capacity preserved.
 
-#### Test Case 3: Instance Leave Doubles Slots
+#### Test Case 3: Instance B Leaves - A's Slots Double
 
-| What We Check             | What We Compare Against       | Expected Result                |
-| ------------------------- | ----------------------------- | ------------------------------ |
-| Only Instance A running   | N/A                           | A is sole instance             |
-| Instance A completions    | Single-instance capacity (10) | All 10 jobs complete on A      |
-| Instance count in results | 1                             | Only 1 instance processed jobs |
-| Failed jobs               | Zero                          | No jobs fail                   |
+| What We Check | What We Compare Against | Expected Result |
+|---------------|------------------------|-----------------|
+| Kill instance B | N/A | Instance B shuts down gracefully |
+| Wait for cleanup/reallocation | Instance timeout + propagation | A receives updated allocation |
+| Query A's allocation | Expected slots for 1 instance | `allocation.slots` = 10 |
+| `allocation.instanceCount` on A | 1 | Only 1 instance registered |
 
-**Key Verification:** When only A is running, it gets the full 10 slots (not limited to 5).
+**Key Verification:** When B leaves, A's allocation increases from 5 back to 10 slots.
+
+#### Test Case 4: Multiple Instance Joins
+
+| What We Check | What We Compare Against | Expected Result |
+|---------------|------------------------|-----------------|
+| Boot A alone | N/A | A has 10 slots |
+| Boot B | N/A | A and B each have 5 slots |
+| Boot C | N/A | A, B, and C each have 3 slots |
+| Kill C | N/A | A and B each have 5 slots |
+| Kill B | N/A | A has 10 slots |
+
+**Key Verification:** Slots redistribute correctly through multiple join/leave cycles.
 
 ---
 
@@ -414,7 +461,7 @@ Each job type: floor((100,000 / 10,000) / 2 * 0.33) ≈ 1-2 per instance ≈ 3 t
 | ------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Slot Calculation          | The new available slot calculations work perfectly with different model, job type and instance combinations                                                            |
 | Slots Evolve With Load    | The calculated slots evolve properly over time, when load increases and decreases                                                                                      |
-| Fixed Ratio Isolation     | If there are two job types with fixed ratios, A and B, and one of them (job type A) is not flexible, then filling the capacity of B should not alter the capacity of A |
+| Fixed Ratio Isolation     | If there are three job types, and one of them (fixedJobType) is not flexible, then filling the capacity of the flexible types should not alter the capacity of the fixed type |
 | Flexible Ratio Adjustment | If there are several job types and they have flexible behavior, their ratios are adjusted depending on the load                                                        |
 | Local Ratio Only          | The dynamic ratio should NOT be shared across instances, it should be local only                                                                                       |
 | Instance Scaling (Join)   | If instance B joins AFTER instance A has joined, A slots halve                                                                                                         |
@@ -469,6 +516,40 @@ For debugging, run tests in order of complexity:
 ---
 
 ## Test Infrastructure
+
+### Instance Lifecycle Management
+
+For tests that need to verify instance join/leave behavior, the test runner must control instance lifecycle:
+
+```typescript
+import { createServer } from '@llm-rate-limiter/e2e-server-instance';
+
+// Boot an instance
+const instance = await createServer({
+  primaryPort: 3001,
+  redisUrl: 'redis://localhost:6379',
+  configPreset: 'instanceScaling',
+});
+
+// Query allocation
+const allocation = await fetchAllocation(instance.port);
+console.log(allocation.slots); // e.g., 10
+
+// Shut down instance
+await instance.close();
+```
+
+**Key Functions:**
+| Function | Purpose |
+|----------|---------|
+| `createServer(config)` | Boot a new instance with specified config |
+| `instance.close()` | Gracefully shut down the instance |
+| `fetchAllocation(port)` | Query `/api/debug/allocation` endpoint |
+| `waitForAllocationUpdate(port, expected)` | Poll until allocation matches expected |
+
+**Timing Considerations:**
+- After instance joins: Wait for Redis pub/sub propagation (~500ms)
+- After instance leaves: Wait for heartbeat timeout + cleanup interval (~15-20s default, configurable)
 
 ### Config Preset Selection
 

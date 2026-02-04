@@ -20,7 +20,7 @@ interface CloseServerParams {
 
 type ServerCloseCallback = (err?: Error) => void;
 
-interface ServerInstance {
+export interface ServerInstance {
   app: Express;
   state: ServerState;
   port: number;
@@ -28,12 +28,17 @@ interface ServerInstance {
 }
 
 export const createServer = async (config: ServerConfig = {}): Promise<ServerInstance> => {
-  const { primaryPort = env.port, fallbackPort = env.fallbackPort, redisUrl = env.redisUrl } = config;
+  const {
+    primaryPort = env.port,
+    fallbackPort = env.fallbackPort,
+    redisUrl = env.redisUrl,
+    configPreset = env.configPreset,
+  } = config;
 
   const port = await findAvailablePort([primaryPort, fallbackPort]);
 
   // Create mutable server state
-  const state = createServerState(redisUrl);
+  const state = createServerState(redisUrl, configPreset);
 
   // Start the rate limiter
   await state.rateLimiter.start();

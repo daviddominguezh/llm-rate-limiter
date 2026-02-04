@@ -32,7 +32,9 @@ const DEEPINFRA_PRICING_OUTPUT = 0.14;
 export interface RateLimiterPreset {
   models: Record<string, {
     requestsPerMinute?: number;
+    requestsPerDay?: number;
     tokensPerMinute?: number;
+    tokensPerDay?: number;
     maxConcurrentRequests?: number;
     pricing: {
       input: number;
@@ -155,6 +157,7 @@ export const slotCalculationConfig: RateLimiterPreset = {
 // =============================================================================
 // Fixed Ratio Isolation Test Config
 // Tests that non-flexible ratios are not affected by load on other job types
+// Now with 3 job types: 1 fixed, 2 flexible
 // =============================================================================
 
 const FIXED_RATIO_TPM = 100000;
@@ -172,18 +175,25 @@ export const fixedRatioConfig: RateLimiterPreset = {
     fixedJobType: {
       estimatedUsedTokens: FIXED_RATIO_TOKENS,
       estimatedNumberOfRequests: 1,
-      ratio: { initialValue: 0.5, flexible: false }, // NOT flexible
+      ratio: { initialValue: 0.4, flexible: false }, // NOT flexible
     },
-    flexibleJobType: {
+    flexibleJobTypeA: {
       estimatedUsedTokens: FIXED_RATIO_TOKENS,
       estimatedNumberOfRequests: 1,
-      ratio: { initialValue: 0.5, flexible: true }, // Flexible (default)
+      ratio: { initialValue: 0.3, flexible: true }, // Flexible
+    },
+    flexibleJobTypeB: {
+      estimatedUsedTokens: FIXED_RATIO_TOKENS,
+      estimatedNumberOfRequests: 1,
+      ratio: { initialValue: 0.3, flexible: true }, // Flexible
     },
   },
 };
 
-// Expected: fixedJobType always gets 5 slots (50% of 10)
-// flexibleJobType can grow/shrink but fixedJobType stays at 5
+// Expected with 2 instances:
+// fixedJobType: floor((100K/10K) / 2 * 0.4) = floor(5 * 0.4) = 2 per instance = 4 total
+// flexibleJobTypeA: floor((100K/10K) / 2 * 0.3) = floor(5 * 0.3) = 1 per instance = 2 total
+// flexibleJobTypeB: floor((100K/10K) / 2 * 0.3) = floor(5 * 0.3) = 1 per instance = 2 total
 
 // =============================================================================
 // Flexible Ratio Adjustment Test Config
@@ -253,6 +263,269 @@ export const instanceScalingConfig: RateLimiterPreset = {
 // Expected with 2 instances: 5 slots each
 
 // =============================================================================
+// Slot Calculation Test Configs - Various Limit Types
+// =============================================================================
+
+// TPM-only config (same as slotCalculation but explicitly named)
+export const slotCalcTpmConfig: RateLimiterPreset = {
+  models: {
+    'model-alpha': {
+      tokensPerMinute: 100000,
+      pricing: { input: 1, cached: 0.1, output: 2 },
+    },
+  },
+  escalationOrder: ['model-alpha'],
+  resourceEstimations: {
+    jobTypeA: {
+      estimatedUsedTokens: 10000,
+      estimatedNumberOfRequests: 1,
+      ratio: { initialValue: 0.6 },
+    },
+    jobTypeB: {
+      estimatedUsedTokens: 5000,
+      estimatedNumberOfRequests: 1,
+      ratio: { initialValue: 0.4 },
+    },
+  },
+};
+// Expected with 2 instances:
+// jobTypeA: floor((100K/10K) / 2 * 0.6) = 3
+// jobTypeB: floor((100K/5K) / 2 * 0.4) = 4
+
+// RPM-only config
+export const slotCalcRpmConfig: RateLimiterPreset = {
+  models: {
+    'model-beta': {
+      requestsPerMinute: 500,
+      pricing: { input: 1, cached: 0.1, output: 2 },
+    },
+  },
+  escalationOrder: ['model-beta'],
+  resourceEstimations: {
+    jobTypeA: {
+      estimatedUsedTokens: 1000, // Not used for RPM calc
+      estimatedNumberOfRequests: 1,
+      ratio: { initialValue: 0.6 },
+    },
+    jobTypeB: {
+      estimatedUsedTokens: 1000, // Not used for RPM calc
+      estimatedNumberOfRequests: 5,
+      ratio: { initialValue: 0.4 },
+    },
+  },
+};
+// Expected with 2 instances:
+// jobTypeA: floor((500/1) / 2 * 0.6) = 150
+// jobTypeB: floor((500/5) / 2 * 0.4) = 20
+
+// Concurrent-only config
+export const slotCalcConcurrentConfig: RateLimiterPreset = {
+  models: {
+    'model-gamma': {
+      maxConcurrentRequests: 100,
+      pricing: { input: 1, cached: 0.1, output: 2 },
+    },
+  },
+  escalationOrder: ['model-gamma'],
+  resourceEstimations: {
+    jobTypeA: {
+      estimatedUsedTokens: 1000,
+      estimatedNumberOfRequests: 1,
+      ratio: { initialValue: 0.7 },
+    },
+    jobTypeB: {
+      estimatedUsedTokens: 1000,
+      estimatedNumberOfRequests: 1,
+      ratio: { initialValue: 0.3 },
+    },
+  },
+};
+// Expected with 2 instances:
+// jobTypeA: floor(100 / 2 * 0.7) = 35
+// jobTypeB: floor(100 / 2 * 0.3) = 15
+
+// Mixed limits config (TPM + RPM) - tests limiting factor
+export const slotCalcTpmRpmConfig: RateLimiterPreset = {
+  models: {
+    'model-delta': {
+      tokensPerMinute: 100000,
+      requestsPerMinute: 50, // This is the limiting factor
+      pricing: { input: 1, cached: 0.1, output: 2 },
+    },
+  },
+  escalationOrder: ['model-delta'],
+  resourceEstimations: {
+    jobTypeA: {
+      estimatedUsedTokens: 10000,
+      estimatedNumberOfRequests: 1,
+      ratio: { initialValue: 0.5 },
+    },
+    jobTypeB: {
+      estimatedUsedTokens: 10000,
+      estimatedNumberOfRequests: 1,
+      ratio: { initialValue: 0.5 },
+    },
+  },
+};
+// Expected with 2 instances (uses limiting factor):
+// TPM-based: floor((100K/10K) / 2 * 0.5) = 2
+// RPM-based: floor((50/1) / 2 * 0.5) = 12
+// Actual: min(2, 12) = 2 (TPM is limiting)
+
+// Multi-model config with different limit types
+export const slotCalcMultiModelConfig: RateLimiterPreset = {
+  models: {
+    'model-tpm': {
+      tokensPerMinute: 100000,
+      pricing: { input: 1, cached: 0.1, output: 2 },
+    },
+    'model-concurrent': {
+      maxConcurrentRequests: 50,
+      pricing: { input: 0.5, cached: 0.05, output: 1 },
+    },
+  },
+  escalationOrder: ['model-tpm', 'model-concurrent'],
+  resourceEstimations: {
+    jobTypeA: {
+      estimatedUsedTokens: 10000,
+      estimatedNumberOfRequests: 1,
+      ratio: { initialValue: 0.5 },
+    },
+    jobTypeB: {
+      estimatedUsedTokens: 10000,
+      estimatedNumberOfRequests: 1,
+      ratio: { initialValue: 0.5 },
+    },
+  },
+};
+// Expected with 2 instances:
+// model-tpm, jobTypeA: floor((100K/10K) / 2 * 0.5) = 2
+// model-concurrent, jobTypeA: floor(50 / 2 * 0.5) = 12
+
+// Various ratios config (3 job types)
+export const slotCalcRatiosConfig: RateLimiterPreset = {
+  models: {
+    'model-alpha': {
+      tokensPerMinute: 100000,
+      pricing: { input: 1, cached: 0.1, output: 2 },
+    },
+  },
+  escalationOrder: ['model-alpha'],
+  resourceEstimations: {
+    jobTypeA: {
+      estimatedUsedTokens: 10000,
+      estimatedNumberOfRequests: 1,
+      ratio: { initialValue: 0.5 },
+    },
+    jobTypeB: {
+      estimatedUsedTokens: 10000,
+      estimatedNumberOfRequests: 1,
+      ratio: { initialValue: 0.3 },
+    },
+    jobTypeC: {
+      estimatedUsedTokens: 10000,
+      estimatedNumberOfRequests: 1,
+      ratio: { initialValue: 0.2 },
+    },
+  },
+};
+// Expected with 2 instances:
+// jobTypeA: floor((100K/10K) / 2 * 0.5) = 2
+// jobTypeB: floor((100K/10K) / 2 * 0.3) = 1
+// jobTypeC: floor((100K/10K) / 2 * 0.2) = 1
+
+// TPD-only config (Tokens Per Day)
+export const slotCalcTpdConfig: RateLimiterPreset = {
+  models: {
+    'model-tpd': {
+      tokensPerDay: 1000000, // 1M tokens per day
+      pricing: { input: 1, cached: 0.1, output: 2 },
+    },
+  },
+  escalationOrder: ['model-tpd'],
+  resourceEstimations: {
+    jobTypeA: {
+      estimatedUsedTokens: 10000,
+      estimatedNumberOfRequests: 1,
+      ratio: { initialValue: 0.6 },
+    },
+    jobTypeB: {
+      estimatedUsedTokens: 5000,
+      estimatedNumberOfRequests: 1,
+      ratio: { initialValue: 0.4 },
+    },
+  },
+};
+// Expected with 2 instances:
+// jobTypeA: floor((1M/10K) / 2 * 0.6) = floor(50 * 0.6) = 30
+// jobTypeB: floor((1M/5K) / 2 * 0.4) = floor(100 * 0.4) = 40
+
+// RPD-only config (Requests Per Day)
+export const slotCalcRpdConfig: RateLimiterPreset = {
+  models: {
+    'model-rpd': {
+      requestsPerDay: 10000, // 10K requests per day
+      pricing: { input: 1, cached: 0.1, output: 2 },
+    },
+  },
+  escalationOrder: ['model-rpd'],
+  resourceEstimations: {
+    jobTypeA: {
+      estimatedUsedTokens: 1000,
+      estimatedNumberOfRequests: 1,
+      ratio: { initialValue: 0.6 },
+    },
+    jobTypeB: {
+      estimatedUsedTokens: 1000,
+      estimatedNumberOfRequests: 5,
+      ratio: { initialValue: 0.4 },
+    },
+  },
+};
+// Expected with 2 instances:
+// jobTypeA: floor((10K/1) / 2 * 0.6) = floor(5000 * 0.6) = 3000
+// jobTypeB: floor((10K/5) / 2 * 0.4) = floor(1000 * 0.4) = 400
+
+// Uneven ratios config (4 job types: 0.7, 0.1, 0.1, 0.1)
+export const slotCalcUnevenRatiosConfig: RateLimiterPreset = {
+  models: {
+    'model-alpha': {
+      tokensPerMinute: 100000,
+      pricing: { input: 1, cached: 0.1, output: 2 },
+    },
+  },
+  escalationOrder: ['model-alpha'],
+  resourceEstimations: {
+    jobTypeA: {
+      estimatedUsedTokens: 10000,
+      estimatedNumberOfRequests: 1,
+      ratio: { initialValue: 0.7 },
+    },
+    jobTypeB: {
+      estimatedUsedTokens: 10000,
+      estimatedNumberOfRequests: 1,
+      ratio: { initialValue: 0.1 },
+    },
+    jobTypeC: {
+      estimatedUsedTokens: 10000,
+      estimatedNumberOfRequests: 1,
+      ratio: { initialValue: 0.1 },
+    },
+    jobTypeD: {
+      estimatedUsedTokens: 10000,
+      estimatedNumberOfRequests: 1,
+      ratio: { initialValue: 0.1 },
+    },
+  },
+};
+// Expected with 2 instances:
+// jobTypeA: floor((100K/10K) / 2 * 0.7) = floor(5 * 0.7) = 3
+// jobTypeB: floor((100K/10K) / 2 * 0.1) = floor(5 * 0.1) = 0
+// jobTypeC: floor((100K/10K) / 2 * 0.1) = floor(5 * 0.1) = 0
+// jobTypeD: floor((100K/10K) / 2 * 0.1) = floor(5 * 0.1) = 0
+// Note: Low ratios may result in 0 slots per instance
+
+// =============================================================================
 // Config Registry
 // =============================================================================
 
@@ -261,7 +534,16 @@ export type ConfigPresetName =
   | 'slotCalculation'
   | 'fixedRatio'
   | 'flexibleRatio'
-  | 'instanceScaling';
+  | 'instanceScaling'
+  | 'slotCalc-tpm'
+  | 'slotCalc-rpm'
+  | 'slotCalc-tpd'
+  | 'slotCalc-rpd'
+  | 'slotCalc-concurrent'
+  | 'slotCalc-tpm-rpm'
+  | 'slotCalc-multi-model'
+  | 'slotCalc-ratios'
+  | 'slotCalc-uneven-ratios';
 
 export const configPresets: Record<ConfigPresetName, RateLimiterPreset> = {
   default: defaultConfig,
@@ -269,6 +551,15 @@ export const configPresets: Record<ConfigPresetName, RateLimiterPreset> = {
   fixedRatio: fixedRatioConfig,
   flexibleRatio: flexibleRatioConfig,
   instanceScaling: instanceScalingConfig,
+  'slotCalc-tpm': slotCalcTpmConfig,
+  'slotCalc-rpm': slotCalcRpmConfig,
+  'slotCalc-tpd': slotCalcTpdConfig,
+  'slotCalc-rpd': slotCalcRpdConfig,
+  'slotCalc-concurrent': slotCalcConcurrentConfig,
+  'slotCalc-tpm-rpm': slotCalcTpmRpmConfig,
+  'slotCalc-multi-model': slotCalcMultiModelConfig,
+  'slotCalc-ratios': slotCalcRatiosConfig,
+  'slotCalc-uneven-ratios': slotCalcUnevenRatiosConfig,
 };
 
 export const getConfigPreset = (name: ConfigPresetName): RateLimiterPreset => {

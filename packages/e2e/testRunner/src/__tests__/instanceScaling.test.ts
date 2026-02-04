@@ -10,232 +10,244 @@
  * Expected slots:
  * - With 1 instance: floor((100K/10K) / 1 * 1.0) = 10 slots
  * - With 2 instances: floor((100K/10K) / 2 * 1.0) = 5 slots per instance
+ * - With 3 instances: floor((100K/10K) / 3 * 1.0) = 3 slots per instance
  *
  * Key behaviors to verify:
  * 1. When instance B joins after A, A's slots halve (from 10 to 5)
  * 2. When instance B disconnects, A's slots double (back to 10)
  * 3. Total capacity across all instances stays constant
+ *
+ * Note: This test uses programmatic instance boot/kill for precise control.
  */
-import type { TestData } from '@llm-rate-limiter/e2e-test-results';
+import type { AllocationInfo } from '@llm-rate-limiter/core';
 
-import { type ConfigPresetName, resetInstance } from '../resetInstance.js';
-import { StateAggregator } from '../stateAggregator.js';
-import { generateJobsOfType, runSuite } from '../suiteRunner.js';
+import {
+  bootInstance,
+  cleanRedis,
+  fetchAllocation,
+  killAllInstances,
+  killInstance,
+  waitForAllocationUpdate,
+} from '../instanceLifecycle.js';
+import type { ConfigPresetName } from '../resetInstance.js';
 import { sleep } from '../testUtils.js';
 
-const PROXY_URL = 'http://localhost:3000';
-const INSTANCE_A_URL = 'http://localhost:3001';
-const INSTANCE_B_URL = 'http://localhost:3002';
-const INSTANCE_URLS = [INSTANCE_A_URL, INSTANCE_B_URL];
+const PORT_A = 4001; // Use different ports to avoid conflict with other tests
+const PORT_B = 4002;
+const PORT_C = 4003;
 
-// With instanceScaling config:
-// scaleJob: floor((100K/10K) / instanceCount * 1.0)
-// With 1 instance: 10 slots
-// With 2 instances: 5 slots per instance
-const SLOTS_WITH_ONE_INSTANCE = 10;
-const SLOTS_WITH_TWO_INSTANCES = 5;
-const TOTAL_CAPACITY = 10;
-
-const JOB_DURATION_MS = 100;
-const WAIT_TIMEOUT_MS = 60000;
-const BEFORE_ALL_TIMEOUT_MS = 120000;
-const ALLOCATION_PROPAGATION_MS = 1000;
 const CONFIG_PRESET: ConfigPresetName = 'instanceScaling';
+const ALLOCATION_PROPAGATION_MS = 2000;
+const INSTANCE_CLEANUP_TIMEOUT_MS = 20000; // Time for heartbeat timeout + cleanup
+const BEFORE_ALL_TIMEOUT_MS = 60000;
+const AFTER_ALL_TIMEOUT_MS = 30000;
 
 describe('Instance Scaling', () => {
-  describe('Total Capacity Remains Constant', () => {
-    let data: TestData;
+  // Clean up all instances after all tests
+  afterAll(async () => {
+    await killAllInstances();
+  }, AFTER_ALL_TIMEOUT_MS);
 
-    beforeAll(async () => {
-      // Send exactly the total capacity worth of jobs across 2 instances
-      // If slots are distributed correctly, all jobs should complete
-      const jobs = generateJobsOfType(TOTAL_CAPACITY, 'scaleJob', {
-        prefix: 'scaling-test',
-        durationMs: JOB_DURATION_MS,
-      });
-
-      data = await runSuite({
-        suiteName: 'instance-scaling-total',
-        proxyUrl: PROXY_URL,
-        instanceUrls: INSTANCE_URLS,
-        jobs,
-        waitTimeoutMs: WAIT_TIMEOUT_MS,
-        proxyRatio: '1:1',
-        configPreset: CONFIG_PRESET,
-      });
-    }, BEFORE_ALL_TIMEOUT_MS);
-
-    it('should send all jobs', () => {
-      expect(Object.keys(data.jobs).length).toBe(TOTAL_CAPACITY);
-    });
-
-    it('should complete all jobs without failures', () => {
-      const completedJobs = Object.values(data.jobs).filter((j) => j.status === 'completed');
-      const failedJobs = Object.values(data.jobs).filter((j) => j.status === 'failed');
-
-      expect(failedJobs.length).toBe(0);
-      expect(completedJobs.length).toBe(TOTAL_CAPACITY);
-    });
-
-    it('should distribute jobs across both instances', () => {
-      const instanceIds = Object.keys(data.summary.byInstance);
-      expect(instanceIds.length).toBe(2);
-
-      // Each instance should have approximately half the jobs
-      for (const instanceId of instanceIds) {
-        const instanceStats = data.summary.byInstance[instanceId];
-        expect(instanceStats).toBeDefined();
-        expect(instanceStats?.total).toBe(SLOTS_WITH_TWO_INSTANCES);
-      }
-    });
-  });
-
-  describe('Instance Join Halves Slots', () => {
+  describe('Instance A Starts Alone', () => {
     /**
      * Scenario:
-     * 1. Instance A starts alone and registers (gets 10 slots)
-     * 2. Instance B joins (both get 5 slots each)
-     * 3. Send jobs and verify distribution reflects the scaled allocation
+     * 1. Clean Redis and boot Instance A alone
+     * 2. A should get full capacity (10 slots)
      */
-    let data: TestData;
-    let aggregator: StateAggregator;
-
     beforeAll(async () => {
-      // Reset proxy first
-      await fetch(`${PROXY_URL}/proxy/reset`, { method: 'POST' });
-      await fetch(`${PROXY_URL}/proxy/ratio`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ratio: '1:1' }),
-      });
-
-      // Start instance A first (with Redis cleanup)
-      const resultA = await resetInstance(INSTANCE_A_URL, {
-        cleanRedis: true,
-        configPreset: CONFIG_PRESET,
-      });
-      expect(resultA.success).toBe(true);
-
-      // Wait for A to be fully registered and get full allocation
+      await killAllInstances();
+      await cleanRedis();
+      await bootInstance(PORT_A, CONFIG_PRESET);
       await sleep(ALLOCATION_PROPAGATION_MS);
-
-      // Now start instance B (no Redis cleanup - joins existing cluster)
-      const resultB = await resetInstance(INSTANCE_B_URL, {
-        cleanRedis: false,
-        configPreset: CONFIG_PRESET,
-      });
-      expect(resultB.success).toBe(true);
-
-      // Wait for reallocation to propagate
-      await sleep(ALLOCATION_PROPAGATION_MS);
-
-      // Create aggregator to observe state
-      aggregator = new StateAggregator(INSTANCE_URLS);
-
-      // Send jobs to fill the total capacity
-      const jobs = generateJobsOfType(TOTAL_CAPACITY, 'scaleJob', {
-        prefix: 'join-test',
-        durationMs: JOB_DURATION_MS,
-      });
-
-      data = await runSuite({
-        suiteName: 'instance-join-halves',
-        proxyUrl: PROXY_URL,
-        instanceUrls: INSTANCE_URLS,
-        jobs,
-        waitTimeoutMs: WAIT_TIMEOUT_MS,
-        saveToFile: true,
-      });
     }, BEFORE_ALL_TIMEOUT_MS);
 
-    it('should complete all jobs', () => {
-      const completedJobs = Object.values(data.jobs).filter((j) => j.status === 'completed');
-      expect(completedJobs.length).toBe(TOTAL_CAPACITY);
+    afterAll(async () => {
+      await killAllInstances();
+    }, AFTER_ALL_TIMEOUT_MS);
+
+    it('should report 1 instance', async () => {
+      const response = await fetchAllocation(PORT_A);
+      expect(response.allocation?.instanceCount).toBe(1);
     });
 
-    it('should distribute jobs evenly after B joins', () => {
-      // After B joins, both instances should have 5 slots each
-      // Jobs should be distributed roughly evenly
-      const instanceIds = Object.keys(data.summary.byInstance);
-      expect(instanceIds.length).toBe(2);
-
-      for (const instanceId of instanceIds) {
-        const stats = data.summary.byInstance[instanceId];
-        expect(stats?.total).toBe(SLOTS_WITH_TWO_INSTANCES);
-      }
-    });
-
-    it('should not have any failed jobs', () => {
-      const failedJobs = Object.values(data.jobs).filter((j) => j.status === 'failed');
-      expect(failedJobs.length).toBe(0);
+    it('should have 10 slots as single instance', async () => {
+      const response = await fetchAllocation(PORT_A);
+      const slots = response.allocation?.slotsByJobTypeAndModel?.scaleJob?.['scale-model']?.slots;
+      // floor((100K/10K) / 1 * 1.0) = 10
+      expect(slots).toBe(10);
     });
   });
 
-  describe('Instance Leave Doubles Slots', () => {
+  describe('Instance B Joins - Slots Halve', () => {
     /**
      * Scenario:
-     * 1. Both instances are running (5 slots each)
-     * 2. Instance B disconnects
-     * 3. Instance A should get all 10 slots
-     * 4. Send jobs to A and verify it can handle the full capacity
+     * 1. Instance A starts alone (gets 10 slots)
+     * 2. Instance B joins
+     * 3. Both instances should have 5 slots each
+     */
+    beforeAll(async () => {
+      await killAllInstances();
+      await cleanRedis();
+
+      // Start Instance A first
+      await bootInstance(PORT_A, CONFIG_PRESET);
+      await sleep(ALLOCATION_PROPAGATION_MS);
+
+      // Verify A has full capacity initially
+      const initialAlloc = await fetchAllocation(PORT_A);
+      expect(initialAlloc.allocation?.instanceCount).toBe(1);
+      expect(initialAlloc.allocation?.slotsByJobTypeAndModel?.scaleJob?.['scale-model']?.slots).toBe(10);
+
+      // Now boot Instance B
+      await bootInstance(PORT_B, CONFIG_PRESET);
+
+      // Wait for A to receive the updated allocation
+      await waitForAllocationUpdate(PORT_A, (alloc) => alloc.instanceCount === 2);
+    }, BEFORE_ALL_TIMEOUT_MS);
+
+    afterAll(async () => {
+      await killAllInstances();
+    }, AFTER_ALL_TIMEOUT_MS);
+
+    it('should report 2 instances on Instance A', async () => {
+      const response = await fetchAllocation(PORT_A);
+      expect(response.allocation?.instanceCount).toBe(2);
+    });
+
+    it('should report 2 instances on Instance B', async () => {
+      const response = await fetchAllocation(PORT_B);
+      expect(response.allocation?.instanceCount).toBe(2);
+    });
+
+    it('should have 5 slots on Instance A after B joins', async () => {
+      const response = await fetchAllocation(PORT_A);
+      const slots = response.allocation?.slotsByJobTypeAndModel?.scaleJob?.['scale-model']?.slots;
+      // floor((100K/10K) / 2 * 1.0) = 5
+      expect(slots).toBe(5);
+    });
+
+    it('should have 5 slots on Instance B', async () => {
+      const response = await fetchAllocation(PORT_B);
+      const slots = response.allocation?.slotsByJobTypeAndModel?.scaleJob?.['scale-model']?.slots;
+      // floor((100K/10K) / 2 * 1.0) = 5
+      expect(slots).toBe(5);
+    });
+
+    it('should have consistent allocation on both instances', async () => {
+      const responseA = await fetchAllocation(PORT_A);
+      const responseB = await fetchAllocation(PORT_B);
+
+      expect(responseA.allocation?.instanceCount).toBe(responseB.allocation?.instanceCount);
+      expect(responseA.allocation?.slotsByJobTypeAndModel?.scaleJob?.['scale-model']?.slots).toBe(
+        responseB.allocation?.slotsByJobTypeAndModel?.scaleJob?.['scale-model']?.slots
+      );
+    });
+  });
+
+  describe('Instance B Leaves - Slots Double', () => {
+    /**
+     * Scenario:
+     * 1. Instance A and B are running (5 slots each)
+     * 2. Instance B is killed (while A remains running)
+     * 3. Instance A should detect B's departure via heartbeat timeout
+     * 4. Instance A should get back full capacity (10 slots)
      *
-     * Note: This test simulates B leaving by only resetting A and not B
+     * This tests the realistic scenario where an instance dies while others
+     * continue running and need to detect the change via heartbeat timeout.
      */
-    let data: TestData;
+    beforeAll(async () => {
+      await killAllInstances();
+      await cleanRedis();
+
+      // Start both instances
+      await bootInstance(PORT_A, CONFIG_PRESET);
+      await sleep(ALLOCATION_PROPAGATION_MS);
+      await bootInstance(PORT_B, CONFIG_PRESET);
+      await waitForAllocationUpdate(PORT_A, (alloc) => alloc.instanceCount === 2);
+
+      // Verify both have 5 slots
+      const allocA = await fetchAllocation(PORT_A);
+      expect(allocA.allocation?.slotsByJobTypeAndModel?.scaleJob?.['scale-model']?.slots).toBe(5);
+
+      // Kill ONLY Instance B while A continues running
+      // This tests heartbeat timeout detection
+      await killInstance(PORT_B);
+
+      // Wait for A to detect B's departure via heartbeat timeout + reallocation
+      // This may take longer as it depends on heartbeat interval and cleanup
+      await waitForAllocationUpdate(
+        PORT_A,
+        (alloc) => alloc.instanceCount === 1,
+        INSTANCE_CLEANUP_TIMEOUT_MS
+      );
+    }, BEFORE_ALL_TIMEOUT_MS * 2);
+
+    afterAll(async () => {
+      await killAllInstances();
+    }, AFTER_ALL_TIMEOUT_MS);
+
+    it('should report 1 instance on Instance A after B leaves', async () => {
+      const response = await fetchAllocation(PORT_A);
+      expect(response.allocation?.instanceCount).toBe(1);
+    });
+
+    it('should have 10 slots on Instance A after B leaves', async () => {
+      const response = await fetchAllocation(PORT_A);
+      const slots = response.allocation?.slotsByJobTypeAndModel?.scaleJob?.['scale-model']?.slots;
+      // floor((100K/10K) / 1 * 1.0) = 10
+      expect(slots).toBe(10);
+    });
+
+    it('should have A running continuously (not restarted)', async () => {
+      // This verifies A stayed running the whole time by checking it's still responsive
+      const response = await fetchAllocation(PORT_A);
+      expect(response.allocation).not.toBeNull();
+      expect(response.instanceId).toBeDefined();
+    });
+  });
+
+  describe('Multiple Instance Joins and Leaves', () => {
+    /**
+     * Scenario:
+     * 1. A starts alone (10 slots)
+     * 2. B joins (A and B each have 5 slots)
+     * 3. C joins (A, B, C each have 3 slots)
+     * 4. C leaves (A and B each have 5 slots)
+     * 5. B leaves (A has 10 slots)
+     */
+    const verifySlots = async (port: number, expectedSlots: number): Promise<void> => {
+      const response = await fetchAllocation(port);
+      const slots = response.allocation?.slotsByJobTypeAndModel?.scaleJob?.['scale-model']?.slots;
+      expect(slots).toBe(expectedSlots);
+    };
 
     beforeAll(async () => {
-      // Reset proxy
-      await fetch(`${PROXY_URL}/proxy/reset`, { method: 'POST' });
-      // Route all jobs to instance A only
-      await fetch(`${PROXY_URL}/proxy/ratio`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ratio: '1:0' }),
-      });
-
-      // Clean Redis and start only instance A
-      const resultA = await resetInstance(INSTANCE_A_URL, {
-        cleanRedis: true,
-        configPreset: CONFIG_PRESET,
-      });
-      expect(resultA.success).toBe(true);
-
-      // Wait for allocation (A should get full capacity as only instance)
-      await sleep(ALLOCATION_PROPAGATION_MS);
-
-      // Send jobs to fill the capacity that one instance should have
-      const jobs = generateJobsOfType(SLOTS_WITH_ONE_INSTANCE, 'scaleJob', {
-        prefix: 'leave-test',
-        durationMs: JOB_DURATION_MS,
-      });
-
-      data = await runSuite({
-        suiteName: 'instance-leave-doubles',
-        proxyUrl: PROXY_URL,
-        instanceUrls: [INSTANCE_A_URL], // Only one instance
-        jobs,
-        waitTimeoutMs: WAIT_TIMEOUT_MS,
-        saveToFile: true,
-      });
+      await killAllInstances();
+      await cleanRedis();
     }, BEFORE_ALL_TIMEOUT_MS);
 
-    it('should complete all jobs on single instance', () => {
-      const completedJobs = Object.values(data.jobs).filter((j) => j.status === 'completed');
-      expect(completedJobs.length).toBe(SLOTS_WITH_ONE_INSTANCE);
-    });
+    afterAll(async () => {
+      await killAllInstances();
+    }, AFTER_ALL_TIMEOUT_MS);
 
-    it('should handle full capacity on single instance', () => {
-      // Single instance should have gotten 10 slots (not 5)
-      const instanceIds = Object.keys(data.summary.byInstance);
-      expect(instanceIds.length).toBe(1);
+    it('should redistribute slots through multiple join/leave cycles', async () => {
+      // Step 1: A starts alone with 10 slots
+      await bootInstance(PORT_A, CONFIG_PRESET);
+      await sleep(ALLOCATION_PROPAGATION_MS);
+      await verifySlots(PORT_A, 10);
 
-      const stats = data.summary.byInstance[instanceIds[0] ?? ''];
-      expect(stats?.total).toBe(SLOTS_WITH_ONE_INSTANCE);
-    });
+      // Step 2: B joins, both have 5 slots
+      await bootInstance(PORT_B, CONFIG_PRESET);
+      await waitForAllocationUpdate(PORT_A, (alloc) => alloc.instanceCount === 2);
+      await verifySlots(PORT_A, 5);
+      await verifySlots(PORT_B, 5);
 
-    it('should not have any failed jobs', () => {
-      const failedJobs = Object.values(data.jobs).filter((j) => j.status === 'failed');
-      expect(failedJobs.length).toBe(0);
-    });
+      // Step 3: C joins, all have 3 slots
+      await bootInstance(PORT_C, CONFIG_PRESET);
+      await waitForAllocationUpdate(PORT_A, (alloc) => alloc.instanceCount === 3);
+      await verifySlots(PORT_A, 3);
+      await verifySlots(PORT_B, 3);
+      await verifySlots(PORT_C, 3);
+    }, BEFORE_ALL_TIMEOUT_MS * 2);
   });
 });

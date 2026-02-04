@@ -16,6 +16,8 @@ These E2E tests verify that the implementation works correctly across multiple i
 
 Tests use different configuration presets defined in `packages/e2e/serverInstance/src/rateLimiterConfigs.ts`:
 
+### Core Presets
+
 | Preset            | Models                      | Job Types                           | Purpose                          |
 | ----------------- | --------------------------- | ----------------------------------- | -------------------------------- |
 | `default`         | 3 (openai, xai, deepinfra)  | 5 (summary, VacationPlanning, etc.) | Original production-like config  |
@@ -23,6 +25,20 @@ Tests use different configuration presets defined in `packages/e2e/serverInstanc
 | `fixedRatio`      | 1 (test-model)              | 3 (fixedJobType, flexibleJobTypeA, flexibleJobTypeB) | Fixed vs flexible ratio behavior |
 | `flexibleRatio`   | 1 (flex-model)              | 3 (flexJobA, flexJobB, flexJobC)    | Dynamic ratio adjustment         |
 | `instanceScaling` | 1 (scale-model)             | 1 (scaleJob)                        | Instance join/leave behavior     |
+
+### Slot Calculation Presets (for testing specific limit types)
+
+| Preset                   | Model Limits                | Job Types                    | Purpose                          |
+| ------------------------ | --------------------------- | ---------------------------- | -------------------------------- |
+| `slotCalc-tpm`           | TPM only (100K)             | 2 (jobTypeA, jobTypeB)       | TPM-based slot calculation       |
+| `slotCalc-rpm`           | RPM only (500)              | 2 (jobTypeA, jobTypeB)       | RPM-based slot calculation       |
+| `slotCalc-tpd`           | TPD only (1M)               | 2 (jobTypeA, jobTypeB)       | TPD-based slot calculation       |
+| `slotCalc-rpd`           | RPD only (10K)              | 2 (jobTypeA, jobTypeB)       | RPD-based slot calculation       |
+| `slotCalc-concurrent`    | maxConcurrent only (100)    | 2 (jobTypeA, jobTypeB)       | Concurrency-based calculation    |
+| `slotCalc-tpm-rpm`       | TPM (100K) + RPM (50)       | 2 (jobTypeA, jobTypeB)       | Mixed limits (limiting factor)   |
+| `slotCalc-multi-model`   | model-tpm: TPM, model-concurrent: concurrent | 2 (jobTypeA, jobTypeB) | Different limit types per model  |
+| `slotCalc-ratios`        | TPM (100K)                  | 3 (0.5, 0.3, 0.2 ratios)     | Various ratio combinations       |
+| `slotCalc-uneven-ratios` | TPM (100K)                  | 4 (0.7, 0.1, 0.1, 0.1 ratios)| Uneven ratio distribution        |
 
 ---
 

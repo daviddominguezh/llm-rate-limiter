@@ -62,32 +62,15 @@ This report summarizes the verification of all documentation files in the `docs/
 | Slot formula | ✓ Accurate | |
 | Allocation structure | ✓ Accurate | |
 | Test cases | ✓ Accurate | |
-| **Config presets** | ⚠️ **INCOMPLETE** | 5 documented, 14 exist |
+| **Config presets** | ✓ **FIXED** | All 14 presets now documented |
 
-### Issue #3: Incomplete config presets table
+### Issue #3: Incomplete config presets table - **RESOLVED**
 
-**Location:** Lines 17-26 (Test Configuration Presets table)
+**Status:** FIXED
 
-**Documentation lists 5 presets:**
-- `default`
-- `slotCalculation`
-- `fixedRatio`
-- `flexibleRatio`
-- `instanceScaling`
-
-**Actual implementation has 14 presets:**
-- The 5 above PLUS:
-- `slotCalc-tpm`
-- `slotCalc-rpm`
-- `slotCalc-tpd`
-- `slotCalc-rpd`
-- `slotCalc-concurrent`
-- `slotCalc-tpm-rpm`
-- `slotCalc-multi-model`
-- `slotCalc-ratios`
-- `slotCalc-uneven-ratios`
-
-**Fix needed:** Add the missing 9 specialized slot calculation presets to the documentation table, or note that there are additional specialized configs for specific test scenarios.
+**Implementation:**
+- Added "Slot Calculation Presets" section to the Test Configuration Presets table
+- Documented all 9 specialized slot calculation presets with their model limits, job types, and purpose
 
 ---
 
@@ -168,7 +151,7 @@ This report summarizes the verification of all documentation files in the `docs/
 |-----|-------|----------|--------|
 | maxWaitMS-design.md | Queue-based waiting | ~~Medium~~ | ✓ **FIXED** - Implemented FIFO queue |
 | memory-based-slot-calculation.md | minCapacity/maxCapacity scope | ~~High~~ | ✓ **FIXED** - Implemented per-model, per-job-type slot clamping |
-| e2e-distributed-slots-tests.md | Missing config presets | Low | Add to table |
+| e2e-distributed-slots-tests.md | Missing config presets | ~~Low~~ | ✓ **FIXED** - Added all 14 presets to documentation |
 | distributed-slots-design.md | UPDATE_RATIOS_SCRIPT | Medium | Mark as not implemented |
 | distributed-slots-design.md | Ratio synchronization | Medium | Mark as not implemented |
 | distributed-slots-design.md | RELEASE_SCRIPT resource adjustment | Medium | Remove or mark as not implemented |

@@ -13,6 +13,8 @@ import type {
   InternalLimiterInstance,
   InternalLimiterStats,
   JobWindowStarts,
+  OverageEvent,
+  OverageResourceType,
   ReservationContext,
 } from './types.js';
 import { CapacityWaitQueue } from './utils/capacityWaitQueue.js';
@@ -31,6 +33,9 @@ export type {
   BaseResourcesPerEvent,
   JobWindowStarts,
   ReservationContext,
+  OverageEvent,
+  OverageResourceType,
+  OverageFn,
 } from './types.js';
 
 const ZERO = 0;
@@ -85,6 +90,25 @@ class LLMRateLimiter implements InternalLimiterInstance {
     if (this.config.onLog !== undefined) {
       this.config.onLog(`${this.label}| ${message}`, data);
     }
+  }
+
+  /**
+   * Emit an overage event when actual usage exceeds estimated usage.
+   * Only emits if onOverage callback is configured and actual > estimated.
+   */
+  private emitOverageIfNeeded(resourceType: OverageResourceType, estimated: number, actual: number): void {
+    if (this.config.onOverage === undefined) return;
+    if (actual <= estimated) return;
+
+    const event: OverageEvent = {
+      resourceType,
+      estimated,
+      actual,
+      overage: actual - estimated,
+      timestamp: Date.now(),
+    };
+
+    this.config.onOverage(event);
   }
 
   private initializeMemoryLimiter(): void {
@@ -294,7 +318,8 @@ class LLMRateLimiter implements InternalLimiterInstance {
 
   /**
    * Record actual request usage with time-window awareness.
-   * Only refunds unused capacity if still within the same time window.
+   * - If actual < estimated: refunds unused capacity (only if same time window)
+   * - If actual > estimated: adds the overage to counters
    */
   private recordRequestUsage(actualRequests: number, windowStarts: JobWindowStarts): void {
     if (this.estimatedNumberOfRequests === ZERO) {
@@ -303,21 +328,30 @@ class LLMRateLimiter implements InternalLimiterInstance {
       this.rpdCounter?.add(actualRequests);
       return;
     }
-    const refund = Math.max(ZERO, this.estimatedNumberOfRequests - actualRequests);
-    if (refund > ZERO) {
-      // Only refund if same window - uses subtractIfSameWindow
+
+    const difference = actualRequests - this.estimatedNumberOfRequests;
+
+    if (difference < ZERO) {
+      // Actual < estimated: refund the unused capacity (only if same window)
+      const refund = -difference;
       if (windowStarts.rpmWindowStart !== undefined) {
         this.rpmCounter?.subtractIfSameWindow(refund, windowStarts.rpmWindowStart);
       }
       if (windowStarts.rpdWindowStart !== undefined) {
         this.rpdCounter?.subtractIfSameWindow(refund, windowStarts.rpdWindowStart);
       }
+    } else if (difference > ZERO) {
+      // Actual > estimated: add the overage to counters
+      this.rpmCounter?.add(difference);
+      this.rpdCounter?.add(difference);
     }
+    // If difference === 0, nothing to adjust
   }
 
   /**
    * Record actual token usage with time-window awareness.
-   * Only refunds unused capacity if still within the same time window.
+   * - If actual < estimated: refunds unused capacity (only if same time window)
+   * - If actual > estimated: adds the overage to counters
    */
   private recordTokenUsage(actualTokens: number, windowStarts: JobWindowStarts): void {
     if (this.estimatedUsedTokens === ZERO) {
@@ -326,26 +360,41 @@ class LLMRateLimiter implements InternalLimiterInstance {
       this.tpdCounter?.add(actualTokens);
       return;
     }
-    const refund = Math.max(ZERO, this.estimatedUsedTokens - actualTokens);
-    if (refund > ZERO) {
-      // Only refund if same window - uses subtractIfSameWindow
+
+    const difference = actualTokens - this.estimatedUsedTokens;
+
+    if (difference < ZERO) {
+      // Actual < estimated: refund the unused capacity (only if same window)
+      const refund = -difference;
       if (windowStarts.tpmWindowStart !== undefined) {
         this.tpmCounter?.subtractIfSameWindow(refund, windowStarts.tpmWindowStart);
       }
       if (windowStarts.tpdWindowStart !== undefined) {
         this.tpdCounter?.subtractIfSameWindow(refund, windowStarts.tpdWindowStart);
       }
+    } else if (difference > ZERO) {
+      // Actual > estimated: add the overage to counters
+      this.tpmCounter?.add(difference);
+      this.tpdCounter?.add(difference);
     }
+    // If difference === 0, nothing to adjust
   }
 
   /**
    * Record actual usage with time-window awareness.
    * Only refunds unused capacity if still within the same time window.
+   * Emits overage events when actual usage exceeds estimates.
    */
   private recordActualUsage(result: InternalJobResult, windowStarts: JobWindowStarts): void {
     const { requestCount: actualRequests, usage } = result;
+    const actualTokens = usage.input + usage.output;
+
     this.recordRequestUsage(actualRequests, windowStarts);
-    this.recordTokenUsage(usage.input + usage.output, windowStarts);
+    this.recordTokenUsage(actualTokens, windowStarts);
+
+    // Track overages when actual exceeds estimated
+    this.emitOverageIfNeeded('requests', this.estimatedNumberOfRequests, actualRequests);
+    this.emitOverageIfNeeded('tokens', this.estimatedUsedTokens, actualTokens);
   }
 
   async queueJob<T extends InternalJobResult>(job: () => Promise<T> | T): Promise<T> {

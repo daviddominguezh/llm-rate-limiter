@@ -13,6 +13,35 @@
 export type LogFn = (message: string, data?: Record<string, unknown>) => void;
 
 // =============================================================================
+// Overage Tracking Types
+// =============================================================================
+
+/**
+ * Type of resource that experienced an overage.
+ */
+export type OverageResourceType = 'tokens' | 'requests';
+
+/**
+ * Event emitted when actual usage exceeds estimated usage.
+ * Useful for tracking estimation accuracy and tuning estimates over time.
+ */
+export interface OverageEvent {
+  /** Type of resource that exceeded estimate */
+  resourceType: OverageResourceType;
+  /** The estimated value that was pre-reserved */
+  estimated: number;
+  /** The actual value recorded after job completion */
+  actual: number;
+  /** The overage amount (actual - estimated) */
+  overage: number;
+  /** Timestamp when the overage was recorded */
+  timestamp: number;
+}
+
+/** Callback for handling overage events */
+export type OverageFn = (event: OverageEvent) => void;
+
+// =============================================================================
 // Job Result Types
 // =============================================================================
 
@@ -101,6 +130,11 @@ export interface InternalLimiterConfigBase {
   label?: string;
   /** Optional logging callback */
   onLog?: LogFn;
+  /**
+   * Optional callback for overage events (when actual > estimated).
+   * Useful for tracking estimation accuracy and tuning estimates over time.
+   */
+  onOverage?: OverageFn;
   /** Estimated number of requests per job (for pre-reservation) */
   estimatedNumberOfRequests?: number;
   /** Estimated tokens per job (for pre-reservation) */

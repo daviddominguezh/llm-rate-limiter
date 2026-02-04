@@ -131,17 +131,20 @@ Verified that the documentation now has correct numbering (Test Cases 1-7 in Slo
 
 ### Issue #8: Overage tracking not implemented
 
-**Status:** Open (Future Enhancement)
+**Status:** RESOLVED
 
 **Description:**
 The design document mentions tracking when `actual > estimated` for future estimation improvements. This is not currently implemented.
 
 **Impact:** Low - Noted as future enhancement in design
 
-**Files to modify:**
-- `packages/core/src/rateLimiter.ts`
-
-**Note:** This was explicitly deferred in the design document.
+**Resolution:**
+- Added `OverageEvent` type with `resourceType`, `estimated`, `actual`, `overage`, and `timestamp` fields
+- Added `OverageResourceType` type (`'tokens' | 'requests'`)
+- Added `OverageFn` callback type and `onOverage` config option to `InternalLimiterConfigBase`
+- Implemented `emitOverageIfNeeded()` helper method in `LLMRateLimiter`
+- Updated `recordActualUsage()` to emit overage events when actual > estimated
+- Exported new types from `rateLimiter.ts`
 
 ---
 
@@ -172,7 +175,7 @@ this.recordTokenUsage(usage.input + usage.output, windowStarts);
 |----------|-------|--------|
 | High | 0 | - |
 | Medium | 0 | - |
-| Low | 2 | #8, #9 |
-| **Total Open** | **2** | |
-| **Resolved** | **6** | #1, #2, #3, #4, #5, #7 |
+| Low | 1 | #9 |
+| **Total Open** | **1** | |
+| **Resolved** | **7** | #1, #2, #3, #4, #5, #7, #8 |
 | **Not Relevant** | **1** | #6 |

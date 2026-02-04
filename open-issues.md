@@ -67,31 +67,18 @@ Jobs waiting in the `CapacityWaitQueue` are NOT proactively woken when TPM/RPM c
 
 ### Issue #4: Slot calculation uses hierarchy instead of min()
 
-**Status:** Open
+**Status:** RESOLVED
 
 **Description:**
 The design specifies that slot calculation should use `min(TPM-based, RPM-based, TPD-based, RPD-based, Concurrent)` to pick the most restrictive limit. However, the implementation uses a priority hierarchy: `maxConcurrent > TPM > RPM`.
 
 **Impact:** Medium - May not pick most restrictive limit in all cases
 
-**Files to modify:**
-- `packages/redis/src/luaScripts.ts`
-
-**Current behavior (lines 71-82):**
-```lua
-if model.maxConcurrentRequests and model.maxConcurrentRequests > 0 then
-  baseCapacity = model.maxConcurrentRequests
-elseif model.tokensPerMinute and model.tokensPerMinute > 0 then
-  baseCapacity = math.floor(model.tokensPerMinute / estimatedTokens)
-elseif model.requestsPerMinute and model.requestsPerMinute > 0 then
-  baseCapacity = math.floor(model.requestsPerMinute / estimatedRequests)
-else
-  baseCapacity = 100
-end
-```
-
-**Expected behavior:**
-Calculate all applicable limits and take the minimum.
+**Resolution:**
+- Changed slot calculation in `packages/redis/src/luaScripts.ts` from hierarchy to min()
+- Now calculates slots from each applicable limit (Concurrent, TPM, RPM, TPD, RPD)
+- Takes the minimum of all calculated values (most restrictive limit)
+- Falls back to 100 only if no limits are configured
 
 ---
 
@@ -189,7 +176,7 @@ this.recordTokenUsage(usage.input + usage.output, windowStarts);
 | Priority | Count | Issues |
 |----------|-------|--------|
 | High | 0 | - |
-| Medium | 2 | #4, #5 |
+| Medium | 1 | #5 |
 | Low | 4 | #6, #7, #8, #9 |
-| **Total Open** | **6** | |
-| **Resolved** | **3** | #1, #2, #3 |
+| **Total Open** | **5** | |
+| **Resolved** | **4** | #1, #2, #3, #4 |

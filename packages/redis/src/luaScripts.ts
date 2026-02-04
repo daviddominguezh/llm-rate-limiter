@@ -63,35 +63,53 @@ local function recalculateAllocations(instancesKey, allocationsKey, channel, mod
         local estimatedTokens = jobType.estimatedUsedTokens or 1
         local estimatedRequests = jobType.estimatedNumberOfRequests or 1
 
-        -- Calculate base capacity from the limiting factor
-        local baseCapacity = 0
+        -- Calculate slot candidates from each limit type
+        local slotCandidates = {}
         local tpm = 0
         local rpm = 0
         local tpd = 0
         local rpd = 0
 
+        -- Concurrent-based slots (direct capacity, no resource division)
         if model.maxConcurrentRequests and model.maxConcurrentRequests > 0 then
-          -- Concurrent-limited model
-          baseCapacity = model.maxConcurrentRequests
-        elseif model.tokensPerMinute and model.tokensPerMinute > 0 then
-          -- TPM-limited model: capacity = TPM / tokens per job
-          baseCapacity = math.floor(model.tokensPerMinute / estimatedTokens)
-        elseif model.requestsPerMinute and model.requestsPerMinute > 0 then
-          -- RPM-limited model: capacity = RPM / requests per job
-          baseCapacity = math.floor(model.requestsPerMinute / estimatedRequests)
-        elseif model.tokensPerDay and model.tokensPerDay > 0 then
-          -- TPD-limited model: capacity = TPD / tokens per job
-          baseCapacity = math.floor(model.tokensPerDay / estimatedTokens)
-        elseif model.requestsPerDay and model.requestsPerDay > 0 then
-          -- RPD-limited model: capacity = RPD / requests per job
-          baseCapacity = math.floor(model.requestsPerDay / estimatedRequests)
-        else
-          baseCapacity = 100 -- fallback
+          local concurrentSlots = math.floor(model.maxConcurrentRequests / instanceCount * ratio)
+          table.insert(slotCandidates, concurrentSlots)
         end
 
-        -- Apply instance distribution and ratio
-        local perInstanceCapacity = math.floor(baseCapacity / instanceCount)
-        local slots = math.floor(perInstanceCapacity * ratio)
+        -- TPM-based slots
+        if model.tokensPerMinute and model.tokensPerMinute > 0 then
+          local tpmSlots = math.floor(model.tokensPerMinute / estimatedTokens / instanceCount * ratio)
+          table.insert(slotCandidates, tpmSlots)
+        end
+
+        -- RPM-based slots
+        if model.requestsPerMinute and model.requestsPerMinute > 0 then
+          local rpmSlots = math.floor(model.requestsPerMinute / estimatedRequests / instanceCount * ratio)
+          table.insert(slotCandidates, rpmSlots)
+        end
+
+        -- TPD-based slots
+        if model.tokensPerDay and model.tokensPerDay > 0 then
+          local tpdSlots = math.floor(model.tokensPerDay / estimatedTokens / instanceCount * ratio)
+          table.insert(slotCandidates, tpdSlots)
+        end
+
+        -- RPD-based slots
+        if model.requestsPerDay and model.requestsPerDay > 0 then
+          local rpdSlots = math.floor(model.requestsPerDay / estimatedRequests / instanceCount * ratio)
+          table.insert(slotCandidates, rpdSlots)
+        end
+
+        -- Use minimum of all candidates (most restrictive limit) or fallback to 100
+        local slots = 100
+        if #slotCandidates > 0 then
+          slots = slotCandidates[1]
+          for _, candidate in ipairs(slotCandidates) do
+            if candidate < slots then
+              slots = candidate
+            end
+          end
+        end
 
         -- Calculate per-instance rate limits
         if model.tokensPerMinute then

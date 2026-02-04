@@ -10,7 +10,7 @@ The `maxWaitMS` parameter controls how long a job is willing to wait for capacit
 
 1. Jobs now wait for capacity by default (up to 65 seconds max)
 2. To get fail-fast behavior, explicitly set `maxWaitMS: 0` for the desired models
-3. The queue-based waiting system replaces the previous polling-based approach
+3. The queue-based waiting system handles capacity waiting efficiently
 
 ## Problem Statement
 

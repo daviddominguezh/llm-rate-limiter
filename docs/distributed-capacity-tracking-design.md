@@ -1,7 +1,5 @@
 # Distributed Actual Usage Tracking - Design Document
 
-**Status:** DESIGN
-
 ## Overview
 
 This document specifies how actual resource usage is tracked and propagated across instances in a distributed rate limiting system to ensure global limits are respected.
@@ -114,7 +112,7 @@ remainingPerInstance = remainingGlobalCapacity / instanceCount
 
 When global actual usage increases, remaining capacity decreases for ALL instances.
 
-## Intended Behavior
+## Behavior
 
 ### Job Completion Flow
 

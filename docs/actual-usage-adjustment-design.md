@@ -1,23 +1,8 @@
 # Actual Usage Adjustment - Design Document
 
-**Status: IMPLEMENTED**
-
 ## Overview
 
 This document describes the design for adjusting capacity based on actual resource consumption after a job completes, rather than relying solely on estimates.
-
-### Implementation Summary
-
-The feature has been implemented with the following key changes:
-
-| File | Changes |
-|------|---------|
-| `packages/core/src/types.ts` | Added `JobWindowStarts`, `ReservationContext`, `OverageEvent` types |
-| `packages/core/src/utils/timeWindowCounter.ts` | Added `getWindowStart()`, `subtractIfSameWindow()` |
-| `packages/core/src/rateLimiter.ts` | Updated `tryReserve()` to return context, window-aware refunds, overage tracking |
-| `packages/core/src/utils/jobDelegation.ts` | Pass reservation context through execution flow |
-| `packages/core/src/utils/jobExecutor.ts` | Use reservation context in `queueJobWithReservedCapacity()`, handle reject usage |
-| `packages/core/src/utils/capacityWaitQueue.ts` | Made generic to support `ReservationContext` |
 
 ## Problem Statement
 
@@ -313,15 +298,6 @@ The `reject()` callback requires `requestCount` (not optional).
   - Without requestCount: RPM counter unchanged (wrong - 3 requests were made)
   - With requestCount=3: RPM counter properly adjusted
 
-### 7. Estimation Feedback Loop (Future Enhancement)
-
-Track actual vs estimated usage patterns to improve future estimates.
-
-**Rationale:**
-- If a job type consistently uses 60% of its estimate, future estimates could be adjusted
-- This is a separate feature from immediate capacity adjustment
-- Scope: out of band for this design, noted for future consideration
-
 ## Behavior Summary
 
 ### By Limit Type
@@ -354,18 +330,3 @@ Track actual vs estimated usage patterns to improve future estimates.
 7. Jobs that call reject(usage) trigger full adjustment flow with provided usage
 8. Overage events are emitted when actual > estimated
 
-## Open Questions
-
-1. **Automatic re-estimation?** If a job consistently uses more than estimated, should the system automatically adjust future estimates for that job type? Current answer: No automatic adjustment, but `onOverage` callback provides data for user-driven adjustments.
-
-2. **Partial refunds for partial window overlap?** If a job runs for 90 seconds (crossing one minute boundary), should we refund proportionally? Current answer: No - simpler to use start-window-only rule.
-
-3. **Metrics and observability?** Should we track refund frequency, overage frequency, and capacity efficiency for monitoring? Current answer: `onOverage` callback provides basic observability; comprehensive metrics are future work.
-
-## Resolved Questions
-
-1. **Should overages be added to counters?** YES - counters must reflect actual usage to maintain rate limit accuracy. Overages are added to ensure we don't under-count.
-
-2. **What happens when a job errors?** Depends on whether `reject()` was called:
-   - Without reject(): Time-windowed capacity NOT released (pessimistic, safe)
-   - With reject(usage): Full adjustment using provided usage (explicit override)

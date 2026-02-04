@@ -4,9 +4,7 @@
 
 This document describes the current behavior of the Redis backend's slot allocation system and the required changes to support proper per-job-type per-model capacity calculation.
 
-## Current Implementation
-
-### Backend Architecture
+## Backend Architecture
 
 The Redis backend coordinates capacity across multiple server instances using:
 
@@ -15,9 +13,9 @@ The Redis backend coordinates capacity across multiple server instances using:
 3. **Pub/Sub Channel**: Notifies instances when allocations change
 4. **Lua Scripts**: Atomic operations for acquire/release/reallocation
 
-### Current Slot Calculation
+### Base Slot Calculation
 
-The current system uses a single `totalCapacity` number calculated in `redisBackendFactory.ts`:
+The system calculates a `totalCapacity` number in `redisBackendFactory.ts`:
 
 ```typescript
 const calculateTotalCapacity = (models: RedisBackendInitConfig['models']): number => {
@@ -31,7 +29,7 @@ const calculateTotalCapacity = (models: RedisBackendInitConfig['models']): numbe
 };
 ```
 
-**Problem**: This only considers `maxConcurrentRequests`. Models with TPM/RPM limits get a default of 100, which severely underestimates actual capacity.
+**Note**: When `maxConcurrentRequests` is not specified, models default to a capacity of 100.
 
 ### Allocation Algorithm (Lua)
 
@@ -62,24 +60,7 @@ end
    - Decrements `inFlight`
    - Triggers reallocation to redistribute freed capacity
 
-### Why This Fails
-
-With the test configuration:
-- openai: TPM-limited (no concurrent limit) → defaultCapacity = 100
-- xai: TPM-limited (no concurrent limit) → defaultCapacity = 100
-- deepinfra: maxConcurrentRequests = 200
-
-**Result**: `totalCapacity = 400`
-
-When 400 slots are exhausted globally, the backend rejects all new jobs even though:
-- deepinfra might have 150+ concurrent slots available locally
-- openai/xai might have TPM capacity remaining
-
-The single `slots` number cannot represent the multi-dimensional capacity reality.
-
-## Required Behavior
-
-### Design Principles
+## Design Principles
 
 1. **Job Types Are Static**: Job types are defined upfront at configuration time, not dynamically registered.
 
@@ -262,59 +243,7 @@ The distributed backend only tracks:
 - In-flight requests (for coordination)
 - Base slot allocations (before local ratio adjustment)
 
-## Implementation Changes Required
-
-### 1. Backend Configuration
-
-The backend needs to know:
-- All model IDs and their capacity limits (TPM, RPM, concurrent)
-- All job types (defined upfront) and their initial ratios
-- Resource estimation per job type per model
-
-### 2. Lua Script Changes
-
-**REGISTER_SCRIPT**: Store model/job-type configuration in Redis
-
-**REALLOCATION_LOGIC**: Calculate slots per job-type per model:
-```lua
-for each jobType do
-  for each model do
-    local baseCapacity = calculateBaseCapacity(model)
-    local slots = math.floor(
-      (baseCapacity / instanceCount) * jobTypeRatio
-    )
-    -- Store in nested hash structure
-  end
-end
-```
-
-**ACQUIRE_SCRIPT**: Check specific job-type + model slot availability
-
-**RELEASE_SCRIPT**:
-- Release for specific job-type + model
-- Decrement in-flight tracking
-- Trigger reallocation to redistribute freed capacity
-
-**Note on Actual Usage Adjustment:**
-- **Actual usage adjustment is a LOCAL concern** - it is NOT handled by Redis
-- The Redis backend tracks SLOTS (discrete counts), not actual token/request usage
-- TPM/RPM limits are enforced LOCALLY by each instance via `TimeWindowCounter`
-- When a job completes, actual usage is compared to estimated usage LOCALLY
-- Refunds (when actual < estimated) are applied LOCALLY to the instance's `TimeWindowCounter`
-- Refunds only occur if the job completes within the same time window it started (time-window-aware)
-- See `docs/actual-usage-adjustment-design.md` for the detailed design
-
-Note: Ratio adjustments are handled locally by each instance and do not require Redis scripts.
-
-### 3. TypeScript Changes
-
-- Update `AllocationInfo` type to include per-job-type per-model breakdown
-- Update `RedisBackendInitConfig` to include job type configuration
-- Update `availabilityTracker.ts` to use new structure
-- Update callbacks to provide detailed breakdown
-- `JobTypeManager` ratio changes remain local (no backend synchronization needed)
-
-### 4. Pub/Sub Messages
+## Pub/Sub Messages
 
 Allocation change notifications include full breakdown:
 ```json
@@ -336,7 +265,7 @@ Allocation change notifications include full breakdown:
 }
 ```
 
-### 5. Ratio Management (Local Only)
+## Ratio Management (Local Only)
 
 Ratios are managed **locally** by each instance's `JobTypeManager`:
 1. Each instance monitors its own load per job type
@@ -345,11 +274,3 @@ Ratios are managed **locally** by each instance's `JobTypeManager`:
 4. No Redis synchronization occurs
 
 This design allows each instance to optimize for its specific traffic pattern without global coordination overhead.
-
-## Migration Path
-
-1. Add new configuration fields (backward compatible)
-2. Implement new Lua scripts alongside existing ones
-3. Update TypeScript types with optional new fields
-4. Migrate instances one at a time
-5. Remove legacy single-slot logic once all instances updated

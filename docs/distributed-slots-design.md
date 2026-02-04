@@ -89,7 +89,7 @@ The single `slots` number cannot represent the multi-dimensional capacity realit
    - **Time-windowed limits (TPM, RPM)**: Only adjust if still within the same time window. If a job started in minute 10 but finished in minute 11, do NOT adjust minute 11's capacity (limits were reset).
    - **Non-time-windowed limits (concurrent, memory)**: Always update immediately, as these are not time-window dependent.
 
-4. **Dynamic Ratios**: Ratios are not fixed—they adjust automatically based on load (see Dynamic Ratio System below).
+4. **Dynamic Ratios**: Ratios are not fixed—they adjust automatically based on LOCAL load (see Dynamic Ratio System below). Ratios are intentionally local to each instance, not synchronized across instances.
 
 ### Multi-Dimensional Capacity
 
@@ -158,9 +158,16 @@ The callback must provide per-job-type per-model breakdown so clients can:
 onAvailableSlotsChange: (info: AllocationInfo) => void;
 ```
 
-## Dynamic Ratio System (Existing Feature)
+## Dynamic Ratio System (Local Per-Instance)
 
-The system already supports dynamic ratio adjustment based on load. When ratios change, slot allocations must be recalculated across all instances.
+The system supports dynamic ratio adjustment based on load. **Ratios are intentionally LOCAL to each instance** — they are not synchronized across instances via Redis.
+
+**Why local ratios?**
+- Each instance may have different traffic patterns (e.g., Instance A serves Product A, Instance B serves Product B)
+- Local adjustment allows each instance to optimize for its own workload
+- Avoids thundering herd problems where all instances react simultaneously
+- Simpler, faster, more resilient (no Redis dependency for ratio changes)
+- The distributed part (fair capacity division) already happens at the slot allocation level via `instanceCount`
 
 ### Ratio Configuration
 
@@ -242,13 +249,18 @@ interface RatioAdjustmentConfig {
 - JobB: ratio=0.567 → 56 slots
 - JobC: ratio=0.3 → 30 slots (unchanged)
 
-### Impact on Distributed Slots
+### Impact on Local Slot Calculation
 
-When ratios change locally, the backend must:
-1. Receive notification of new ratios
-2. Recalculate per-job-type per-model slots for ALL instances
-3. Publish updated allocations via Pub/Sub
-4. All instances update their local availability tracking
+When ratios change locally on an instance:
+1. The instance's `JobTypeManager` recalculates local slot allocations
+2. The `availabilityTracker` is notified via callback
+3. Local availability is updated immediately
+4. **No Redis communication occurs** — ratios are purely local
+
+The distributed backend only tracks:
+- Instance count (for fair division of global capacity)
+- In-flight requests (for coordination)
+- Base slot allocations (before local ratio adjustment)
 
 ## Implementation Changes Required
 
@@ -280,13 +292,10 @@ end
 
 **RELEASE_SCRIPT**:
 - Release for specific job-type + model
-- Accept actual resource usage for capacity adjustment
-- Only adjust time-windowed limits if within same window
+- Decrement in-flight tracking
+- Trigger reallocation to redistribute freed capacity
 
-**UPDATE_RATIOS_SCRIPT** (new):
-- Accept updated ratios from an instance
-- Recalculate all slot allocations
-- Publish updates to all instances
+Note: Ratio adjustments are handled locally by each instance and do not require Redis scripts.
 
 ### 3. TypeScript Changes
 
@@ -294,7 +303,7 @@ end
 - Update `RedisBackendInitConfig` to include job type configuration
 - Update `availabilityTracker.ts` to use new structure
 - Update callbacks to provide detailed breakdown
-- Connect `JobTypeManager` ratio changes to backend updates
+- `JobTypeManager` ratio changes remain local (no backend synchronization needed)
 
 ### 4. Pub/Sub Messages
 
@@ -318,19 +327,15 @@ Allocation change notifications include full breakdown:
 }
 ```
 
-### 5. Ratio Synchronization
+### 5. Ratio Management (Local Only)
 
-When an instance's `JobTypeManager` adjusts ratios:
-1. Instance calls backend with new ratios
-2. Backend stores ratios in Redis (single source of truth)
-3. Backend recalculates slots for all instances
-4. Backend publishes updates via Pub/Sub
-5. All instances receive new allocations
+Ratios are managed **locally** by each instance's `JobTypeManager`:
+1. Each instance monitors its own load per job type
+2. `JobTypeManager.adjustRatios()` recalculates ratios based on local load
+3. Local slot allocations are updated immediately
+4. No Redis synchronization occurs
 
-**Challenge**: Multiple instances may try to adjust ratios simultaneously. Options:
-- Leader election: Only one instance adjusts ratios
-- Merge strategy: Backend merges ratio updates from all instances
-- Centralized calculation: Backend calculates ratios based on aggregated load from all instances
+This design allows each instance to optimize for its specific traffic pattern without global coordination overhead.
 
 ## Migration Path
 

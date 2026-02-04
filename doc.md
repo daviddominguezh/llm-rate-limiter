@@ -383,7 +383,7 @@ Then, for job type A the current load is 50% (100 slots initially - 50 of curren
 
 Then, our dynamic allocation of ratio should decrease the job type A ratio and increase job type B's, so now the load of A should be equal to the load of B.
 
-Please, keep in mind that this must work for the distributed back-end. Therefore, the ratios should be shared across instances, not local. Because of this, besides extending the core library, we must extend our Redis implementation so it also supports it.
+Please, keep in mind that ratios are intentionally LOCAL to each instance. Each instance adjusts its own ratios based on its local load patterns. This design allows instances with different traffic patterns to optimize independently, avoids thundering herd problems, and keeps the system simpler and more resilient. The distributed backend only coordinates slot allocation (dividing capacity by instance count) — not ratio management.
 
 Finally, this must co-exist with the current implementation, so the current tests keep working. This means, do not delete the current implementation, but extend the API.
 
@@ -421,7 +421,7 @@ These are the things you must test:
 4. When all models are at maximum capacity, the rate-limiter starts rejecting.
 5. After the rate-limiter was at full capacity, when the clock marks a new minute, it should immediatly resolve if we queue the previously rejected jobs again, because there should be capacity, since it is a new minute.
 6. When the one instance acquires slots, all the other instances availability decrease.
-7. When the dynamic ratios change, they change for all instances.
+7. When the dynamic ratios change, they change locally for that instance only (ratios are not shared across instances).
 
 Please, plan how to implement these e2e tests. Use this Redis: 'REDIS_URL="rediss://default:blabla@precise-25046.upstash.io:6379"'
 

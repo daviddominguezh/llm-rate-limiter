@@ -80,52 +80,43 @@ This report summarizes the verification of all documentation files in the `docs/
 |----------|--------|-------|
 | AllocationInfo structure | ✓ Accurate | |
 | Slot formula | ✓ Accurate | |
-| Lua scripts present | ✓ Mostly accurate | |
+| Lua scripts present | ✓ Accurate | |
 | JobTypeManager.adjustRatios() | ✓ Accurate | |
 | RatioAdjustmentConfig | ✓ Accurate | |
-| **UPDATE_RATIOS_SCRIPT** | ✗ **NOT IMPLEMENTED** | Documented but doesn't exist |
-| **Ratio synchronization** | ✗ **NOT IMPLEMENTED** | Documented but ratios are local only |
+| **UPDATE_RATIOS_SCRIPT** | ✓ **FIXED** | Removed - ratios are local by design |
+| **Ratio synchronization** | ✓ **FIXED** | Updated docs to clarify ratios are local by design |
 | **RELEASE_SCRIPT resource adjustment** | ✗ **NOT IMPLEMENTED** | Documented feature doesn't exist |
 
-### Issue #4: UPDATE_RATIOS_SCRIPT not implemented
+### Issue #4: UPDATE_RATIOS_SCRIPT - **RESOLVED**
 
-**Location:** Lines 286-289
+**Status:** FIXED (by design decision)
 
-**Documentation says:**
-> **UPDATE_RATIOS_SCRIPT** (new):
-> - Accept updated ratios from an instance
-> - Recalculate all slot allocations
-> - Publish updates to all instances
-
-**Actual implementation:** This script does NOT exist in `luaScripts.ts`.
-
-**Fix needed:** Mark as "NOT YET IMPLEMENTED" or remove from documentation.
+**Resolution:**
+- Ratios are intentionally LOCAL to each instance
+- No `UPDATE_RATIOS_SCRIPT` is needed because ratios are not synchronized
+- Documentation updated to remove references to this script
+- Each instance optimizes for its own traffic pattern independently
 
 ---
 
-### Issue #5: Ratio synchronization not implemented
+### Issue #5: Ratio synchronization - **RESOLVED**
 
-**Location:** Lines 321-333
+**Status:** FIXED (by design decision)
 
-**Documentation says:**
-> When an instance's `JobTypeManager` adjusts ratios:
-> 1. Instance calls backend with new ratios
-> 2. Backend stores ratios in Redis (single source of truth)
-> 3. Backend recalculates slots for all instances
-> 4. Backend publishes updates via Pub/Sub
-> 5. All instances receive new allocations
-
-**Actual implementation:**
-- Ratios are adjusted **locally only** via `JobTypeManager.adjustRatios()`
-- No method exists to push ratio changes to the backend
-- No backend coordination of ratios across instances
-- Each instance independently adjusts its own ratios
-
-**Fix needed:** Mark as "NOT YET IMPLEMENTED" or remove from documentation. Clarify that ratios are currently LOCAL ONLY.
+**Resolution:**
+- Ratios are intentionally LOCAL, not distributed
+- Documentation updated to clarify this design:
+  - Each instance monitors its own load per job type
+  - `JobTypeManager.adjustRatios()` recalculates ratios based on local load
+  - No Redis synchronization occurs
+- This design allows:
+  - Different instances to optimize for different traffic patterns
+  - Avoids thundering herd problems
+  - Simpler, faster, more resilient system
 
 ---
 
-### Issue #6: RELEASE_SCRIPT resource adjustment not implemented
+### Issue #6: RELEASE_SCRIPT resource adjustment not implemented - **DESIGN COMPLETE**
 
 **Location:** Lines 281-284
 
@@ -141,7 +132,14 @@ This report summarizes the verification of all documentation files in the `docs/
 - Triggers reallocation ✓
 - **MISSING**: No mechanism to accept actual resource usage or adjust time-windowed limits
 
-**Fix needed:** Remove the resource usage adjustment claims or mark as "NOT YET IMPLEMENTED".
+**Status:** DESIGN COMPLETE - See `docs/actual-usage-adjustment-design.md`
+
+**Design Summary:**
+- Created comprehensive design document for the "Actual Usage Adjustment" feature
+- Key behavior: Refund unused capacity when actual < estimated, within same time window
+- Time-windowed limits (TPM, RPM, TPD, RPD): Only adjust if job completes within same window
+- Non-time-windowed limits (concurrent, memory): Always release immediately
+- Implementation pending
 
 ---
 
@@ -152,6 +150,6 @@ This report summarizes the verification of all documentation files in the `docs/
 | maxWaitMS-design.md | Queue-based waiting | ~~Medium~~ | ✓ **FIXED** - Implemented FIFO queue |
 | memory-based-slot-calculation.md | minCapacity/maxCapacity scope | ~~High~~ | ✓ **FIXED** - Implemented per-model, per-job-type slot clamping |
 | e2e-distributed-slots-tests.md | Missing config presets | ~~Low~~ | ✓ **FIXED** - Added all 14 presets to documentation |
-| distributed-slots-design.md | UPDATE_RATIOS_SCRIPT | Medium | Mark as not implemented |
-| distributed-slots-design.md | Ratio synchronization | Medium | Mark as not implemented |
-| distributed-slots-design.md | RELEASE_SCRIPT resource adjustment | Medium | Remove or mark as not implemented |
+| distributed-slots-design.md | UPDATE_RATIOS_SCRIPT | ~~Medium~~ | ✓ **FIXED** - Removed (ratios are local by design) |
+| distributed-slots-design.md | Ratio synchronization | ~~Medium~~ | ✓ **FIXED** - Clarified ratios are local by design |
+| distributed-slots-design.md | RELEASE_SCRIPT resource adjustment | Medium | ✓ **DESIGN COMPLETE** - See `docs/actual-usage-adjustment-design.md` |

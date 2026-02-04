@@ -78,6 +78,8 @@ const extractModelCapacities = (
       tokensPerMinute: modelConfig.tokensPerMinute ?? null,
       requestsPerMinute: modelConfig.requestsPerMinute ?? null,
       maxConcurrentRequests: modelConfig.maxConcurrentRequests ?? null,
+      tokensPerDay: modelConfig.tokensPerDay ?? null,
+      requestsPerDay: modelConfig.requestsPerDay ?? null,
     };
   }
   return capacities;

@@ -408,6 +408,10 @@ export interface ModelSlotAllocation {
   tokensPerMinute: number;
   /** Per-instance requests per minute limit for this model */
   requestsPerMinute: number;
+  /** Per-instance tokens per day limit for this model */
+  tokensPerDay: number;
+  /** Per-instance requests per day limit for this model */
+  requestsPerDay: number;
 }
 
 /** Multi-dimensional slot allocation by job type and model */

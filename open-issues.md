@@ -1,6 +1,7 @@
 # Open Issues
 
 **Generated:** 2026-02-04
+**Updated:** 2026-02-04
 **Source:** Documentation vs Implementation Verification Report
 
 ---
@@ -9,37 +10,37 @@
 
 ### Issue #1: TPD (Tokens Per Day) not implemented in distributed backend
 
-**Status:** Open
+**Status:** RESOLVED
 
 **Description:**
 Tokens Per Day limit is not included in the distributed backend Lua scripts. Daily token limits are only enforced locally via `TimeWindowCounter`, not coordinated across instances.
 
 **Impact:** High - Daily token limits not enforced in distributed mode
 
-**Files to modify:**
-- `packages/redis/src/luaScripts.ts`
-
-**Current behavior:**
-- Lua scripts only handle `tokensPerMinute`, `requestsPerMinute`, and `maxConcurrentRequests`
-- No `tokensPerDay` calculation or tracking
+**Resolution:**
+- Added `tokensPerDay` to `ModelCapacityConfig` in `packages/redis/src/types.ts`
+- Added `tokensPerDay` to `ModelSlotAllocationData` in `packages/redis/src/types.ts`
+- Updated `extractModelCapacities()` in `packages/redis/src/redisBackendFactory.ts`
+- Added TPD to slot calculation hierarchy in `packages/redis/src/luaScripts.ts`
+- Added `tokensPerDay` to `ModelSlotAllocation` in `packages/core/src/multiModelTypes.ts`
 
 ---
 
 ### Issue #2: RPD (Requests Per Day) not implemented in distributed backend
 
-**Status:** Open
+**Status:** RESOLVED
 
 **Description:**
 Requests Per Day limit is not included in the distributed backend Lua scripts. Daily request limits are only enforced locally via `TimeWindowCounter`, not coordinated across instances.
 
 **Impact:** High - Daily request limits not enforced in distributed mode
 
-**Files to modify:**
-- `packages/redis/src/luaScripts.ts`
-
-**Current behavior:**
-- Lua scripts only handle `tokensPerMinute`, `requestsPerMinute`, and `maxConcurrentRequests`
-- No `requestsPerDay` calculation or tracking
+**Resolution:**
+- Added `requestsPerDay` to `ModelCapacityConfig` in `packages/redis/src/types.ts`
+- Added `requestsPerDay` to `ModelSlotAllocationData` in `packages/redis/src/types.ts`
+- Updated `extractModelCapacities()` in `packages/redis/src/redisBackendFactory.ts`
+- Added RPD to slot calculation hierarchy in `packages/redis/src/luaScripts.ts`
+- Added `requestsPerDay` to `ModelSlotAllocation` in `packages/core/src/multiModelTypes.ts`
 
 ---
 
@@ -192,7 +193,8 @@ this.recordTokenUsage(usage.input + usage.output, windowStarts);
 
 | Priority | Count | Issues |
 |----------|-------|--------|
-| High | 3 | #1, #2, #3 |
+| High | 1 | #3 |
 | Medium | 2 | #4, #5 |
 | Low | 4 | #6, #7, #8, #9 |
-| **Total** | **9** | |
+| **Total Open** | **7** | |
+| **Resolved** | **2** | #1, #2 |

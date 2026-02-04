@@ -105,6 +105,10 @@ export interface ModelCapacityConfig {
   requestsPerMinute: number | null;
   /** Maximum concurrent requests (null if not configured) */
   maxConcurrentRequests: number | null;
+  /** Tokens per day limit (null if not configured) */
+  tokensPerDay: number | null;
+  /** Requests per day limit (null if not configured) */
+  requestsPerDay: number | null;
 }
 
 /**
@@ -180,6 +184,10 @@ export interface ModelSlotAllocationData {
   tokensPerMinute: number;
   /** Per-instance requests per minute limit for this model */
   requestsPerMinute: number;
+  /** Per-instance tokens per day limit for this model */
+  tokensPerDay: number;
+  /** Per-instance requests per day limit for this model */
+  requestsPerDay: number;
 }
 
 /**

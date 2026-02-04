@@ -10,7 +10,7 @@
  * Formula: slots[jobType][model] = floor((modelCapacity / estimatedResource) / instanceCount * ratio)
  *
  * Config keys used:
- * - {prefix}:model-capacities - Hash of modelId -> JSON {tokensPerMinute, requestsPerMinute, maxConcurrentRequests}
+ * - {prefix}:model-capacities - Hash of modelId -> JSON {tokensPerMinute, requestsPerMinute, maxConcurrentRequests, tokensPerDay, requestsPerDay}
  * - {prefix}:job-type-resources - Hash of jobTypeId -> JSON {estimatedUsedTokens, estimatedNumberOfRequests, ratio}
  */
 const REALLOCATION_LOGIC = `
@@ -67,6 +67,8 @@ local function recalculateAllocations(instancesKey, allocationsKey, channel, mod
         local baseCapacity = 0
         local tpm = 0
         local rpm = 0
+        local tpd = 0
+        local rpd = 0
 
         if model.maxConcurrentRequests and model.maxConcurrentRequests > 0 then
           -- Concurrent-limited model
@@ -77,6 +79,12 @@ local function recalculateAllocations(instancesKey, allocationsKey, channel, mod
         elseif model.requestsPerMinute and model.requestsPerMinute > 0 then
           -- RPM-limited model: capacity = RPM / requests per job
           baseCapacity = math.floor(model.requestsPerMinute / estimatedRequests)
+        elseif model.tokensPerDay and model.tokensPerDay > 0 then
+          -- TPD-limited model: capacity = TPD / tokens per job
+          baseCapacity = math.floor(model.tokensPerDay / estimatedTokens)
+        elseif model.requestsPerDay and model.requestsPerDay > 0 then
+          -- RPD-limited model: capacity = RPD / requests per job
+          baseCapacity = math.floor(model.requestsPerDay / estimatedRequests)
         else
           baseCapacity = 100 -- fallback
         end
@@ -85,18 +93,26 @@ local function recalculateAllocations(instancesKey, allocationsKey, channel, mod
         local perInstanceCapacity = math.floor(baseCapacity / instanceCount)
         local slots = math.floor(perInstanceCapacity * ratio)
 
-        -- Calculate per-instance TPM/RPM limits
+        -- Calculate per-instance rate limits
         if model.tokensPerMinute then
           tpm = math.floor(model.tokensPerMinute / instanceCount)
         end
         if model.requestsPerMinute then
           rpm = math.floor(model.requestsPerMinute / instanceCount)
         end
+        if model.tokensPerDay then
+          tpd = math.floor(model.tokensPerDay / instanceCount)
+        end
+        if model.requestsPerDay then
+          rpd = math.floor(model.requestsPerDay / instanceCount)
+        end
 
         slotsByJobTypeAndModel[jobTypeId][modelId] = {
           slots = slots,
           tokensPerMinute = tpm,
-          requestsPerMinute = rpm
+          requestsPerMinute = rpm,
+          tokensPerDay = tpd,
+          requestsPerDay = rpd
         }
       end
     end

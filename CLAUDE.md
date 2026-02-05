@@ -24,10 +24,10 @@ npm run test:core            # Core package
 npm run test:redis           # Redis package (unit)
 npm run test:redis-e2e       # Redis package (e2e)
 
-# E2E distributed tests (requires Redis running)
-npm run e2e:setup            # Start 2 instances + proxy (runs in background)
-npm run e2e:test             # Run full test suite
-npm run e2e:test:escalation  # Run specific test
+# E2E distributed tests (requires Redis running on localhost:6379)
+npm run test:e2e                 # Run full test suite
+npm run test:e2e:single -- --testPathPatterns=exactCapacity.test  # Run specific test
+npm run test:e2e:verifySetup     # Verify infrastructure setup works
 ```
 
 ## Architecture

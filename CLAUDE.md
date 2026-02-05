@@ -91,4 +91,20 @@ Detailed designs in `docs/`:
 - `memory-based-slots.md` - Memory as local constraint
 - `max-wait-timeout.md` - Queue timeout configuration per job type/model
 - `e2e-testing-guide.md` - E2E testing framework, how to run and write tests
-- `e2e-test-reference.md` - Reference for individual test files and their purpose
+
+## Documentation for e2e tests
+
+Detailed docs for e2e tests can be found in `packages/e2e/docs/e2e-test-reference.md`
+
+## UI Components
+
+- When modifying the visualizer NextJS app (packages/e2e/visualizer), remember to ALWAYS use shadcn/ui components instead of creating new ones from scratch. Those components are located in `packages/e2e/visualizer/components/ui/`. To add new shadcn components run `npx shadcn@latest add <component-name>` inside that project.
+- Available components: https://ui.shadcn.com/docs/components
+- Note: This app uses shadcn with @base-ui/react (not @radix-ui)
+
+
+## TypeScript
+
+- Never use `any` type - always use proper explicit TypeScript types
+- Never disable ESLint rules (no eslint-disable comments or config modifications)
+

@@ -107,4 +107,4 @@ Detailed docs for e2e tests can be found in `packages/e2e/docs/e2e-test-referenc
 
 - Never use `any` type - always use proper explicit TypeScript types
 - Never disable ESLint rules (no eslint-disable comments or config modifications)
-
+- You MUST ALWAYS run 'npm run check' in the root folder after ANY change, then, fix all the reported issues

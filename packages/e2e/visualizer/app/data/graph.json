@@ -1,0 +1,2131 @@
+{
+  "startNode": "INITIAL_STEP",
+  "agents": [
+    {
+      "id": "routing",
+      "description": "Handles initial classification and conversation flow control"
+    },
+    { "id": "booking", "description": "Manages new flight reservations" },
+    { "id": "modify", "description": "Handles reservation modifications" },
+    { "id": "cancel", "description": "Processes flight cancellations" },
+    {
+      "id": "compensation",
+      "description": "Manages refunds and compensation requests"
+    },
+    { "id": "transfer", "description": "Handles escalation to human agents" }
+  ],
+  "nodes": [
+    {
+      "id": "INITIAL_STEP",
+      "text": "START",
+      "kind": "agent",
+      "description": "Entry point for all conversations",
+      "nextNodeIsUser": true
+    },
+    {
+      "id": "R_IdentifyAction",
+      "text": "Identify what action the user wants to perform",
+      "kind": "agent_decision",
+      "description": "Determine if user wants to: Book a flight, Modify a reservation, Cancel a reservation, Request compensation/refund, or Other request",
+      "agent": "routing"
+    },
+    {
+      "id": "R_ScopeCheck",
+      "text": "Check if request is within policy scope",
+      "kind": "agent_decision",
+      "description": "Evaluate whether the 'Other' request falls within airline policy scope and can be handled by the bot",
+      "agent": "routing"
+    },
+    {
+      "id": "R_AskMoreHelp",
+      "text": "Is there anything else I can help you with today?",
+      "kind": "agent",
+      "description": "Offer additional assistance after completing a task",
+      "agent": "routing",
+      "nextNodeIsUser": true
+    },
+    {
+      "id": "R_EndConversation",
+      "text": "Thank you for contacting us. Have a great day!",
+      "kind": "agent",
+      "description": "Politely end the conversation when user has no further needs",
+      "agent": "routing"
+    },
+
+    {
+      "id": "T_TransferToHuman",
+      "text": "I need to transfer you to a human agent for this request.",
+      "kind": "agent",
+      "description": "Initiate transfer process to human agent",
+      "agent": "transfer"
+    },
+    {
+      "id": "T_ExecuteTransfer",
+      "text": "Connecting you to a human agent...",
+      "kind": "agent",
+      "description": "Execute the transfer_to_human_agents tool",
+      "agent": "transfer"
+    },
+    {
+      "id": "T_TransferMessage",
+      "text": "YOU ARE BEING TRANSFERRED TO A HUMAN AGENT. PLEASE HOLD ON.",
+      "kind": "agent",
+      "description": "Inform user of active transfer - conversation will be handed off",
+      "agent": "transfer",
+      "nextNodeIsUser": true
+    },
+    {
+      "id": "T_TransferComplete",
+      "text": "Human Agent Takes Over",
+      "kind": "agent",
+      "description": "Conversation successfully handed off to human agent",
+      "agent": "transfer"
+    },
+
+    {
+      "id": "B_GetUserId",
+      "text": "Please provide your user ID or email address to proceed with booking.",
+      "kind": "agent",
+      "description": "Collect user identification to access their profile and begin booking process",
+      "agent": "booking",
+      "nextNodeIsUser": true
+    },
+    {
+      "id": "B_TripType",
+      "text": "Is this a one-way or round-trip flight?",
+      "kind": "agent",
+      "description": "Determine the type of trip for proper flight search",
+      "agent": "booking",
+      "nextNodeIsUser": true
+    },
+    {
+      "id": "B_OneWaySelected",
+      "text": "One-way trip selected",
+      "kind": "agent",
+      "description": "User selected one-way trip - proceed to route collection",
+      "agent": "booking"
+    },
+    {
+      "id": "B_RoundTripSelected",
+      "text": "Round-trip selected",
+      "kind": "agent",
+      "description": "User selected round-trip - will need departure and return dates",
+      "agent": "booking"
+    },
+    {
+      "id": "B_GetRoute",
+      "text": "What is your origin city/airport and destination?",
+      "kind": "agent",
+      "description": "Collect departure and arrival airports for flight search",
+      "agent": "booking",
+      "nextNodeIsUser": true
+    },
+    {
+      "id": "B_GetDates",
+      "text": "What are your travel date(s)?",
+      "kind": "agent",
+      "description": "Collect departure date and return date (if round-trip) for flight search",
+      "agent": "booking",
+      "nextNodeIsUser": true
+    },
+    {
+      "id": "B_SearchFlights",
+      "text": "Searching for available flights...",
+      "kind": "agent",
+      "description": "Execute flight search based on route, dates, and trip type",
+      "agent": "booking"
+    },
+    {
+      "id": "B_SelectFlights",
+      "text": "Here are the available flights. Which flight(s) would you like to select?",
+      "kind": "agent",
+      "description": "Present flight options and allow user to select preferred flights",
+      "agent": "booking",
+      "nextNodeIsUser": true
+    },
+    {
+      "id": "B_SelectCabin",
+      "text": "Which cabin class would you prefer? Options: Basic Economy, Economy, or Business. Note: All flights must have the same cabin class.",
+      "kind": "agent",
+      "description": "Collect cabin preference - must be consistent across all flight segments in the reservation",
+      "agent": "booking",
+      "nextNodeIsUser": true
+    },
+    {
+      "id": "B_BasicEconomy",
+      "text": "Basic Economy selected",
+      "kind": "agent",
+      "description": "User selected Basic Economy - note: this class has modification restrictions",
+      "agent": "booking"
+    },
+    {
+      "id": "B_Economy",
+      "text": "Economy selected",
+      "kind": "agent",
+      "description": "User selected Economy cabin class",
+      "agent": "booking"
+    },
+    {
+      "id": "B_Business",
+      "text": "Business class selected",
+      "kind": "agent",
+      "description": "User selected Business class - eligible for flexible cancellation",
+      "agent": "booking"
+    },
+    {
+      "id": "B_CollectPassengers",
+      "text": "Please provide passenger information (maximum 5 passengers). For each passenger I need: First name, Last name, and Date of birth.",
+      "kind": "agent",
+      "description": "Collect details for all travelers - max 5 passengers per booking, require full legal names and DOB",
+      "agent": "booking",
+      "nextNodeIsUser": true
+    },
+    {
+      "id": "B_CheckMembership",
+      "text": "Checking your membership level...",
+      "kind": "agent_decision",
+      "description": "Determine booking user's membership tier (Regular, Silver, Gold) to calculate free baggage allowance",
+      "agent": "booking"
+    },
+    {
+      "id": "B_RegularMember",
+      "text": "Regular membership confirmed",
+      "kind": "agent",
+      "description": "User is Regular member - baggage: Basic Economy=0, Economy=1, Business=2 free bags per passenger",
+      "agent": "booking"
+    },
+    {
+      "id": "B_SilverMember",
+      "text": "Silver membership confirmed",
+      "kind": "agent",
+      "description": "User is Silver member - baggage: Basic Economy=1, Economy=2, Business=3 free bags per passenger",
+      "agent": "booking"
+    },
+    {
+      "id": "B_GoldMember",
+      "text": "Gold membership confirmed",
+      "kind": "agent",
+      "description": "User is Gold member - baggage: Basic Economy=2, Economy=3, Business=4 free bags per passenger",
+      "agent": "booking"
+    },
+    {
+      "id": "B_CalculateBaggage",
+      "text": "Calculating your free baggage allowance...",
+      "kind": "agent",
+      "description": "Compute free checked bags based on membership level and cabin class combination",
+      "agent": "booking"
+    },
+    {
+      "id": "B_AskExtraBags",
+      "text": "Your booking includes {FREE_BAGS} free checked bag(s) per passenger. Would you like to add extra bags? Each additional bag costs $50.",
+      "kind": "agent",
+      "description": "Inform user of included baggage and offer additional bags at $50 each",
+      "agent": "booking",
+      "nextNodeIsUser": true
+    },
+    {
+      "id": "B_AddExtraBags",
+      "text": "How many extra bags would you like to add?",
+      "kind": "agent",
+      "description": "Collect quantity of additional checked bags at $50 per bag",
+      "agent": "booking",
+      "nextNodeIsUser": true
+    },
+    {
+      "id": "B_OfferInsurance",
+      "text": "Would you like to add travel insurance for $30 per passenger? This enables full refund for cancellations due to health or weather reasons.",
+      "kind": "agent",
+      "description": "Offer travel insurance - IMPORTANT: Can ONLY be added during initial booking, not later",
+      "agent": "booking",
+      "nextNodeIsUser": true
+    },
+    {
+      "id": "B_AddInsurance",
+      "text": "Travel insurance added for all passengers",
+      "kind": "agent",
+      "description": "Add travel insurance coverage to the booking",
+      "agent": "booking"
+    },
+    {
+      "id": "B_SelectPayment",
+      "text": "Please select payment method(s) from your profile. You may use: Maximum 1 travel certificate, Maximum 1 credit card, and Maximum 3 gift cards. Note: Any remaining balance on travel certificates is non-refundable.",
+      "kind": "agent",
+      "description": "Collect payment methods - must be from user profile only, enforce combination limits",
+      "agent": "booking",
+      "nextNodeIsUser": true
+    },
+    {
+      "id": "B_ConfirmDetails",
+      "text": "Please review your booking details and confirm: [BOOKING_SUMMARY]",
+      "kind": "agent",
+      "description": "Display complete booking summary (flights, cabin, passengers, baggage, insurance, payment, total) and request explicit confirmation",
+      "agent": "booking",
+      "nextNodeIsUser": true
+    },
+    {
+      "id": "B_ExecuteBooking",
+      "text": "Processing your booking...",
+      "kind": "agent",
+      "description": "Execute the booking transaction after user confirmation",
+      "agent": "booking"
+    },
+    {
+      "id": "B_Success",
+      "text": "Your booking is complete! Your confirmation number is {CONFIRMATION_NUMBER}. A confirmation email will be sent shortly.",
+      "kind": "agent",
+      "description": "Booking completed successfully - provide confirmation number",
+      "agent": "booking",
+      "nextNodeIsUser": true
+    },
+    {
+      "id": "B_Abort",
+      "text": "Booking has been cancelled. No charges have been made. Is there anything else I can help you with?",
+      "kind": "agent",
+      "description": "User declined to confirm - abort booking process without charges",
+      "agent": "booking",
+      "nextNodeIsUser": true
+    },
+
+    {
+      "id": "M_GetUserId",
+      "text": "Please provide your user ID or email to proceed with the modification.",
+      "kind": "agent",
+      "description": "Collect user identification to access their reservations",
+      "agent": "modify",
+      "nextNodeIsUser": true
+    },
+    {
+      "id": "M_AskReservationId",
+      "text": "Do you have your reservation ID?",
+      "kind": "agent",
+      "description": "Determine if user knows their reservation ID or needs help locating it",
+      "agent": "modify",
+      "nextNodeIsUser": true
+    },
+    {
+      "id": "M_GetReservationId",
+      "text": "Please provide your reservation ID.",
+      "kind": "agent",
+      "description": "Collect reservation ID directly from user",
+      "agent": "modify",
+      "nextNodeIsUser": true
+    },
+    {
+      "id": "M_LookupReservation",
+      "text": "Let me help you find your reservation. Can you provide your travel dates or destination?",
+      "kind": "agent",
+      "description": "Help locate reservation using search tools when user doesn't know their ID",
+      "agent": "modify",
+      "nextNodeIsUser": true
+    },
+    {
+      "id": "M_FetchDetails",
+      "text": "Fetching your reservation details...",
+      "kind": "agent",
+      "description": "Retrieve complete reservation details from system",
+      "agent": "modify"
+    },
+    {
+      "id": "M_SelectModType",
+      "text": "What would you like to modify? Options: Change flights, Change cabin class, Add baggage, Add insurance, or Update passenger information.",
+      "kind": "agent",
+      "description": "Determine which aspect of the reservation user wants to modify",
+      "agent": "modify",
+      "nextNodeIsUser": true
+    },
+
+    {
+      "id": "MF_CheckBasicEconomy",
+      "text": "Checking cabin class eligibility...",
+      "kind": "agent_decision",
+      "description": "Verify if reservation is Basic Economy - Basic Economy flights CANNOT be modified",
+      "agent": "modify"
+    },
+    {
+      "id": "MF_DenyBasicEconomy",
+      "text": "Sorry, Basic Economy bookings cannot have their flights modified. You would need to cancel and rebook. Is there anything else I can help you with?",
+      "kind": "agent",
+      "description": "Inform user that Basic Economy restricts flight changes - suggest cancel/rebook",
+      "agent": "modify",
+      "nextNodeIsUser": true
+    },
+    {
+      "id": "MF_ValidateRules",
+      "text": "Validating modification rules...",
+      "kind": "agent",
+      "description": "Validate that requested changes maintain: same origin, same destination, same trip type (one-way/round-trip)",
+      "agent": "modify"
+    },
+    {
+      "id": "MF_SelectNewFlights",
+      "text": "Please select your new flights. Note: You may keep some existing segments - kept segments will retain their original price.",
+      "kind": "agent",
+      "description": "Present available flights and allow user to select replacements while optionally keeping some segments",
+      "agent": "modify",
+      "nextNodeIsUser": true
+    },
+    {
+      "id": "MF_CheckPriceDiff",
+      "text": "Calculating price difference...",
+      "kind": "agent_decision",
+      "description": "Compare new flight prices against original to determine if user pays more, receives refund, or no change",
+      "agent": "modify"
+    },
+    {
+      "id": "MF_PayMore",
+      "text": "The new flights cost ${DIFFERENCE} more. You will need to pay this difference.",
+      "kind": "agent",
+      "description": "Inform user of additional payment required for more expensive flights",
+      "agent": "modify"
+    },
+    {
+      "id": "MF_GetRefund",
+      "text": "The new flights cost ${DIFFERENCE} less. You will receive a refund for the difference.",
+      "kind": "agent",
+      "description": "Inform user they will receive refund for cheaper flight selection",
+      "agent": "modify"
+    },
+    {
+      "id": "MF_SelectPayment",
+      "text": "Please select a payment method from your profile: 1 gift card OR 1 credit card.",
+      "kind": "agent",
+      "description": "Collect payment for modification - only 1 gift card OR 1 credit card allowed (not both)",
+      "agent": "modify",
+      "nextNodeIsUser": true
+    },
+    {
+      "id": "MF_Confirm",
+      "text": "Please review your flight changes and confirm: [CHANGES_SUMMARY]",
+      "kind": "agent",
+      "description": "Display all flight changes with price impact and request user confirmation",
+      "agent": "modify",
+      "nextNodeIsUser": true
+    },
+    {
+      "id": "MF_Execute",
+      "text": "Processing your flight changes...",
+      "kind": "agent",
+      "description": "Execute the flight modification after user confirmation",
+      "agent": "modify"
+    },
+    {
+      "id": "MF_Success",
+      "text": "Your flights have been successfully changed! Updated confirmation details will be sent to your email.",
+      "kind": "agent",
+      "description": "Flight modification completed successfully",
+      "agent": "modify",
+      "nextNodeIsUser": true
+    },
+    {
+      "id": "MF_Abort",
+      "text": "Flight modification cancelled. Your original booking remains unchanged. Is there anything else I can help you with?",
+      "kind": "agent",
+      "description": "User declined to confirm - abort flight changes",
+      "agent": "modify",
+      "nextNodeIsUser": true
+    },
+
+    {
+      "id": "MC_CheckFlown",
+      "text": "Checking flight status...",
+      "kind": "agent_decision",
+      "description": "Verify if any flight segment has already been flown - cabin cannot be changed after any flight is taken",
+      "agent": "modify"
+    },
+    {
+      "id": "MC_DenyFlown",
+      "text": "Sorry, cabin class cannot be changed after any portion of your trip has been flown. Is there anything else I can help you with?",
+      "kind": "agent",
+      "description": "Deny cabin change because at least one flight segment is already completed",
+      "agent": "modify",
+      "nextNodeIsUser": true
+    },
+    {
+      "id": "MC_SelectCabin",
+      "text": "Please select your new cabin class: Basic Economy, Economy, or Business. Note: All flights must have the same cabin class.",
+      "kind": "agent",
+      "description": "Collect new cabin class preference - must apply uniformly to all segments",
+      "agent": "modify",
+      "nextNodeIsUser": true
+    },
+    {
+      "id": "MC_CheckPriceDiff",
+      "text": "Calculating cabin change price difference...",
+      "kind": "agent_decision",
+      "description": "Calculate price difference between current and requested cabin class",
+      "agent": "modify"
+    },
+    {
+      "id": "MC_PayDiff",
+      "text": "The new cabin class costs ${DIFFERENCE} more. You will need to pay this difference.",
+      "kind": "agent",
+      "description": "Inform user of additional payment for cabin upgrade",
+      "agent": "modify"
+    },
+    {
+      "id": "MC_GetRefund",
+      "text": "The new cabin class costs ${DIFFERENCE} less. You will receive a refund for the difference.",
+      "kind": "agent",
+      "description": "Inform user of refund for cabin downgrade",
+      "agent": "modify"
+    },
+    {
+      "id": "MC_Confirm",
+      "text": "Please review your cabin change and confirm: [CHANGES_SUMMARY]",
+      "kind": "agent",
+      "description": "Display cabin change details with price impact and request confirmation",
+      "agent": "modify",
+      "nextNodeIsUser": true
+    },
+    {
+      "id": "MC_Execute",
+      "text": "Processing cabin class change...",
+      "kind": "agent",
+      "description": "Execute the cabin modification after user confirmation",
+      "agent": "modify"
+    },
+    {
+      "id": "MC_Success",
+      "text": "Your cabin class has been successfully changed! Updated confirmation will be sent to your email.",
+      "kind": "agent",
+      "description": "Cabin modification completed successfully",
+      "agent": "modify",
+      "nextNodeIsUser": true
+    },
+    {
+      "id": "MC_Abort",
+      "text": "Cabin change cancelled. Your original booking remains unchanged. Is there anything else I can help you with?",
+      "kind": "agent",
+      "description": "User declined to confirm - abort cabin changes",
+      "agent": "modify",
+      "nextNodeIsUser": true
+    },
+
+    {
+      "id": "MB_Rule",
+      "text": "Please note: You can only ADD bags to your reservation. Removing previously purchased bags is not permitted.",
+      "kind": "agent",
+      "description": "Inform user of baggage modification constraints - addition only, no removal",
+      "agent": "modify"
+    },
+    {
+      "id": "MB_AddBags",
+      "text": "How many additional checked bags would you like to add? Each bag costs $50.",
+      "kind": "agent",
+      "description": "Collect quantity of extra bags to add at $50 per bag",
+      "agent": "modify",
+      "nextNodeIsUser": true
+    },
+    {
+      "id": "MB_Confirm",
+      "text": "Please confirm: Adding {BAGS} bag(s) for ${AMOUNT}.",
+      "kind": "agent",
+      "description": "Confirm baggage addition details and total cost",
+      "agent": "modify",
+      "nextNodeIsUser": true
+    },
+    {
+      "id": "MB_Execute",
+      "text": "Processing baggage addition...",
+      "kind": "agent",
+      "description": "Execute the baggage addition after user confirmation",
+      "agent": "modify"
+    },
+    {
+      "id": "MB_Success",
+      "text": "Additional baggage has been added to your reservation!",
+      "kind": "agent",
+      "description": "Baggage addition completed successfully",
+      "agent": "modify",
+      "nextNodeIsUser": true
+    },
+    {
+      "id": "MB_Abort",
+      "text": "Baggage addition cancelled. Is there anything else I can help you with?",
+      "kind": "agent",
+      "description": "User declined to confirm - abort baggage addition",
+      "agent": "modify",
+      "nextNodeIsUser": true
+    },
+
+    {
+      "id": "MI_Deny",
+      "text": "Sorry, travel insurance cannot be added after the initial booking. Insurance must be purchased at the time of booking. Is there anything else I can help you with?",
+      "kind": "agent",
+      "description": "Deny insurance addition - policy only allows insurance during initial booking",
+      "agent": "modify",
+      "nextNodeIsUser": true
+    },
+
+    {
+      "id": "MP_Rule",
+      "text": "Please note: You can modify passenger details (name, date of birth), but the number of passengers cannot be changed. This restriction applies even for human agents.",
+      "kind": "agent",
+      "description": "Inform user that passenger count is fixed - only details can be updated",
+      "agent": "modify"
+    },
+    {
+      "id": "MP_UpdateInfo",
+      "text": "Which passenger's information would you like to update? Please provide the new details: First name, Last name, and/or Date of birth.",
+      "kind": "agent",
+      "description": "Collect updated passenger information",
+      "agent": "modify",
+      "nextNodeIsUser": true
+    },
+    {
+      "id": "MP_Confirm",
+      "text": "Please confirm the passenger information changes: [CHANGES_SUMMARY]",
+      "kind": "agent",
+      "description": "Display passenger changes and request confirmation",
+      "agent": "modify",
+      "nextNodeIsUser": true
+    },
+    {
+      "id": "MP_Execute",
+      "text": "Processing passenger updates...",
+      "kind": "agent",
+      "description": "Execute the passenger information update",
+      "agent": "modify"
+    },
+    {
+      "id": "MP_Success",
+      "text": "Passenger information has been successfully updated!",
+      "kind": "agent",
+      "description": "Passenger modification completed successfully",
+      "agent": "modify",
+      "nextNodeIsUser": true
+    },
+    {
+      "id": "MP_Abort",
+      "text": "Passenger update cancelled. Is there anything else I can help you with?",
+      "kind": "agent",
+      "description": "User declined to confirm - abort passenger changes",
+      "agent": "modify",
+      "nextNodeIsUser": true
+    },
+
+    {
+      "id": "C_GetUserId",
+      "text": "Please provide your user ID or email to proceed with the cancellation.",
+      "kind": "agent",
+      "description": "Collect user identification to access their reservations",
+      "agent": "cancel",
+      "nextNodeIsUser": true
+    },
+    {
+      "id": "C_AskReservationId",
+      "text": "Do you have your reservation ID?",
+      "kind": "agent",
+      "description": "Determine if user knows their reservation ID",
+      "agent": "cancel",
+      "nextNodeIsUser": true
+    },
+    {
+      "id": "C_GetReservationId",
+      "text": "Please provide your reservation ID.",
+      "kind": "agent",
+      "description": "Collect reservation ID directly from user",
+      "agent": "cancel",
+      "nextNodeIsUser": true
+    },
+    {
+      "id": "C_LookupReservation",
+      "text": "Let me help you find your reservation. Can you provide your travel dates or destination?",
+      "kind": "agent",
+      "description": "Help locate reservation using search tools",
+      "agent": "cancel",
+      "nextNodeIsUser": true
+    },
+    {
+      "id": "C_FetchDetails",
+      "text": "Fetching your reservation details...",
+      "kind": "agent",
+      "description": "Retrieve complete reservation details from system",
+      "agent": "cancel"
+    },
+    {
+      "id": "C_AskReason",
+      "text": "What is the reason for cancellation? Options: Change of plan, Airline cancelled the flight, Health or weather reasons, Other.",
+      "kind": "agent",
+      "description": "Collect cancellation reason - affects eligibility determination",
+      "agent": "cancel",
+      "nextNodeIsUser": true
+    },
+    {
+      "id": "C_ReasonChangeOfPlan",
+      "text": "Reason recorded: Change of plan",
+      "kind": "agent",
+      "description": "User is cancelling due to personal change of plans",
+      "agent": "cancel"
+    },
+    {
+      "id": "C_ReasonAirlineCancelled",
+      "text": "Reason recorded: Airline cancelled the flight",
+      "kind": "agent",
+      "description": "Flight was cancelled by the airline - automatically eligible for cancellation",
+      "agent": "cancel"
+    },
+    {
+      "id": "C_ReasonHealthWeather",
+      "text": "Reason recorded: Health or weather reasons",
+      "kind": "agent",
+      "description": "User cancelling due to health or weather - may be covered by insurance",
+      "agent": "cancel"
+    },
+    {
+      "id": "C_ReasonOther",
+      "text": "Reason recorded: Other",
+      "kind": "agent",
+      "description": "User has another reason for cancellation",
+      "agent": "cancel"
+    },
+    {
+      "id": "C_CheckFlown",
+      "text": "Checking if any flights have been taken...",
+      "kind": "agent_decision",
+      "description": "Verify if any portion of the trip has already been flown - cannot self-service cancel if any segment completed",
+      "agent": "cancel"
+    },
+    {
+      "id": "C_TransferFlown",
+      "text": "Since part of your trip has already been flown, I need to transfer you to a human agent to assist with the cancellation.",
+      "kind": "agent",
+      "description": "Cannot process cancellation for partially flown trips - must escalate to human",
+      "agent": "cancel"
+    },
+    {
+      "id": "C_Check24Hours",
+      "text": "Checking if reservation was booked within the last 24 hours...",
+      "kind": "agent_decision",
+      "description": "24-hour booking window provides free cancellation regardless of other factors",
+      "agent": "cancel"
+    },
+    {
+      "id": "C_CheckAirlineCancelled",
+      "text": "Checking if flight was cancelled by the airline...",
+      "kind": "agent_decision",
+      "description": "Airline-initiated cancellation automatically qualifies for customer cancellation",
+      "agent": "cancel"
+    },
+    {
+      "id": "C_CheckBusinessClass",
+      "text": "Checking cabin class...",
+      "kind": "agent_decision",
+      "description": "Business class bookings have flexible cancellation privileges",
+      "agent": "cancel"
+    },
+    {
+      "id": "C_CheckInsurance",
+      "text": "Checking for travel insurance...",
+      "kind": "agent_decision",
+      "description": "Verify if booking includes travel insurance",
+      "agent": "cancel"
+    },
+    {
+      "id": "C_CheckInsuranceCoverage",
+      "text": "Checking if cancellation reason is covered by insurance...",
+      "kind": "agent_decision",
+      "description": "Insurance only covers health and weather reasons - not change of plan or other",
+      "agent": "cancel"
+    },
+    {
+      "id": "C_Allowed",
+      "text": "Your reservation is eligible for cancellation.",
+      "kind": "agent",
+      "description": "User meets at least one eligibility criterion for cancellation",
+      "agent": "cancel"
+    },
+    {
+      "id": "C_Denied",
+      "text": "Sorry, your reservation does not meet the criteria for cancellation. Cancellation requires at least one of: booked within 24 hours, airline cancelled the flight, Business class booking, or travel insurance with a covered reason (health/weather). Is there anything else I can help you with?",
+      "kind": "agent",
+      "description": "User does not meet any cancellation eligibility criteria",
+      "agent": "cancel",
+      "nextNodeIsUser": true
+    },
+    {
+      "id": "C_Confirm",
+      "text": "Please confirm you want to cancel this reservation: [CANCELLATION_SUMMARY]. Refunds will be processed to your original payment methods within 5-7 business days.",
+      "kind": "agent",
+      "description": "Display cancellation details including refund information and request confirmation",
+      "agent": "cancel",
+      "nextNodeIsUser": true
+    },
+    {
+      "id": "C_Execute",
+      "text": "Processing cancellation...",
+      "kind": "agent",
+      "description": "Execute the cancellation after user confirmation",
+      "agent": "cancel"
+    },
+    {
+      "id": "C_ProcessRefund",
+      "text": "Processing refund to original payment methods. Please allow 5-7 business days.",
+      "kind": "agent",
+      "description": "Initiate refund to the payment methods used in original booking",
+      "agent": "cancel"
+    },
+    {
+      "id": "C_Success",
+      "text": "Your reservation has been successfully cancelled. Your refund will be processed within 5-7 business days.",
+      "kind": "agent",
+      "description": "Cancellation completed successfully",
+      "agent": "cancel",
+      "nextNodeIsUser": true
+    },
+    {
+      "id": "C_Abort",
+      "text": "Cancellation has been aborted. Your reservation remains active. Is there anything else I can help you with?",
+      "kind": "agent",
+      "description": "User declined to confirm - reservation remains unchanged",
+      "agent": "cancel",
+      "nextNodeIsUser": true
+    },
+
+    {
+      "id": "COMP_CheckExplicitRequest",
+      "text": "Checking if compensation was explicitly requested...",
+      "kind": "agent_decision",
+      "description": "IMPORTANT: Only process compensation if user explicitly asks for it - NEVER offer proactively",
+      "agent": "compensation"
+    },
+    {
+      "id": "COMP_NoProactiveOffer",
+      "text": "Is there anything else I can help you with today?",
+      "kind": "agent",
+      "description": "User did not explicitly request compensation - do NOT offer it proactively",
+      "agent": "compensation",
+      "nextNodeIsUser": true
+    },
+    {
+      "id": "COMP_CheckMembership",
+      "text": "Checking your membership level...",
+      "kind": "agent_decision",
+      "description": "Silver and Gold members are eligible for compensation",
+      "agent": "compensation"
+    },
+    {
+      "id": "COMP_CheckInsurance",
+      "text": "Checking for travel insurance...",
+      "kind": "agent_decision",
+      "description": "Users with travel insurance are eligible for compensation",
+      "agent": "compensation"
+    },
+    {
+      "id": "COMP_CheckBusinessClass",
+      "text": "Checking cabin class...",
+      "kind": "agent_decision",
+      "description": "Business class passengers are eligible for compensation",
+      "agent": "compensation"
+    },
+    {
+      "id": "COMP_Eligible",
+      "text": "You are eligible for compensation.",
+      "kind": "agent",
+      "description": "User meets eligibility criteria (Silver/Gold member, has insurance, or Business class)",
+      "agent": "compensation"
+    },
+    {
+      "id": "COMP_NotEligible",
+      "text": "Sorry, you are not eligible for compensation. Compensation is available for: Silver or Gold members, customers with travel insurance, or Business class passengers. Is there anything else I can help you with?",
+      "kind": "agent",
+      "description": "Regular member without insurance flying Economy/Basic Economy is not eligible",
+      "agent": "compensation",
+      "nextNodeIsUser": true
+    },
+    {
+      "id": "COMP_AskType",
+      "text": "What is your complaint regarding? Options: Flight cancelled by airline, Flight delayed, Other.",
+      "kind": "agent",
+      "description": "Determine complaint type - only cancelled or delayed flights qualify for compensation",
+      "agent": "compensation",
+      "nextNodeIsUser": true
+    },
+    {
+      "id": "COMP_CancelledFlight",
+      "text": "I understand your flight was cancelled by the airline.",
+      "kind": "agent",
+      "description": "User's complaint is about an airline-cancelled flight",
+      "agent": "compensation"
+    },
+    {
+      "id": "COMP_DelayedFlight",
+      "text": "I understand your flight was delayed.",
+      "kind": "agent",
+      "description": "User's complaint is about a delayed flight",
+      "agent": "compensation"
+    },
+    {
+      "id": "COMP_OtherReason",
+      "text": "Sorry, compensation is only available for flights that were cancelled or delayed by the airline. Is there anything else I can help you with?",
+      "kind": "agent",
+      "description": "Complaints other than cancelled/delayed flights do not qualify for compensation",
+      "agent": "compensation",
+      "nextNodeIsUser": true
+    },
+    {
+      "id": "COMP_CancelledVerify",
+      "text": "Verifying the cancellation details with our system...",
+      "kind": "agent",
+      "description": "Confirm flight cancellation facts with system records",
+      "agent": "compensation"
+    },
+    {
+      "id": "COMP_CancelledCertificate",
+      "text": "As compensation for the cancelled flight, we can offer you a travel certificate worth $100 per passenger affected (${TOTAL} total). Do you accept?",
+      "kind": "agent",
+      "description": "Offer $100 × number of passengers as travel certificate for cancelled flight",
+      "agent": "compensation",
+      "nextNodeIsUser": true
+    },
+    {
+      "id": "COMP_DelayedAction",
+      "text": "Before we can process compensation for the delay, you'll need to first change or cancel your reservation. Would you like to modify or cancel your booking?",
+      "kind": "agent",
+      "description": "Delayed flight compensation requires user to first modify or cancel the reservation",
+      "agent": "compensation",
+      "nextNodeIsUser": true
+    },
+    {
+      "id": "COMP_DelayedToModify",
+      "text": "Let's first process your reservation modification.",
+      "kind": "agent",
+      "description": "User chose to modify - redirect to modify flow with return context",
+      "agent": "compensation"
+    },
+    {
+      "id": "COMP_DelayedToCancel",
+      "text": "Let's first process your reservation cancellation.",
+      "kind": "agent",
+      "description": "User chose to cancel - redirect to cancel flow with return context",
+      "agent": "compensation"
+    },
+    {
+      "id": "COMP_ReturnAfterAction",
+      "text": "Now that your reservation has been updated, let's proceed with your compensation request.",
+      "kind": "agent",
+      "description": "Return to compensation flow after completing modification or cancellation",
+      "agent": "compensation"
+    },
+    {
+      "id": "COMP_DelayedVerify",
+      "text": "Verifying the delay details with our system...",
+      "kind": "agent",
+      "description": "Confirm flight delay facts with system records",
+      "agent": "compensation"
+    },
+    {
+      "id": "COMP_DelayedCertificate",
+      "text": "As compensation for the flight delay, we can offer you a travel certificate worth $50 per passenger affected (${TOTAL} total). Do you accept?",
+      "kind": "agent",
+      "description": "Offer $50 × number of passengers as travel certificate for delayed flight",
+      "agent": "compensation",
+      "nextNodeIsUser": true
+    },
+    {
+      "id": "COMP_Success",
+      "text": "Your travel certificate has been issued and added to your account. You can use it on your next booking.",
+      "kind": "agent",
+      "description": "Compensation certificate successfully issued to user's account",
+      "agent": "compensation",
+      "nextNodeIsUser": true
+    }
+  ],
+  "edges": [
+    {
+      "from": "INITIAL_STEP",
+      "to": "R_IdentifyAction",
+      "preconditions": [
+        {
+          "type": "user_said",
+          "value": "User sends initial message or request"
+        }
+      ]
+    },
+    {
+      "from": "R_IdentifyAction",
+      "to": "B_GetUserId",
+      "preconditions": [
+        { "type": "agent_decision", "value": "User wants to book a new flight" }
+      ]
+    },
+    {
+      "from": "R_IdentifyAction",
+      "to": "M_GetUserId",
+      "preconditions": [
+        {
+          "type": "agent_decision",
+          "value": "User wants to modify an existing reservation"
+        }
+      ]
+    },
+    {
+      "from": "R_IdentifyAction",
+      "to": "C_GetUserId",
+      "preconditions": [
+        {
+          "type": "agent_decision",
+          "value": "User wants to cancel a reservation"
+        }
+      ]
+    },
+    {
+      "from": "R_IdentifyAction",
+      "to": "COMP_CheckExplicitRequest",
+      "preconditions": [
+        {
+          "type": "agent_decision",
+          "value": "User mentions compensation, refund, or reimbursement"
+        }
+      ]
+    },
+    {
+      "from": "R_IdentifyAction",
+      "to": "R_ScopeCheck",
+      "preconditions": [
+        {
+          "type": "agent_decision",
+          "value": "User request does not match booking, modify, cancel, or compensation"
+        }
+      ]
+    },
+    {
+      "from": "R_ScopeCheck",
+      "to": "T_TransferToHuman",
+      "preconditions": [
+        {
+          "type": "agent_decision",
+          "value": "Request is outside policy scope or requires human assistance"
+        }
+      ]
+    },
+    {
+      "from": "R_ScopeCheck",
+      "to": "R_IdentifyAction",
+      "preconditions": [
+        {
+          "type": "agent_decision",
+          "value": "Request can be clarified and redirected to valid action"
+        }
+      ]
+    },
+    {
+      "from": "R_AskMoreHelp",
+      "to": "R_IdentifyAction",
+      "preconditions": [
+        { "type": "user_said", "value": "Yes, I need help with something else" }
+      ]
+    },
+    {
+      "from": "R_AskMoreHelp",
+      "to": "R_EndConversation",
+      "preconditions": [
+        {
+          "type": "user_said",
+          "value": "No, that's all / Nothing else / Goodbye"
+        }
+      ]
+    },
+
+    {
+      "from": "T_TransferToHuman",
+      "to": "T_ExecuteTransfer",
+      "preconditions": [
+        {
+          "type": "tool_call",
+          "value": "transfer_to_human_agents",
+          "description": "Initiate handoff to human agent queue"
+        }
+      ]
+    },
+    {
+      "from": "T_ExecuteTransfer",
+      "to": "T_TransferMessage"
+    },
+    {
+      "from": "T_TransferMessage",
+      "to": "T_TransferComplete"
+    },
+
+    {
+      "from": "B_GetUserId",
+      "to": "B_TripType",
+      "preconditions": [
+        {
+          "type": "tool_call",
+          "value": "getUserProfile",
+          "description": "Retrieve user profile using provided ID or email"
+        }
+      ]
+    },
+    {
+      "from": "B_TripType",
+      "to": "B_OneWaySelected",
+      "preconditions": [{ "type": "user_said", "value": "One way / Solo ida" }]
+    },
+    {
+      "from": "B_TripType",
+      "to": "B_RoundTripSelected",
+      "preconditions": [
+        { "type": "user_said", "value": "Round trip / Ida y vuelta" }
+      ]
+    },
+    {
+      "from": "B_OneWaySelected",
+      "to": "B_GetRoute"
+    },
+    {
+      "from": "B_RoundTripSelected",
+      "to": "B_GetRoute"
+    },
+    {
+      "from": "B_GetRoute",
+      "to": "B_GetDates",
+      "preconditions": [
+        {
+          "type": "user_said",
+          "value": "User provides origin and destination cities/airports"
+        }
+      ]
+    },
+    {
+      "from": "B_GetDates",
+      "to": "B_SearchFlights",
+      "preconditions": [
+        { "type": "user_said", "value": "User provides travel date(s)" }
+      ]
+    },
+    {
+      "from": "B_SearchFlights",
+      "to": "B_SelectFlights",
+      "preconditions": [
+        {
+          "type": "tool_call",
+          "value": "searchFlights",
+          "description": "Search available flights based on route, dates, and trip type"
+        }
+      ]
+    },
+    {
+      "from": "B_SelectFlights",
+      "to": "B_SelectCabin",
+      "preconditions": [
+        { "type": "user_said", "value": "User selects preferred flight(s)" }
+      ]
+    },
+    {
+      "from": "B_SelectCabin",
+      "to": "B_BasicEconomy",
+      "preconditions": [{ "type": "user_said", "value": "Basic Economy" }]
+    },
+    {
+      "from": "B_SelectCabin",
+      "to": "B_Economy",
+      "preconditions": [{ "type": "user_said", "value": "Economy" }]
+    },
+    {
+      "from": "B_SelectCabin",
+      "to": "B_Business",
+      "preconditions": [{ "type": "user_said", "value": "Business" }]
+    },
+    {
+      "from": "B_BasicEconomy",
+      "to": "B_CollectPassengers"
+    },
+    {
+      "from": "B_Economy",
+      "to": "B_CollectPassengers"
+    },
+    {
+      "from": "B_Business",
+      "to": "B_CollectPassengers"
+    },
+    {
+      "from": "B_CollectPassengers",
+      "to": "B_CheckMembership",
+      "preconditions": [
+        {
+          "type": "user_said",
+          "value": "User provides passenger details (name, DOB for each)"
+        }
+      ]
+    },
+    {
+      "from": "B_CheckMembership",
+      "to": "B_RegularMember",
+      "preconditions": [
+        {
+          "type": "agent_decision",
+          "value": "User membership level is Regular"
+        }
+      ]
+    },
+    {
+      "from": "B_CheckMembership",
+      "to": "B_SilverMember",
+      "preconditions": [
+        { "type": "agent_decision", "value": "User membership level is Silver" }
+      ]
+    },
+    {
+      "from": "B_CheckMembership",
+      "to": "B_GoldMember",
+      "preconditions": [
+        { "type": "agent_decision", "value": "User membership level is Gold" }
+      ]
+    },
+    {
+      "from": "B_RegularMember",
+      "to": "B_CalculateBaggage"
+    },
+    {
+      "from": "B_SilverMember",
+      "to": "B_CalculateBaggage"
+    },
+    {
+      "from": "B_GoldMember",
+      "to": "B_CalculateBaggage"
+    },
+    {
+      "from": "B_CalculateBaggage",
+      "to": "B_AskExtraBags"
+    },
+    {
+      "from": "B_AskExtraBags",
+      "to": "B_AddExtraBags",
+      "preconditions": [
+        { "type": "user_said", "value": "Yes, I want extra bags" }
+      ]
+    },
+    {
+      "from": "B_AskExtraBags",
+      "to": "B_OfferInsurance",
+      "preconditions": [
+        { "type": "user_said", "value": "No extra bags needed / No thanks" }
+      ]
+    },
+    {
+      "from": "B_AddExtraBags",
+      "to": "B_OfferInsurance",
+      "preconditions": [
+        { "type": "user_said", "value": "User specifies number of extra bags" }
+      ]
+    },
+    {
+      "from": "B_OfferInsurance",
+      "to": "B_AddInsurance",
+      "preconditions": [{ "type": "user_said", "value": "Yes, add insurance" }]
+    },
+    {
+      "from": "B_OfferInsurance",
+      "to": "B_SelectPayment",
+      "preconditions": [
+        { "type": "user_said", "value": "No insurance needed / No thanks" }
+      ]
+    },
+    {
+      "from": "B_AddInsurance",
+      "to": "B_SelectPayment"
+    },
+    {
+      "from": "B_SelectPayment",
+      "to": "B_ConfirmDetails",
+      "preconditions": [
+        {
+          "type": "user_said",
+          "value": "User selects payment method(s) from profile"
+        }
+      ]
+    },
+    {
+      "from": "B_ConfirmDetails",
+      "to": "B_ExecuteBooking",
+      "preconditions": [
+        { "type": "user_said", "value": "Yes, confirm booking" }
+      ]
+    },
+    {
+      "from": "B_ConfirmDetails",
+      "to": "B_Abort",
+      "preconditions": [{ "type": "user_said", "value": "No, cancel booking" }]
+    },
+    {
+      "from": "B_ExecuteBooking",
+      "to": "B_Success",
+      "preconditions": [
+        {
+          "type": "tool_call",
+          "value": "createBooking",
+          "description": "Execute booking with all collected details and payment"
+        }
+      ]
+    },
+    {
+      "from": "B_Success",
+      "to": "R_AskMoreHelp"
+    },
+    {
+      "from": "B_Abort",
+      "to": "R_IdentifyAction",
+      "preconditions": [
+        { "type": "user_said", "value": "User wants to do something else" }
+      ]
+    },
+
+    {
+      "from": "M_GetUserId",
+      "to": "M_AskReservationId",
+      "preconditions": [
+        {
+          "type": "tool_call",
+          "value": "getUserProfile",
+          "description": "Retrieve user profile to access their reservations"
+        }
+      ]
+    },
+    {
+      "from": "M_AskReservationId",
+      "to": "M_GetReservationId",
+      "preconditions": [
+        { "type": "user_said", "value": "Yes, I have the reservation ID" }
+      ]
+    },
+    {
+      "from": "M_AskReservationId",
+      "to": "M_LookupReservation",
+      "preconditions": [
+        { "type": "user_said", "value": "No, I don't have the reservation ID" }
+      ]
+    },
+    {
+      "from": "M_GetReservationId",
+      "to": "M_FetchDetails",
+      "preconditions": [
+        { "type": "user_said", "value": "User provides reservation ID" }
+      ]
+    },
+    {
+      "from": "M_LookupReservation",
+      "to": "M_FetchDetails",
+      "preconditions": [
+        {
+          "type": "tool_call",
+          "value": "searchReservations",
+          "description": "Search for user's reservations by travel details"
+        }
+      ]
+    },
+    {
+      "from": "M_FetchDetails",
+      "to": "M_SelectModType",
+      "preconditions": [
+        {
+          "type": "tool_call",
+          "value": "getReservation",
+          "description": "Fetch complete reservation details"
+        }
+      ]
+    },
+    {
+      "from": "M_SelectModType",
+      "to": "MF_CheckBasicEconomy",
+      "preconditions": [{ "type": "user_said", "value": "Change flights" }]
+    },
+    {
+      "from": "M_SelectModType",
+      "to": "MC_CheckFlown",
+      "preconditions": [{ "type": "user_said", "value": "Change cabin class" }]
+    },
+    {
+      "from": "M_SelectModType",
+      "to": "MB_Rule",
+      "preconditions": [{ "type": "user_said", "value": "Add baggage" }]
+    },
+    {
+      "from": "M_SelectModType",
+      "to": "MI_Deny",
+      "preconditions": [{ "type": "user_said", "value": "Add insurance" }]
+    },
+    {
+      "from": "M_SelectModType",
+      "to": "MP_Rule",
+      "preconditions": [
+        { "type": "user_said", "value": "Update passenger information" }
+      ]
+    },
+
+    {
+      "from": "MF_CheckBasicEconomy",
+      "to": "MF_DenyBasicEconomy",
+      "preconditions": [
+        {
+          "type": "agent_decision",
+          "value": "Reservation cabin class is Basic Economy"
+        }
+      ]
+    },
+    {
+      "from": "MF_CheckBasicEconomy",
+      "to": "MF_ValidateRules",
+      "preconditions": [
+        {
+          "type": "agent_decision",
+          "value": "Reservation cabin class is NOT Basic Economy"
+        }
+      ]
+    },
+    {
+      "from": "MF_DenyBasicEconomy",
+      "to": "R_AskMoreHelp"
+    },
+    {
+      "from": "MF_ValidateRules",
+      "to": "MF_SelectNewFlights"
+    },
+    {
+      "from": "MF_SelectNewFlights",
+      "to": "MF_CheckPriceDiff",
+      "preconditions": [
+        { "type": "user_said", "value": "User selects new flight(s)" }
+      ]
+    },
+    {
+      "from": "MF_CheckPriceDiff",
+      "to": "MF_PayMore",
+      "preconditions": [
+        {
+          "type": "agent_decision",
+          "value": "New flights cost more than original"
+        }
+      ]
+    },
+    {
+      "from": "MF_CheckPriceDiff",
+      "to": "MF_GetRefund",
+      "preconditions": [
+        {
+          "type": "agent_decision",
+          "value": "New flights cost less than original"
+        }
+      ]
+    },
+    {
+      "from": "MF_CheckPriceDiff",
+      "to": "MF_Confirm",
+      "preconditions": [
+        { "type": "agent_decision", "value": "Price is the same" }
+      ]
+    },
+    {
+      "from": "MF_PayMore",
+      "to": "MF_SelectPayment"
+    },
+    {
+      "from": "MF_GetRefund",
+      "to": "MF_SelectPayment"
+    },
+    {
+      "from": "MF_SelectPayment",
+      "to": "MF_Confirm",
+      "preconditions": [
+        { "type": "user_said", "value": "User selects payment method" }
+      ]
+    },
+    {
+      "from": "MF_Confirm",
+      "to": "MF_Execute",
+      "preconditions": [
+        { "type": "user_said", "value": "Yes, confirm changes" }
+      ]
+    },
+    {
+      "from": "MF_Confirm",
+      "to": "MF_Abort",
+      "preconditions": [{ "type": "user_said", "value": "No, cancel changes" }]
+    },
+    {
+      "from": "MF_Execute",
+      "to": "MF_Success",
+      "preconditions": [
+        {
+          "type": "tool_call",
+          "value": "updateReservationFlights",
+          "description": "Execute flight modification with new selections"
+        }
+      ]
+    },
+    {
+      "from": "MF_Success",
+      "to": "R_AskMoreHelp"
+    },
+    {
+      "from": "MF_Abort",
+      "to": "R_IdentifyAction",
+      "preconditions": [
+        { "type": "user_said", "value": "User wants to do something else" }
+      ]
+    },
+
+    {
+      "from": "MC_CheckFlown",
+      "to": "MC_DenyFlown",
+      "preconditions": [
+        {
+          "type": "agent_decision",
+          "value": "At least one flight segment has already been flown"
+        }
+      ]
+    },
+    {
+      "from": "MC_CheckFlown",
+      "to": "MC_SelectCabin",
+      "preconditions": [
+        {
+          "type": "agent_decision",
+          "value": "No flight segments have been flown yet"
+        }
+      ]
+    },
+    {
+      "from": "MC_DenyFlown",
+      "to": "R_AskMoreHelp"
+    },
+    {
+      "from": "MC_SelectCabin",
+      "to": "MC_CheckPriceDiff",
+      "preconditions": [
+        { "type": "user_said", "value": "User selects new cabin class" }
+      ]
+    },
+    {
+      "from": "MC_CheckPriceDiff",
+      "to": "MC_PayDiff",
+      "preconditions": [
+        { "type": "agent_decision", "value": "New cabin costs more (upgrade)" }
+      ]
+    },
+    {
+      "from": "MC_CheckPriceDiff",
+      "to": "MC_GetRefund",
+      "preconditions": [
+        {
+          "type": "agent_decision",
+          "value": "New cabin costs less (downgrade)"
+        }
+      ]
+    },
+    {
+      "from": "MC_CheckPriceDiff",
+      "to": "MC_Confirm",
+      "preconditions": [
+        { "type": "agent_decision", "value": "Price is the same" }
+      ]
+    },
+    {
+      "from": "MC_PayDiff",
+      "to": "MC_Confirm"
+    },
+    {
+      "from": "MC_GetRefund",
+      "to": "MC_Confirm"
+    },
+    {
+      "from": "MC_Confirm",
+      "to": "MC_Execute",
+      "preconditions": [
+        { "type": "user_said", "value": "Yes, confirm changes" }
+      ]
+    },
+    {
+      "from": "MC_Confirm",
+      "to": "MC_Abort",
+      "preconditions": [{ "type": "user_said", "value": "No, cancel changes" }]
+    },
+    {
+      "from": "MC_Execute",
+      "to": "MC_Success",
+      "preconditions": [
+        {
+          "type": "tool_call",
+          "value": "updateReservationCabin",
+          "description": "Execute cabin class change"
+        }
+      ]
+    },
+    {
+      "from": "MC_Success",
+      "to": "R_AskMoreHelp"
+    },
+    {
+      "from": "MC_Abort",
+      "to": "R_IdentifyAction",
+      "preconditions": [
+        { "type": "user_said", "value": "User wants to do something else" }
+      ]
+    },
+
+    {
+      "from": "MB_Rule",
+      "to": "MB_AddBags"
+    },
+    {
+      "from": "MB_AddBags",
+      "to": "MB_Confirm",
+      "preconditions": [
+        { "type": "user_said", "value": "User specifies number of bags to add" }
+      ]
+    },
+    {
+      "from": "MB_Confirm",
+      "to": "MB_Execute",
+      "preconditions": [{ "type": "user_said", "value": "Yes, confirm" }]
+    },
+    {
+      "from": "MB_Confirm",
+      "to": "MB_Abort",
+      "preconditions": [{ "type": "user_said", "value": "No, cancel" }]
+    },
+    {
+      "from": "MB_Execute",
+      "to": "MB_Success",
+      "preconditions": [
+        {
+          "type": "tool_call",
+          "value": "updateReservationBaggage",
+          "description": "Add extra baggage to reservation"
+        }
+      ]
+    },
+    {
+      "from": "MB_Success",
+      "to": "R_AskMoreHelp"
+    },
+    {
+      "from": "MB_Abort",
+      "to": "R_IdentifyAction",
+      "preconditions": [
+        { "type": "user_said", "value": "User wants to do something else" }
+      ]
+    },
+
+    {
+      "from": "MI_Deny",
+      "to": "R_AskMoreHelp"
+    },
+
+    {
+      "from": "MP_Rule",
+      "to": "MP_UpdateInfo"
+    },
+    {
+      "from": "MP_UpdateInfo",
+      "to": "MP_Confirm",
+      "preconditions": [
+        {
+          "type": "user_said",
+          "value": "User provides updated passenger details"
+        }
+      ]
+    },
+    {
+      "from": "MP_Confirm",
+      "to": "MP_Execute",
+      "preconditions": [{ "type": "user_said", "value": "Yes, confirm" }]
+    },
+    {
+      "from": "MP_Confirm",
+      "to": "MP_Abort",
+      "preconditions": [{ "type": "user_said", "value": "No, cancel" }]
+    },
+    {
+      "from": "MP_Execute",
+      "to": "MP_Success",
+      "preconditions": [
+        {
+          "type": "tool_call",
+          "value": "updatePassengerInfo",
+          "description": "Update passenger information in reservation"
+        }
+      ]
+    },
+    {
+      "from": "MP_Success",
+      "to": "R_AskMoreHelp"
+    },
+    {
+      "from": "MP_Abort",
+      "to": "R_IdentifyAction",
+      "preconditions": [
+        { "type": "user_said", "value": "User wants to do something else" }
+      ]
+    },
+
+    {
+      "from": "C_GetUserId",
+      "to": "C_AskReservationId",
+      "preconditions": [
+        {
+          "type": "tool_call",
+          "value": "getUserProfile",
+          "description": "Retrieve user profile to access their reservations"
+        }
+      ]
+    },
+    {
+      "from": "C_AskReservationId",
+      "to": "C_GetReservationId",
+      "preconditions": [
+        { "type": "user_said", "value": "Yes, I have the reservation ID" }
+      ]
+    },
+    {
+      "from": "C_AskReservationId",
+      "to": "C_LookupReservation",
+      "preconditions": [
+        { "type": "user_said", "value": "No, I don't have the reservation ID" }
+      ]
+    },
+    {
+      "from": "C_GetReservationId",
+      "to": "C_FetchDetails",
+      "preconditions": [
+        { "type": "user_said", "value": "User provides reservation ID" }
+      ]
+    },
+    {
+      "from": "C_LookupReservation",
+      "to": "C_FetchDetails",
+      "preconditions": [
+        {
+          "type": "tool_call",
+          "value": "searchReservations",
+          "description": "Search for user's reservations by travel details"
+        }
+      ]
+    },
+    {
+      "from": "C_FetchDetails",
+      "to": "C_AskReason",
+      "preconditions": [
+        {
+          "type": "tool_call",
+          "value": "getReservation",
+          "description": "Fetch complete reservation details"
+        }
+      ]
+    },
+    {
+      "from": "C_AskReason",
+      "to": "C_ReasonChangeOfPlan",
+      "preconditions": [
+        { "type": "user_said", "value": "Change of plan / Changed my mind" }
+      ]
+    },
+    {
+      "from": "C_AskReason",
+      "to": "C_ReasonAirlineCancelled",
+      "preconditions": [
+        { "type": "user_said", "value": "Airline cancelled the flight" }
+      ]
+    },
+    {
+      "from": "C_AskReason",
+      "to": "C_ReasonHealthWeather",
+      "preconditions": [
+        { "type": "user_said", "value": "Health reasons / Weather reasons" }
+      ]
+    },
+    {
+      "from": "C_AskReason",
+      "to": "C_ReasonOther",
+      "preconditions": [{ "type": "user_said", "value": "Other reason" }]
+    },
+    {
+      "from": "C_ReasonChangeOfPlan",
+      "to": "C_CheckFlown"
+    },
+    {
+      "from": "C_ReasonAirlineCancelled",
+      "to": "C_CheckFlown"
+    },
+    {
+      "from": "C_ReasonHealthWeather",
+      "to": "C_CheckFlown"
+    },
+    {
+      "from": "C_ReasonOther",
+      "to": "C_CheckFlown"
+    },
+    {
+      "from": "C_CheckFlown",
+      "to": "C_TransferFlown",
+      "preconditions": [
+        {
+          "type": "agent_decision",
+          "value": "At least one flight segment has already been flown"
+        }
+      ]
+    },
+    {
+      "from": "C_CheckFlown",
+      "to": "C_Check24Hours",
+      "preconditions": [
+        {
+          "type": "agent_decision",
+          "value": "No flight segments have been flown yet"
+        }
+      ]
+    },
+    {
+      "from": "C_TransferFlown",
+      "to": "T_ExecuteTransfer"
+    },
+    {
+      "from": "C_Check24Hours",
+      "to": "C_Allowed",
+      "preconditions": [
+        {
+          "type": "agent_decision",
+          "value": "Reservation was booked within the last 24 hours"
+        }
+      ]
+    },
+    {
+      "from": "C_Check24Hours",
+      "to": "C_CheckAirlineCancelled",
+      "preconditions": [
+        {
+          "type": "agent_decision",
+          "value": "Reservation was booked more than 24 hours ago"
+        }
+      ]
+    },
+    {
+      "from": "C_CheckAirlineCancelled",
+      "to": "C_Allowed",
+      "preconditions": [
+        {
+          "type": "agent_decision",
+          "value": "Flight was cancelled by the airline"
+        }
+      ]
+    },
+    {
+      "from": "C_CheckAirlineCancelled",
+      "to": "C_CheckBusinessClass",
+      "preconditions": [
+        {
+          "type": "agent_decision",
+          "value": "Flight was NOT cancelled by the airline"
+        }
+      ]
+    },
+    {
+      "from": "C_CheckBusinessClass",
+      "to": "C_Allowed",
+      "preconditions": [
+        { "type": "agent_decision", "value": "Reservation is Business class" }
+      ]
+    },
+    {
+      "from": "C_CheckBusinessClass",
+      "to": "C_CheckInsurance",
+      "preconditions": [
+        {
+          "type": "agent_decision",
+          "value": "Reservation is NOT Business class"
+        }
+      ]
+    },
+    {
+      "from": "C_CheckInsurance",
+      "to": "C_CheckInsuranceCoverage",
+      "preconditions": [
+        {
+          "type": "agent_decision",
+          "value": "Reservation includes travel insurance"
+        }
+      ]
+    },
+    {
+      "from": "C_CheckInsurance",
+      "to": "C_Denied",
+      "preconditions": [
+        {
+          "type": "agent_decision",
+          "value": "Reservation does NOT include travel insurance"
+        }
+      ]
+    },
+    {
+      "from": "C_CheckInsuranceCoverage",
+      "to": "C_Allowed",
+      "preconditions": [
+        {
+          "type": "agent_decision",
+          "value": "Cancellation reason is covered by insurance (health or weather)"
+        }
+      ]
+    },
+    {
+      "from": "C_CheckInsuranceCoverage",
+      "to": "C_Denied",
+      "preconditions": [
+        {
+          "type": "agent_decision",
+          "value": "Cancellation reason is NOT covered by insurance (change of plan or other)"
+        }
+      ]
+    },
+    {
+      "from": "C_Allowed",
+      "to": "C_Confirm"
+    },
+    {
+      "from": "C_Denied",
+      "to": "R_AskMoreHelp"
+    },
+    {
+      "from": "C_Confirm",
+      "to": "C_Execute",
+      "preconditions": [
+        { "type": "user_said", "value": "Yes, confirm cancellation" }
+      ]
+    },
+    {
+      "from": "C_Confirm",
+      "to": "C_Abort",
+      "preconditions": [{ "type": "user_said", "value": "No, do not cancel" }]
+    },
+    {
+      "from": "C_Execute",
+      "to": "C_ProcessRefund",
+      "preconditions": [
+        {
+          "type": "tool_call",
+          "value": "cancelReservation",
+          "description": "Execute the reservation cancellation"
+        }
+      ]
+    },
+    {
+      "from": "C_ProcessRefund",
+      "to": "C_Success"
+    },
+    {
+      "from": "C_Success",
+      "to": "R_AskMoreHelp"
+    },
+    {
+      "from": "C_Abort",
+      "to": "R_IdentifyAction",
+      "preconditions": [
+        { "type": "user_said", "value": "User wants to do something else" }
+      ]
+    },
+
+    {
+      "from": "COMP_CheckExplicitRequest",
+      "to": "COMP_NoProactiveOffer",
+      "preconditions": [
+        {
+          "type": "agent_decision",
+          "value": "User did NOT explicitly ask for compensation"
+        }
+      ]
+    },
+    {
+      "from": "COMP_CheckExplicitRequest",
+      "to": "COMP_CheckMembership",
+      "preconditions": [
+        {
+          "type": "agent_decision",
+          "value": "User EXPLICITLY asked for compensation or refund"
+        }
+      ]
+    },
+    {
+      "from": "COMP_NoProactiveOffer",
+      "to": "R_IdentifyAction",
+      "preconditions": [
+        { "type": "user_said", "value": "User makes a new request" }
+      ]
+    },
+    {
+      "from": "COMP_CheckMembership",
+      "to": "COMP_Eligible",
+      "preconditions": [
+        { "type": "agent_decision", "value": "User is Silver or Gold member" }
+      ]
+    },
+    {
+      "from": "COMP_CheckMembership",
+      "to": "COMP_CheckInsurance",
+      "preconditions": [
+        { "type": "agent_decision", "value": "User is Regular member" }
+      ]
+    },
+    {
+      "from": "COMP_CheckInsurance",
+      "to": "COMP_Eligible",
+      "preconditions": [
+        { "type": "agent_decision", "value": "User has travel insurance" }
+      ]
+    },
+    {
+      "from": "COMP_CheckInsurance",
+      "to": "COMP_CheckBusinessClass",
+      "preconditions": [
+        {
+          "type": "agent_decision",
+          "value": "User does NOT have travel insurance"
+        }
+      ]
+    },
+    {
+      "from": "COMP_CheckBusinessClass",
+      "to": "COMP_Eligible",
+      "preconditions": [
+        { "type": "agent_decision", "value": "User is flying Business class" }
+      ]
+    },
+    {
+      "from": "COMP_CheckBusinessClass",
+      "to": "COMP_NotEligible",
+      "preconditions": [
+        {
+          "type": "agent_decision",
+          "value": "User is flying Economy or Basic Economy"
+        }
+      ]
+    },
+    {
+      "from": "COMP_NotEligible",
+      "to": "R_AskMoreHelp"
+    },
+    {
+      "from": "COMP_Eligible",
+      "to": "COMP_AskType"
+    },
+    {
+      "from": "COMP_AskType",
+      "to": "COMP_CancelledFlight",
+      "preconditions": [
+        { "type": "user_said", "value": "Flight was cancelled by the airline" }
+      ]
+    },
+    {
+      "from": "COMP_AskType",
+      "to": "COMP_DelayedFlight",
+      "preconditions": [{ "type": "user_said", "value": "Flight was delayed" }]
+    },
+    {
+      "from": "COMP_AskType",
+      "to": "COMP_OtherReason",
+      "preconditions": [{ "type": "user_said", "value": "Other reason" }]
+    },
+    {
+      "from": "COMP_OtherReason",
+      "to": "R_AskMoreHelp"
+    },
+    {
+      "from": "COMP_CancelledFlight",
+      "to": "COMP_CancelledVerify"
+    },
+    {
+      "from": "COMP_CancelledVerify",
+      "to": "COMP_CancelledCertificate",
+      "preconditions": [
+        {
+          "type": "tool_call",
+          "value": "verifyFlightCancellation",
+          "description": "Verify that the flight was indeed cancelled by the airline"
+        }
+      ]
+    },
+    {
+      "from": "COMP_CancelledCertificate",
+      "to": "COMP_Success",
+      "preconditions": [
+        { "type": "user_said", "value": "Yes, I accept the certificate" }
+      ]
+    },
+    {
+      "from": "COMP_CancelledCertificate",
+      "to": "R_AskMoreHelp",
+      "preconditions": [{ "type": "user_said", "value": "No, I don't accept" }]
+    },
+    {
+      "from": "COMP_DelayedFlight",
+      "to": "COMP_DelayedAction"
+    },
+    {
+      "from": "COMP_DelayedAction",
+      "to": "COMP_DelayedToModify",
+      "preconditions": [
+        { "type": "user_said", "value": "I want to modify my reservation" }
+      ]
+    },
+    {
+      "from": "COMP_DelayedAction",
+      "to": "COMP_DelayedToCancel",
+      "preconditions": [
+        { "type": "user_said", "value": "I want to cancel my reservation" }
+      ]
+    },
+    {
+      "from": "COMP_DelayedToModify",
+      "to": "M_SelectModType",
+      "contextPreconditions": {
+        "preconditions": ["COMPENSATION_DELAY_FLOW"],
+        "jumpTo": "COMP_ReturnAfterAction"
+      }
+    },
+    {
+      "from": "COMP_DelayedToCancel",
+      "to": "C_AskReason",
+      "contextPreconditions": {
+        "preconditions": ["COMPENSATION_DELAY_FLOW"],
+        "jumpTo": "COMP_ReturnAfterAction"
+      }
+    },
+    {
+      "from": "COMP_ReturnAfterAction",
+      "to": "COMP_DelayedVerify"
+    },
+    {
+      "from": "COMP_DelayedVerify",
+      "to": "COMP_DelayedCertificate",
+      "preconditions": [
+        {
+          "type": "tool_call",
+          "value": "verifyFlightDelay",
+          "description": "Verify the flight delay details with system records"
+        }
+      ]
+    },
+    {
+      "from": "COMP_DelayedCertificate",
+      "to": "COMP_Success",
+      "preconditions": [
+        { "type": "user_said", "value": "Yes, I accept the certificate" }
+      ]
+    },
+    {
+      "from": "COMP_DelayedCertificate",
+      "to": "R_AskMoreHelp",
+      "preconditions": [{ "type": "user_said", "value": "No, I don't accept" }]
+    },
+    {
+      "from": "COMP_Success",
+      "to": "R_AskMoreHelp",
+      "preconditions": [
+        {
+          "type": "tool_call",
+          "value": "issueTravelCertificate",
+          "description": "Issue travel certificate to user's account"
+        }
+      ]
+    }
+  ]
+}

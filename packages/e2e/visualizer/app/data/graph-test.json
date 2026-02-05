@@ -1,0 +1,25 @@
+{
+  "startNode": "INITIAL_STEP",
+  "agents": [],
+  "nodes": [
+    { "id": "INITIAL_STEP", "text": "Start", "kind": "agent", "description": "Starting point" },
+    { "id": "A", "text": "Node A", "kind": "agent", "description": "First branch" },
+    { "id": "B", "text": "Node B", "kind": "agent", "description": "Child of A" },
+    { "id": "C", "text": "Node C", "kind": "agent", "description": "Child of A" },
+    { "id": "D", "text": "Node D", "kind": "agent", "description": "Child of A" },
+    { "id": "E", "text": "Node E", "kind": "agent", "description": "Second branch" },
+    { "id": "F", "text": "Node F", "kind": "agent", "description": "Child of E" },
+    { "id": "G", "text": "Node G", "kind": "agent", "description": "Child of E" },
+    { "id": "H", "text": "Node H", "kind": "agent", "description": "Child of E" }
+  ],
+  "edges": [
+    { "from": "INITIAL_STEP", "to": "A" },
+    { "from": "INITIAL_STEP", "to": "E" },
+    { "from": "A", "to": "B" },
+    { "from": "A", "to": "C" },
+    { "from": "A", "to": "D" },
+    { "from": "E", "to": "F" },
+    { "from": "E", "to": "G" },
+    { "from": "E", "to": "H" }
+  ]
+}

@@ -1,0 +1,230 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
+
+@custom-variant dark (&:is(.dark *));
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-sans);
+  --font-mono: var(--font-geist-mono);
+  --color-sidebar-ring: var(--sidebar-ring);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar: var(--sidebar);
+  --color-chart-5: var(--chart-5);
+  --color-chart-4: var(--chart-4);
+  --color-chart-3: var(--chart-3);
+  --color-chart-2: var(--chart-2);
+  --color-chart-1: var(--chart-1);
+  --color-ring: var(--ring);
+  --color-input: var(--input);
+  --color-border: var(--border);
+  --color-destructive: var(--destructive);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-accent: var(--accent);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-muted: var(--muted);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-secondary: var(--secondary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary: var(--primary);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-popover: var(--popover);
+  --color-card-foreground: var(--card-foreground);
+  --color-card: var(--card);
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --radius-2xl: calc(var(--radius) + 8px);
+  --radius-3xl: calc(var(--radius) + 12px);
+  --radius-4xl: calc(var(--radius) + 16px);
+}
+
+:root {
+  --background: oklch(1 0 0);
+  --foreground: oklch(0.141 0.005 285.823);
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.141 0.005 285.823);
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.141 0.005 285.823);
+  --primary: oklch(0.51 0.23 277);
+  --primary-foreground: oklch(0.96 0.02 272);
+  --secondary: oklch(0.55 0 0);
+  --secondary-foreground: oklch(0.98 0 0);
+  --muted: oklch(0.967 0.001 286.375);
+  --muted-foreground: oklch(0.552 0.016 285.938);
+  --accent: oklch(0.51 0.23 277);
+  --accent-foreground: oklch(0.96 0.02 272);
+  --destructive: oklch(0.577 0.245 27.325);
+  --border: oklch(0.92 0.004 286.32);
+  --input: oklch(0.92 0.004 286.32);
+  --ring: oklch(0.705 0.015 286.067);
+  --chart-1: oklch(0.79 0.10 275);
+  --chart-2: oklch(0.68 0.16 277);
+  --chart-3: oklch(0.59 0.20 277);
+  --chart-4: oklch(0.51 0.23 277);
+  --chart-5: oklch(0.46 0.21 277);
+  --radius: 0.625rem;
+  --sidebar: oklch(0.985 0 0);
+  --sidebar-foreground: oklch(0.141 0.005 285.823);
+  --sidebar-primary: oklch(0.51 0.23 277);
+  --sidebar-primary-foreground: oklch(0.96 0.02 272);
+  --sidebar-accent: oklch(0.51 0.23 277);
+  --sidebar-accent-foreground: oklch(0.96 0.02 272);
+  --sidebar-border: oklch(0.92 0.004 286.32);
+  --sidebar-ring: oklch(0.705 0.015 286.067);
+}
+
+.dark {
+  --background: oklch(0.141 0.005 285.823);
+  --foreground: oklch(0.985 0 0);
+  --card: oklch(0.21 0.006 285.885);
+  --card-foreground: oklch(0.985 0 0);
+  --popover: oklch(0.21 0.006 285.885);
+  --popover-foreground: oklch(0.985 0 0);
+  --primary: oklch(0.59 0.20 277);
+  --primary-foreground: oklch(0.96 0.02 272);
+  --secondary: oklch(0.274 0.006 286.033);
+  --secondary-foreground: oklch(0.985 0 0);
+  --muted: oklch(0.274 0.006 286.033);
+  --muted-foreground: oklch(0.705 0.015 286.067);
+  --accent: oklch(0.59 0.20 277);
+  --accent-foreground: oklch(0.96 0.02 272);
+  --destructive: oklch(0.704 0.191 22.216);
+  --border: oklch(1 0 0 / 10%);
+  --input: oklch(1 0 0 / 15%);
+  --ring: oklch(0.552 0.016 285.938);
+  --chart-1: oklch(0.79 0.10 275);
+  --chart-2: oklch(0.68 0.16 277);
+  --chart-3: oklch(0.59 0.20 277);
+  --chart-4: oklch(0.51 0.23 277);
+  --chart-5: oklch(0.46 0.21 277);
+  --sidebar: oklch(0.21 0.006 285.885);
+  --sidebar-foreground: oklch(0.985 0 0);
+  --sidebar-primary: oklch(0.68 0.16 277);
+  --sidebar-primary-foreground: oklch(0.96 0.02 272);
+  --sidebar-accent: oklch(0.59 0.20 277);
+  --sidebar-accent-foreground: oklch(0.96 0.02 272);
+  --sidebar-border: oklch(1 0 0 / 10%);
+  --sidebar-ring: oklch(0.552 0.016 285.938);
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+}
+
+/* React Flow Theme */
+.react-flow {
+  --xy-background-color: #f7f9fb;
+  --xy-theme-selected: var(--primary);
+  --xy-theme-hover: var(--secondary);
+  --xy-theme-edge-hover: black;
+  --xy-theme-color-focus: #e8e8e8;
+
+  --xy-node-border-default: 1px solid var(--secondary);
+  --xy-node-boxshadow-default:
+    0px 3.54px 4.55px 0px #00000005, 0px 3.54px 4.55px 0px #0000000d,
+    0px 0.51px 1.01px 0px #0000001a;
+  --xy-node-border-radius-default: 8px;
+
+  --xy-handle-background-color-default: #ffffff;
+  --xy-handle-border-color-default: var(--secondary);
+
+  --xy-edge-label-color-default: #505050;
+}
+
+.react-flow.dark {
+  --xy-node-boxshadow-default:
+    0px 3.54px 4.55px 0px rgba(255, 255, 255, 0.05),
+    0px 3.54px 4.55px 0px rgba(255, 255, 255, 0.13),
+    0px 0.51px 1.01px 0px rgba(255, 255, 255, 0.2);
+  --xy-theme-color-focus: #535353;
+}
+
+.react-flow__node-agent,
+.react-flow__node-agent_decision {
+  border-radius: var(--radius-lg);
+}
+
+.react-flow__node.selectable:focus {
+  box-shadow: 0px 0px 0px 4px var(--xy-theme-color-focus);
+}
+
+.react-flow__node.selectable:focus:active {
+  box-shadow: var(--xy-node-boxshadow-default);
+}
+
+.react-flow__node.selectable:hover,
+.react-flow__node.draggable:hover {
+  border-color: var(--xy-theme-hover);
+}
+
+.react-flow__node.selectable.selected {
+  border-color: var(--xy-theme-selected);
+  box-shadow: var(--xy-node-boxshadow-default);
+}
+
+.react-flow__edge.selectable:hover .react-flow__edge-path,
+.react-flow__edge.selectable.selected .react-flow__edge-path {
+  stroke: var(--xy-theme-edge-hover);
+}
+
+.react-flow__handle {
+  background-color: var(--xy-handle-background-color-default);
+  pointer-events: all;
+  cursor: pointer;
+}
+
+.react-flow__handle.connectionindicator:hover {
+  pointer-events: all;
+  border-color: var(--xy-theme-edge-hover);
+  background-color: white;
+}
+
+.react-flow__handle.connectionindicator:focus,
+.react-flow__handle.connectingfrom,
+.react-flow__handle.connectingto {
+  border-color: var(--xy-theme-edge-hover);
+}
+
+/* Temporary edge during proximity drag */
+.temp .react-flow__edge-path {
+  stroke: #bbb;
+  stroke-dasharray: 5 5;
+}
+
+/* Animated dashed edges - dashes move towards target */
+@keyframes dash-flow {
+  to {
+    stroke-dashoffset: -20;
+  }
+}
+
+.react-flow__edge-path.animated-dash {
+  animation: dash-flow 1s linear infinite;
+}
+
+/* Default edge styling - dashed */
+.react-flow .react-flow__edge .react-flow__edge-path {
+  stroke: #94a3b8;
+  stroke-width: 1.5;
+  stroke-dasharray: 5 5;
+}
+
+/* Hide React Flow attribution */
+.react-flow__attribution {
+  display: none;
+}
+

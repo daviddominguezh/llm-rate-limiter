@@ -1,0 +1,2910 @@
+{
+  "startNode": "INITIAL_STEP",
+  "agents": [
+    { "id": "greeting", "description": "Section of the flow that handles greeting" },
+    { "id": "browse", "description": "Section of the flow that handles browsing" },
+    { "id": "checkout", "description": "Section of the flow that handles checking-out" },
+    { "id": "tracking", "description": "Section of the flow that handles order tracking" }
+  ],
+  "nodes": [
+    {
+      "id": "INITIAL_STEP",
+      "text": "START",
+      "kind": "agent",
+      "nextNodeIsUser": true
+    },
+    {
+      "id": "IdentifyFirstContact",
+      "text": "Identificar si: 1) es un saludo común (hola), o 2) la búsqueda de un producto con imagen de referencia",
+      "kind": "agent_decision",
+      "description": "Identify whether it is a common greeting (hello) or a search for a product with a reference image",
+      "agent": "greeting"
+    },
+    {
+      "id": "GreetingAskName",
+      "text": "¡Un gusto tenerte en {BUSINESS_NAME}! Mi nombre es {BOT_NAME}. ¿Cuál es tu nombre?",
+      "kind": "agent",
+      "description": "Respond exactly with the response example below:",
+      "agent": "greeting",
+      "nextNodeIsUser": true
+    },
+    {
+      "id": "UserSpecifiedName",
+      "text": "REGISTER_NAME",
+      "kind": "agent",
+      "description": "Register the exact name as written by the user, to give a warm greeting",
+      "agent": "greeting"
+    },
+    {
+      "id": "AskNameImageSearch",
+      "text": "Bueno, pues un gusto tenerte en {BUSINESS_NAME}. Mi nombre es {BOT_NAME}. Mientras busco el producto que enviaste, por favor dime, ¿cuál es tu nombre?",
+      "kind": "agent",
+      "description": "Respond exactly with the response example below:",
+      "agent": "greeting",
+      "nextNodeIsUser": true
+    },
+    {
+      "id": "UserSpecifiedNameImageSearch",
+      "text": "REGISTER_NAME",
+      "kind": "agent",
+      "description": "Register the exact name as written by the user, to give a warm greeting",
+      "agent": "greeting"
+    },
+    {
+      "id": "RegisterUserNameImageSearch",
+      "text": "Encantada de conocerte {USER_NAME}. Cuéntame, ¿qué productos estás buscando hoy? Si gustas, aquí puedes encontrar el catálogo de nuestros productos: {CATALOG_URL}",
+      "kind": "agent",
+      "description": "Send an initial message that opens the conversation and invites the user to express their needs",
+      "agent": "greeting"
+    },
+    {
+      "id": "ReturnToCartWithoutAddingNewItems",
+      "text": "The user wants to proceed with the products they already added to their cart without adding new items",
+      "kind": "agent",
+      "description": "Proceed to the customize order step with the products they already added to their cart.",
+      "agent": "browse"
+    },
+    {
+      "id": "RegisterUserName",
+      "text": "Encantada de conocerte {USER_NAME}. Cuéntame, ¿qué productos estás buscando hoy? Si gustas, aquí puedes encontrar el catálogo de nuestros productos: {CATALOG_URL}",
+      "kind": "agent",
+      "description": "Send an initial message that opens the conversation and invites the user to express their needs",
+      "agent": "greeting",
+      "nextNodeIsUser": true
+    },
+    {
+      "id": "ContinueWithExistingUserName",
+      "text": "¡Me alegra tenerte de nuevo por aquí, {USER_NAME}! Cuéntame, ¿qué productos estás buscando hoy?",
+      "kind": "agent",
+      "description": "Send an initial message saluting the user by their name that opens the conversation and invites them to express their needs",
+      "agent": "greeting",
+      "nextNodeIsUser": true
+    },
+    {
+      "id": "AskGenderAsSearchCriteria",
+      "text": "Ok, ¿lo necesitas para hombre o para mujer? (si el usuario ya mencionó el genero arriba, pregutale por otra personalización, como la talla, el color, el uso que le quiere dar, el material, el almacenamiento, la capacidad (otra personalización): ¿Serian camisas para mujer en qué talla? o  ¿Serian pantalones para hombre en qué color?",
+      "kind": "agent",
+      "description": "If the user has already said the gender, ask for the size, but do not ask again if it is for women or men. **If they have already said it, note the gender user mentioned above**",
+      "agent": "browse",
+      "nextNodeIsUser": true
+    },
+    {
+      "id": "ProceedWithGenderSelection",
+      "text": "ProceedWithGenderSelection",
+      "kind": "agent",
+      "agent": "browse",
+      "description": "Continues with product search after user specifies gender"
+    },
+    {
+      "id": "SaveGenderBeforeSearch",
+      "text": "SaveGenderBeforeSearch",
+      "kind": "agent",
+      "agent": "browse",
+      "description": "Saves the user's gender preference before searching"
+    },
+    {
+      "id": "UnderstandTheReference",
+      "text": "Identificar si ya existe una foto de referencia del producto buscado",
+      "kind": "agent_decision",
+      "description": "Determine if the user has sent an image or not",
+      "agent": "greeting"
+    },
+    {
+      "id": "AskTheReferenceImage",
+      "text": "¿Puedes compartirme la imagen que viste? Con eso, busco el producto",
+      "kind": "agent",
+      "description": "Send a message asking the reference image to help them find the product. Example: '¿Puedes compartirme la imagen que viste? Con eso, busco el producto",
+      "agent": "greeting",
+      "nextNodeIsUser": true
+    },
+    {
+      "id": "NoProductsFound",
+      "text": "Te cuento que acabé de revisar en nuestro inventario y no tenemos: [mencionar el producto que busca el cliente]. ¿Quieres que te ayude a encontrar algo similar?",
+      "kind": "agent",
+      "description": "Send a message being honest about no products were found, but asks sutile if: Is there any other product they would be interested?",
+      "agent": "browse",
+      "nextNodeIsUser": true
+    },
+    {
+      "id": "CheckProductPersonalizationsSP",
+      "text": "Checking personalization availability...",
+      "kind": "agent",
+      "description": "Check if the personalization (color/size/material) the user requested is available in the product's available options or If the personalization is not available. Do NOT respond to the user directly from this node - only make the routing decision.",
+      "agent": "browse"
+    },
+    {
+      "id": "AnswerProductPersonalizationsSP",
+      "text": "Replies to a question about the availability of generic personalizations",
+      "kind": "agent",
+      "description": "Check in which personalizations (color/size/material) the user requested product is available in.",
+      "agent": "browse"
+    },
+    {
+      "id": "DoAnswerProductPersonalizationSP",
+      "text": "Responde la pregunta del usuario y finaliza con algo como: ¿Continuamos con la opcion que te mostré, o quieres buscar otro producto?",
+      "kind": "agent",
+      "description": "Use the availability information you received in the searchProduct tool's result to reply to the user question",
+      "agent": "browse",
+      "nextNodeIsUser": true
+    },
+    {
+      "id": "AnswerProductPersonalizationsMP",
+      "text": "Replies to a question about the availability of generic personalizations",
+      "kind": "agent",
+      "description": "Check in which personalizations (color/size/material) the user requested product is available in.",
+      "agent": "browse"
+    },
+    {
+      "id": "DoAnswerProductPersonalizationMP",
+      "text": "Responde la pregunta del usuario y finaliza con algo como: ¿Continuamos con alguna de las opciones que viste, o quieres buscar otro producto?",
+      "kind": "agent",
+      "description": "Use the availability information you received in the searchProduct tool's result to reply to the user question",
+      "agent": "browse",
+      "nextNodeIsUser": true
+    },
+    {
+      "id": "ExistingPersonalizationSP",
+      "text": "La personalización existe, se le debe mostrar al usuario",
+      "kind": "agent",
+      "description": "The requested personalization EXISTS in the product data.",
+      "agent": "browse"
+    },
+    {
+      "id": "NonExistingPersonalizationSP",
+      "text": "Personalization not available - routing to inform user...",
+      "kind": "agent",
+      "description": "The requested personalization is NOT available in the product data. Route to InformNonExistingPersonalizationSP which will inform the user and offer alternatives (continue with available options or search for another product). Do NOT send a message from this node - it's a routing node only.",
+      "agent": "browse"
+    },
+    {
+      "id": "InformNonExistingPersonalizationSP",
+      "text": "No está disponible en la personalización que lo buscas. Pero puedo buscarte algo similar, ¿quieres que miremos?",
+      "kind": "agent",
+      "description": "Informs the user about the personalization they are asking for are not available and propose action",
+      "agent": "browse",
+      "nextNodeIsUser": true
+    },
+    {
+      "id": "CheckProductPersonalizationsMP",
+      "text": "Checking personalization availability...",
+      "kind": "agent",
+      "description": "Check if the requested personalization exists for a product that you already showed to the user. Indicate whether this option is available or unavailable. Do NOT respond to the user directly - only make the routing decision.",
+      "agent": "browse"
+    },
+    {
+      "id": "AskForNewDifferentProduct",
+      "text": "Checking for new product availability...",
+      "kind": "agent",
+      "description": "Verify whether a new product name, not previously displayed, offers a specific personalization. Indicate whether this option is available or unavailable. Do NOT respond to the user directly - only make the routing decision.",
+      "agent": "browse"
+    },
+    {
+      "id": "ExistingPersonalizationMP",
+      "text": "La personalización existe, se le debe mostrar al usuario",
+      "kind": "agent",
+      "description": "The requested personalization EXISTS for the specified product.",
+      "agent": "browse"
+    },
+    {
+      "id": "NonExistingPersonalizationMP",
+      "text": "Personalization not available - routing to inform user...",
+      "kind": "agent",
+      "description": "The requested personalization is NOT available for the specified product. Route to InformNonExistingPersonalizationMP which will inform the user and offer alternatives (continue with available options or search for another product). Do NOT send a message from this node - it's a routing node only.",
+      "agent": "browse"
+    },
+    {
+      "id": "InformNonExistingPersonalizationMP",
+      "text": "No está disponible en la personalización que lo buscas. Pero puedo buscarte algo similar, ¿quieres que miremos?",
+      "kind": "agent",
+      "description": "Informs the user about the personalization they are asking for are not available and propose action",
+      "agent": "browse",
+      "nextNodeIsUser": true
+    },
+    {
+      "id": "SearchIntent",
+      "text": "PRODUCT_SEARCH",
+      "kind": "agent",
+      "description": "Search for products in the catalog based on user input (text description, image reference, product characteristics, price range, color, size, talla, material, price range, style, gender, any descriptive characteristics).",
+      "agent": "browse"
+    },
+    {
+      "id": "SingleProduct",
+      "text": "Mira, estuve buscando y te encontré esta opción: <PRODUCT CARD> ¿Cumple con lo que buscabas?",
+      "kind": "agent",
+      "description": "DO NOT CHANGE the product card format you received, return it exactly as you got it.",
+      "agent": "browse",
+      "nextNodeIsUser": true
+    },
+    {
+      "id": "MultipleProducts",
+      "text": "Estaba buscando, y encontré estás opciones: <PRODUCT CARD> ¿Cuál te gusta?",
+      "kind": "agent",
+      "description": "DO NOT CHANGE the product card format you received, return it exactly as you got it.",
+      "agent": "browse",
+      "nextNodeIsUser": true
+    },
+    {
+      "id": "AskInformation",
+      "text": "Responde usando el historial de la descripción de los productos",
+      "kind": "agent",
+      "description": "Respond using the product search tool's results history. You already have this information from the product description. For example: 'The available colors and sizes are:[X, Y, Z]'",
+      "agent": "browse",
+      "nextNodeIsUser": true
+    },
+    {
+      "id": "AnswerProductQuestionSP",
+      "text": "<RESPUESTA A LA PREGUNTA> ¿Con cuál producto te gustaría continuar?",
+      "kind": "agent",
+      "description": "Respond using the product search tool's results history and conversation context. You already have this information from the product description.",
+      "agent": "browse",
+      "nextNodeIsUser": true
+    },
+    {
+      "id": "AnswerProductQuestionMP",
+      "text": "<RESPUESTA A LA PREGUNTA> ¿Te gustaría continuar con este producto?",
+      "kind": "agent",
+      "description": "Respond using the product search tool's results history and conversation context. You already have this information from the product description.",
+      "agent": "browse",
+      "nextNodeIsUser": true
+    },
+    {
+      "id": "AskChanges",
+      "text": "Entiendo. ¿Qué característica le cambiarías y te consigo algo mejor?",
+      "kind": "agent",
+      "description": "Ask what the user would change to refine the search",
+      "agent": "browse",
+      "nextNodeIsUser": true
+    },
+    {
+      "id": "NotInterestedInSeeingAnyMore",
+      "text": "Vale, ¿Crees que puedo ayudarte en algo más?",
+      "kind": "agent",
+      "description": "Thank the user and ask if you can help with anything else",
+      "agent": "browse",
+      "nextNodeIsUser": true
+    },
+    {
+      "id": "ConfirmAddCart",
+      "text": "¿Quieres ordenar este producto? 🛒",
+      "kind": "agent",
+      "description": "Propose adding the chosen product to the user`s shopping cart",
+      "agent": "browse",
+      "nextNodeIsUser": true
+    },
+    {
+      "id": "AskQuantity",
+      "text": "¿Cuántas unidades quieres llevar?",
+      "kind": "agent",
+      "description": "Request the quantity of units to add",
+      "agent": "browse",
+      "nextNodeIsUser": true
+    },
+    {
+      "id": "AskMultipleQuantities",
+      "text": "¿Cuántas unidades de cada producto quieres llevar?",
+      "kind": "agent",
+      "description": "Request the quantity of each kind of product they want to add. Ask using a list schema",
+      "agent": "browse",
+      "nextNodeIsUser": true
+    },
+    {
+      "id": "VerifyProductsWereAddedToCart",
+      "text": "Verify that the products were added to the cart",
+      "kind": "agent_decision",
+      "description": "Check if the tool's response confirms that the items were successfully added to the cart or if it reports that they could NOT be added due to an error",
+      "agent": "browse"
+    },
+    {
+      "id": "ProductsWereNotAddedToCart",
+      "text": "No pude agregar: <PRODUCTO CON ERROR> a tu carrito, porque: <MENCIONA EL ERROR>",
+      "kind": "agent",
+      "description": "Inform the user of the error that occurred when adding the item to the cart, and ask them what they want to do with the product that failed",
+      "agent": "browse",
+      "nextNodeIsUser": true
+    },
+    {
+      "id": "WhatPersonalizationHasEnoughStock",
+      "text": "Hay inventario suficiente en: <MENCIONA LAS PERSONALIZACIONES CON STOCK SUFICIENTE QUE RETORNO LA TOOL AddMultipleItemsToCart>",
+      "kind": "agent",
+      "description": "Inform the user which customizations have sufficient stock based on the previous result addMultipleItemsToCart tool just returned",
+      "agent": "browse",
+      "nextNodeIsUser": true
+    },
+    {
+      "id": "CartOptions",
+      "text": "Listo, los productos ya están en tu carrito. Ahora, ¿Quieres continuar al pago? 🛒, o ¿Te gustaria seguir comprando más cosas? 🔍",
+      "kind": "agent",
+      "description": "Confirm products added and Offer next actions: finalize current order or continue shopping",
+      "agent": "browse",
+      "nextNodeIsUser": true
+    },
+    {
+      "id": "BuyMoreItems",
+      "text": "Cuéntame, ¿en qué color o talla buscas el otro producto que quieres comprar?",
+      "kind": "agent",
+      "description": "Please request the size, color, and material details to ensure accurate product searches based on the user's preferences.",
+      "agent": "browse",
+      "nextNodeIsUser": true
+    },
+    {
+      "id": "WhichRemove",
+      "text": "¿Cuál producto deseas eliminar? Producto 1... Producto 2...",
+      "kind": "agent",
+      "description": "Ask the user which product to remove",
+      "agent": "browse",
+      "nextNodeIsUser": true
+    },
+    {
+      "id": "RemoveSuccess",
+      "text": "✅ Producto eliminado del carrito",
+      "kind": "agent",
+      "description": "Confirm that the item was removed from the cart",
+      "agent": "browse"
+    },
+    {
+      "id": "WhichReplace",
+      "text": "¿Cuál producto quieres reemplazar? Producto 1... Producto 2...",
+      "kind": "agent",
+      "description": "Ask which cart product will be replaced",
+      "agent": "browse",
+      "nextNodeIsUser": true
+    },
+    {
+      "id": "WhatInstead",
+      "text": "¿Qué producto quieres agregar en su lugar?",
+      "kind": "agent",
+      "description": "Ask which product should be added as a replacement",
+      "agent": "browse",
+      "nextNodeIsUser": true
+    },
+    {
+      "id": "CheckReplacementType",
+      "text": "ANALYZE_REPLACEMENT_TYPE",
+      "kind": "agent",
+      "description": "Analyzes whether the user wants only change the personalization or user wants a product with different name",
+      "agent": "browse"
+    },
+    {
+      "id": "AddSameProductWithNewPersonalization",
+      "text": "Agregando el mismo producto con la nueva personalización",
+      "kind": "agent",
+      "description": "Adds the same product to cart with the new personalization specified by the user",
+      "agent": "browse"
+    },
+    {
+      "id": "ShowCart",
+      "text": "Tu carrito contiene: Productos: X, Y, Z",
+      "kind": "agent",
+      "description": "Present the current cart contents to the user",
+      "agent": "browse"
+    },
+    {
+      "id": "CustomLink",
+      "text": "Revisa que tus personalizaciones esten bien, en este link: <LINK>. Y avisame cuando hayas confirmado tu pedido. Espero tu confirmación para avanzar",
+      "kind": "agent",
+      "description": "Provide the link to the customization form and ask for confirmation when finished",
+      "agent": "browse",
+      "nextNodeIsUser": true
+    },
+    {
+      "id": "RemindCustom",
+      "text": "Para continuar, por favor completa el formulario en el link",
+      "kind": "agent",
+      "description": "Remind the user to complete the form if not yet done",
+      "agent": "browse",
+      "nextNodeIsUser": true
+    },
+    {
+      "id": "AskCity",
+      "text": "¿En qué ciudad estás ubicado?",
+      "kind": "agent",
+      "description": "Request the city to calculate shipping and coverage",
+      "agent": "checkout",
+      "nextNodeIsUser": true
+    },
+    {
+      "id": "CityHasExactMatch",
+      "text": "Revisaré la cobertura y el costo de envío a: [Menciona la ciudad encontrada]",
+      "kind": "agent",
+      "description": "Continues with the process. This option is only available when the tool searchCityId returned one (1) unique single exact match. You can never choose this option if the search returned more than one city.",
+      "agent": "checkout"
+    },
+    {
+      "id": "ClarifyCity",
+      "text": "Mira que no encontré la ciudad exacta que mencionaste. ¿Cuál de estas opciones es la tuya:",
+      "kind": "agent",
+      "description": "Asks the user to choose an alternative when there is no exact match",
+      "agent": "checkout",
+      "nextNodeIsUser": true
+    },
+    {
+      "id": "CalculatShippingFees",
+      "text": "Calculates the shipping cost",
+      "kind": "agent",
+      "description": "Finds the shipping cost and coverage of the city",
+      "agent": "checkout"
+    },
+    {
+      "id": "InformShippingFees",
+      "text": "Tu envío tiene un costo de: $<PRICE>. ¿Continuamos con el pago?",
+      "kind": "agent",
+      "description": "Inform the calculated shipping cost",
+      "agent": "checkout",
+      "nextNodeIsUser": true
+    },
+    {
+      "id": "CalculateTotalOnline",
+      "text": "Calculates the total price for the order",
+      "kind": "agent",
+      "description": "Obtains the total price for this order",
+      "agent": "checkout"
+    },
+    {
+      "id": "ShowTotalOnline",
+      "text": "El total a pagar en línea es de :$<PRICE>. ¿Confirmas?",
+      "kind": "agent",
+      "description": "Shows the total to pay for online payment",
+      "agent": "checkout",
+      "nextNodeIsUser": true
+    },
+    {
+      "id": "AskDataOnline",
+      "text": "Para procesar tu pedido enviame estos datos: \n1. Nombre completo\n2. Email\n3. Cédula\n4. Dirección completa\n5. Barrio \n6. Detalles de tu dirección solo si los hay (ejemplo: Apto 301, Torre B, etc.)",
+      "kind": "agent",
+      "description": "Request the data required for online payment",
+      "agent": "checkout",
+      "nextNodeIsUser": true
+    },
+    {
+      "id": "RequestMissingDataOnline",
+      "text": "Faltó <Mencionar el dato que no pasó la validación o que el usuario olvidó compartir>. Por favor, envíamelo",
+      "kind": "agent",
+      "description": "Request the missing or invalid data required for moving forward in the online payment",
+      "agent": "checkout",
+      "nextNodeIsUser": true
+    },
+    {
+      "id": "RequestMissingDataCOD",
+      "text": "Faltó <Mencionar el dato que no pasó la validación o que el usuario olvidó compartir>. Por favor, envíamelo",
+      "kind": "agent",
+      "description": "Request the missing or invalid data required for moving forward in creating the cash on delivery order",
+      "agent": "checkout",
+      "nextNodeIsUser": true
+    },
+    {
+      "id": "ShowPayLink",
+      "text": "Este es tu link de pago: [URL]",
+      "kind": "agent",
+      "description": "Provide the payment link so the user can complete the charge",
+      "agent": "checkout",
+      "nextNodeIsUser": true
+    },
+    {
+      "id": "ShowTotalCOD",
+      "text": "Total contra entrega: $<PRICE>",
+      "kind": "agent",
+      "description": "Show the total to pay for cash on delivery",
+      "agent": "checkout"
+    },
+    {
+      "id": "ShowOrderSummary",
+      "text": "Confirmame si está de acuerdo con el total a pagar:\n📦 Resumen del Pedido\n• Producto 1: $X\n• Producto 2: $Y\n💰 Subtotal: $Z\n🚚 Envío: $A\n💳 Método de pago: $B\n━━━━━━━━━━━━━\n✅ Total: $C",
+      "kind": "agent",
+      "description": "Present the final order summary structured to receive confirmation from user",
+      "agent": "checkout",
+      "nextNodeIsUser": true
+    },
+    {
+      "id": "AskDataCOD",
+      "text": "Para procesar tu pedido enviame estos datos: \n1. Nombre completo\n2. Email\n3. Cédula\n4. Dirección completa\n5. Barrio \n6. Detalles de tu dirección solo si los hay (ejemplo: Apto 301, Torre B, etc.)",
+      "kind": "agent",
+      "description": "Request the data required for cash on delivery",
+      "agent": "checkout",
+      "nextNodeIsUser": true
+    },
+    {
+      "id": "ValidateCODData",
+      "text": "Validando datos para crear la orden",
+      "kind": "agent",
+      "description": "Validate the user's input against these specific requirements:\n(1) nombre: must be non-empty full name (first + last name),\n(2) email: must match valid email format (contains @ and domain),\n(3) documentoIdentidad: must be non-empty ID number (cédula) and it must have at maximum 10 digits, if it has more than 10 digits, you MUST reject this and ask for a valid number,\n(4) direccion: must be complete,\n5) barrio (string, MANDATORY): The neighborhood name (e.g., Laureles),\n6)  detalle (string, OPTIONAL): ONLY for apartment/tower/floor details like 'Apto 301', 'Torre B Piso 5', 'Conjunto Los Pinos'",
+      "agent": "checkout"
+    },
+    {
+      "id": "CreateCODOrder",
+      "text": "Creando tu pedido contra entrega",
+      "kind": "agent",
+      "description": "Creates the cash on delivery order after all validation checks have passed. Please include apartement number or details if the user mentioned",
+      "agent": "checkout"
+    },
+    {
+      "id": "OrderSuccess",
+      "text": "Listo, ya creamos tu pedido. Cuando tu número de guía esté listo te lo comparto",
+      "kind": "agent",
+      "description": "DO NOT CHANGE the order confirmation format you received, return it exactly as you got it",
+      "agent": "checkout",
+      "nextNodeIsUser": true
+    },
+    {
+      "id": "PaymentPending",
+      "text": "⚠️ Aún no tenemos tu pago registrado. Por favor vuelve a intentarlo y confírmame",
+      "kind": "agent",
+      "description": "Inform that the payment is not yet registered and request a retry",
+      "agent": "checkout",
+      "nextNodeIsUser": true
+    },
+    {
+      "id": "OrderCancelled",
+      "text": "Ok, hemos cancelado el pedido como lo solicitaste",
+      "kind": "agent",
+      "description": "Confirm that the order was canceled at the user's request",
+      "agent": "checkout"
+    },
+    {
+      "id": "SearchProduct",
+      "text": "Analyzing search results...",
+      "kind": "agent",
+      "agent": "browse",
+      "description": "Interpret the **searchProducts** tool results by examining the number of products returned by the tool. Make routing decision based ONLY on the result count from the tool, not on user input."
+    },
+    {
+      "id": "ShowSingleImage",
+      "text": "Sending product image...",
+      "kind": "agent",
+      "agent": "browse",
+      "description": "Display an image to the user of the product requested. Do NOT ask questions, provide options, or send text messages. Your only task is show the requested product image. Use the IDs from the search results."
+    },
+    {
+      "id": "ShowSeveralImages",
+      "text": "Sending product options...",
+      "kind": "agent",
+      "agent": "browse",
+      "description": "Display the requested images, at least show two images. If multiple personalizations exist for one product, pick one automatically. Use the IDs from the search results."
+    },
+    {
+      "id": "GenerateProductCards",
+      "text": "GenerateProductCards",
+      "kind": "agent",
+      "agent": "browse",
+      "description": "Generate several product cards with information about price, personalization and product's benfits. Do NOT ask questions, provide options, or send text messages. Use the product IDs from the search results"
+    },
+    {
+      "id": "GenerateProductCard",
+      "text": "GenerateProductCard",
+      "kind": "agent",
+      "agent": "browse",
+      "description": "Generate one product card with information about price, personalization and product's benfits. Do NOT ask questions, provide options, or send text messages. Use the product ID from the search results"
+    },
+    {
+      "id": "UserSaidFormWasFilled",
+      "text": "UserSaidFormWasFilled",
+      "kind": "agent",
+      "agent": "browse",
+      "description": "Proceeds with the order once the user confirms they filled the form"
+    },
+    {
+      "id": "ConfirmCustomFormWasFilled",
+      "text": "ConfirmCustomFormWasFilled",
+      "kind": "agent",
+      "agent": "browse",
+      "description": "Confirms if the user did fill the form indeed"
+    },
+    {
+      "id": "RemindCustom1",
+      "text": "RemindCustom1",
+      "kind": "agent",
+      "agent": "browse",
+      "description": "Remind the user to complete the form if not yet done"
+    },
+    {
+      "id": "RemindCustom2",
+      "text": "RemindCustom2",
+      "kind": "agent",
+      "agent": "browse",
+      "description": "Remind the user to complete the form if not yet done"
+    },
+    {
+      "id": "ProceedWithGivenQuantity",
+      "text": "ProceedWithGivenQuantity",
+      "kind": "agent",
+      "agent": "browse",
+      "description": "Continues with the process once the user has specified the quantity"
+    },
+    {
+      "id": "ProceedWithMultipleGivenQuantity",
+      "text": "ProceedWithMultipleGivenQuantity",
+      "kind": "agent",
+      "agent": "browse",
+      "description": "Continues with the multiple shopping process after the user has specified the quantity of each kind of product to add"
+    },
+    {
+      "id": "CheckIfMultipleProducts",
+      "text": "CHECK_MULTIPLE_PRODUCTS",
+      "kind": "agent_decision",
+      "agent": "browse",
+      "description": "Determine if user wants to add only ONE kind of product or multiple kinds of products based on the conversation context"
+    },
+    {
+      "id": "ContinueWithOrder",
+      "text": "ContinueWithOrder",
+      "kind": "agent",
+      "agent": "browse",
+      "description": "The user can use any of these words to signify that they want to continue with the order: 'terminar' / 'continuar' / 'finalizar' / 'avanzar' (all and similars are valid and you should understand them as a valid)"
+    },
+    {
+      "id": "GetCart",
+      "text": "GetCart",
+      "kind": "agent",
+      "agent": "browse",
+      "description": "Allows the user to see their cart"
+    },
+    {
+      "id": "RemoveItemFromCart",
+      "text": "RemoveItemFromCart",
+      "kind": "agent",
+      "agent": "browse",
+      "description": "Allows the user to delete a product from their cart"
+    },
+    {
+      "id": "UserDidNotSpecifyItemToRemove",
+      "text": "UserDidNotSpecifyItemToRemove",
+      "kind": "agent",
+      "agent": "browse",
+      "description": "Request the user to specify which of all the items in their cart they want to remove, with customizations and literal quantities"
+    },
+    {
+      "id": "UserSpecifiedItemToRemove",
+      "text": "UserSpecifiedItemToRemove",
+      "kind": "agent",
+      "agent": "browse",
+      "description": "The user specified the specific name of the product they want to remove"
+    },
+    {
+      "id": "ReplaceItemFromCart",
+      "text": "ReplaceItemFromCart",
+      "kind": "agent",
+      "agent": "browse",
+      "description": "An item in the cart will be replaced with a new product that the user will select."
+    },
+    {
+      "id": "UserSpecifiedItemToReplace",
+      "text": "UserSpecifiedItemToReplace",
+      "kind": "agent",
+      "agent": "browse",
+      "description": "The user DID specify the name of the product they want to replace"
+    },
+    {
+      "id": "UserDidNotSpecifyItemToReplace",
+      "text": "UserDidNotSpecifyItemToReplace",
+      "kind": "agent",
+      "agent": "browse",
+      "description": "The user DID NOT specify the name of the product they want to remove neither the personalizations of the product to be removed"
+    },
+    {
+      "id": "ReplaceItemSpecified",
+      "text": "ReplaceItemSpecified",
+      "kind": "agent",
+      "agent": "browse",
+      "description": "Ask which cart product will be replaced"
+    },
+    {
+      "id": "UserSpecifiedCity",
+      "text": "UserSpecifiedCity",
+      "kind": "agent",
+      "agent": "checkout",
+      "description": "User specified the city"
+    },
+    {
+      "id": "AskCity2",
+      "text": "AskCity2",
+      "kind": "agent",
+      "agent": "checkout",
+      "description": "Request the city to calculate shipping and coverage"
+    },
+    {
+      "id": "ConfirmShippingToCity",
+      "text": "ConfirmShippingToCity",
+      "kind": "agent",
+      "agent": "checkout",
+      "description": "Use the cityID of the city chosen by the user to confirm the shipping cost"
+    },
+    {
+      "id": "CityDoesNotExist",
+      "text": "No encontré ninguna ciudad con ese nombre. Por favor, corrige el nombre de la ciudad y lo vuelvo a buscar",
+      "kind": "agent",
+      "description": "Inform the user that the city they specified does not exist and ask them to provide a valid city name",
+      "agent": "checkout",
+      "nextNodeIsUser": true
+    },
+    {
+      "id": "AskPayment",
+      "text": "¿Cuál será tu método de pago? Tenemos {PAYMENT_METHODS}",
+      "kind": "agent",
+      "description": "Request the preferred payment method",
+      "agent": "checkout",
+      "nextNodeIsUser": true
+    },
+    {
+      "id": "AskPaymentInvalidOption",
+      "text": "No manejamos ese método de pago, sin embargo tenemos {PAYMENT_METHODS} ¿Cuál prefieres?",
+      "kind": "agent",
+      "agent": "checkout",
+      "description": "Informs the chosen payment method is not available and request one valid preferred payment method",
+      "nextNodeIsUser": true
+    },
+    {
+      "id": "AskPayment1",
+      "text": "AskPayment1",
+      "kind": "agent",
+      "agent": "checkout",
+      "description": "User requested to pay online (ONLY credit/debit card or PSE). Keep in mind that transferences, Nequi, etc., are NOT valid options)"
+    },
+    {
+      "id": "AskPayment2",
+      "text": "AskPayment2",
+      "kind": "agent",
+      "agent": "checkout",
+      "description": "User requested to pay in cash on-delivery"
+    },
+    {
+      "id": "AskPayment3",
+      "text": "AskPayment3",
+      "kind": "agent",
+      "agent": "checkout",
+      "description": "User requested to pay with a transference"
+    },
+    {
+      "id": "ValidateOnlineData",
+      "text": "Validando datos para generar el link de pago",
+      "kind": "agent",
+      "description": "Validate the user's input against these specific requirements:\n(1) nombre: must be non-empty full name (first + last name),\n(2) email: must match valid email format (contains @ and domain),\n(3) documentoIdentidad: must be non-empty ID number (cédula) and it must have at maximum 10 digits, if it has more than 10 digits, you MUST reject this and ask for a valid number,\n(4) direccion: must be complete,\n5) barrio (string, MANDATORY): The neighborhood name (e.g., Laureles),\n6)  detalle (string, OPTIONAL): ONLY for apartment/tower/floor details like 'Apto 301', 'Torre B Piso 5', 'Conjunto Los Pinos'",
+      "agent": "checkout"
+    },
+    {
+      "id": "CreateOnlinePayment",
+      "text": "Generando tu link de pago",
+      "kind": "agent",
+      "description": "Creates the online payment link after all validation checks have passed. Only calls the createPaymentLink tool from this node.",
+      "agent": "checkout"
+    },
+    {
+      "id": "ShowPayLink1",
+      "text": "ShowPayLink1",
+      "kind": "agent",
+      "agent": "checkout",
+      "description": "After user confirmed the payment we need to verify if the backend received the payment as the user mentioned"
+    },
+    {
+      "id": "ShowPayLink2",
+      "text": "ShowPayLink2",
+      "kind": "agent",
+      "agent": "checkout",
+      "description": "Evaluate if the payment was received as the used confirmed"
+    },
+    {
+      "id": "PaymentPending1",
+      "text": "PaymentPending1",
+      "kind": "agent",
+      "agent": "checkout",
+      "description": "Verify if the payment was registered or was not registered and request a retry"
+    },
+    {
+      "id": "PaymentPending2",
+      "text": "PaymentPending2",
+      "kind": "agent",
+      "agent": "checkout",
+      "description": "Verify if the payment was registered or was not registered, and request a retry"
+    },
+    {
+      "id": "CalculateTotalTransference",
+      "text": "Calculates the total price for the transference order",
+      "kind": "agent",
+      "description": "Obtains the total price for this transference order",
+      "agent": "checkout"
+    },
+    {
+      "id": "ShowTotalTransference",
+      "text": "Total a pagar por transferencia: $<PRICE>. ¿Confirmas?",
+      "kind": "agent",
+      "description": "Shows the total to pay for transference payment",
+      "agent": "checkout",
+      "nextNodeIsUser": true
+    },
+    {
+      "id": "AskDataTransference",
+      "text": "Para procesar tu pedido por transferencia envíame estos datos: \n1. Nombre completo\n2. Email\n3. Cédula\n4. Dirección completa\n5. Barrio \n6. Detalles de tu dirección solo si los hay (ejemplo: Apto 301, Torre B, etc.)",
+      "kind": "agent",
+      "description": "Request the data required for transference payment",
+      "agent": "checkout",
+      "nextNodeIsUser": true
+    },
+    {
+      "id": "ValidateTransferenceData",
+      "text": "Validando datos para generar los datos de transferencia",
+      "kind": "agent",
+      "description": "Validate the user's input against these specific requirements:\n(1) nombre: must be non-empty full name (first + last name),\n(2) email: must match valid email format (contains @ and domain),\n(3) documentoIdentidad: must be non-empty ID number (cédula) and it must have at maximum 10 digits, if it has more than 10 digits, you MUST reject this and ask for a valid number,\n(4) direccion: must be complete,\n5) barrio (string, MANDATORY): The neighborhood name (e.g., Laureles),\n6) detalle (string, OPTIONAL): ONLY for apartment/tower/floor details like 'Apto 301', 'Torre B Piso 5', 'Conjunto Los Pinos'",
+      "agent": "checkout"
+    },
+    {
+      "id": "RequestMissingDataTransference",
+      "text": "Faltó <Mencionar el dato que no pasó la validación o que el usuario olvidó compartir>. Por favor, envíamelo",
+      "kind": "agent",
+      "description": "Request the missing or invalid data required for moving forward in the transference payment",
+      "agent": "checkout",
+      "nextNodeIsUser": true
+    },
+    {
+      "id": "CreateTransferencePayment",
+      "text": "Generando los datos para tu transferencia",
+      "kind": "agent",
+      "description": "Creates the transference payment after all validation checks have passed. Only calls the getTransferenceDetails tool from this node.",
+      "agent": "checkout"
+    },
+    {
+      "id": "ShowTransferenceDetails",
+      "text": "Estos son los datos para realizar tu transferencia: [BANK_DETAILS]. Por favor confirma cuando hayas realizado el pago y envía captura del comprobante",
+      "kind": "agent",
+      "description": "Provide the transference bank details so the user can complete the payment. Ask for screenshot confirmation.",
+      "agent": "checkout",
+      "nextNodeIsUser": true
+    },
+    {
+      "id": "AskPaymentScreenshot",
+      "text": "¿Puedes compartirme la captura de pantalla del comprobante de pago?",
+      "kind": "agent",
+      "description": "Request the payment screenshot as confirmation of the transference",
+      "agent": "checkout",
+      "nextNodeIsUser": true
+    },
+    {
+      "id": "ShowTransferenceDetails1",
+      "text": "Dame un momento mientras verifico la transferencia",
+      "kind": "agent",
+      "agent": "checkout",
+      "description": "After user confirmed the transference payment we need to verify if the backend received the payment as the user mentioned"
+    },
+    {
+      "id": "WaitForTransferenceConfirmation",
+      "text": "Dame un momento mientras verifico la transferencia",
+      "kind": "agent",
+      "agent": "checkout",
+      "description": "After user confirmed the transference payment we need to verify if we received the payment as the user mentioned",
+      "nextNodeIsUser": true
+    },
+    {
+      "id": "ShowTransferenceDetails2",
+      "text": "Dame un momento mientras verifico la transferencia",
+      "kind": "agent",
+      "agent": "checkout",
+      "description": "Evaluate if the transference payment was verified by human operator"
+    },
+    {
+      "id": "PaymentPendingTransference",
+      "text": "Ya revisamos y no hemos recibido tu pago. ¿Estás seguro de que lo realizaste? Por favor, confírmame si sí lo enviaste, y a qué cuenta.",
+      "kind": "agent",
+      "description": "Inform that the transference payment is was not received and request payment confirmation double check",
+      "agent": "checkout"
+    },
+    {
+      "id": "PaymentPendingTransference1",
+      "text": "PaymentPendingTransference1",
+      "kind": "agent",
+      "agent": "checkout",
+      "description": "Verify if the transference payment was verified or not, and request a retry",
+      "nextNodeIsUser": true
+    },
+    {
+      "id": "TrackingOrderStatus",
+      "text": "Retrieving your order status...",
+      "kind": "agent",
+      "description": "Determine if the user has created orders and find the status of those orders",
+      "agent": "tracking"
+    },
+    {
+      "id": "InterpretOrderStatus",
+      "text": "InterpretOrderStatus",
+      "kind": "agent",
+      "description": "Analyzes the getOrders tool response and determines the appropriate status response",
+      "agent": "tracking"
+    },
+    {
+      "id": "UserDoesNotNeedAnythingElse",
+      "text": "Vale, entiendo, ten un buen día y gracias por considerarnos",
+      "kind": "agent",
+      "description": "Wish the user a good day and mention that you will be there for them when they need something else",
+      "agent": "tracking",
+      "nextNodeIsUser": true
+    },
+    {
+      "id": "OrderUnpaid",
+      "text": "Tu pedido aún no ha sido pagado. Necesitas completar el pago primero.",
+      "kind": "agent",
+      "description": "Inform user their order is unpaid",
+      "agent": "tracking",
+      "nextNodeIsUser": true
+    },
+    {
+      "id": "OrderPaidUnconfirmed",
+      "text": "Tu pago fue recibido. Estamos confirmando tu pedido.",
+      "kind": "agent",
+      "description": "Inform user payment received and being confirmed",
+      "agent": "tracking",
+      "nextNodeIsUser": true
+    },
+    {
+      "id": "OrderConfirmed",
+      "text": "Tu pedido está confirmado y se está preparando para envío.",
+      "kind": "agent",
+      "description": "Inform user order is confirmed and being prepared",
+      "agent": "tracking",
+      "nextNodeIsUser": true
+    },
+    {
+      "id": "OrderSent",
+      "text": "El pedido fue enviado. Decidir SI existe trackingId ó NO existe",
+      "kind": "agent",
+      "description": "Analyze and determine if the order includes tracking Id information",
+      "agent": "tracking"
+    },
+    {
+      "id": "OrderReceived",
+      "text": "Según nuestros registros, tu pedido ya fue entregado.",
+      "kind": "agent",
+      "description": "Inform user order was delivered",
+      "agent": "tracking",
+      "nextNodeIsUser": true
+    },
+    {
+      "id": "ReceiptInformation",
+      "text": "Te comparto la guía de seguimiento",
+      "kind": "agent",
+      "description": "Share with the user the tool result of sendTrackingID",
+      "agent": "tracking",
+      "nextNodeIsUser": true
+    },
+    {
+      "id": "OrderCancelledTracking",
+      "text": "Tu pedido fue cancelado.",
+      "kind": "agent",
+      "description": "Inform user order was cancelled",
+      "agent": "tracking",
+      "nextNodeIsUser": true
+    },
+    {
+      "id": "OrderPaymentFailed",
+      "text": "Hubo un problema con tu pago. Contacta soporte para generar un nuevo link.",
+      "kind": "agent",
+      "description": "Inform user payment failed",
+      "agent": "tracking",
+      "nextNodeIsUser": true
+    },
+    {
+      "id": "NoOrdersFound",
+      "text": "No encontré ningún pedido asociado a tu cuenta.",
+      "kind": "agent",
+      "description": "Inform user they have no orders",
+      "agent": "tracking",
+      "nextNodeIsUser": true
+    },
+    {
+      "id": "TrackingIdNotFound",
+      "text": "Tu pedido ya fue enviado, pero aún no tengo el número de la guía. Cuando el administrador la cargue, te la compartiré.",
+      "kind": "agent",
+      "description": "Inform that the order was sent but the trackingId is not attached yet, in some time will be available",
+      "agent": "tracking",
+      "nextNodeIsUser": true
+    },
+    {
+      "id": "OfferTrackingGuide",
+      "text": "Tu pedido ya fue enviado. Este es tu número de guía: [trackingId]. ¿Te envío el PDF de la transportadora?",
+      "kind": "agent",
+      "description": "Ask user if they want to receive the PDF with the trackingId info",
+      "agent": "tracking",
+      "nextNodeIsUser": true
+    },
+    {
+      "id": "UserWantsGuide",
+      "text": "UserWantsGuide",
+      "kind": "agent",
+      "description": "Determines if user wants the tracking guide",
+      "agent": "tracking"
+    },
+    {
+      "id": "SendTrackingGuide",
+      "text": "SendTrackingGuide",
+      "kind": "agent",
+      "description": "Sends tracking guide PDF using sendTrackingID tool",
+      "agent": "tracking"
+    },
+    {
+      "id": "TrackingGuideDeclined",
+      "text": "Entendido, no enviaré la guía.",
+      "kind": "agent",
+      "description": "Acknowledge user declined the tracking guide",
+      "agent": "tracking"
+    },
+    {
+      "id": "AskMoreTracking",
+      "text": "¿Hay algo más en lo que pueda ayudarte?",
+      "kind": "agent",
+      "description": "Ask if user needs more tracking assistance",
+      "agent": "tracking",
+      "nextNodeIsUser": true
+    }
+  ],
+  "edges": [
+    {
+      "from": "INITIAL_STEP",
+      "to": "IdentifyFirstContact",
+      "preconditions": [
+        { "type": "user_said", "value": "Busco un producto/referencia" }
+      ]
+    },
+    {
+      "from": "IdentifyFirstContact",
+      "to": "GreetingAskName",
+      "preconditions": [
+        {
+          "type": "agent_decision",
+          "value": "The user said hello or introduced themselves, but did not say which product they wanted and did not send any pictures"
+        }
+      ],
+      "contextPreconditions": { "preconditions": ["NO_USER_HAS_NAME"] }
+    },
+    {
+      "from": "IdentifyFirstContact",
+      "to": "ContinueWithExistingUserName",
+      "preconditions": [
+        {
+          "type": "agent_decision",
+          "value": "The user said hello or introduced themselves, but did not say which product they wanted and did not send any pictures"
+        }
+      ],
+      "contextPreconditions": {
+        "preconditions": ["USER_HAS_NAME"],
+        "jumpTo": "RegisterUserName"
+      }
+    },
+    {
+      "from": "IdentifyFirstContact",
+      "to": "UnderstandTheReference",
+      "preconditions": [
+        {
+          "type": "agent_decision",
+          "value": "The user said hello, but also either sent a picture to show what product he wanted or said he was looking for a specific product"
+        }
+      ]
+    },
+    {
+      "from": "UnderstandTheReference",
+      "to": "SearchProduct",
+      "preconditions": [
+        {
+          "type": "agent_decision",
+          "value": "The user has already sent an image of the product."
+        }
+      ],
+      "contextPreconditions": { "preconditions": ["USER_HAS_NAME"] }
+    },
+    {
+      "from": "UnderstandTheReference",
+      "to": "AskNameImageSearch",
+      "preconditions": [
+        {
+          "type": "agent_decision",
+          "value": "The user has already sent an image of the product."
+        }
+      ],
+      "contextPreconditions": { "preconditions": ["NO_USER_HAS_NAME"] }
+    },
+    {
+      "from": "UnderstandTheReference",
+      "to": "AskTheReferenceImage",
+      "preconditions": [
+        {
+          "type": "agent_decision",
+          "value": "The user has never sent a photo of the product they are looking for. They only mentioned wanting a product, but did not send a picture of reference"
+        }
+      ]
+    },
+
+    {
+      "from": "AskNameImageSearch",
+      "to": "UserSpecifiedNameImageSearch",
+      "preconditions": [{ "type": "user_said", "value": "Me llamo [NAME]" }]
+    },
+    {
+      "from": "UserSpecifiedNameImageSearch",
+      "to": "RegisterUserNameImageSearch",
+      "preconditions": [
+        {
+          "type": "tool_call",
+          "value": "addUserName",
+          "description": "Use the provided name the user gave to you as the name parameter in the addUserName tool"
+        }
+      ]
+    },
+    {
+      "from": "RegisterUserNameImageSearch",
+      "to": "SearchProduct"
+    },
+    {
+      "from": "GreetingAskName",
+      "to": "UserSpecifiedName",
+      "preconditions": [{ "type": "user_said", "value": "Me llamo [NAME]" }]
+    },
+    {
+      "from": "UserSpecifiedName",
+      "to": "RegisterUserName",
+      "preconditions": [
+        {
+          "type": "tool_call",
+          "value": "addUserName",
+          "description": "Use the provided name the user gave to you as the name parameter in the addUserName tool"
+        }
+      ]
+    },
+    {
+      "from": "RegisterUserName",
+      "to": "SearchIntent",
+      "preconditions": [
+        { "type": "user_said", "value": "Quisiera un [PRODUCTO] como..." }
+      ]
+    },
+    {
+      "from": "AskTheReferenceImage",
+      "to": "UnderstandTheReference"
+    },
+    {
+      "from": "SearchIntent",
+      "to": "SearchProduct",
+      "preconditions": [{ "type": "tool_call", "value": "searchProducts" }],
+      "contextPreconditions": { "preconditions": ["NO_ASK_GENDER"] }
+    },
+    {
+      "from": "SearchIntent",
+      "to": "SearchProduct",
+      "preconditions": [{ "type": "tool_call", "value": "searchProducts" }],
+      "contextPreconditions": { "preconditions": ["NEVER_ASK_GENDER"] }
+    },
+    {
+      "from": "SearchIntent",
+      "to": "AskGenderAsSearchCriteria",
+      "contextPreconditions": { "preconditions": ["ASK_GENDER"] }
+    },
+    {
+      "from": "AskGenderAsSearchCriteria",
+      "to": "ProceedWithGenderSelection",
+      "preconditions": [
+        { "type": "user_said", "value": "Para hombre o para mujer" }
+      ]
+    },
+    {
+      "from": "ProceedWithGenderSelection",
+      "to": "SaveGenderBeforeSearch",
+      "preconditions": [{ "type": "tool_call", "value": "saveUserGender" }]
+    },
+    {
+      "from": "SaveGenderBeforeSearch",
+      "to": "SearchProduct",
+      "preconditions": [{ "type": "tool_call", "value": "searchProducts" }]
+    },
+    {
+      "from": "AnswerProductQuestionSP",
+      "to": "SingleProduct"
+    },
+    {
+      "from": "SingleProduct",
+      "to": "ShowSingleImage",
+      "preconditions": [
+        { "type": "user_said", "value": "Quisiera ver otra imagen" }
+      ]
+    },
+    {
+      "from": "SingleProduct",
+      "to": "AnswerProductQuestionSP",
+      "preconditions": [
+        {
+          "type": "user_said",
+          "value": "¿cuál de los que me mostraste es el más barato? o ¿por qué este producto me sirve? o ¿por qué me lo recomiendas? o ¿qué tal es la calidad? o ¿cómo son los materiales? (pregunta que indica que quiere más información)"
+        }
+      ]
+    },
+    {
+      "from": "SingleProduct",
+      "to": "AskInformation",
+      "preconditions": [
+        {
+          "type": "user_said",
+          "value": "¿En qué color/talla/material/almacenamiento (personalización) esta disponible? (pregunta por disponibilidad de personalizaciones)"
+        }
+      ]
+    },
+    {
+      "from": "SingleProduct",
+      "to": "ConfirmAddCart",
+      "preconditions": [{ "type": "user_said", "value": "Sí me gusta" }]
+    },
+    {
+      "from": "SingleProduct",
+      "to": "AskChanges",
+      "preconditions": [{ "type": "user_said", "value": "No me gusta" }]
+    },
+    {
+      "from": "SingleProduct",
+      "to": "CheckProductPersonalizationsSP",
+      "preconditions": [
+        {
+          "type": "user_said",
+          "value": "Lo tienes en otro material/tamaño/talla/coloralmacenamiento (personalización)?"
+        }
+      ]
+    },
+    {
+      "from": "SingleProduct",
+      "to": "SearchIntent",
+      "preconditions": [
+        {
+          "type": "user_said",
+          "value": "¿Qué otras opciones tienes? / Prefiero ver otro producto distinto, como ... [X, Y, Z], ¿Qué otras opciones tienes más baratas?"
+        }
+      ]
+    },
+    {
+      "from": "SingleProduct",
+      "to": "ReturnToCartWithoutAddingNewItems",
+      "preconditions": [
+        {
+          "type": "user_said",
+          "value": "No me gusto, o deja así, o solo dame el producto que ya tenia en el carrito"
+        }
+      ],
+      "contextPreconditions": {
+        "preconditions": ["USER_HAS_NONEMPTY_CART"],
+        "jumpTo": "ContinueWithOrder"
+      }
+    },
+    {
+      "from": "SingleProduct",
+      "to": "NotInterestedInSeeingAnyMore",
+      "preconditions": [
+        {
+          "type": "user_said",
+          "value": "No, gracias. Nada, así está bien, gracias por su atención, dejemos así"
+        }
+      ]
+    },
+    {
+      "from": "SingleProduct",
+      "to": "AskQuantity",
+      "preconditions": [
+        {
+          "type": "user_said",
+          "value": "Quiero comprar el producto que me mostraste antes, los que vi antes"
+        }
+      ]
+    },
+    {
+      "from": "CheckProductPersonalizationsSP",
+      "to": "ExistingPersonalizationSP",
+      "preconditions": [
+        {
+          "type": "agent_decision",
+          "value": "The product is available with the personalization the user is asking for"
+        }
+      ]
+    },
+    {
+      "from": "CheckProductPersonalizationsSP",
+      "to": "NonExistingPersonalizationSP",
+      "preconditions": [
+        {
+          "type": "agent_decision",
+          "value": "The product is NOT available with the personalization the user is asking for"
+        }
+      ]
+    },
+    {
+      "from": "ExistingPersonalizationSP",
+      "to": "SingleProduct",
+      "preconditions": [
+        {
+          "type": "tool_call",
+          "value": "sendImage",
+          "description": "Send an image of the personalization the user is asking for"
+        }
+      ]
+    },
+    {
+      "from": "NonExistingPersonalizationSP",
+      "to": "InformNonExistingPersonalizationSP"
+    },
+    {
+      "from": "InformNonExistingPersonalizationSP",
+      "to": "CheckProductPersonalizationsSP",
+      "preconditions": [
+        {
+          "type": "user_said",
+          "value": "Pregunto por la disponibilidad de una personalización específica de un producto que ya me mostraste antes. Por ejemplo: ¿Tienes X producto que ya me mostraste antes, en el color/talla/material/estilo/almacenamiento X?"
+        }
+      ]
+    },
+    {
+      "from": "InformNonExistingPersonalizationSP",
+      "to": "AnswerProductPersonalizationsSP",
+      "preconditions": [
+        {
+          "type": "user_said",
+          "value": "Pregunto por la disponibilidad de alguna personalización general de un producto que ya me mostraste antes. Por ejemplo: ¿En qué colores/tallas/materiales/estilos/almacenamientos lo tienes?"
+        }
+      ]
+    },
+    {
+      "from": "AnswerProductPersonalizationsSP",
+      "to": "DoAnswerProductPersonalizationSP",
+      "contextPreconditions": {
+        "preconditions": ["ALWAYS_TRUE"],
+        "jumpTo": "SingleProduct"
+      }
+    },
+    {
+      "from": "InformNonExistingPersonalizationSP",
+      "to": "ConfirmAddCart",
+      "preconditions": [
+        {
+          "type": "user_said",
+          "value": "Quiero continuar con el color/talla/material/estilo/almacenamiento (personalización) X que me mostraste"
+        }
+      ]
+    },
+    {
+      "from": "InformNonExistingPersonalizationSP",
+      "to": "SearchIntent",
+      "preconditions": [
+        {
+          "type": "user_said",
+          "value": "Entonces quiero otro [PRODUCTO] como..."
+        }
+      ]
+    },
+    {
+      "from": "CheckProductPersonalizationsMP",
+      "to": "ExistingPersonalizationMP",
+      "preconditions": [
+        {
+          "type": "agent_decision",
+          "value": "The product is available with the personalization the user is asking for"
+        }
+      ]
+    },
+    {
+      "from": "CheckProductPersonalizationsMP",
+      "to": "NonExistingPersonalizationMP",
+      "preconditions": [
+        {
+          "type": "agent_decision",
+          "value": "The product is NOT available with the personalization the user is asking for"
+        }
+      ]
+    },
+    {
+      "from": "ExistingPersonalizationMP",
+      "to": "MultipleProducts",
+      "preconditions": [
+        {
+          "type": "tool_call",
+          "value": "sendImage",
+          "description": "Send an image of the personalization the user is asking for"
+        }
+      ]
+    },
+    {
+      "from": "NonExistingPersonalizationMP",
+      "to": "InformNonExistingPersonalizationMP"
+    },
+    {
+      "from": "InformNonExistingPersonalizationMP",
+      "to": "AnswerProductPersonalizationsMP",
+      "preconditions": [
+        {
+          "type": "user_said",
+          "value": "Pregunto por la disponibilidad de alguna personalización general de un producto que ya me mostraste antes. Por ejemplo: ¿En qué colores/tallas/materiales/estilos/almacenamientos lo tienes?"
+        }
+      ]
+    },
+    {
+      "from": "AnswerProductPersonalizationsMP",
+      "to": "DoAnswerProductPersonalizationMP",
+      "contextPreconditions": {
+        "preconditions": ["ALWAYS_TRUE"],
+        "jumpTo": "MultipleProducts"
+      }
+    },
+    {
+      "from": "InformNonExistingPersonalizationMP",
+      "to": "CheckProductPersonalizationsMP",
+      "preconditions": [
+        {
+          "type": "user_said",
+          "value": "Preguntó por una personalización específica de un producto que ya le mostraste antes. Por ejemplo: ¿Tienes X producto que ya me mostraste antes, en el color/talla/material/estilo/almacenamiento X?"
+        }
+      ]
+    },
+    {
+      "from": "InformNonExistingPersonalizationMP",
+      "to": "ConfirmAddCart",
+      "preconditions": [
+        {
+          "type": "user_said",
+          "value": "Afirmo que quiero continuar con el color/talla/material/estilo/almacenamiento (personalización) X que ya me mostraste"
+        }
+      ]
+    },
+    {
+      "from": "InformNonExistingPersonalizationMP",
+      "to": "SearchIntent",
+      "preconditions": [
+        {
+          "type": "user_said",
+          "value": "Entonces tienes otro [PRODUCTO] como..."
+        }
+      ]
+    },
+    {
+      "from": "AnswerProductQuestionMP",
+      "to": "MultipleProducts"
+    },
+    {
+      "from": "MultipleProducts",
+      "to": "ConfirmAddCart",
+      "preconditions": [
+        { "type": "user_said", "value": "Me gusta el producto [X]" }
+      ]
+    },
+    {
+      "from": "MultipleProducts",
+      "to": "AnswerProductQuestionMP",
+      "preconditions": [
+        {
+          "type": "user_said",
+          "value": "¿cuál de los que me mostraste es el más barato? o ¿por qué este producto me sirve? o ¿por qué me lo recomiendas? o ¿qué tal es la calidad? o ¿cómo son los materiales? (pregunta que indica que quiere más información)"
+        }
+      ]
+    },
+    {
+      "from": "MultipleProducts",
+      "to": "AskQuantity",
+      "preconditions": [
+        {
+          "type": "user_said",
+          "value": "\"Quiero comprar los que me mostraste antes\", o \"quiero los que ya me habias mostrado\", o \"quiero los primeros que me mostraste\""
+        }
+      ]
+    },
+    {
+      "from": "MultipleProducts",
+      "to": "SearchIntent",
+      "preconditions": [
+        {
+          "type": "user_said",
+          "value": "¿Qué opciones más baratas tienes?, ¿Qué otras opciones tienes en otro (precio, color, tamaño, material)?"
+        }
+      ]
+    },
+    {
+      "from": "MultipleProducts",
+      "to": "AskChanges",
+      "preconditions": [
+        {
+          "type": "user_said",
+          "value": "Ninguno me gustó"
+        }
+      ]
+    },
+    {
+      "from": "MultipleProducts",
+      "to": "NotInterestedInSeeingAnyMore",
+      "preconditions": [
+        {
+          "type": "user_said",
+          "value": "No, nada, así está bien, gracias por su atención, dejemos así"
+        }
+      ]
+    },
+    {
+      "from": "MultipleProducts",
+      "to": "CheckProductPersonalizationsMP",
+      "preconditions": [
+        {
+          "type": "user_said",
+          "value": "¿El producto [X] (mostrado antes) está disponible en otro color/talla/material/almacenamiento?"
+        }
+      ]
+    },
+    {
+      "from": "MultipleProducts",
+      "to": "AskForNewDifferentProduct",
+      "preconditions": [
+        {
+          "type": "user_said",
+          "value": "¿Tienen el producto [Y] (NO mostrado antes) en [Z] personalización? Me interesa saber si lo tienen en un (color, talla, material, almacenamiento) especifico. (Pregunta por un producto que NO se le había mostrado antes)"
+        }
+      ]
+    },
+    {
+      "from": "MultipleProducts",
+      "to": "AskInformation",
+      "preconditions": [
+        {
+          "type": "user_said",
+          "value": "¿En qué colores/tallas/materiales/almacenamiento (personalización) esta disponible?"
+        }
+      ]
+    },
+    {
+      "from": "MultipleProducts",
+      "to": "ReturnToCartWithoutAddingNewItems",
+      "preconditions": [
+        {
+          "type": "user_said",
+          "value": "No me gusto, o deja así, o solo dame el producto que ya tenia en el carrito"
+        }
+      ],
+      "contextPreconditions": {
+        "preconditions": ["USER_HAS_NONEMPTY_CART"],
+        "jumpTo": "ContinueWithOrder"
+      }
+    },
+    {
+      "from": "AskForNewDifferentProduct",
+      "to": "SearchProduct",
+      "preconditions": [
+        {
+          "type": "tool_call",
+          "value": "searchProducts"
+        }
+      ]
+    },
+    {
+      "from": "AskInformation",
+      "to": "ConfirmAddCart",
+      "preconditions": [
+        { "type": "user_said", "value": "Me gusta el producto [X]" }
+      ]
+    },
+    {
+      "from": "AskInformation",
+      "to": "SearchIntent",
+      "preconditions": [
+        {
+          "type": "user_said",
+          "value": "Es que estaba buscando algo con X, Y, Z características"
+        }
+      ]
+    },
+    {
+      "from": "AskChanges",
+      "to": "SearchIntent",
+      "preconditions": [
+        { "type": "user_said", "value": "Me gustaría que tuviera..." }
+      ]
+    },
+    {
+      "from": "AskChanges",
+      "to": "CheckIfMultipleProducts",
+      "preconditions": [
+        { "type": "user_said", "value": "Quiero seguir con este producto" }
+      ]
+    },
+    {
+      "from": "ConfirmAddCart",
+      "to": "CheckIfMultipleProducts",
+      "preconditions": [{ "type": "user_said", "value": "Sí, agrégalo" }]
+    },
+    {
+      "from": "ConfirmAddCart",
+      "to": "AskChanges",
+      "preconditions": [{ "type": "user_said", "value": "No, no lo agregues" }]
+    },
+    {
+      "from": "ConfirmAddCart",
+      "to": "CheckProductPersonalizationsMP",
+      "preconditions": [
+        {
+          "type": "user_said",
+          "value": "Preguntó por una personalización de un producto que ya le mostraste antes"
+        }
+      ]
+    },
+    {
+      "from": "ConfirmAddCart",
+      "to": "SearchIntent",
+      "preconditions": [
+        {
+          "type": "user_said",
+          "value": "Prefiero buscar otro producto que tenga X caracteristica, o lo necesito con X, Y, Z, Me gustaría que tuviera..."
+        }
+      ]
+    },
+    {
+      "from": "CheckIfMultipleProducts",
+      "to": "AskQuantity",
+      "preconditions": [
+        {
+          "type": "agent_decision",
+          "value": "User wants to add ONLY ONE KIND of products, that's means one product id)"
+        }
+      ]
+    },
+    {
+      "from": "CheckIfMultipleProducts",
+      "to": "AskMultipleQuantities",
+      "preconditions": [
+        {
+          "type": "agent_decision",
+          "value": "User wants to add MULTIPLE products (2 or more)"
+        }
+      ]
+    },
+    {
+      "from": "AskQuantity",
+      "to": "ProceedWithGivenQuantity",
+      "preconditions": [{ "type": "user_said", "value": "Quiero X unidades" }]
+    },
+    {
+      "from": "ProceedWithGivenQuantity",
+      "to": "VerifyProductsWereAddedToCart",
+      "preconditions": [
+        {
+          "type": "tool_call",
+          "value": "addMultipleItemsToCart",
+          "description": "Collect all the products and their quantities the user wants to add. Group them into the items array. The \"personalizations\" property is optional and must be provided ONLY IF the user specified them explicitly. NEVER ask for personalizations."
+        }
+      ]
+    },
+    {
+      "from": "AskMultipleQuantities",
+      "to": "ProceedWithMultipleGivenQuantity",
+      "preconditions": [
+        {
+          "type": "user_said",
+          "value": "Quiero X unidades del product Y, - Z unidades del product M, etc"
+        }
+      ]
+    },
+    {
+      "from": "ProceedWithMultipleGivenQuantity",
+      "to": "VerifyProductsWereAddedToCart",
+      "preconditions": [
+        {
+          "type": "tool_call",
+          "value": "addMultipleItemsToCart",
+          "description": "Collect all the product ids and their quantities the user wants to add, **do not ask for personalizations**. Group them into the items array for the tool call."
+        }
+      ]
+    },
+    {
+      "from": "VerifyProductsWereAddedToCart",
+      "to": "CartOptions",
+      "preconditions": [
+        {
+          "type": "agent_decision",
+          "value": "The tool responded that the items were indeed successfully added to the cart."
+        }
+      ]
+    },
+    {
+      "from": "VerifyProductsWereAddedToCart",
+      "to": "ProductsWereNotAddedToCart",
+      "preconditions": [
+        {
+          "type": "agent_decision",
+          "value": "The tool responded that one o more product could not be added to the cart due to an error."
+        }
+      ]
+    },
+    {
+      "from": "ProductsWereNotAddedToCart",
+      "to": "ProceedWithMultipleGivenQuantity",
+      "preconditions": [
+        {
+          "type": "user_said",
+          "value": "Quiero continuar solo con los productos que SI estaban disponibles"
+        }
+      ]
+    },
+    {
+      "from": "ProductsWereNotAddedToCart",
+      "to": "WhatPersonalizationHasEnoughStock",
+      "preconditions": [
+        {
+          "type": "user_said",
+          "value": "¿Cuáles personalizaciones sí estan disponibles? ¿En qué personalización (talla, color, material, almacenamiento) sí tienes stock disponible? o pregunta por personalizaciones que sí tengan suficiente stock"
+        }
+      ]
+    },
+    {
+      "from": "ProductsWereNotAddedToCart",
+      "to": "BuyMoreItems",
+      "preconditions": [
+        {
+          "type": "user_said",
+          "value": "Quiero buscar un nuevo producto diferente al producto que no se agrego al carrito"
+        }
+      ]
+    },
+    {
+      "from": "ProductsWereNotAddedToCart",
+      "to": "ProceedWithMultipleGivenQuantity",
+      "preconditions": [
+        {
+          "type": "user_said",
+          "value": "Quiero llevar el mismo producto en otra personalización"
+        }
+      ]
+    },
+    {
+      "from": "WhatPersonalizationHasEnoughStock",
+      "to": "ProceedWithMultipleGivenQuantity",
+      "preconditions": [
+        {
+          "type": "user_said",
+          "value": "Dame X unidades del producto Z, y N unidades del producto M"
+        }
+      ]
+    },
+    {
+      "from": "CartOptions",
+      "to": "BuyMoreItems",
+      "preconditions": [
+        { "type": "user_said", "value": "Quiero comprar más productos" }
+      ]
+    },
+    {
+      "from": "CartOptions",
+      "to": "ContinueWithOrder",
+      "preconditions": [
+        {
+          "type": "user_said",
+          "value": "Continuar / Avanzar / Terminar / Finalizar el pedido"
+        }
+      ]
+    },
+    {
+      "from": "CartOptions",
+      "to": "GetCart",
+      "preconditions": [{ "type": "user_said", "value": "Ver carrito" }]
+    },
+    {
+      "from": "CartOptions",
+      "to": "RemoveItemFromCart",
+      "preconditions": [{ "type": "user_said", "value": "Eliminar producto" }]
+    },
+    {
+      "from": "CartOptions",
+      "to": "ReplaceItemFromCart",
+      "preconditions": [{ "type": "user_said", "value": "Reemplazar producto" }]
+    },
+    {
+      "from": "BuyMoreItems",
+      "to": "SearchIntent",
+      "preconditions": [
+        { "type": "user_said", "value": "Quisiera un producto X" }
+      ]
+    },
+    { "from": "RemoveSuccess", "to": "CartOptions" },
+    {
+      "from": "WhichReplace",
+      "to": "ReplaceItemSpecified",
+      "preconditions": [
+        { "type": "user_said", "value": "Quiero reemplazar el producto X" }
+      ]
+    },
+    {
+      "from": "WhatInstead",
+      "to": "CheckReplacementType",
+      "preconditions": [
+        {
+          "type": "user_said",
+          "value": "Quiero el producto X con personalización Y"
+        }
+      ]
+    },
+    {
+      "from": "CheckReplacementType",
+      "to": "AddSameProductWithNewPersonalization",
+      "preconditions": [
+        {
+          "type": "agent_decision",
+          "value": "Only is a personalization change, the name of the product is the same"
+        }
+      ]
+    },
+    {
+      "from": "CheckReplacementType",
+      "to": "SearchIntent",
+      "preconditions": [
+        {
+          "type": "agent_decision",
+          "value": "User wants to search a new product name"
+        }
+      ]
+    },
+    {
+      "from": "AddSameProductWithNewPersonalization",
+      "to": "CartOptions",
+      "preconditions": [
+        {
+          "type": "tool_call",
+          "value": "addMultipleItemsToCart",
+          "description": "Add the same product ID to cart with the new personalizations specified by the user. Use the product ID from the item that was just deleted. Wrap it in the items array. The personalizations MUST be provided based on what the user explicitly said they want."
+        }
+      ]
+    },
+    { "from": "ShowCart", "to": "CartOptions" },
+    {
+      "from": "CustomLink",
+      "to": "UserSaidFormWasFilled",
+      "preconditions": [
+        { "type": "user_said", "value": "Listo, ya llené el formulario" }
+      ]
+    },
+    { "from": "RemindCustom", "to": "RemindCustom", "preconditions": [] },
+    {
+      "from": "RemindCustom",
+      "to": "RemindCustom1",
+      "preconditions": [
+        {
+          "type": "user_said",
+          "value": "\"Listo, llené el formulario\", o \"lo veo bien\", o \"ya está\""
+        }
+      ]
+    },
+    {
+      "from": "AskCity",
+      "to": "UserSpecifiedCity",
+      "preconditions": [
+        { "type": "user_said", "value": "Estoy en la ciudad X" }
+      ]
+    },
+    {
+      "from": "CityHasExactMatch",
+      "to": "CalculatShippingFees",
+      "preconditions": [
+        {
+          "type": "tool_call",
+          "value": "confirmShippingToCity",
+          "description": "Use the full cityID obtained from the call to the tool \"searchCityId\" as the \"cityID\" parameter for this call. NEVER hallucinate nor shorten this cityID value."
+        }
+      ]
+    },
+    {
+      "from": "ClarifyCity",
+      "to": "ConfirmShippingToCity",
+      "preconditions": [
+        {
+          "type": "user_said",
+          "value": "Eligió el nombre de una de las ciudades de la lista"
+        }
+      ]
+    },
+    {
+      "from": "ClarifyCity",
+      "to": "AskCity",
+      "preconditions": [
+        {
+          "type": "user_said",
+          "value": "No es esa, no es ninguna opción de la lista"
+        }
+      ]
+    },
+    { "from": "CalculatShippingFees", "to": "InformShippingFees" },
+    {
+      "from": "InformShippingFees",
+      "to": "AskPayment",
+      "preconditions": [{ "type": "user_said", "value": "Sí" }]
+    },
+    {
+      "from": "InformShippingFees",
+      "to": "CartOptions",
+      "preconditions": [{ "type": "user_said", "value": "No" }]
+    },
+    {
+      "from": "AskPayment",
+      "to": "AskPayment1",
+      "preconditions": [{ "type": "user_said", "value": "Pago en línea" }]
+    },
+    {
+      "from": "AskPayment",
+      "to": "AskPayment2",
+      "preconditions": [{ "type": "user_said", "value": "Pago contra entrega" }]
+    },
+    {
+      "from": "AskPayment",
+      "to": "AskPayment3",
+      "preconditions": [
+        {
+          "type": "user_said",
+          "value": "Alguna de las opciones de transferencia (debe ser una opción específica)"
+        }
+      ]
+    },
+    {
+      "from": "AskPayment",
+      "to": "AskPaymentInvalidOption",
+      "preconditions": [
+        {
+          "type": "user_said",
+          "value": "Cualquier opción que no esté explícitamente en la lista (no es ni pago en línea ni pago contra entrega, ni una de las opciones de transferencia listadas específicamente) o no específico con cuál tipo de transferencia"
+        }
+      ]
+    },
+    {
+      "from": "AskPaymentInvalidOption",
+      "to": "AskPayment1",
+      "preconditions": [{ "type": "user_said", "value": "Pago en línea" }]
+    },
+    {
+      "from": "AskPaymentInvalidOption",
+      "to": "AskPayment2",
+      "preconditions": [{ "type": "user_said", "value": "Pago contra entrega" }]
+    },
+    {
+      "from": "AskPaymentInvalidOption",
+      "to": "AskPayment3",
+      "preconditions": [
+        {
+          "type": "user_said",
+          "value": "Alguna de las opciones de transferencia (debe ser una opción específica)"
+        }
+      ]
+    },
+    {
+      "from": "AskPaymentInvalidOption",
+      "to": "AskPaymentInvalidOption",
+      "preconditions": [
+        {
+          "type": "user_said",
+          "value": "Una opción que no está en la lista (no es ni pago en línea ni pago contra entrega, ni una de las opciones de transferencia listadas específicamente) o no específico con cuál tipo de transferencia"
+        }
+      ]
+    },
+    {
+      "from": "AskPayment2",
+      "to": "ShowTotalCOD",
+      "preconditions": [
+        { "type": "tool_call", "value": "calculateTotalPayment" }
+      ]
+    },
+    { "from": "ShowTotalCOD", "to": "ShowOrderSummary" },
+    {
+      "from": "ShowOrderSummary",
+      "to": "AskDataCOD",
+      "preconditions": [{ "type": "user_said", "value": "Sí, confirmo" }]
+    },
+    {
+      "from": "ShowOrderSummary",
+      "to": "OrderCancelled",
+      "preconditions": [{ "type": "user_said", "value": "No, no confirmo" }]
+    },
+    {
+      "from": "AskDataCOD",
+      "to": "ValidateCODData",
+      "preconditions": [
+        {
+          "type": "user_said",
+          "value": "Mi nombre es Pepito, correo..., cédula..., dirección..."
+        }
+      ]
+    },
+    {
+      "from": "ValidateCODData",
+      "to": "RequestMissingDataCOD",
+      "preconditions": [
+        {
+          "type": "agent_decision",
+          "value": "One or more required fields are missing, invalid, ambiguos, or incomplete (the \"barrio\" parameter IS ALSO MANDATORY, AND, the address must be unambiguos, otherwise, select this option and ask a clarifying address)"
+        }
+      ]
+    },
+    {
+      "from": "RequestMissingDataCOD",
+      "to": "CreateCODOrder",
+      "preconditions": [
+        {
+          "type": "agent_decision",
+          "value": "All required fields are present, valid, and complete"
+        }
+      ]
+    },
+    {
+      "from": "RequestMissingDataCOD",
+      "to": "ValidateCODData",
+      "preconditions": [
+        {
+          "type": "agent_decision",
+          "value": "One or more required fields are missing, invalid, ambiguos, or incomplete (the \"barrio\" parameter IS ALSO MANDATORY, AND, the address must be unambiguos, otherwise, select this option and ask a clarifying address)"
+        }
+      ]
+    },
+    {
+      "from": "ValidateCODData",
+      "to": "CreateCODOrder",
+      "preconditions": [
+        {
+          "type": "agent_decision",
+          "value": "All required fields are present, valid, and complete"
+        }
+      ]
+    },
+    {
+      "from": "CreateCODOrder",
+      "to": "OrderSuccess",
+      "preconditions": [
+        { "type": "tool_call", "value": "createCashOnDeliveryOrder" }
+      ]
+    },
+    { "from": "OrderCancelled", "to": "CartOptions" },
+    {
+      "from": "SearchProduct",
+      "to": "NoProductsFound",
+      "preconditions": [
+        {
+          "type": "agent_decision",
+          "value": "the tool search did not found any (0) products"
+        }
+      ]
+    },
+    {
+      "from": "SearchProduct",
+      "to": "ShowSingleImage",
+      "preconditions": [
+        {
+          "type": "agent_decision",
+          "value": "the tool search found only one (1) product"
+        }
+      ]
+    },
+    {
+      "from": "SearchProduct",
+      "to": "ShowSeveralImages",
+      "preconditions": [
+        {
+          "type": "agent_decision",
+          "value": "the tool search found more than one (>1) product"
+        }
+      ]
+    },
+    {
+      "from": "NoProductsFound",
+      "to": "SearchIntent",
+      "preconditions": [
+        {
+          "type": "user_said",
+          "value": "¿Qué otras opciones tienes? ó, quiero un [PRODUCTO] como..."
+        }
+      ]
+    },
+    {
+      "from": "NoProductsFound",
+      "to": "AskQuantity",
+      "preconditions": [
+        {
+          "type": "user_said",
+          "value": "\"Quiero comprar los que me mostraste antes\", o \"quiero los que ya me habias mostrado\", o \"quiero los primeros que me mostraste\""
+        }
+      ]
+    },
+    {
+      "from": "NoProductsFound",
+      "to": "NotInterestedInSeeingAnyMore",
+      "preconditions": [
+        {
+          "type": "user_said",
+          "value": "No gracias, ya no me interesa nada más o No, asi esta bien"
+        }
+      ],
+      "contextPreconditions": { "preconditions": ["USER_HAS_EMPTY_CART"] }
+    },
+    {
+      "from": "NoProductsFound",
+      "to": "ReturnToCartWithoutAddingNewItems",
+      "preconditions": [
+        {
+          "type": "user_said",
+          "value": "No me gusto, o deja así, o solo dame el producto que ya tenia en el carrito"
+        }
+      ],
+      "contextPreconditions": {
+        "preconditions": ["USER_HAS_NONEMPTY_CART"],
+        "jumpTo": "ContinueWithOrder"
+      }
+    },
+    {
+      "from": "ShowSingleImage",
+      "to": "GenerateProductCard",
+      "preconditions": [
+        {
+          "type": "tool_call",
+          "value": "sendImage",
+          "description": "Call the tool \"sendImage\" NOW. Do not request any additional information, do not ask for customizations, just call the tool NOW. Provide the tool with the ID of the image you want to send to the user, you obtained this ID in the result of the call to the tool \"searchProducts\""
+        }
+      ]
+    },
+    {
+      "from": "GenerateProductCard",
+      "to": "SingleProduct",
+      "preconditions": [
+        {
+          "type": "tool_call",
+          "value": "productCards",
+          "description": "Call the tool \"productCards\" NOW."
+        }
+      ]
+    },
+    {
+      "from": "ShowSeveralImages",
+      "to": "GenerateProductCards",
+      "preconditions": [
+        {
+          "type": "tool_call",
+          "value": "sendImages",
+          "description": "IMMEDIATELY call the tool \"sendImages\". Your ONLY task is to execute the tool call - do NOT send any text message, do NOT ask questions, do NOT provide options. Simply call the tool with an array of product IDs from search results. Include one image ID per distinct product (max 3). If multiple personalizations exist, pick one automatically. The tool itself sends the images to the user."
+        }
+      ]
+    },
+    {
+      "from": "GenerateProductCards",
+      "to": "MultipleProducts",
+      "preconditions": [
+        {
+          "type": "tool_call",
+          "value": "productCards",
+          "description": "Call the tool \"productCards\" NOW."
+        }
+      ]
+    },
+    {
+      "from": "UserSaidFormWasFilled",
+      "to": "ConfirmCustomFormWasFilled",
+      "preconditions": [
+        { "type": "tool_call", "value": "confirmOrderCustomization" }
+      ]
+    },
+    {
+      "from": "ConfirmCustomFormWasFilled",
+      "to": "AskCity",
+      "preconditions": [
+        { "type": "agent_decision", "value": "The user DID complete the form" }
+      ]
+    },
+    {
+      "from": "ConfirmCustomFormWasFilled",
+      "to": "RemindCustom",
+      "preconditions": [
+        {
+          "type": "agent_decision",
+          "value": "The user did NOT complete the form"
+        }
+      ]
+    },
+    {
+      "from": "RemindCustom1",
+      "to": "RemindCustom2",
+      "preconditions": [
+        { "type": "tool_call", "value": "confirmOrderCustomization" }
+      ]
+    },
+    {
+      "from": "RemindCustom2",
+      "to": "AskCity",
+      "preconditions": [
+        { "type": "agent_decision", "value": "The user DID complete the form" }
+      ]
+    },
+    {
+      "from": "RemindCustom2",
+      "to": "RemindCustom",
+      "preconditions": [
+        {
+          "type": "agent_decision",
+          "value": "The user did NOT complete the form"
+        }
+      ]
+    },
+    {
+      "from": "ContinueWithOrder",
+      "to": "CustomLink",
+      "preconditions": [
+        { "type": "tool_call", "value": "createOrderCustomization" }
+      ]
+    },
+    {
+      "from": "GetCart",
+      "to": "ShowCart",
+      "preconditions": [{ "type": "tool_call", "value": "getCart" }]
+    },
+    {
+      "from": "RemoveItemFromCart",
+      "to": "UserDidNotSpecifyItemToRemove",
+      "preconditions": [
+        {
+          "type": "agent_decision",
+          "value": "The user did NOT specify which product to remove"
+        }
+      ]
+    },
+    {
+      "from": "RemoveItemFromCart",
+      "to": "UserSpecifiedItemToRemove",
+      "preconditions": [
+        {
+          "type": "agent_decision",
+          "value": "The user DID specify which product to remove"
+        }
+      ]
+    },
+    {
+      "from": "UserDidNotSpecifyItemToRemove",
+      "to": "WhichRemove",
+      "preconditions": [{ "type": "tool_call", "value": "getCart" }]
+    },
+    {
+      "from": "UserSpecifiedItemToRemove",
+      "to": "RemoveSuccess",
+      "preconditions": [{ "type": "tool_call", "value": "deleteCartItem" }]
+    },
+    {
+      "from": "ReplaceItemFromCart",
+      "to": "UserSpecifiedItemToReplace",
+      "preconditions": [
+        {
+          "type": "agent_decision",
+          "value": "The user DID specify which product to replace"
+        }
+      ]
+    },
+    {
+      "from": "ReplaceItemFromCart",
+      "to": "UserDidNotSpecifyItemToReplace",
+      "preconditions": [
+        {
+          "type": "agent_decision",
+          "value": "The user did NOT specify which product to replace"
+        }
+      ]
+    },
+    {
+      "from": "UserSpecifiedItemToReplace",
+      "to": "WhatInstead",
+      "preconditions": [{ "type": "tool_call", "value": "deleteCartItem" }]
+    },
+    {
+      "from": "UserDidNotSpecifyItemToReplace",
+      "to": "WhichReplace",
+      "preconditions": [{ "type": "tool_call", "value": "getCart" }]
+    },
+    {
+      "from": "ReplaceItemSpecified",
+      "to": "WhatInstead",
+      "preconditions": [{ "type": "tool_call", "value": "deleteCartItem" }]
+    },
+    {
+      "from": "UserSpecifiedCity",
+      "to": "AskCity2",
+      "preconditions": [
+        {
+          "type": "tool_call",
+          "value": "searchCityId",
+          "description": "If the user says a city name (e.g. 'Medellín'), call `searchCityId` with: { \"city\": \"<city>\" }.\nExample: user says 'Bogotá' → call `searchCityId` with input {\"city\": \"Bogotá\"}."
+        }
+      ]
+    },
+    {
+      "from": "AskCity2",
+      "to": "CityHasExactMatch",
+      "preconditions": [
+        { "type": "agent_decision", "value": "City had an exact match" }
+      ]
+    },
+    {
+      "from": "AskCity2",
+      "to": "ClarifyCity",
+      "preconditions": [
+        { "type": "agent_decision", "value": "City had several matches" }
+      ]
+    },
+    {
+      "from": "AskCity2",
+      "to": "CityDoesNotExist",
+      "preconditions": [
+        { "type": "agent_decision", "value": "No city was found" }
+      ]
+    },
+    {
+      "from": "CityDoesNotExist",
+      "to": "UserSpecifiedCity",
+      "preconditions": [
+        { "type": "user_said", "value": "Nuevo nombre de ciudad corregido" }
+      ]
+    },
+    {
+      "from": "ConfirmShippingToCity",
+      "to": "CalculatShippingFees",
+      "preconditions": [
+        {
+          "type": "tool_call",
+          "value": "confirmShippingToCity",
+          "description": "Use the full cityID obtained from the call to the tool \"searchCityId\" as the \"cityID\" parameter for this call. NEVER hallucinate nor shorten this cityID value."
+        }
+      ]
+    },
+
+    {
+      "from": "AskPayment3",
+      "to": "CalculateTotalTransference",
+      "preconditions": [
+        { "type": "tool_call", "value": "calculateTotalPayment" }
+      ]
+    },
+    { "from": "CalculateTotalTransference", "to": "ShowTotalTransference" },
+    {
+      "from": "ShowTotalTransference",
+      "to": "AskDataTransference",
+      "preconditions": [{ "type": "user_said", "value": "Sí, confirmo" }]
+    },
+    {
+      "from": "ShowTotalTransference",
+      "to": "CartOptions",
+      "preconditions": [{ "type": "user_said", "value": "No, no confirmo" }]
+    },
+    {
+      "from": "AskDataTransference",
+      "to": "ValidateTransferenceData",
+      "preconditions": [
+        {
+          "type": "user_said",
+          "value": "Mi nombre es Pepito, correo..., cédula..., dirección..."
+        }
+      ]
+    },
+    {
+      "from": "ValidateTransferenceData",
+      "to": "RequestMissingDataTransference",
+      "preconditions": [
+        {
+          "type": "agent_decision",
+          "value": "One or more required fields are missing, invalid, ambiguos, or incomplete (the \"barrio\" parameter IS ALSO MANDATORY, AND, the address must be unambiguos, otherwise, select this option and ask a clarifying address)"
+        }
+      ]
+    },
+    {
+      "from": "RequestMissingDataTransference",
+      "to": "CreateTransferencePayment",
+      "preconditions": [
+        {
+          "type": "agent_decision",
+          "value": "All required fields are present, valid, and complete"
+        }
+      ]
+    },
+    {
+      "from": "RequestMissingDataTransference",
+      "to": "ValidateTransferenceData",
+      "preconditions": [
+        {
+          "type": "agent_decision",
+          "value": "One or more required fields are missing, invalid, ambiguos, or incomplete (the \"barrio\" parameter IS ALSO MANDATORY, AND, the address must be unambiguos, otherwise, select this option and ask a clarifying address)"
+        }
+      ]
+    },
+    {
+      "from": "ValidateTransferenceData",
+      "to": "CreateTransferencePayment",
+      "preconditions": [
+        {
+          "type": "agent_decision",
+          "value": "All required fields are present, valid, and complete, and documentoIdentidad has 10 digits at maximum"
+        }
+      ]
+    },
+    {
+      "from": "CreateTransferencePayment",
+      "to": "ShowTransferenceDetails",
+      "preconditions": [
+        { "type": "tool_call", "value": "getTransferenceDetails" }
+      ]
+    },
+    {
+      "from": "ShowTransferenceDetails",
+      "to": "ShowTransferenceDetails1",
+      "preconditions": [
+        {
+          "type": "user_said",
+          "value": "el usuario dice \"ya pagué, mira la captura de pantalla del comprobante\" o explícitamente en su ÚLTIMO mensaje informa que no pudo tomar la captura de pantalla, por ejemplo \"ya pagué, pero no tomé captura\" o \"no tomé captura\""
+        }
+      ]
+    },
+    {
+      "from": "ShowTransferenceDetails",
+      "to": "AskPaymentScreenshot",
+      "preconditions": [
+        {
+          "type": "user_said",
+          "value": "el usuario dice \"ya pagué\", pero NO ha enviado captura de pantalla del comprobante NI TAMPOCO ha dicho explícitamente que NO TOMÓ la captura"
+        }
+      ]
+    },
+    {
+      "from": "AskPaymentScreenshot",
+      "to": "ShowTransferenceDetails1",
+      "preconditions": [
+        {
+          "type": "user_said",
+          "value": "el usuario envía la captura de pantalla de la transferencia o explícitamente indica que NO tomó captura de pantalla"
+        }
+      ]
+    },
+    {
+      "from": "AskPaymentScreenshot",
+      "to": "ShowTransferenceDetails",
+      "preconditions": [
+        {
+          "type": "user_said",
+          "value": "el usuario pide verificar los datos de la cuenta de destino"
+        }
+      ]
+    },
+    {
+      "from": "ShowTransferenceDetails1",
+      "to": "WaitForTransferenceConfirmation",
+      "preconditions": [
+        {
+          "type": "tool_call",
+          "value": "waitForTransferenceVerification",
+          "description": "You do not need a screenshot to call this tool, you must call this tool NOW"
+        }
+      ]
+    },
+    {
+      "from": "WaitForTransferenceConfirmation",
+      "to": "ShowTransferenceDetails2"
+    },
+    {
+      "from": "ShowTransferenceDetails2",
+      "to": "OrderSuccess",
+      "preconditions": [
+        {
+          "type": "agent_decision",
+          "value": "The tool result confirmed the payment"
+        }
+      ]
+    },
+    {
+      "from": "ShowTransferenceDetails2",
+      "to": "PaymentPendingTransference",
+      "preconditions": [
+        {
+          "type": "agent_decision",
+          "value": "The tool result did not confirm the payment"
+        }
+      ]
+    },
+    {
+      "from": "PaymentPendingTransference",
+      "to": "PaymentPendingTransference1",
+      "preconditions": [
+        {
+          "type": "user_said",
+          "value": "el usuario dice \"ya pagué, mira la captura de pantalla del comprobante\" o explícitamente en su ÚLTIMO mensaje informa que no pudo tomar la captura de pantalla, por ejemplo \"ya pagué, pero no tomé captura\" o \"no tomé captura\""
+        }
+      ]
+    },
+    {
+      "from": "PaymentPendingTransference",
+      "to": "AskPaymentScreenshot",
+      "preconditions": [
+        {
+          "type": "user_said",
+          "value": "el usuario dice \"ya pagué\", pero NO ha enviado captura de pantalla del comprobante NI TAMPOCO ha dicho explícitamente que no pudo tomar captura"
+        }
+      ]
+    },
+    {
+      "from": "PaymentPendingTransference1",
+      "to": "ShowTransferenceDetails1"
+    },
+    {
+      "from": "AskPayment1",
+      "to": "CalculateTotalOnline",
+      "preconditions": [
+        { "type": "tool_call", "value": "calculateTotalPayment" }
+      ]
+    },
+    { "from": "CalculateTotalOnline", "to": "ShowTotalOnline" },
+    {
+      "from": "ShowTotalOnline",
+      "to": "AskDataOnline",
+      "preconditions": [{ "type": "user_said", "value": "Sí, confirmo" }]
+    },
+    {
+      "from": "ShowTotalOnline",
+      "to": "CartOptions",
+      "preconditions": [{ "type": "user_said", "value": "No, no confirmo" }]
+    },
+    {
+      "from": "AskDataOnline",
+      "to": "ValidateOnlineData",
+      "preconditions": [
+        {
+          "type": "user_said",
+          "value": "Mi nombre es Pepito, correo..., cédula..., dirección..."
+        }
+      ]
+    },
+    {
+      "from": "ValidateOnlineData",
+      "to": "RequestMissingDataOnline",
+      "preconditions": [
+        {
+          "type": "agent_decision",
+          "value": "One or more required fields are missing, invalid, ambiguos, or incomplete (the \"barrio\" parameter IS ALSO MANDATORY, AND, the address must be unambiguos, otherwise, select this option and ask a clarifying address)"
+        }
+      ]
+    },
+    {
+      "from": "RequestMissingDataOnline",
+      "to": "CreateOnlinePayment",
+      "preconditions": [
+        {
+          "type": "agent_decision",
+          "value": "All required fields are present, valid, and complete"
+        }
+      ]
+    },
+    {
+      "from": "RequestMissingDataOnline",
+      "to": "ValidateOnlineData",
+      "preconditions": [
+        {
+          "type": "agent_decision",
+          "value": "One or more required fields are missing, invalid, ambiguos, or incomplete (the \"barrio\" parameter IS ALSO MANDATORY, AND, the address must be unambiguos, otherwise, select this option and ask a clarifying address)"
+        }
+      ]
+    },
+    {
+      "from": "ValidateOnlineData",
+      "to": "CreateOnlinePayment",
+      "preconditions": [
+        {
+          "type": "agent_decision",
+          "value": "All required fields are present, valid, and complete, and documentoIdentidad has 10 digits at maximum"
+        }
+      ]
+    },
+    {
+      "from": "CreateOnlinePayment",
+      "to": "ShowPayLink",
+      "preconditions": [{ "type": "tool_call", "value": "createPaymentLink" }]
+    },
+    {
+      "from": "ShowPayLink",
+      "to": "ShowPayLink1",
+      "preconditions": [{ "type": "user_said", "value": "¡Ya pagué!" }]
+    },
+    {
+      "from": "ShowPayLink1",
+      "to": "ShowPayLink2",
+      "preconditions": [{ "type": "tool_call", "value": "verifyPayment" }]
+    },
+    {
+      "from": "ShowPayLink2",
+      "to": "OrderSuccess",
+      "preconditions": [
+        {
+          "type": "agent_decision",
+          "value": "The tool result confirmed the payment"
+        }
+      ]
+    },
+    {
+      "from": "ShowPayLink2",
+      "to": "PaymentPending",
+      "preconditions": [
+        {
+          "type": "agent_decision",
+          "value": "The tool result did not confirm the payment"
+        }
+      ]
+    },
+    {
+      "from": "PaymentPending",
+      "to": "PaymentPending1",
+      "preconditions": [{ "type": "user_said", "value": "¡Ya pagué!" }]
+    },
+    {
+      "from": "PaymentPending1",
+      "to": "PaymentPending2",
+      "preconditions": [{ "type": "tool_call", "value": "verifyPayment" }]
+    },
+    {
+      "from": "PaymentPending2",
+      "to": "OrderSuccess",
+      "preconditions": [
+        {
+          "type": "agent_decision",
+          "value": "The tool result confirmed the payment"
+        }
+      ]
+    },
+    {
+      "from": "OrderSuccess",
+      "to": "UserDoesNotNeedAnythingElse",
+      "preconditions": [
+        {
+          "type": "user_said",
+          "value": "Gracias, eso es todo o no necesito nada más"
+        }
+      ]
+    },
+    {
+      "from": "OrderSuccess",
+      "to": "TrackingOrderStatus",
+      "preconditions": [
+        {
+          "type": "user_said",
+          "value": "¿Cómo va mi pedido? o ¿Cuándo llega mi pedido? o pásame la guía de envío"
+        }
+      ]
+    },
+    {
+      "from": "NotInterestedInSeeingAnyMore",
+      "to": "UserDoesNotNeedAnythingElse",
+      "preconditions": [
+        {
+          "type": "user_said",
+          "value": "No, no necesito nada más, gracias, eso era todo"
+        }
+      ]
+    },
+    {
+      "from": "NotInterestedInSeeingAnyMore",
+      "to": "RegisterUserName",
+      "preconditions": [
+        {
+          "type": "user_said",
+          "value": "Si, necesito ayuda con algo: busco, quiero, necesito [X]"
+        }
+      ]
+    },
+    {
+      "from": "PaymentPending2",
+      "to": "PaymentPending",
+      "preconditions": [
+        {
+          "type": "agent_decision",
+          "value": "The tool result did not confirm the payment"
+        }
+      ]
+    },
+    {
+      "from": "RegisterUserName",
+      "to": "TrackingOrderStatus",
+      "preconditions": [
+        {
+          "type": "user_said",
+          "value": "¿Cómo va mi pedido? o ¿Cuándo llega mi pedido? o pásame la guía de envío"
+        }
+      ]
+    },
+    {
+      "from": "TrackingOrderStatus",
+      "to": "InterpretOrderStatus",
+      "preconditions": [{ "type": "tool_call", "value": "getOrders" }]
+    },
+    {
+      "from": "InterpretOrderStatus",
+      "to": "OrderUnpaid",
+      "preconditions": [
+        { "type": "agent_decision", "value": "Order status is unpaid" }
+      ]
+    },
+    {
+      "from": "InterpretOrderStatus",
+      "to": "OrderPaidUnconfirmed",
+      "preconditions": [
+        {
+          "type": "agent_decision",
+          "value": "Order status is paid/unconfirmed"
+        }
+      ]
+    },
+    {
+      "from": "InterpretOrderStatus",
+      "to": "OrderConfirmed",
+      "preconditions": [
+        { "type": "agent_decision", "value": "Order status is confirmed" }
+      ]
+    },
+    {
+      "from": "InterpretOrderStatus",
+      "to": "OrderSent",
+      "preconditions": [
+        { "type": "agent_decision", "value": "Order status is sent/enviado" }
+      ]
+    },
+    {
+      "from": "InterpretOrderStatus",
+      "to": "OrderReceived",
+      "preconditions": [
+        { "type": "agent_decision", "value": "Order status is received" }
+      ]
+    },
+    {
+      "from": "InterpretOrderStatus",
+      "to": "OrderCancelledTracking",
+      "preconditions": [
+        { "type": "agent_decision", "value": "Order status is cancelled" }
+      ]
+    },
+    {
+      "from": "InterpretOrderStatus",
+      "to": "OrderPaymentFailed",
+      "preconditions": [
+        { "type": "agent_decision", "value": "Order status is payment-failed" }
+      ]
+    },
+    {
+      "from": "InterpretOrderStatus",
+      "to": "NoOrdersFound",
+      "preconditions": [
+        { "type": "agent_decision", "value": "No orders found for user" }
+      ]
+    },
+    {
+      "from": "OrderSent",
+      "to": "OfferTrackingGuide",
+      "preconditions": [
+        { "type": "agent_decision", "value": "trackingId exists in response" }
+      ]
+    },
+    {
+      "from": "OrderSent",
+      "to": "TrackingIdNotFound",
+      "preconditions": [
+        { "type": "agent_decision", "value": "No trackingId exists" }
+      ]
+    },
+    {
+      "from": "TrackingIdNotFound",
+      "to": "AskMoreTracking",
+      "preconditions": [
+        {
+          "type": "user_said",
+          "value": "Vale, gracias, esperaré que me la envies"
+        }
+      ]
+    },
+    {
+      "from": "OfferTrackingGuide",
+      "to": "UserWantsGuide",
+      "preconditions": [
+        { "type": "user_said", "value": "User responds to guide offer" }
+      ]
+    },
+    {
+      "from": "UserWantsGuide",
+      "to": "SendTrackingGuide",
+      "preconditions": [
+        { "type": "agent_decision", "value": "User wants the guide" }
+      ]
+    },
+    {
+      "from": "UserWantsGuide",
+      "to": "TrackingGuideDeclined",
+      "preconditions": [
+        { "type": "agent_decision", "value": "User declined the guide" }
+      ]
+    },
+    {
+      "from": "SendTrackingGuide",
+      "to": "ReceiptInformation",
+      "preconditions": [{ "type": "tool_call", "value": "sendTrackingID" }]
+    },
+    {
+      "from": "ReceiptInformation",
+      "to": "AskMoreTracking"
+    },
+    {
+      "from": "TrackingGuideDeclined",
+      "to": "AskMoreTracking"
+    },
+    {
+      "from": "OrderUnpaid",
+      "to": "AskMoreTracking"
+    },
+    {
+      "from": "OrderPaidUnconfirmed",
+      "to": "AskMoreTracking"
+    },
+    {
+      "from": "OrderConfirmed",
+      "to": "AskMoreTracking"
+    },
+    {
+      "from": "OrderReceived",
+      "to": "AskMoreTracking"
+    },
+    {
+      "from": "OrderCancelledTracking",
+      "to": "AskMoreTracking"
+    },
+    {
+      "from": "OrderPaymentFailed",
+      "to": "AskMoreTracking"
+    },
+    {
+      "from": "NoOrdersFound",
+      "to": "AskMoreTracking"
+    },
+    {
+      "from": "AskMoreTracking",
+      "to": "InterpretOrderStatus",
+      "preconditions": [
+        {
+          "type": "user_said",
+          "value": "tengo otra duda / necesito también otra cosa..."
+        }
+      ]
+    },
+    {
+      "from": "AskMoreTracking",
+      "to": "UserDoesNotNeedAnythingElse",
+      "preconditions": [
+        {
+          "type": "user_said",
+          "value": "Eso es todo, muchas gracias, no necesito nada más"
+        }
+      ]
+    },
+    {
+      "from": "AskMoreTracking",
+      "to": "RegisterUserName",
+      "preconditions": [
+        {
+          "type": "user_said",
+          "value": "Ya no necesito nada más sobre mi pedido, pero quiero preguntarte otra cosa"
+        }
+      ]
+    },
+    {
+      "from": "UserDoesNotNeedAnythingElse",
+      "to": "RegisterUserName",
+      "preconditions": [
+        {
+          "type": "user_said",
+          "value": "Hola, tengo una pregunta, o necesito saber algo"
+        }
+      ]
+    }
+  ]
+}

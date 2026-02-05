@@ -1,7 +1,7 @@
 <p align="center">
   <h1 align="center">LLM Rate Limiter</h1>
   <p align="center">
-    A production-ready, TypeScript-first rate limiter for LLM APIs with multi-model support, automatic fallback, cost tracking, and distributed coordination.
+    A TypeScript library for managing LLM API rate limits across multiple models and instances.
   </p>
 </p>
 
@@ -21,395 +21,358 @@
 </p>
 
 <p align="center">
-  <a href="#features">Features</a> &bull;
-  <a href="#installation">Installation</a> &bull;
-  <a href="#quick-start">Quick Start</a> &bull;
-  <a href="#architecture">Architecture</a> &bull;
-  <a href="#distributed-mode">Distributed Mode</a> &bull;
-  <a href="#api-reference">API Reference</a> &bull;
-  <a href="#contributing">Contributing</a>
+  <a href="#the-problem">Problem</a> •
+  <a href="#quickstart">Quickstart</a> •
+  <a href="#features">Features</a> •
+  <a href="#distributed-mode">Distributed Mode</a> •
+  <a href="#api-reference">API Reference</a>
 </p>
 
 ---
 
-## Why LLM Rate Limiter?
+## The Problem
 
-LLM APIs have complex rate limiting rules: requests per minute, tokens per minute, concurrent request limits, and daily quotas. When you're running multiple models across multiple instances, managing these limits becomes a significant engineering challenge.
+LLM APIs enforce multiple overlapping rate limits: tokens per minute (TPM), requests per minute (RPM), daily quotas (TPD/RPD), and concurrent request caps. These limits apply globally to your API key, not per instance.
 
-**LLM Rate Limiter** solves this by providing:
+When you scale horizontally, local rate limiting breaks. Three instances each tracking "500 RPM locally" will hit a 500 RPM global limit 3x faster than expected. You need distributed coordination, but most solutions require deploying and maintaining separate proxy infrastructure.
 
-- **Unified Rate Limiting** - One library to handle RPM, TPM, RPD, TPD, concurrency, and memory limits
-- **Smart Fallback** - Automatically switch to the next available model when one is exhausted
-- **Distributed Coordination** - Fair slot distribution across multiple instances via Redis
-- **Accurate Cost Tracking** - Built-in pricing calculation with per-request cost breakdowns
-- **Actual Usage Adjustment** - Refund unused capacity when jobs use less than estimated
+Additionally:
+
+- **Capacity estimation is imprecise.** You reserve 10K tokens for a job, it uses 6K, and that 4K sits locked until the job completes—wasted capacity that could serve other requests.
+- **Fallback logic is non-trivial.** When GPT-4 hits its limit, you want to fall back to Claude, but only if Claude has capacity, and you need to track which model actually served the request.
+- **Time windows create edge cases.** A job that starts in minute N but completes in minute N+1 shouldn't get tokens refunded to minute N+1's budget—that minute never had those tokens reserved.
+
+This library handles all of this as an in-process solution. No sidecars, no proxies, no infrastructure to deploy. It's a library you import that coordinates via Redis when you need distribution.
+
+## How It Works
+
+The library wraps your LLM calls in a job queue that enforces rate limits before execution. You provide a callback containing your actual LLM code—any SDK, any provider. The library:
+
+1. Checks capacity across all configured limits (TPM, RPM, TPD, RPD, concurrent, memory)
+2. Either executes immediately, queues until capacity is available, or delegates to the next model
+3. Adjusts capacity counters based on actual token usage after completion
+4. Coordinates with other instances via Redis (optional) using pool-based allocation
 
 ## Features
 
-| Feature | Description |
-|---------|-------------|
-| **Multi-Model Support** | Define independent rate limits per model with configurable priority order |
-| **Automatic Fallback** | Seamlessly delegate to the next available model when capacity is exhausted |
-| **Comprehensive Limits** | RPM, RPD, TPM, TPD, concurrent requests, and memory-based limits |
-| **Cost Tracking** | Built-in pricing calculation with input/output/cached token rates |
-| **Distributed Coordination** | Redis backend for fair slot distribution across instances |
-| **Type-Safe** | Full TypeScript support with compile-time validation |
-| **Memory-Aware** | Optional memory-based capacity limits with automatic adjustment |
-| **Queue Management** | Configurable wait times with automatic capacity-based queuing |
-| **Actual Usage Adjustment** | Refund or charge based on actual vs estimated token usage |
-| **Dynamic Ratios** | Local job type ratio adjustment based on load patterns |
+| Feature                      | Description                                                             |
+| ---------------------------- | ----------------------------------------------------------------------- |
+| **Rate Limits**              | RPM, TPM, RPD, TPD, concurrent requests, memory-based limits            |
+| **Multi-Model Fallback**     | Automatic delegation to next model when capacity is exhausted           |
+| **Distributed Coordination** | Redis backend for multi-instance deployments with pool-based allocation |
+| **Cost Tracking**            | Per-request cost calculation with input/output/cached token pricing     |
+| **Actual Usage Adjustment**  | Refunds unused capacity when jobs use less than estimated               |
+| **Type Safety**              | Full TypeScript support with compile-time model ID validation           |
+| **Provider Agnostic**        | Callback-based design works with any LLM SDK or API                     |
 
-## Installation
+## Architecture
 
-```bash
-# Core library
-npm install @llm-rate-limiter/core
+```mermaid
+flowchart TB
+    subgraph Limiter["LLM Rate Limiter"]
+        CB["Your callback runs here—any SDK, any provider, any model."]
+    end
 
-# Redis backend (optional, for distributed systems)
-npm install @llm-rate-limiter/redis
+    Limiter --> Models
+
+    subgraph Models["Model Selection"]
+        direction LR
+        A["Model A<br/>(primary)"] -->|delegate| B["Model B<br/>(fallback)"]
+        B -->|delegate| C["Model C<br/>(fallback)"]
+    end
+
+    Models --> Limits
+
+    subgraph Limits["Rate Limit Enforcement"]
+        direction LR
+        T["Token Limits<br/>TPM / TPD"]
+        R["Request Limits<br/>RPM / RPD"]
+        Con["Concurrency<br/>+ Memory"]
+    end
+
+    Limits --> Backend
+
+    subgraph Backend["Backend (pluggable)"]
+        direction LR
+        L["Local<br/>(default)"]
+        Redis["Redis<br/>(distributed)"]
+    end
 ```
 
-## Quick Start
+---
 
-### Single Model
+## Quickstart
+
+```bash
+npm install @llm-rate-limiter/core
+```
+
+### Basic Usage
 
 ```typescript
 import { createLLMRateLimiter } from '@llm-rate-limiter/core';
 
 const limiter = createLLMRateLimiter({
   models: {
-    'gpt-4': {
+    'gpt-4o': {
       requestsPerMinute: 500,
-      tokensPerMinute: 100000,
-      maxConcurrentRequests: 10,
-      pricing: { input: 0.03, output: 0.06, cached: 0.015 },
+      tokensPerMinute: 150000,
+      pricing: { input: 0.0025, output: 0.01, cached: 0.00125 },
     },
   },
 });
 
 const result = await limiter.queueJob({
-  jobId: 'my-job-1',
-  job: async ({ modelId }, reject) => {
-    const response = await callOpenAI(modelId, 'Hello, world!');
+  jobId: 'job-123',
+  job: async ({ modelId }) => {
+    const response = await openai.chat.completions.create({
+      model: modelId,
+      messages: [{ role: 'user', content: 'Hello' }],
+    });
+    
     return {
+      data: response.choices[0].message.content,
       requestCount: 1,
-      inputTokens: 10,
+      inputTokens: response.usage?.prompt_tokens ?? 0,
+      outputTokens: response.usage?.completion_tokens ?? 0,
       cachedTokens: 0,
-      outputTokens: 20,
-      data: response,
     };
   },
-  onComplete: (result, { totalCost }) => {
-    console.log(`Completed with ${result.modelUsed}, cost: $${totalCost}`);
-  },
 });
+
+console.log(result.data);
 ```
 
-### Multi-Model with Automatic Fallback
+The `job` callback can contain any code—OpenAI, Anthropic, Ollama, or custom APIs. The library manages capacity; you manage the LLM calls.
+
+### Multi-Model with Job Types
 
 ```typescript
+import { createLLMRateLimiter } from '@llm-rate-limiter/core';
+
 const limiter = createLLMRateLimiter({
   models: {
-    'gpt-4': {
-      requestsPerMinute: 100,
-      pricing: { input: 0.03, output: 0.06, cached: 0.015 },
-    },
-    'gpt-3.5-turbo': {
-      requestsPerMinute: 1000,
-      pricing: { input: 0.001, output: 0.002, cached: 0.0005 },
-    },
-    'claude-3-sonnet': {
+    'openai/gpt-4o': {
       requestsPerMinute: 500,
-      pricing: { input: 0.003, output: 0.015, cached: 0.00075 },
+      tokensPerMinute: 500000,
+      pricing: { input: 0.0025, output: 0.01, cached: 0.00125 },
+    },
+    'anthropic/claude-3-5-sonnet': {
+      requestsPerMinute: 1000,
+      tokensPerMinute: 80000,
+      pricing: { input: 0.003, output: 0.015, cached: 0.0015 },
+    },
+    'deepinfra/llama-3-70b': {
+      maxConcurrentRequests: 200,  // No TPM/RPM, just concurrency
+      pricing: { input: 0.0003, output: 0.0004, cached: 0.0003 },
     },
   },
-  order: ['gpt-4', 'gpt-3.5-turbo', 'claude-3-sonnet'],
-});
-
-const result = await limiter.queueJob({
-  jobId: 'my-job',
-  job: async ({ modelId }, reject) => {
-    try {
-      const response = await callLLM(modelId, prompt);
-      return {
-        requestCount: 1,
-        inputTokens: 100,
-        cachedTokens: 0,
-        outputTokens: 50,
-        data: response,
-      };
-    } catch (error) {
-      // Delegate to next model on failure
-      reject(
-        { requestCount: 1, inputTokens: 100, cachedTokens: 0, outputTokens: 0 },
-        { delegate: true }
-      );
-      throw error;
-    }
+  escalationOrder: ['openai/gpt-4o', 'anthropic/claude-3-5-sonnet', 'deepinfra/llama-3-70b'],
+  resourceEstimationsPerJob: {
+    summarize: {
+      estimatedUsedTokens: 10000,
+      estimatedNumberOfRequests: 1,
+      ratio: { initialValue: 0.3 },
+    },
+    chat: {
+      estimatedUsedTokens: 2000,
+      estimatedNumberOfRequests: 3,
+      ratio: { initialValue: 0.4, flexible: false },  // Protected capacity
+    },
+    embedding: {
+      estimatedUsedTokens: 500,
+      estimatedNumberOfRequests: 1,
+    },
   },
 });
 
-console.log(`Used model: ${result.modelUsed}`);
+// Jobs are routed based on type and available capacity
+const summary = await limiter.queueJob({
+  jobId: 'sum-1',
+  jobType: 'summarize',
+  job: async ({ modelId }) => {
+    const response = await callLLM(modelId, longDocument);
+    return {
+      data: response.text,
+      inputTokens: response.usage.input,
+      outputTokens: response.usage.output,
+      cachedTokens: 0,
+      requestCount: 1,
+    };
+  },
+});
+
+console.log(`Model used: ${summary.modelUsed}`);
 ```
 
-## Architecture
+### Distributed (Redis)
 
+For multi-instance deployments:
+
+```bash
+npm install @llm-rate-limiter/redis
 ```
-                        ┌─────────────────────────────────────────────┐
-                        │           LLM Rate Limiter                  │
-                        └─────────────────────────────────────────────┘
-                                           │
-              ┌────────────────────────────┼────────────────────────────┐
-              │                            │                            │
-              ▼                            ▼                            ▼
-    ┌─────────────────┐          ┌─────────────────┐          ┌─────────────────┐
-    │    Model A      │          │    Model B      │          │    Model C      │
-    │   (primary)     │   ───►   │   (fallback)    │   ───►   │   (fallback)    │
-    │   Limiter       │ delegate │    Limiter      │ delegate │   Limiter       │
-    └─────────────────┘          └─────────────────┘          └─────────────────┘
-              │                            │                            │
-              └────────────────────────────┼────────────────────────────┘
-                                           │
-              ┌────────────────────────────┼────────────────────────────┐
-              │                            │                            │
-              ▼                            ▼                            ▼
-    ┌─────────────────┐          ┌─────────────────┐          ┌─────────────────┐
-    │  RPM / RPD      │          │  TPM / TPD      │          │  Concurrency    │
-    │  Limiters       │          │  Limiters       │          │  + Memory       │
-    └─────────────────┘          └─────────────────┘          └─────────────────┘
-                                           │
-                        ┌──────────────────┴──────────────────┐
-                        │        Backend (optional)           │
-                        │  ┌─────────┐    ┌────────────────┐  │
-                        │  │  Local  │ OR │ Redis (dist.)  │  │
-                        │  └─────────┘    └────────────────┘  │
-                        └─────────────────────────────────────┘
-```
-
-### Rate Limit Types
-
-| Limit | Description | Reset |
-|-------|-------------|-------|
-| `requestsPerMinute` (RPM) | Max requests per minute | Every minute |
-| `requestsPerDay` (RPD) | Max requests per day | Every 24 hours |
-| `tokensPerMinute` (TPM) | Max tokens per minute | Every minute |
-| `tokensPerDay` (TPD) | Max tokens per day | Every 24 hours |
-| `maxConcurrentRequests` | Max parallel requests | On job completion |
-| `memory` | Memory-based capacity | Dynamic |
-
-## Distributed Mode
-
-For multi-instance deployments, use the Redis backend for coordinated rate limiting with fair slot distribution.
-
-### How It Works
-
-The distributed system uses a **pool-based allocation** approach:
-
-1. **Redis** tracks global capacity per model and divides it fairly across instances
-2. **Local instances** distribute their allocated pool across job types using configurable ratios
-3. **Actual usage** is reported back to Redis, which adjusts allocations dynamically
-
-```
-┌─────────────────────────────────────────────────────────────────────┐
-│                              Redis                                   │
-│  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐               │
-│  │  Instances   │  │ Pool Alloc.  │  │ Global Usage │               │
-│  │    Hash      │  │    Hash      │  │   Counters   │               │
-│  └──────────────┘  └──────────────┘  └──────────────┘               │
-└─────────────────────────────────────────────────────────────────────┘
-         ▲                   ▲                   │
-         │                   │                   ▼
-    ┌────┴───────────────────┴───────────────────┴────┐
-    │                   Instance A                     │
-    │   Pool: 33 slots  │  Local Ratios: jobA=0.6     │
-    │                   │               jobB=0.4      │
-    └─────────────────────────────────────────────────┘
-    ┌─────────────────────────────────────────────────┐
-    │                   Instance B                     │
-    │   Pool: 33 slots  │  Local Ratios: jobA=0.5     │
-    │                   │               jobB=0.5      │
-    └─────────────────────────────────────────────────┘
-    ┌─────────────────────────────────────────────────┐
-    │                   Instance C                     │
-    │   Pool: 34 slots  │  Local Ratios: jobA=0.7     │
-    │                   │               jobB=0.3      │
-    └─────────────────────────────────────────────────┘
-```
-
-### Setup
 
 ```typescript
 import { createLLMRateLimiter } from '@llm-rate-limiter/core';
 import { createRedisBackend } from '@llm-rate-limiter/redis';
 
 const limiter = createLLMRateLimiter({
-  backend: createRedisBackend({
-    redis: 'redis://localhost:6379',
-    keyPrefix: 'llm-rl:',
-  }),
   models: {
-    'gpt-4': {
-      requestsPerMinute: 500,
+    'gpt-4o': {
+      requestsPerMinute: 5000,
       tokensPerMinute: 1000000,
-      pricing: { input: 0.03, output: 0.06, cached: 0.015 },
+      pricing: { input: 0.0025, output: 0.01, cached: 0.00125 },
     },
   },
+  backend: createRedisBackend({
+    redis: { host: 'localhost', port: 6379 },
+    instanceId: process.env.INSTANCE_ID,
+    heartbeatIntervalMs: 5000,
+    staleInstanceThresholdMs: 15000,
+  }),
 });
 
-// Start (registers with Redis for slot allocation)
-await limiter.start();
-
-// Use normally...
-const result = await limiter.queueJob({ /* ... */ });
-
-// Stop (unregisters from Redis)
-await limiter.stop();
+await limiter.start();  // Required for distributed backend
 ```
+
+---
+
+## Distributed Mode
+
+When running multiple instances, each needs a fair share of your global rate limits. The Redis backend handles this automatically.
+
+### Pool-Based Allocation
+
+```mermaid
+flowchart TB
+    subgraph Global["Global Limits: 1,000,000 TPM / 5,000 RPM"]
+        subgraph Redis["Redis"]
+            H["Tracks instance heartbeats"]
+            P["Calculates pool allocations"]
+            U["Stores actual usage for rebalancing"]
+            PS["Broadcasts allocation changes via pub/sub"]
+        end
+    end
+
+    Redis --> A
+    Redis --> B
+    Redis --> C
+
+    subgraph Instances["3 Instances (detected via heartbeats)"]
+        A["Instance A<br/>333K TPM<br/>1666 RPM"]
+        B["Instance B<br/>333K TPM<br/>1666 RPM"]
+        C["Instance C<br/>334K TPM<br/>1668 RPM"]
+    end
+```
+
+Each instance enforces limits against its local pool. Job type ratios (how much of the pool goes to "summarize" vs "chat" jobs) are managed locally per instance—Redis doesn't need to know about job types. This separation allows instant local ratio adjustments without coordination overhead.
 
 ### Key Features
 
-| Feature | Description |
-|---------|-------------|
-| **Fair Division** | Slots distributed evenly across active instances |
-| **Heartbeat** | Automatic cleanup of stale instances |
-| **Pub/Sub** | Real-time allocation updates via Redis channels |
-| **Actual Usage Tracking** | Global counters adjust allocations based on real consumption |
-| **Local Ratio Management** | Each instance optimizes job type distribution independently |
+| Feature                    | Description                                                  |
+| -------------------------- | ------------------------------------------------------------ |
+| **Fair Division**          | Slots distributed evenly across active instances             |
+| **Heartbeat**              | Automatic cleanup of stale instances                         |
+| **Pub/Sub**                | Real-time allocation updates via Redis channels              |
+| **Actual Usage Tracking**  | Global counters adjust allocations based on real consumption |
+| **Local Ratio Management** | Each instance optimizes job type distribution independently  |
 
-### Monitoring
+## Actual Usage Adjustment
 
-```typescript
-const stats = await redisBackend.getStats();
-// {
-//   totalInstances: 3,
-//   totalInFlight: 45,
-//   totalAllocated: 100,
-//   instances: [
-//     { id: 'instance-1', inFlight: 20, allocation: 33, lastHeartbeat: ... },
-//     { id: 'instance-2', inFlight: 15, allocation: 33, lastHeartbeat: ... },
-//     { id: 'instance-3', inFlight: 10, allocation: 34, lastHeartbeat: ... },
-//   ]
-// }
+Most rate limiters reserve capacity based on estimates and never reconcile. If you estimate 10K tokens but use 6K, that 4K is wasted until the time window resets.
+
+This library tracks actual usage and adjusts accordingly:
+
+```
+Job starts at 10:00:45 → reserves 10,000 tokens (estimated)
+Job completes at 10:00:52 → used 6,000 tokens (actual)
+Same minute window → 4,000 tokens refunded to available capacity
 ```
 
-## Advanced Features
+The adjustment only happens if the job completes within the same time window it started. A job that starts in minute 10 but finishes in minute 11 doesn't get a refund—minute 10's window already closed, and minute 11 never had those tokens reserved.
 
-### Queue Management with maxWaitMS
+```typescript
+return {
+  data: response,
+  inputTokens: response.usage.input,   // Actual usage
+  outputTokens: response.usage.output,
+};
+```
 
-Control how long jobs wait for capacity before delegating to the next model:
+If actual usage exceeds the estimate, the overage is added to counters (accurate tracking) and the `onOverage` callback fires (so you can tune estimates).
+
+### Error Handling
+
+When a job throws without calling `reject()`, the library **does not release time-windowed capacity**. It can't know if your code called the LLM API before crashing. This is safe by default—capacity naturally recovers when the time window resets.
+
+If you know the actual usage at the point of failure, call `reject()` explicitly:
+
+```typescript
+job: async ({ modelId }, reject) => {
+  try {
+    const response = await callLLM(modelId);
+    // ... processing fails here
+  } catch (error) {
+    reject(
+      { requestCount: 1, inputTokens: 3000, outputTokens: 0, cachedTokens: 0 },
+      { delegate: true }  // Try next model
+    );
+    throw error;
+  }
+}
+```
+
+## Memory-Based Limits
 
 ```typescript
 const limiter = createLLMRateLimiter({
-  models: {
-    'gpt-4': { tokensPerMinute: 100000, pricing: { ... } },
-    'gpt-3.5': { maxConcurrentRequests: 10, pricing: { ... } },
-  },
-  resourceEstimationsPerJob: {
-    // Critical jobs: wait for capacity (dynamic default: 5-65s)
-    critical: {
-      estimatedUsedTokens: 500,
-      // maxWaitMS not specified → uses dynamic default
-    },
-    // Low priority: fail fast, delegate immediately
-    lowPriority: {
-      estimatedUsedTokens: 100,
-      maxWaitMS: {
-        'gpt-4': 0,      // Don't wait
-        'gpt-3.5': 0,    // Don't wait
-      },
-    },
-    // Mixed: different wait times per model
-    standard: {
-      estimatedUsedTokens: 200,
-      maxWaitMS: {
-        'gpt-4': 60000,   // Wait up to 60s (TPM resets predictably)
-        'gpt-3.5': 5000,  // Wait only 5s (concurrent limit is unpredictable)
-      },
-    },
-  },
-});
-```
-
-### Memory-Based Limits
-
-Automatically adjust capacity based on available system memory:
-
-```typescript
-const limiter = createLLMRateLimiter({
-  models: {
-    'gpt-4': {
-      requestsPerMinute: 500,
-      resourcesPerEvent: { estimatedUsedMemoryKB: 1000 },
-      pricing: { input: 0.03, output: 0.06, cached: 0.015 },
-    },
-  },
+  models: { /* ... */ },
   memory: {
-    freeMemoryRatio: 0.5,           // Use up to 50% of free memory
-    recalculationIntervalMs: 5000,  // Recalculate every 5 seconds
+    totalAvailableMemoryKB: 512 * 1024,
+    recalculationIntervalMs: 5000,
   },
-  minCapacity: 10,   // Never go below 10 concurrent jobs
-  maxCapacity: 100,  // Never exceed 100 concurrent jobs
+  minCapacity: 5,
+  maxCapacity: 100,
 });
 ```
 
-### Availability Callbacks
-
-Monitor real-time availability changes:
+## Callbacks
 
 ```typescript
 const limiter = createLLMRateLimiter({
   models: { /* ... */ },
-  onAvailableSlotsChange: (availability, reason, adjustment) => {
-    console.log(`Slots: ${availability.slots}, Reason: ${reason}`);
-    // reason: 'adjustment' | 'tokensMinute' | 'tokensDay' |
-    //         'requestsMinute' | 'requestsDay' | 'concurrentRequests' |
-    //         'memory' | 'distributed'
+  onAvailableSlotsChange: (availability, reason) => {
+    // reason: 'tokensMinute' | 'tokensDay' | 'requestsMinute' | 
+    //         'requestsDay' | 'concurrentRequests' | 'memory' | 'distributed'
+  },
+  onOverage: (overage) => {
+    console.warn(`Exceeded estimate by ${overage.tokens} tokens`);
+  },
+  onLog: (level, message, data) => {
+    // 'debug' | 'info' | 'warn' | 'error'
   },
 });
 ```
 
-### Job Type Ratios
-
-Configure how capacity is distributed across different job types:
-
-```typescript
-const limiter = createLLMRateLimiter({
-  models: { /* ... */ },
-  resourceEstimationsPerJob: {
-    summary: {
-      estimatedUsedTokens: 10000,
-      ratio: { initialValue: 0.4, flexible: false },  // Fixed 40%, protected
-    },
-    chat: {
-      estimatedUsedTokens: 2000,
-      ratio: { initialValue: 0.3 },  // Flexible, can adjust based on load
-    },
-    background: {
-      estimatedUsedTokens: 5000,
-      ratio: { initialValue: 0.3 },  // Flexible
-    },
-  },
-});
-```
+---
 
 ## API Reference
 
 ### `createLLMRateLimiter(config)`
 
-Creates a new rate limiter instance.
-
 ```typescript
 interface LLMRateLimiterConfig {
   models: Record<string, ModelRateLimitConfig>;
-  order?: string[];                              // Priority order (required if >1 model)
-  memory?: MemoryLimitConfig;
+  escalationOrder?: string[];
+  resourceEstimationsPerJob?: Record<string, JobTypeConfig>;
+  backend?: BackendConfig;
+  memory?: MemoryConfig;
   minCapacity?: number;
   maxCapacity?: number;
-  resourceEstimationsPerJob?: Record<string, JobTypeConfig>;
-  backend?: BackendConfig | DistributedBackendConfig;
-  label?: string;
-  onLog?: LogFn;
   onAvailableSlotsChange?: OnAvailableSlotsChange;
+  onOverage?: OnOverage;
+  onLog?: LogFn;
 }
 
 interface ModelRateLimitConfig {
@@ -420,121 +383,83 @@ interface ModelRateLimitConfig {
   maxConcurrentRequests?: number;
   pricing: { input: number; cached: number; output: number };
 }
+
+interface JobTypeConfig {
+  estimatedUsedTokens?: number;
+  estimatedUsedMemoryKB?: number;
+  estimatedNumberOfRequests?: number;
+  ratio?: { initialValue: number; flexible?: boolean };
+  maxWaitMS?: Record<string, number>;
+}
 ```
 
 ### `limiter.queueJob(options)`
 
-Queue a job with automatic model selection.
-
 ```typescript
-const result = await limiter.queueJob({
-  jobId: 'unique-job-id',
-  jobType: 'summary',  // Optional: uses configured estimations
-  job: async ({ modelId }, reject) => {
-    // Your LLM API call
-    return { requestCount, inputTokens, cachedTokens, outputTokens, data };
-  },
-  onComplete: (result, context) => { /* success */ },
-  onError: (error, context) => { /* failure */ },
-});
+interface QueueJobOptions<T> {
+  jobId: string;
+  jobType?: string;
+  job: (args: { modelId: string }, reject: RejectFn) => Promise<JobResult<T>>;
+  onComplete?: (result: T, context: JobContext) => void;
+  onError?: (error: Error, context: JobContext) => void;
+}
+
+interface JobResult<T> {
+  data: T;
+  requestCount?: number;
+  inputTokens: number;
+  outputTokens: number;
+  cachedTokens: number;
+}
 ```
 
-### `limiter.hasCapacity()` / `limiter.hasCapacityForModel(modelId)`
+### Other Methods
 
-Check capacity availability (non-blocking).
-
-### `limiter.getStats()` / `limiter.getModelStats(modelId)`
-
-Get current statistics and usage information.
-
-### `limiter.start()` / `limiter.stop()`
-
-Start/stop the limiter. Required for distributed backends.
+```typescript
+limiter.hasCapacity(): boolean
+limiter.hasCapacityForModel(modelId: string): boolean
+limiter.getStats(): Stats
+limiter.getModelStats(modelId: string): ModelStats
+limiter.start(): Promise<void>  // Required for distributed backend
+limiter.stop(): Promise<void>
+```
 
 ## Project Structure
 
 ```
 llm-rate-limiter/
 ├── packages/
-│   ├── core/                    # Core rate limiter library
-│   │   ├── src/
-│   │   │   ├── index.ts
-│   │   │   ├── multiModelRateLimiter.ts
-│   │   │   ├── multiModelTypes.ts
-│   │   │   └── utils/
-│   │   └── __tests__/
-│   │
-│   ├── redis/                   # Redis distributed backend
-│   │   ├── src/
-│   │   │   ├── index.ts
-│   │   │   ├── redisBackend.ts
-│   │   │   └── luaScripts.ts
-│   │   └── __tests__/
-│   │
-│   └── e2e/                     # End-to-end test infrastructure
-│       ├── serverInstance/
-│       ├── proxy/
-│       └── testRunner/
-│
-├── docs/                        # Design documents
-├── package.json
+│   ├── core/           # Core rate limiter
+│   ├── redis/          # Redis distributed backend
+│   └── e2e/            # End-to-end tests
+├── docs/               # Design documents
 └── README.md
-```
-
-## Development
-
-### Prerequisites
-
-- Node.js 18+
-- npm 9+
-- Redis (for distributed backend tests)
-
-### Setup
-
-```bash
-git clone https://github.com/user/llm-rate-limiter.git
-cd llm-rate-limiter
-npm install
-```
-
-### Commands
-
-```bash
-npm run build          # Build all packages
-npm test               # Run all tests
-npm run typecheck      # Type check
-npm run lint           # Lint
-npm run lint:fix       # Lint with auto-fix
-
-# Package-specific
-npm run test:core      # Core package tests
-npm run test:redis     # Redis package tests
-
-# E2E testing
-npm run e2e:setup      # Start test instances
-npm run e2e:test       # Run E2E tests
 ```
 
 ## Contributing
 
-Contributions are welcome! Please follow these guidelines:
+Contributions are welcome! Please:
 
-1. **Fork** the repository
-2. **Create** a feature branch (`git checkout -b feature/amazing-feature`)
-3. **Write tests** for your changes
-4. **Ensure** all tests pass (`npm test`)
-5. **Ensure** lint passes (`npm run lint`)
-6. **Ensure** types check (`npm run typecheck`)
-7. **Commit** your changes with a clear message
-8. **Push** to the branch
-9. **Open** a Pull Request
+1. Fork the repository
+2. Create a feature branch (`git checkout -b feature/amazing-feature`)
+3. Write tests for your changes
+4. Ensure all tests pass (`npm test`)
+5. Ensure types check (`npm run typecheck`)
+6. Commit with a clear message
+7. Open a Pull Request
 
-### Code Style
+## Development
 
-- TypeScript strict mode enabled
-- No `any` types - use proper explicit types
-- No ESLint disable comments
-- Clear, descriptive variable and function names
+```bash
+git clone https://github.com/llm-rate-limiter/llm-rate-limiter.git
+cd llm-rate-limiter
+npm install
+
+npm run build          # Build all packages
+npm test               # Run tests
+npm run typecheck      # Type check
+npm run lint           # Lint
+```
 
 ## License
 
@@ -543,5 +468,5 @@ MIT License - see [LICENSE](LICENSE) for details.
 ---
 
 <p align="center">
-  Built with TypeScript &bull; Tested with Jest &bull; Distributed coordination powered by Redis
+  Built with TypeScript • Provider Agnostic • Distributed coordination via Redis
 </p>

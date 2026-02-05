@@ -50,8 +50,8 @@ All instance coordination uses a single Redis Pub/Sub channel:
 │                              REDIS                                   │
 │                                                                      │
 │  ┌─────────────────────────────────────────────────────────────┐    │
-│  │  Slot Allocations (per instance)                            │    │
-│  │  - instanceCount, slotsByJobTypeAndModel                    │    │
+│  │  Pool Allocations (per instance, per model)                 │    │
+│  │  - instanceCount, pools[modelId].totalSlots                 │    │
 │  └─────────────────────────────────────────────────────────────┘    │
 │                                                                      │
 │  ┌─────────────────────────────────────────────────────────────┐    │
@@ -86,7 +86,7 @@ All instance coordination uses a single Redis Pub/Sub channel:
 Redis maintains a global counter per model per time window:
 
 ```
-{prefix}:usage:{modelId}:{windowType}:{windowStart}
+{prefix}usage:{modelId}:{windowType}:{windowStart}
 ```
 
 Fields:
@@ -120,7 +120,7 @@ When global actual usage increases, remaining capacity decreases for ALL instanc
 
 2. **Instance reports to Redis**:
    ```
-   release(context, { actual: { tokens, requests }, windowStarts })
+   release(context)
    ```
 
 3. **Redis updates global counters**:
@@ -203,17 +203,24 @@ Per instance: 5,000 / 3 = 1,666 TPM available
 
 ```typescript
 interface BackendReleaseContext {
+  /** The instance making the release request */
   instanceId: string;
-  jobId: string;
-  jobType: string;
+  /** The model being released */
   modelId: string;
-
+  /** Job identifier */
+  jobId: string;
+  /** Estimated resources that were reserved */
+  estimated: {
+    tokens: number;
+    requests: number;
+  };
+  /** Actual resources used */
   actual: {
     tokens: number;
     requests: number;
   };
-
-  windowStarts: {
+  /** Window start timestamps for distributed usage tracking */
+  windowStarts?: {
     tpmWindowStart?: number;
     rpmWindowStart?: number;
     tpdWindowStart?: number;
@@ -222,14 +229,25 @@ interface BackendReleaseContext {
 }
 ```
 
+**Note:** There is no `jobType` field - job type distribution is handled locally, not via Redis.
+
 ### AllocationInfo
 
 ```typescript
 interface AllocationInfo {
   instanceCount: number;
-  slotsByJobTypeAndModel: Record<string, Record<string, ModelSlotAllocation>>;
-
-  dynamicLimits: {
+  /** Per-model pool allocations */
+  pools: {
+    [modelId: string]: {
+      totalSlots: number;
+      tokensPerMinute: number;
+      requestsPerMinute: number;
+      tokensPerDay: number;
+      requestsPerDay: number;
+    };
+  };
+  /** Dynamic limits based on actual global usage */
+  dynamicLimits?: {
     [modelId: string]: {
       tokensPerMinute?: number;
       requestsPerMinute?: number;
@@ -245,7 +263,7 @@ interface AllocationInfo {
 ### Global Usage Key (TPM/RPM)
 
 ```
-Key: {prefix}:usage:{modelId}:tpm:{windowStart}
+Key: {prefix}usage:{modelId}:tpm:{windowStart}
 Type: Hash
 Fields:
   - actualTokens: number
@@ -258,7 +276,7 @@ TTL: 2 minutes (auto-cleanup after window expires)
 ### Daily Usage Key (TPD/RPD)
 
 ```
-Key: {prefix}:usage:{modelId}:tpd:{dayStart}
+Key: {prefix}usage:{modelId}:tpd:{dayStart}
 Type: Hash
 Fields:
   - actualTokens: number
@@ -273,12 +291,12 @@ TTL: 25 hours (auto-cleanup after day expires)
 ### Release Script
 
 ```lua
--- Input: instanceId, jobId, jobType, modelId, actualTokens, actualRequests,
+-- Input: instanceId, modelId, actualTokens, actualRequests,
 --        tpmWindowStart, rpmWindowStart, tpdWindowStart, rpdWindowStart
 
 -- Update global usage for TPM
 if tpmWindowStart then
-  local usageKey = prefix .. ':usage:' .. modelId .. ':tpm:' .. tpmWindowStart
+  local usageKey = prefix .. 'usage:' .. modelId .. ':tpm:' .. tpmWindowStart
   redis.call('HINCRBY', usageKey, 'actualTokens', actualTokens)
   redis.call('HSET', usageKey, 'lastUpdate', timestamp)
   redis.call('EXPIRE', usageKey, 120)
@@ -286,7 +304,7 @@ end
 
 -- Update global usage for RPM
 if rpmWindowStart then
-  local usageKey = prefix .. ':usage:' .. modelId .. ':rpm:' .. rpmWindowStart
+  local usageKey = prefix .. 'usage:' .. modelId .. ':rpm:' .. rpmWindowStart
   redis.call('HINCRBY', usageKey, 'actualRequests', actualRequests)
   redis.call('HSET', usageKey, 'lastUpdate', timestamp)
   redis.call('EXPIRE', usageKey, 120)
@@ -294,7 +312,7 @@ end
 
 -- Update global usage for TPD
 if tpdWindowStart then
-  local usageKey = prefix .. ':usage:' .. modelId .. ':tpd:' .. tpdWindowStart
+  local usageKey = prefix .. 'usage:' .. modelId .. ':tpd:' .. tpdWindowStart
   redis.call('HINCRBY', usageKey, 'actualTokens', actualTokens)
   redis.call('HSET', usageKey, 'lastUpdate', timestamp)
   redis.call('EXPIRE', usageKey, 90000) -- 25 hours
@@ -302,7 +320,7 @@ end
 
 -- Update global usage for RPD
 if rpdWindowStart then
-  local usageKey = prefix .. ':usage:' .. modelId .. ':rpd:' .. rpdWindowStart
+  local usageKey = prefix .. 'usage:' .. modelId .. ':rpd:' .. rpdWindowStart
   redis.call('HINCRBY', usageKey, 'actualRequests', actualRequests)
   redis.call('HSET', usageKey, 'lastUpdate', timestamp)
   redis.call('EXPIRE', usageKey, 90000)
@@ -319,10 +337,10 @@ local function recalculateAllocations()
   for each model in models do
     -- Get current window's global actual usage
     local currentMinute = math.floor(timestamp / 60000) * 60000
-    local tpmUsageKey = prefix .. ':usage:' .. modelId .. ':tpm:' .. currentMinute
+    local tpmUsageKey = prefix .. 'usage:' .. modelId .. ':tpm:' .. currentMinute
     local actualTPM = tonumber(redis.call('HGET', tpmUsageKey, 'actualTokens')) or 0
 
-    local rpmUsageKey = prefix .. ':usage:' .. modelId .. ':rpm:' .. currentMinute
+    local rpmUsageKey = prefix .. 'usage:' .. modelId .. ':rpm:' .. currentMinute
     local actualRPM = tonumber(redis.call('HGET', rpmUsageKey, 'actualRequests')) or 0
 
     -- Calculate remaining capacity
@@ -332,10 +350,19 @@ local function recalculateAllocations()
     local tpmPerInstance = math.floor(math.max(0, remainingTPM) / instanceCount)
     local rpmPerInstance = math.floor(math.max(0, remainingRPM) / instanceCount)
 
-    -- Calculate slots based on remaining capacity
-    local tpmSlots = math.floor(tpmPerInstance / estimatedTokens * ratio)
-    local rpmSlots = math.floor(rpmPerInstance / estimatedRequests * ratio)
-    local slots = math.min(tpmSlots, rpmSlots)
+    -- Calculate pool slots based on remaining capacity (per-model, no job type)
+    local tpmSlots = math.floor(tpmPerInstance / estimatedTokensPerJob)
+    local rpmSlots = math.floor(rpmPerInstance / estimatedRequestsPerJob)
+    local poolSlots = math.min(tpmSlots, rpmSlots)
+
+    -- Build pool allocation
+    pools[modelId] = {
+      totalSlots = poolSlots,
+      tokensPerMinute = tpmPerInstance,
+      requestsPerMinute = rpmPerInstance,
+      tokensPerDay = tpdPerInstance,
+      requestsPerDay = rpdPerInstance
+    }
 
     -- Build dynamic limits
     dynamicLimits[modelId] = {
@@ -350,7 +377,7 @@ local function recalculateAllocations()
   for each instance do
     local allocation = {
       instanceCount = instanceCount,
-      slotsByJobTypeAndModel = slots,
+      pools = pools,
       dynamicLimits = dynamicLimits
     }
     redis.call('PUBLISH', channel, cjson.encode({
@@ -367,11 +394,11 @@ end
 
 ```typescript
 onAllocationUpdate(allocation: AllocationInfo) {
-  // Update slot counts
-  this.updateSlots(allocation.slotsByJobTypeAndModel);
+  // Update pool slot counts (used by JobTypeManager locally)
+  this.updatePoolSlots(allocation.pools);
 
   // Update local rate limits to match global remaining capacity
-  for (const [modelId, limits] of Object.entries(allocation.dynamicLimits)) {
+  for (const [modelId, limits] of Object.entries(allocation.dynamicLimits ?? {})) {
     this.rateLimiters[modelId].setRateLimits({
       tokensPerMinute: limits.tokensPerMinute,
       requestsPerMinute: limits.requestsPerMinute,
@@ -388,9 +415,12 @@ onAllocationUpdate(allocation: AllocationInfo) {
 async releaseCapacity(context: ReservationContext, actual: ActualUsage) {
   await this.backend.release({
     instanceId: this.instanceId,
-    jobId: context.jobId,
-    jobType: context.jobType,
     modelId: context.modelId,
+    jobId: context.jobId,
+    estimated: {
+      tokens: context.estimatedTokens,
+      requests: context.estimatedRequests,
+    },
     actual: {
       tokens: actual.inputTokens + actual.outputTokens + actual.cachedTokens,
       requests: actual.requestCount,
@@ -429,4 +459,4 @@ When a job calls `reject(usage)`:
 - **Redis writes per job**: 1 HINCRBY per job completion per active window type
 - **Broadcast frequency**: On every release that changes global counters
 - **TTL cleanup**: Automatic via Redis key expiration
-- **Payload size**: Allocations include dynamicLimits per model
+- **Payload size**: Allocations include pools and dynamicLimits per model

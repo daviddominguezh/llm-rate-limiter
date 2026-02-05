@@ -1,6 +1,6 @@
 # Documentation vs Implementation Analysis
 
-This document summarizes the analysis of all design documents in `/docs` against the current implementation.
+This document summarizes the analysis of design documents in `/docs` against the actual implementation.
 
 **Analysis Date:** 2026-02-04
 
@@ -8,219 +8,137 @@ This document summarizes the analysis of all design documents in `/docs` against
 
 ## Summary
 
-| Document | Status | Key Finding |
-|----------|--------|-------------|
-| memory-based-slot-calculation.md | ✅ Complete | Per-job-type memory calculation implemented |
-| e2e-distributed-tests-design.md | ✅ Adapted | Tests work but architecture evolved to pool-based |
-| maxWaitMS-design.md | ✅ Complete | No major discrepancies |
-| actual-usage-adjustment-design.md | ✅ Complete | Minor: `requestCount` optional vs required |
-| distributed-capacity-tracking-design.md | ✅ Accurate | Minor structural differences |
-| distributed-slots-design.md | ✅ Complete | minCapacity enforcement added |
+| Document | Status | Action Required |
+|----------|--------|-----------------|
+| memory-based-slot-calculation.md | ✅ Matches | None |
+| e2e-distributed-tests-design.md | ✅ Updated | None |
+| maxWaitMS-design.md | ✅ Matches | None |
+| actual-usage-adjustment-design.md | ✅ Matches | Minor update |
+| distributed-capacity-tracking-design.md | ✅ Updated | None |
+| distributed-slots-design.md | ✅ Matches | Minor cleanup |
 
 ---
 
-## 1. memory-based-slot-calculation.md
+## Detailed Findings
 
-### Summary
-Describes memory-based slot calculation where each instance calculates its own memory-based slots independently, with the formula: `localMemorySlots = floor(memoryForJobType / estimatedMemoryKB)`.
+### 1. memory-based-slot-calculation.md
 
-### Implementation Location
-- `packages/core/src/utils/memoryUtils.ts` - Memory detection
-- `packages/core/src/utils/memoryManager.ts` - Per-job-type memory manager
-- `packages/core/src/utils/availabilityTracker.ts` - Slot calculation
+**Status:** ✅ Implementation matches documentation
 
-### Status: ✅ Complete
+The implementation accurately represents the documented design:
 
-Both enforcement and reporting layers now implement per-job-type memory correctly:
+- Memory is a LOCAL constraint (not distributed via Redis)
+- Formula correctly implemented: `finalSlots = min(distributedSlots, localMemorySlots)`
+- Memory slot calculation: `floor(memoryForJobType / estimatedMemoryKB)`
+- `minCapacity`/`maxCapacity` bounds applied per-model after memory constraint with scaling
+- Ratio determines memory portion per job type
 
-1. **Enforcement layer** (`memoryManager.ts`): Per-job-type semaphores with dynamic ratio updates
-2. **Reporting layer** (`availabilityTracker.ts`): `calculatePerJobTypeMemorySlots()` calculates slots per job type using ratios
-
-**Implementation:**
-```typescript
-// For each job type: memorySlots = floor((totalMemory * ratio) / estimatedMemoryKB)
-// Sum all per-job-type slots for total memory slots
-```
+**Key Files:**
+- `packages/core/src/utils/memoryUtils.ts` - Memory detection and heap limit parsing
+- `packages/core/src/utils/availabilityTracker.ts` - Memory slot calculation (lines 235-316)
 
 ---
 
-## 2. e2e-distributed-tests-design.md
+### 2. e2e-distributed-tests-design.md
 
-### Summary
-Describes a comprehensive E2E test suite with 6 test suites and 15 config presets for verifying multi-dimensional slot allocation.
+**Status:** ✅ Updated to match implementation
 
-### Implementation Location
-- `packages/e2e/serverInstance/src/rateLimiterConfigs.ts` - Config presets
-- `packages/e2e/testRunner/src/__tests__/` - All 6 test suites
-- `packages/e2e/testRunner/src/instanceLifecycle.ts` - Instance management
+Documentation has been rewritten to reflect the pool-based architecture:
 
-### Architectural Change: Pool-Based vs Per-Job-Type Allocation
-
-**Document design:**
-```typescript
-interface AllocationInfo {
-  instanceCount: number;
-  slotsByJobTypeAndModel: Record<string, Record<string, ModelSlotAllocation>>;
-}
-```
-
-**Actual implementation:**
-```typescript
-interface AllocationInfo {
-  instanceCount: number;
-  pools: {
-    [modelId]: {
-      totalSlots: number;
-      tokensPerMinute: number;
-      // ...
-    }
-  };
-}
-```
-
-Redis calculates per-model slots (not per-job-type). Job type distribution is handled **locally** by each instance.
-
-### Status
-- All 6 test suites implemented and functional
-- All 15 config presets match the document
-- Test assertions adapted to pool-based architecture
+- Describes pool-based slot allocation (Redis tracks per-model, local handles job types)
+- Uses correct `allocation.pools[modelId].totalSlots` structure
+- Explains separation of concerns: Redis pools vs local JobTypeManager ratios
+- Test assertions reflect actual implementation behavior
 
 ---
 
-## 3. maxWaitMS-design.md
+### 3. maxWaitMS-design.md
 
-### Summary
-Controls how long a job waits for model capacity before delegating to the next model or rejecting.
+**Status:** ✅ Implementation matches documentation
 
-### Implementation Location
-- `packages/core/src/jobTypeTypes.ts` - Type definitions
-- `packages/core/src/utils/jobExecutionHelpers.ts` - `calculateDefaultMaxWaitMS()`, `getMaxWaitMS()`
-- `packages/core/src/utils/capacityWaitQueue.ts` - FIFO queue
-- `packages/core/src/utils/jobDelegation.ts` - Model selection with waiting
+All key features implemented as specified:
 
-### Status: ✅ Complete and Correct
+- Default `maxWaitMS` calculation: `(60 - currentSeconds + 5) * 1000` ms
+- Per-job-type, per-model configuration structure
+- Compile-time type safety for model IDs via TypeScript generics
+- FIFO queue-based waiting in `CapacityWaitQueue`
+- Fail-fast behavior for `maxWaitMS = 0`
+- Wake-up triggers: job completion, window reset, timeout, backend allocation change
+- Error message: `'All models exhausted: no capacity available within maxWaitMS'`
 
-All features implemented as documented:
-- Default calculation: `(60 - currentSeconds + 5) * 1000`
-- Per-model, per-job-type configuration
-- Fail-fast behavior (`maxWaitMS = 0`)
-- FIFO queue ordering
-- Type-safe model ID validation
-- Error message matches exactly
+**Key Files:**
+- `packages/core/src/utils/jobExecutionHelpers.ts` - `calculateDefaultMaxWaitMS()`, `getMaxWaitMS()`, `selectModelWithWait()`
+- `packages/core/src/utils/capacityWaitQueue.ts` - FIFO queue implementation
 
 ---
 
-## 4. actual-usage-adjustment-design.md
+### 4. actual-usage-adjustment-design.md
 
-### Summary
-System for adjusting rate limiter capacity based on actual resource consumption after job completion.
+**Status:** ✅ Implementation matches documentation (minor discrepancy)
 
-### Implementation Location
-- `packages/core/src/rateLimiter.ts` - `recordActualUsage()`, `emitOverageIfNeeded()`
+Core behaviors correctly implemented:
+
+- Actual vs estimated comparison with refund/overage handling
+- Time-window-aware refunds via `subtractIfSameWindow()`
+- All three job completion scenarios:
+  1. **Job succeeds:** Full adjustment flow with backend notification
+  2. **Job throws without reject():** Time-windowed capacity NOT released, memory/concurrency ARE released
+  3. **Job calls reject(usage):** Same adjustment flow as success
+- Overage events emitted when `actual > estimated`
+
+**Minor Discrepancy:**
+
+| Aspect | Documentation | Implementation |
+|--------|---------------|----------------|
+| `requestCount` in `reject()` | Required field | Optional (defaults to 1) |
+
+**Key Files:**
+- `packages/core/src/rateLimiter.ts` - `recordActualUsage()`, `queueJobWithReservedCapacity()`
 - `packages/core/src/utils/timeWindowCounter.ts` - `subtractIfSameWindow()`
-- `packages/core/src/utils/jobExecutionHelpers.ts` - `DelegationError` class
-- `packages/core/src/utils/jobExecutor.ts` - `createRejectHandler()`
-- `packages/redis/src/luaScripts.ts` - `RELEASE_SCRIPT`
-
-### Minor Discrepancy
-
-**Document says:** `requestCount` is **required** in `reject()` callback
-
-**Implementation:** `requestCount?: number` is **optional** (defaults to 1)
-
-This is actually more user-friendly and doesn't break the design intent.
-
-### Status: ✅ Complete
-
-All 8 success criteria from the document are implemented:
-1. Capacity adjusted when actual differs from estimated within same time window
-2. No adjustment when job crosses time-window boundary
-3. Memory/concurrency always release immediately
-4. Counters accurately reflect actual consumption
-5. Distributed and local backends behave consistently
-6. Jobs that throw without `reject()` do NOT release time-windowed capacity
-7. Jobs that call `reject(usage)` trigger full adjustment flow
-8. Overage events emitted when actual > estimated
 
 ---
 
-## 5. distributed-capacity-tracking-design.md
+### 5. distributed-capacity-tracking-design.md
 
-### Summary
-Tracks actual resource usage across distributed instances to ensure global limits are respected.
+**Status:** ✅ Updated to match implementation
 
-### Implementation Location
-- `packages/redis/src/luaScripts.ts` - Lua scripts for global usage tracking
-- `packages/redis/src/redisBackend.ts` - Backend implementation
-- `packages/core/src/multiModelRateLimiter.ts` - `applyAllocationToLimiters()`
-- `packages/core/src/rateLimiter.ts` - `setRateLimits()`
+Documentation has been updated to reflect the pool-based architecture:
 
-### Minor Discrepancies
-
-#### 1. AllocationInfo structure uses `pools` instead of `slotsByJobTypeAndModel`
-This is a deliberate evolution toward simpler pool-based architecture.
-
-#### 2. Error handling without `reject()`
-**Document:** Do NOT report actual usage
-**Implementation:** Reports `{ requests: 0, tokens: 0 }` - achieves same goal
-
-### Issue: Debug Logging
-`multiModelRateLimiter.ts` contains `console.log` debug statements (lines 157, 161, 166, 191) that should be removed or converted to proper logging.
-
-### Status: ✅ Accurate
-Core algorithm correctly implemented. Main difference is pool-based model vs per-job-type-and-model.
+- `BackendReleaseContext` interface updated: removed `jobType`, added `estimated`
+- `AllocationInfo` interface updated: uses `pools` structure instead of `slotsByJobTypeAndModel`
+- Lua script pseudocode updated to reflect pool-based allocation
+- Explains that job type distribution is local-only
 
 ---
 
-## 6. distributed-slots-design.md
+### 6. distributed-slots-design.md
 
-### Summary
-Pool-based slot allocation system for distributed rate limiting with local job type ratio management.
+**Status:** ✅ Implementation matches documentation
 
-### Implementation Location
-- `packages/redis/src/redisBackend.ts` - Redis backend
-- `packages/redis/src/luaScripts.ts` - Lua scripts
+The implementation accurately represents the documented pool-based design:
+
+- Pool-based architecture: Redis tracks per-model, local handles job types
+- `AllocationInfo` structure matches exactly
+- Pool calculation: `floor((remainingCapacity / estimatedResourcePerJob) / instanceCount)`
+- Two-layer acquire/release (local check then Redis check)
+- Dynamic ratio adjustment:
+  - Config defaults match: `highLoadThreshold: 0.7`, `lowLoadThreshold: 0.3`, etc.
+  - 5-step algorithm: identify donors → identify receivers → calculate contributions → transfer → normalize
+  - Triggers: periodic (5s) and release-based (every 10 releases)
+- Information boundaries respected (Redis unaware of job types)
+
+**Minor Issues:**
+- Debug `console.log` statements in `packages/core/src/multiModelRateLimiter.ts` (lines 157, 160, 166, 191) should be removed or converted to proper logging
+
+**Key Files:**
+- `packages/redis/src/luaScripts.ts` - Redis Lua scripts
 - `packages/core/src/utils/jobTypeManager.ts` - Local ratio management
-- `packages/core/src/utils/jobTypeHelpers.ts` - Ratio adjustment algorithms
-
-### Status: ✅ Complete
-
-All discrepancies have been resolved:
-
-1. **minCapacity enforcement**: `recalculateAllocatedSlots()` now uses `Math.max(1, Math.floor(...))` to guarantee at least 1 slot per job type
-
-2. **Dead code removed**: `redisJobTypeOps.ts` and `jobTypeLuaScripts.ts` have been deleted as they were unused
-
-3. **Debug console.log statements**: Noted but intentionally kept for now (user request)
-
----
-
-## Cross-Cutting Issues
-
-### 1. Pool-Based vs Per-Job-Type Architecture
-Multiple documents reference per-job-type-and-model allocation, but the implementation uses pool-based (per-model only) allocation. This is a deliberate architectural evolution but the documents should be updated.
-
-**Affected documents:**
-- e2e-distributed-tests-design.md
-- distributed-capacity-tracking-design.md
-- distributed-slots-design.md
-
-### 2. Debug Logging in Production Code
-`console.log` statements in `multiModelRateLimiter.ts` should use the `onLog` callback or be removed.
-
----
-
-## Resolved Issues
-
-The following issues have been fixed:
-
-1. ✅ **minCapacity enforcement** - Added `Math.max(1, ...)` in `jobTypeHelpers.ts::recalculateAllocatedSlots()`
-2. ✅ **Dead code removed** - Deleted `redisJobTypeOps.ts`, `jobTypeLuaScripts.ts`, and cleaned up related imports/types
-3. ✅ **Memory slot calculation** - `availabilityTracker.ts` now calculates per-job-type memory slots using ratios
+- `packages/core/src/utils/jobTypeHelpers.ts` - Ratio adjustment algorithm
 
 ---
 
 ## Remaining Recommendations
 
-1. **Update documentation** to reflect pool-based architecture
-2. **Clean up debug logging** - remove `console.log` or use proper logging callbacks
+1. **Low Priority:** Clarify in `actual-usage-adjustment-design.md` that `requestCount` defaults to 1
+2. **Low Priority:** Remove debug `console.log` statements from `multiModelRateLimiter.ts`
+3. **Medium Priority:** Add E2E test coverage for `slotCalc-memory` configuration

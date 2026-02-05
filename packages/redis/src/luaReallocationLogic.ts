@@ -9,6 +9,11 @@
  * - {prefix}:job-type-resources - Hash of jobTypeId -> JSON {estimatedUsedTokens, estimatedNumberOfRequests, ratio}
  */
 export const REALLOCATION_LOGIC = `
+-- Helper: Check if value is a valid number (not nil, not cjson.null)
+local function isValidNumber(val)
+  return type(val) == 'number'
+end
+
 -- Helper: Get global actual usage for a model from Redis counters
 local function getGlobalUsage(prefix, modelId, timestamp)
   local MS_PER_MINUTE = 60000
@@ -100,22 +105,22 @@ local function recalculateAllocations(instancesKey, allocationsKey, channel, mod
     local tpd = 0
     local rpd = 0
 
-    if model.tokensPerMinute then
+    if isValidNumber(model.tokensPerMinute) then
       local remaining = math.max(0, model.tokensPerMinute - usage.tpmUsed)
       tpm = math.floor(remaining / instanceCount)
       dynamicLimits[modelId].tokensPerMinute = tpm
     end
-    if model.requestsPerMinute then
+    if isValidNumber(model.requestsPerMinute) then
       local remaining = math.max(0, model.requestsPerMinute - usage.rpmUsed)
       rpm = math.floor(remaining / instanceCount)
       dynamicLimits[modelId].requestsPerMinute = rpm
     end
-    if model.tokensPerDay then
+    if isValidNumber(model.tokensPerDay) then
       local remaining = math.max(0, model.tokensPerDay - usage.tpdUsed)
       tpd = math.floor(remaining / instanceCount)
       dynamicLimits[modelId].tokensPerDay = tpd
     end
-    if model.requestsPerDay then
+    if isValidNumber(model.requestsPerDay) then
       local remaining = math.max(0, model.requestsPerDay - usage.rpdUsed)
       rpd = math.floor(remaining / instanceCount)
       dynamicLimits[modelId].requestsPerDay = rpd
@@ -125,7 +130,7 @@ local function recalculateAllocations(instancesKey, allocationsKey, channel, mod
     local slotCandidates = {}
 
     -- Concurrent-based slots
-    if model.maxConcurrentRequests and model.maxConcurrentRequests > 0 then
+    if isValidNumber(model.maxConcurrentRequests) and model.maxConcurrentRequests > 0 then
       table.insert(slotCandidates, math.floor(model.maxConcurrentRequests / instanceCount))
     end
 

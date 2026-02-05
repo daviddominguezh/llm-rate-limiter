@@ -245,9 +245,9 @@ export async function bootInstance(
     throw new Error(`Instance already running on port ${port}`);
   }
 
-  const serverPath = resolve(import.meta.dirname, '../../serverInstance/dist/main.js');
+  const serverPath = resolve(import.meta.dirname, '../../serverInstance/src/main.ts');
 
-  const proc = spawn('node', [serverPath], {
+  const proc = spawn('npx', ['tsx', serverPath], {
     env: {
       ...process.env,
       PORT: port.toString(),
@@ -255,6 +255,14 @@ export async function bootInstance(
       CONFIG_PRESET: configPreset,
     },
     stdio: ['ignore', 'pipe', 'pipe'],
+  });
+
+  // Log stdout/stderr for debugging
+  proc.stdout.on('data', (data: Buffer) => {
+    process.stdout.write(`[Instance:${port}] ${data.toString()}`);
+  });
+  proc.stderr.on('data', (data: Buffer) => {
+    process.stderr.write(`[Instance:${port}:ERR] ${data.toString()}`);
   });
 
   instances.set(port, { process: proc, port, configPreset });

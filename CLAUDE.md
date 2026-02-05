@@ -45,8 +45,8 @@ npm run e2e:test:escalation  # Run specific test
 ### Key Architectural Concepts
 
 **Pool-based allocation** (distributed mode):
-- Redis calculates per-model pools using **averaged estimates** across all job types
-- Formula: `pools[model].totalSlots = floor(modelCapacity / avgEstimatedResource / instanceCount)`
+- Redis calculates per-model pools using **weighted average or maximum estimates** across all job types
+- Formula: `pools[model].totalSlots = floor(modelCapacity / estimatedResourcePerJob / instanceCount)`
 - Redis does NOT know about job types - only model-level capacity
 
 **Local ratio management**:

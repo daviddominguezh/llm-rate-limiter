@@ -32,14 +32,8 @@ import {
 } from './luaScripts.js';
 import type { BackendOperationConfig, RedisKeys } from './redisHelpers.js';
 import { buildKeys, evalScript } from './redisHelpers.js';
-import { RedisJobTypeOps } from './redisJobTypeOps.js';
 import { ignoreError, isParsedMessage, isRedisBackendStats, parseAllocation } from './redisTypeGuards.js';
-import type {
-  RedisBackendInstance,
-  RedisBackendInternalConfig,
-  RedisBackendStats,
-  RedisJobTypeStats,
-} from './types.js';
+import type { RedisBackendInstance, RedisBackendInternalConfig, RedisBackendStats } from './types.js';
 import { isRedisClient, subscriberOptions, toRedisOptions } from './types.js';
 
 /** Internal backend implementation class */
@@ -55,7 +49,6 @@ class RedisBackendImpl {
   private cleanupInterval: NodeJS.Timeout | null = null;
   private subscriberActive = false;
   private setupSubscriberPromise: Promise<void> | null = null;
-  private readonly jobTypeOps: RedisJobTypeOps;
   private stopPromise: Promise<void> | null = null;
   private configInitPromise: Promise<void> | null = null;
 
@@ -77,12 +70,6 @@ class RedisBackendImpl {
     };
     this.setupSubscriberReconnection();
     this.startCleanupInterval();
-    this.jobTypeOps = new RedisJobTypeOps(
-      this.redis,
-      this.keys,
-      redisConfig.resourceEstimationsPerJob,
-      redisConfig.totalCapacity
-    );
     // Initialize config in Redis
     this.configInitPromise = this.initConfig(
       redisConfig.modelCapacities,
@@ -340,16 +327,6 @@ class RedisBackendImpl {
     return parsed;
   };
 
-  readonly acquireJobType = async (instanceId: string, jobTypeId: string): Promise<boolean> =>
-    await this.jobTypeOps.acquire(instanceId, jobTypeId);
-
-  readonly releaseJobType = async (instanceId: string, jobTypeId: string): Promise<void> => {
-    await this.jobTypeOps.release(instanceId, jobTypeId);
-  };
-
-  readonly getJobTypeStats = async (): Promise<RedisJobTypeStats | undefined> =>
-    await this.jobTypeOps.getStats();
-
   getBackendConfig(): BackendConfig {
     return {
       register: this.register,
@@ -368,8 +345,5 @@ export const createRedisBackend = (config: RedisBackendInternalConfig): RedisBac
     getBackendConfig: () => impl.getBackendConfig(),
     stop: impl.stop,
     getStats: impl.getStats,
-    getJobTypeStats: impl.getJobTypeStats,
-    acquireJobType: impl.acquireJobType,
-    releaseJobType: impl.releaseJobType,
   };
 };

@@ -153,9 +153,10 @@ export const normalizeRatios = (states: Map<string, JobTypeState>): void => {
   }
 };
 
-/** Recalculate allocated slots based on current ratios */
+/** Recalculate allocated slots based on current ratios, enforcing minCapacity of 1 */
 export const recalculateAllocatedSlots = (states: Map<string, JobTypeState>, totalCapacity: number): void => {
   for (const state of states.values()) {
-    state.allocatedSlots = Math.floor(totalCapacity * state.currentRatio);
+    // Enforce minCapacity of 1 to prevent job types from being completely blocked
+    state.allocatedSlots = Math.max(ONE, Math.floor(totalCapacity * state.currentRatio));
   }
 };

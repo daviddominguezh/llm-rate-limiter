@@ -523,12 +523,3 @@ return cjson.encode({
   instances = stats
 })
 `;
-
-// Re-export job type scripts from dedicated module
-export {
-  ACQUIRE_JOB_TYPE_SCRIPT,
-  GET_JOB_TYPES_STATS_SCRIPT,
-  INIT_JOB_TYPES_SCRIPT,
-  RELEASE_JOB_TYPE_SCRIPT,
-  SET_JOB_TYPE_CAPACITY_SCRIPT,
-} from './jobTypeLuaScripts.js';

@@ -246,33 +246,73 @@ export class AvailabilityTracker {
     const { modelCapacityBounds } = this;
     const { pools } = allocation;
 
-    // Calculate memory slots based on average estimated memory across job types
+    // Calculate memory slots per job type based on ratios and individual memory estimates
     let memorySlots = Number.POSITIVE_INFINITY;
     if (totalMemoryKB !== null && resourcesPerJob !== undefined) {
-      const avgEstimatedMemoryKB = this.getAverageEstimatedMemory(resourcesPerJob);
-      if (avgEstimatedMemoryKB > ZERO) {
-        memorySlots = Math.floor(totalMemoryKB / avgEstimatedMemoryKB);
-      }
+      memorySlots = this.calculatePerJobTypeMemorySlots(resourcesPerJob, totalMemoryKB);
     }
 
     // Apply memory constraint and per-model clamping to pools
     return applyMemoryConstraintAndClamping(pools, memorySlots, modelCapacityBounds);
   }
 
-  /** Calculate average estimated memory across all job types */
-  private getAverageEstimatedMemory(resourcesPerJob: ResourceEstimationsPerJob): number {
-    const jobTypes = Object.values(resourcesPerJob);
-    if (jobTypes.length === ZERO) return ZERO;
+  /**
+   * Calculate total memory slots by summing per-job-type memory slots.
+   * Each job type gets: floor((totalMemory * ratio) / estimatedMemoryKB)
+   * Uses initial ratios from config for stable reporting.
+   */
+  private calculatePerJobTypeMemorySlots(
+    resourcesPerJob: ResourceEstimationsPerJob,
+    totalMemoryKB: number
+  ): number {
+    const jobTypes = Object.entries(resourcesPerJob);
+    if (jobTypes.length === ZERO) return Number.POSITIVE_INFINITY;
 
-    let total = ZERO;
-    let count = ZERO;
-    for (const config of jobTypes) {
-      if (config?.estimatedUsedMemoryKB !== undefined && config.estimatedUsedMemoryKB > ZERO) {
-        total += config.estimatedUsedMemoryKB;
-        count += ONE;
+    // Calculate ratios (initial values or equal distribution)
+    const ratios = this.calculateRatiosFromConfig(resourcesPerJob);
+
+    let totalSlots = ZERO;
+    let hasMemoryConstraint = false;
+
+    for (const [jobType, config] of jobTypes) {
+      const ratio = ratios.get(jobType) ?? (ONE / jobTypes.length);
+      const memoryForJobType = totalMemoryKB * ratio;
+      const estimatedMemoryKB = config?.estimatedUsedMemoryKB ?? ZERO;
+
+      if (estimatedMemoryKB > ZERO) {
+        totalSlots += Math.floor(memoryForJobType / estimatedMemoryKB);
+        hasMemoryConstraint = true;
       }
     }
-    return count > ZERO ? Math.floor(total / count) : ZERO;
+
+    return hasMemoryConstraint ? totalSlots : Number.POSITIVE_INFINITY;
+  }
+
+  /** Calculate ratios from resourceEstimationsPerJob config (initial values or equal distribution) */
+  private calculateRatiosFromConfig(resourcesPerJob: ResourceEstimationsPerJob): Map<string, number> {
+    const jobTypeIds = Object.keys(resourcesPerJob);
+    const ratios = new Map<string, number>();
+
+    let specifiedTotal = ZERO;
+    const specifiedRatios = new Map<string, number>();
+
+    for (const id of jobTypeIds) {
+      const config = resourcesPerJob[id];
+      if (config?.ratio?.initialValue !== undefined) {
+        specifiedRatios.set(id, config.ratio.initialValue);
+        specifiedTotal += config.ratio.initialValue;
+      }
+    }
+
+    const remainingRatio = ONE - specifiedTotal;
+    const unspecifiedCount = jobTypeIds.length - specifiedRatios.size;
+    const evenShare = unspecifiedCount > ZERO ? remainingRatio / unspecifiedCount : ZERO;
+
+    for (const id of jobTypeIds) {
+      ratios.set(id, specifiedRatios.get(id) ?? evenShare);
+    }
+
+    return ratios;
   }
 
   /** Check for changes and emit callback if availability changed */

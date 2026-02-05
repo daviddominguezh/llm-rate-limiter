@@ -166,12 +166,6 @@ export interface RedisBackendInstance {
   stop: () => Promise<void>;
   /** Get current stats for monitoring */
   getStats: () => Promise<RedisBackendStats>;
-  /** Get job type stats (if resourcesPerJob configured) */
-  getJobTypeStats: () => Promise<RedisJobTypeStats | undefined>;
-  /** Acquire a job type slot */
-  acquireJobType: (instanceId: string, jobTypeId: string) => Promise<boolean>;
-  /** Release a job type slot */
-  releaseJobType: (instanceId: string, jobTypeId: string) => Promise<void>;
 }
 
 /**
@@ -219,30 +213,6 @@ export interface AllocationData {
   instanceCount: number;
   /** Pool allocation per model (pool-based slot allocation) */
   pools: PoolsData;
-}
-
-/**
- * Job type state stored in Redis.
- */
-export interface RedisJobTypeState {
-  /** Current ratio (0-1) */
-  currentRatio: number;
-  /** Initial ratio (0-1) */
-  initialRatio: number;
-  /** Whether ratio is flexible */
-  flexible: boolean;
-  /** Total in-flight across all instances */
-  totalInFlight: number;
-  /** Allocated slots based on ratio and total capacity */
-  allocatedSlots: number;
-}
-
-/**
- * Job type stats from Redis.
- */
-export interface RedisJobTypeStats {
-  /** Job type states keyed by job type ID */
-  jobTypes: Record<string, RedisJobTypeState>;
 }
 
 /**

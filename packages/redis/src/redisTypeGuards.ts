@@ -3,7 +3,7 @@
  */
 import type { AllocationInfo, DynamicLimits } from '@llm-rate-limiter/core';
 
-import type { AllocationData, RedisBackendStats, RedisJobTypeStats } from './types.js';
+import type { AllocationData, RedisBackendStats } from './types.js';
 
 export const isObject = (d: unknown): d is Record<string, unknown> => typeof d === 'object' && d !== null;
 
@@ -19,8 +19,6 @@ export const isParsedMessage = (d: unknown): d is { instanceId: string; allocati
 
 export const isRedisBackendStats = (d: unknown): d is RedisBackendStats =>
   isObject(d) && 'totalInstances' in d;
-
-export const isRedisJobTypeStats = (d: unknown): d is RedisJobTypeStats['jobTypes'] => isObject(d);
 
 /** Type guard for DynamicLimits - validates structure of dynamic limits per model */
 export const isDynamicLimits = (d: unknown): d is DynamicLimits => {
@@ -62,13 +60,6 @@ export const parseAllocation = (json: string | null): AllocationInfo => {
   } catch {
     return defaultAlloc;
   }
-};
-
-export const parseJobTypeStats = (result: string): RedisJobTypeStats | undefined => {
-  if (result === '') return undefined;
-  const parsed: unknown = JSON.parse(result);
-  if (!isRedisJobTypeStats(parsed)) return undefined;
-  return { jobTypes: parsed };
 };
 
 export const ignoreError = (): void => {

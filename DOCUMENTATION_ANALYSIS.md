@@ -10,12 +10,12 @@ This document summarizes the analysis of all design documents in `/docs` against
 
 | Document | Status | Key Finding |
 |----------|--------|-------------|
-| memory-based-slot-calculation.md | ⚠️ Partial Discrepancy | Slot reporting uses average memory instead of per-job-type |
+| memory-based-slot-calculation.md | ✅ Complete | Per-job-type memory calculation implemented |
 | e2e-distributed-tests-design.md | ✅ Adapted | Tests work but architecture evolved to pool-based |
 | maxWaitMS-design.md | ✅ Complete | No major discrepancies |
 | actual-usage-adjustment-design.md | ✅ Complete | Minor: `requestCount` optional vs required |
 | distributed-capacity-tracking-design.md | ✅ Accurate | Minor structural differences |
-| distributed-slots-design.md | ⚠️ 95% Complete | Missing minCapacity enforcement |
+| distributed-slots-design.md | ✅ Complete | minCapacity enforcement added |
 
 ---
 
@@ -29,40 +29,18 @@ Describes memory-based slot calculation where each instance calculates its own m
 - `packages/core/src/utils/memoryManager.ts` - Per-job-type memory manager
 - `packages/core/src/utils/availabilityTracker.ts` - Slot calculation
 
-### Discrepancies
+### Status: ✅ Complete
 
-#### 1. Memory slot calculation uses AVERAGE memory, not per-job-type memory
+Both enforcement and reporting layers now implement per-job-type memory correctly:
 
-**Document specifies:**
-```
-For each jobType:
-  memorySlots = floor((totalMemory × ratio) / estimatedMemoryKB)
-```
+1. **Enforcement layer** (`memoryManager.ts`): Per-job-type semaphores with dynamic ratio updates
+2. **Reporting layer** (`availabilityTracker.ts`): `calculatePerJobTypeMemorySlots()` calculates slots per job type using ratios
 
-**Implementation (`availabilityTracker.ts` lines 249-256):**
+**Implementation:**
 ```typescript
-const avgEstimatedMemoryKB = this.getAverageEstimatedMemory(resourcesPerJob);
-memorySlots = Math.floor(totalMemoryKB / avgEstimatedMemoryKB);
+// For each job type: memorySlots = floor((totalMemory * ratio) / estimatedMemoryKB)
+// Sum all per-job-type slots for total memory slots
 ```
-
-This calculates a **single global memory slot limit** using average memory across all job types, rather than per-job-type.
-
-#### 2. Memory constraint applied globally, not per-job-type
-
-**Document shows:**
-```
-jobTypeA final = min(distributed=25, local=5) = 5 slots   <- Memory limited
-jobTypeB final = min(distributed=25, local=50) = 25 slots <- TPM limited
-```
-
-**Implementation:** Uses a global scaling factor applied to all pools equally.
-
-### Impact
-- **Runtime behavior is correct** - `MemoryManager` properly enforces per-job-type memory during execution
-- **Reported slot counts** via `onAvailableSlotsChange` may not match the documented formula
-
-### Recommendation
-Update `availabilityTracker.ts::calculateSlotsWithMemoryConstraint()` to calculate memory slots per job type rather than using a global average.
 
 ---
 
@@ -205,26 +183,15 @@ Pool-based slot allocation system for distributed rate limiting with local job t
 - `packages/core/src/utils/jobTypeManager.ts` - Local ratio management
 - `packages/core/src/utils/jobTypeHelpers.ts` - Ratio adjustment algorithms
 
-### Discrepancies
+### Status: ✅ Complete
 
-#### 1. No minCapacity enforcement
-**Document (lines 279-282):** "Local manager guarantees minCapacity (e.g., 1)" for floor rounding edge cases
+All discrepancies have been resolved:
 
-**Implementation:** `recalculateAllocatedSlots` uses `Math.floor(totalCapacity * state.currentRatio)` but does NOT enforce a minimum of 1.
+1. **minCapacity enforcement**: `recalculateAllocatedSlots()` now uses `Math.max(1, Math.floor(...))` to guarantee at least 1 slot per job type
 
-**Impact:** A job type with very low ratio could get 0 slots, blocking all jobs of that type.
+2. **Dead code removed**: `redisJobTypeOps.ts` and `jobTypeLuaScripts.ts` have been deleted as they were unused
 
-#### 2. Unused RedisJobTypeOps
-Document states "No Job Type in Redis" but implementation includes:
-- `packages/redis/src/jobTypeLuaScripts.ts`
-- `packages/redis/src/redisJobTypeOps.ts`
-
-These are not used in the main acquire/release flow. Should be documented or removed.
-
-#### 3. Debug console.log statements
-Same issue as distributed-capacity-tracking - debug logs in production code.
-
-### Status: ⚠️ 95% Complete
+3. **Debug console.log statements**: Noted but intentionally kept for now (user request)
 
 ---
 
@@ -241,15 +208,19 @@ Multiple documents reference per-job-type-and-model allocation, but the implemen
 ### 2. Debug Logging in Production Code
 `console.log` statements in `multiModelRateLimiter.ts` should use the `onLog` callback or be removed.
 
-### 3. Memory Slot Calculation
-`availabilityTracker.ts` uses average memory for slot calculation instead of per-job-type memory as documented.
+---
+
+## Resolved Issues
+
+The following issues have been fixed:
+
+1. ✅ **minCapacity enforcement** - Added `Math.max(1, ...)` in `jobTypeHelpers.ts::recalculateAllocatedSlots()`
+2. ✅ **Dead code removed** - Deleted `redisJobTypeOps.ts`, `jobTypeLuaScripts.ts`, and cleaned up related imports/types
+3. ✅ **Memory slot calculation** - `availabilityTracker.ts` now calculates per-job-type memory slots using ratios
 
 ---
 
-## Recommendations
+## Remaining Recommendations
 
-1. **Update documentation** to reflect pool-based architecture or update implementation to match per-job-type design
-2. **Add minCapacity enforcement** in `jobTypeHelpers.ts::recalculateAllocatedSlots()`
-3. **Remove or document** `RedisJobTypeOps` functionality
-4. **Fix memory slot calculation** in `availabilityTracker.ts` to match documented per-job-type behavior
-5. **Clean up debug logging** - remove `console.log` or use proper logging callbacks
+1. **Update documentation** to reflect pool-based architecture
+2. **Clean up debug logging** - remove `console.log` or use proper logging callbacks

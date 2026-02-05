@@ -1,8 +1,7 @@
+import type { TestData } from '@llm-rate-limiter/e2e-test-results';
 import { mkdir } from 'node:fs/promises';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-
-import type { TestData } from '@llm-rate-limiter/e2e-test-results';
 
 import { type ConfigPresetName, resetInstance } from './resetInstance.js';
 import { StateAggregator } from './stateAggregator.js';
@@ -110,10 +109,7 @@ const setProxyRatio = async (proxyUrl: string, ratio: string): Promise<void> => 
 };
 
 /** Reset all server instances */
-const resetAllInstances = async (
-  instanceUrls: string[],
-  configPreset?: ConfigPresetName
-): Promise<void> => {
+const resetAllInstances = async (instanceUrls: string[], configPreset?: ConfigPresetName): Promise<void> => {
   let isFirst = true;
   for (const url of instanceUrls) {
     const result = await resetInstance(url, { cleanRedis: isFirst, configPreset });

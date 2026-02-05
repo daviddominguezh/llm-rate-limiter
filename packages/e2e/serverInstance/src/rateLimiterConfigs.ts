@@ -30,18 +30,21 @@ const DEEPINFRA_PRICING_OUTPUT = 0.14;
 // =============================================================================
 
 export interface RateLimiterPreset {
-  models: Record<string, {
-    requestsPerMinute?: number;
-    requestsPerDay?: number;
-    tokensPerMinute?: number;
-    tokensPerDay?: number;
-    maxConcurrentRequests?: number;
-    pricing: {
-      input: number;
-      cached: number;
-      output: number;
-    };
-  }>;
+  models: Record<
+    string,
+    {
+      requestsPerMinute?: number;
+      requestsPerDay?: number;
+      tokensPerMinute?: number;
+      tokensPerDay?: number;
+      maxConcurrentRequests?: number;
+      pricing: {
+        input: number;
+        cached: number;
+        output: number;
+      };
+    }
+  >;
   escalationOrder: readonly string[];
   resourceEstimations: ResourceEstimationsPerJob;
 }

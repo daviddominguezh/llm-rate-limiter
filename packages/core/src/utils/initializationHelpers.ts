@@ -124,7 +124,9 @@ const DEFAULT_JOB_TYPE_CAPACITY = 100;
 const DEFAULT_TOKENS_PER_JOB = 1000;
 
 /** Calculate average estimated tokens per job from resource estimations */
-const calculateAverageTokensPerJob = (resourceEstimationsPerJob: ResourceEstimationsPerJob | undefined): number => {
+const calculateAverageTokensPerJob = (
+  resourceEstimationsPerJob: ResourceEstimationsPerJob | undefined
+): number => {
   if (resourceEstimationsPerJob === undefined) {
     return DEFAULT_TOKENS_PER_JOB;
   }

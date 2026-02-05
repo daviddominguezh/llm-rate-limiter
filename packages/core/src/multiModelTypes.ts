@@ -12,7 +12,13 @@
 import type { ActiveJobInfo } from './activeJobTypes.js';
 import type { DistributedBackendFactory } from './backendFactoryTypes.js';
 import type { JobTypeStats, RatioAdjustmentConfig, ResourceEstimationsPerJob } from './jobTypeTypes.js';
-import type { InternalJobResult, InternalLimiterStats, LogFn, MemoryLimitConfig, OverageFn } from './types.js';
+import type {
+  InternalJobResult,
+  InternalLimiterStats,
+  LogFn,
+  MemoryLimitConfig,
+  OverageFn,
+} from './types.js';
 
 // =============================================================================
 // Model Configuration Types

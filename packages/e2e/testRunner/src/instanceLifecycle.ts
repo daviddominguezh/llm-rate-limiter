@@ -2,12 +2,11 @@
  * Instance lifecycle management for E2E tests.
  * Provides functions to boot, kill, and query server instances programmatically.
  */
+import type { AllocationInfo } from '@llm-rate-limiter/core';
+import { Redis } from 'ioredis';
 import { type ChildProcess, spawn } from 'node:child_process';
 import { request } from 'node:http';
 import { resolve } from 'node:path';
-
-import type { AllocationInfo } from '@llm-rate-limiter/core';
-import { Redis } from 'ioredis';
 
 import type { ConfigPresetName } from './resetInstance.js';
 

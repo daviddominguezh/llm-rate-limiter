@@ -350,7 +350,7 @@ describe('Pool-Based Slot Calculation', () => {
     it('should report memory stats in debug endpoint', async () => {
       // Memory is a local constraint - verify stats endpoint shows memory info
       const response = await fetch(`${INSTANCE_A_URL}/api/debug/stats`);
-      const stats = await response.json() as { stats: { memory?: { maxCapacityKB: number } } };
+      const stats = (await response.json()) as { stats: { memory?: { maxCapacityKB: number } } };
       // Memory stats should be present when memory is configured
       expect(stats.stats.memory).toBeDefined();
       expect(stats.stats.memory?.maxCapacityKB).toBeGreaterThan(0);
@@ -377,57 +377,69 @@ describe('Pool-Based Slot Calculation', () => {
       await killAllInstances();
     }, 30000);
 
-    it('should calculate 10 pool slots with 1 instance', async () => {
-      await killAllInstances();
-      await cleanRedis();
-      await bootInstance(PORT_A, 'instanceScaling');
-      await sleep(ALLOCATION_PROPAGATION_MS);
+    it(
+      'should calculate 10 pool slots with 1 instance',
+      async () => {
+        await killAllInstances();
+        await cleanRedis();
+        await bootInstance(PORT_A, 'instanceScaling');
+        await sleep(ALLOCATION_PROPAGATION_MS);
 
-      const response = await fetchAllocationFromPort(PORT_A);
-      expect(response.allocation?.instanceCount).toBe(1);
-      expect(response.allocation?.pools?.['scale-model']?.totalSlots).toBe(10);
+        const response = await fetchAllocationFromPort(PORT_A);
+        expect(response.allocation?.instanceCount).toBe(1);
+        expect(response.allocation?.pools?.['scale-model']?.totalSlots).toBe(10);
 
-      await killAllInstances();
-    }, INSTANCE_SCALE_TIMEOUT);
+        await killAllInstances();
+      },
+      INSTANCE_SCALE_TIMEOUT
+    );
 
-    it('should calculate 5 pool slots each with 2 instances', async () => {
-      await killAllInstances();
-      await cleanRedis();
-      await bootInstance(PORT_A, 'instanceScaling');
-      await sleep(ALLOCATION_PROPAGATION_MS);
-      await bootInstance(PORT_B, 'instanceScaling');
-      await waitForAllocationUpdate(PORT_A, (a) => a.instanceCount === 2);
+    it(
+      'should calculate 5 pool slots each with 2 instances',
+      async () => {
+        await killAllInstances();
+        await cleanRedis();
+        await bootInstance(PORT_A, 'instanceScaling');
+        await sleep(ALLOCATION_PROPAGATION_MS);
+        await bootInstance(PORT_B, 'instanceScaling');
+        await waitForAllocationUpdate(PORT_A, (a) => a.instanceCount === 2);
 
-      const responseA = await fetchAllocationFromPort(PORT_A);
-      const responseB = await fetchAllocationFromPort(PORT_B);
+        const responseA = await fetchAllocationFromPort(PORT_A);
+        const responseB = await fetchAllocationFromPort(PORT_B);
 
-      expect(responseA.allocation?.instanceCount).toBe(2);
-      expect(responseA.allocation?.pools?.['scale-model']?.totalSlots).toBe(5);
-      expect(responseB.allocation?.pools?.['scale-model']?.totalSlots).toBe(5);
+        expect(responseA.allocation?.instanceCount).toBe(2);
+        expect(responseA.allocation?.pools?.['scale-model']?.totalSlots).toBe(5);
+        expect(responseB.allocation?.pools?.['scale-model']?.totalSlots).toBe(5);
 
-      await killAllInstances();
-    }, INSTANCE_SCALE_TIMEOUT);
+        await killAllInstances();
+      },
+      INSTANCE_SCALE_TIMEOUT
+    );
 
-    it('should calculate 3 pool slots each with 3 instances', async () => {
-      await killAllInstances();
-      await cleanRedis();
-      await bootInstance(PORT_A, 'instanceScaling');
-      await sleep(ALLOCATION_PROPAGATION_MS);
-      await bootInstance(PORT_B, 'instanceScaling');
-      await waitForAllocationUpdate(PORT_A, (a) => a.instanceCount === 2);
-      await bootInstance(PORT_C, 'instanceScaling');
-      await waitForAllocationUpdate(PORT_A, (a) => a.instanceCount === 3);
+    it(
+      'should calculate 3 pool slots each with 3 instances',
+      async () => {
+        await killAllInstances();
+        await cleanRedis();
+        await bootInstance(PORT_A, 'instanceScaling');
+        await sleep(ALLOCATION_PROPAGATION_MS);
+        await bootInstance(PORT_B, 'instanceScaling');
+        await waitForAllocationUpdate(PORT_A, (a) => a.instanceCount === 2);
+        await bootInstance(PORT_C, 'instanceScaling');
+        await waitForAllocationUpdate(PORT_A, (a) => a.instanceCount === 3);
 
-      const responseA = await fetchAllocationFromPort(PORT_A);
-      const responseB = await fetchAllocationFromPort(PORT_B);
-      const responseC = await fetchAllocationFromPort(PORT_C);
+        const responseA = await fetchAllocationFromPort(PORT_A);
+        const responseB = await fetchAllocationFromPort(PORT_B);
+        const responseC = await fetchAllocationFromPort(PORT_C);
 
-      expect(responseA.allocation?.instanceCount).toBe(3);
-      expect(responseA.allocation?.pools?.['scale-model']?.totalSlots).toBe(3);
-      expect(responseB.allocation?.pools?.['scale-model']?.totalSlots).toBe(3);
-      expect(responseC.allocation?.pools?.['scale-model']?.totalSlots).toBe(3);
+        expect(responseA.allocation?.instanceCount).toBe(3);
+        expect(responseA.allocation?.pools?.['scale-model']?.totalSlots).toBe(3);
+        expect(responseB.allocation?.pools?.['scale-model']?.totalSlots).toBe(3);
+        expect(responseC.allocation?.pools?.['scale-model']?.totalSlots).toBe(3);
 
-      await killAllInstances();
-    }, INSTANCE_SCALE_TIMEOUT);
+        await killAllInstances();
+      },
+      INSTANCE_SCALE_TIMEOUT
+    );
   });
 });

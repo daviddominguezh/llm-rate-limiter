@@ -1,7 +1,6 @@
+import type { TestData } from '@llm-rate-limiter/e2e-test-results';
 import { writeFile } from 'node:fs/promises';
 import { request } from 'node:http';
-
-import type { TestData } from '@llm-rate-limiter/e2e-test-results';
 
 import type { InstanceState } from './stateAggregator.js';
 import { type RawTestData, transformTestData } from './testDataTransform.js';

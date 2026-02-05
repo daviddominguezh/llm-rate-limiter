@@ -19,8 +19,8 @@ import type {
   ReservationContext,
 } from './types.js';
 import { CapacityWaitQueue } from './utils/capacityWaitQueue.js';
-import { isDelegationError } from './utils/jobExecutionHelpers.js';
 import { validateConfig } from './utils/configValidation.js';
+import { isDelegationError } from './utils/jobExecutionHelpers.js';
 import { getAvailableMemoryKB } from './utils/memoryUtils.js';
 import { Semaphore } from './utils/semaphore.js';
 import { TimeWindowCounter } from './utils/timeWindowCounter.js';

@@ -278,7 +278,7 @@ Allocation change notifications include pool breakdown:
 Pool: 2 slots, jobTypeA ratio: 0.3
 floor(2 * 0.3) = 0 slots
 
-Mitigation: Local manager guarantees minCapacity (e.g., 1)
+Mitigation: Local manager guarantees minJobTypeCapacity (default: 1)
 ```
 
 ### Ratio Sum Exceeds 1.0

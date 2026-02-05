@@ -232,35 +232,47 @@ describe('Instance Scaling with Pool-Based Allocation', () => {
       await killAllInstances();
     }, AFTER_ALL_TIMEOUT_MS);
 
-    it('should redistribute pool slots through multiple join/leave cycles', async () => {
-      // Step 1: A starts alone with 10 pool slots
-      await bootInstance(PORT_A, CONFIG_PRESET);
-      await sleep(ALLOCATION_PROPAGATION_MS);
-      await verifyPoolSlots(PORT_A, 10);
+    it(
+      'should redistribute pool slots through multiple join/leave cycles',
+      async () => {
+        // Step 1: A starts alone with 10 pool slots
+        await bootInstance(PORT_A, CONFIG_PRESET);
+        await sleep(ALLOCATION_PROPAGATION_MS);
+        await verifyPoolSlots(PORT_A, 10);
 
-      // Step 2: B joins, both have 5 pool slots
-      await bootInstance(PORT_B, CONFIG_PRESET);
-      await waitForAllocationUpdate(PORT_A, (alloc) => alloc.instanceCount === 2);
-      await verifyPoolSlots(PORT_A, 5);
-      await verifyPoolSlots(PORT_B, 5);
+        // Step 2: B joins, both have 5 pool slots
+        await bootInstance(PORT_B, CONFIG_PRESET);
+        await waitForAllocationUpdate(PORT_A, (alloc) => alloc.instanceCount === 2);
+        await verifyPoolSlots(PORT_A, 5);
+        await verifyPoolSlots(PORT_B, 5);
 
-      // Step 3: C joins, all have 3 pool slots
-      await bootInstance(PORT_C, CONFIG_PRESET);
-      await waitForAllocationUpdate(PORT_A, (alloc) => alloc.instanceCount === 3);
-      await verifyPoolSlots(PORT_A, 3);
-      await verifyPoolSlots(PORT_B, 3);
-      await verifyPoolSlots(PORT_C, 3);
+        // Step 3: C joins, all have 3 pool slots
+        await bootInstance(PORT_C, CONFIG_PRESET);
+        await waitForAllocationUpdate(PORT_A, (alloc) => alloc.instanceCount === 3);
+        await verifyPoolSlots(PORT_A, 3);
+        await verifyPoolSlots(PORT_B, 3);
+        await verifyPoolSlots(PORT_C, 3);
 
-      // Step 4: C leaves, A and B each have 5 pool slots
-      await killInstance(PORT_C);
-      await waitForAllocationUpdate(PORT_A, (alloc) => alloc.instanceCount === 2, INSTANCE_CLEANUP_TIMEOUT_MS);
-      await verifyPoolSlots(PORT_A, 5);
-      await verifyPoolSlots(PORT_B, 5);
+        // Step 4: C leaves, A and B each have 5 pool slots
+        await killInstance(PORT_C);
+        await waitForAllocationUpdate(
+          PORT_A,
+          (alloc) => alloc.instanceCount === 2,
+          INSTANCE_CLEANUP_TIMEOUT_MS
+        );
+        await verifyPoolSlots(PORT_A, 5);
+        await verifyPoolSlots(PORT_B, 5);
 
-      // Step 5: B leaves, A has 10 pool slots
-      await killInstance(PORT_B);
-      await waitForAllocationUpdate(PORT_A, (alloc) => alloc.instanceCount === 1, INSTANCE_CLEANUP_TIMEOUT_MS);
-      await verifyPoolSlots(PORT_A, 10);
-    }, BEFORE_ALL_TIMEOUT_MS * 3);
+        // Step 5: B leaves, A has 10 pool slots
+        await killInstance(PORT_B);
+        await waitForAllocationUpdate(
+          PORT_A,
+          (alloc) => alloc.instanceCount === 1,
+          INSTANCE_CLEANUP_TIMEOUT_MS
+        );
+        await verifyPoolSlots(PORT_A, 10);
+      },
+      BEFORE_ALL_TIMEOUT_MS * 3
+    );
   });
 });

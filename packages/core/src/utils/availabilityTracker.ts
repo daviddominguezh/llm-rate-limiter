@@ -275,7 +275,7 @@ export class AvailabilityTracker {
     let hasMemoryConstraint = false;
 
     for (const [jobType, config] of jobTypes) {
-      const ratio = ratios.get(jobType) ?? (ONE / jobTypes.length);
+      const ratio = ratios.get(jobType) ?? ONE / jobTypes.length;
       const memoryForJobType = totalMemoryKB * ratio;
       const estimatedMemoryKB = config?.estimatedUsedMemoryKB ?? ZERO;
 

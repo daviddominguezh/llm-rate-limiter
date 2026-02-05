@@ -6,7 +6,6 @@
 import type { ResourceEstimationsPerJob } from '../jobTypeTypes.js';
 import type { AvailabilityChangeReason, LLMRateLimiterConfig } from '../multiModelTypes.js';
 import type { InternalLimiterStats, LogFn } from '../types.js';
-
 import { calculateInitialRatios } from './jobTypeValidation.js';
 import { getAvailableMemoryKB } from './memoryUtils.js';
 import { Semaphore } from './semaphore.js';
@@ -74,11 +73,7 @@ class PerJobTypeMemoryManager implements MemoryManagerInstance {
       const estimatedUsedMemoryKB = jobConfig.estimatedUsedMemoryKB ?? ZERO;
 
       this.jobTypeStates.set(jobType, {
-        semaphore: new Semaphore(
-          Math.max(ONE, allocatedMemoryKB),
-          `${label}/Memory/${jobType}`,
-          onLog
-        ),
+        semaphore: new Semaphore(Math.max(ONE, allocatedMemoryKB), `${label}/Memory/${jobType}`, onLog),
         estimatedUsedMemoryKB,
         currentRatio: ratio,
         allocatedMemoryKB,
@@ -94,7 +89,9 @@ class PerJobTypeMemoryManager implements MemoryManagerInstance {
     });
 
     // Start periodic memory recalculation
-    this.startRecalculationInterval(config.memory?.recalculationIntervalMs ?? DEFAULT_RECALCULATION_INTERVAL_MS);
+    this.startRecalculationInterval(
+      config.memory?.recalculationIntervalMs ?? DEFAULT_RECALCULATION_INTERVAL_MS
+    );
   }
 
   private startRecalculationInterval(intervalMs: number): void {

@@ -241,40 +241,44 @@ describe('Dynamic Ratio is Local Only (Pool-Based)', () => {
       expect(poolA?.tokensPerMinute).toBe(poolB?.tokensPerMinute);
     });
 
-    it('Instance B should maintain pool allocation after Instance A processes heavy load', async () => {
-      // Get baseline pool allocation for Instance B
-      const baselineB = await fetchAllocation(INSTANCE_B_URL);
-      const baselinePoolB = baselineB.allocation?.pools?.['flex-model'];
+    it(
+      'Instance B should maintain pool allocation after Instance A processes heavy load',
+      async () => {
+        // Get baseline pool allocation for Instance B
+        const baselineB = await fetchAllocation(INSTANCE_B_URL);
+        const baselinePoolB = baselineB.allocation?.pools?.['flex-model'];
 
-      // Send heavy load to Instance A only
-      await fetch(`${PROXY_URL}/proxy/ratio`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ratio: '1:0' }),
-      });
+        // Send heavy load to Instance A only
+        await fetch(`${PROXY_URL}/proxy/ratio`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ ratio: '1:0' }),
+        });
 
-      const heavyJobs = generateJobsOfType(6, 'flexJobA', {
-        prefix: 'alloc-verify',
-        durationMs: LONG_JOB_DURATION_MS,
-      });
+        const heavyJobs = generateJobsOfType(6, 'flexJobA', {
+          prefix: 'alloc-verify',
+          durationMs: LONG_JOB_DURATION_MS,
+        });
 
-      await runSuite({
-        suiteName: 'local-ratio-alloc-verify',
-        proxyUrl: PROXY_URL,
-        instanceUrls: [INSTANCE_A_URL],
-        jobs: heavyJobs,
-        waitTimeoutMs: WAIT_TIMEOUT_MS,
-        sendJobsInParallel: true,
-      });
+        await runSuite({
+          suiteName: 'local-ratio-alloc-verify',
+          proxyUrl: PROXY_URL,
+          instanceUrls: [INSTANCE_A_URL],
+          jobs: heavyJobs,
+          waitTimeoutMs: WAIT_TIMEOUT_MS,
+          sendJobsInParallel: true,
+        });
 
-      // After heavy load on A, verify B's pool allocation is NOT reduced
-      const afterLoadB = await fetchAllocation(INSTANCE_B_URL);
-      const afterPoolB = afterLoadB.allocation?.pools?.['flex-model'];
+        // After heavy load on A, verify B's pool allocation is NOT reduced
+        const afterLoadB = await fetchAllocation(INSTANCE_B_URL);
+        const afterPoolB = afterLoadB.allocation?.pools?.['flex-model'];
 
-      // Instance B's pool allocation should be unchanged (ratios are local)
-      // Pool slots might change due to dynamic limits, but shouldn't decrease due to A's local load
-      expect(afterPoolB?.totalSlots).toBeGreaterThanOrEqual(baselinePoolB?.totalSlots ?? 0);
-    }, BEFORE_ALL_TIMEOUT_MS);
+        // Instance B's pool allocation should be unchanged (ratios are local)
+        // Pool slots might change due to dynamic limits, but shouldn't decrease due to A's local load
+        expect(afterPoolB?.totalSlots).toBeGreaterThanOrEqual(baselinePoolB?.totalSlots ?? 0);
+      },
+      BEFORE_ALL_TIMEOUT_MS
+    );
   });
 
   describe('Mixed Load Across Instances', () => {

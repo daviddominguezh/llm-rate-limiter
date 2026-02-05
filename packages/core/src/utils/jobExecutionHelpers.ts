@@ -195,7 +195,10 @@ export interface SelectModelWithWaitParams {
    * Jobs are served in order when capacity becomes available.
    * Returns ReservationContext if capacity was reserved, null if timed out.
    */
-  waitForCapacityWithTimeoutForModel: (modelId: string, maxWaitMS: number) => Promise<ReservationContext | null>;
+  waitForCapacityWithTimeoutForModel: (
+    modelId: string,
+    maxWaitMS: number
+  ) => Promise<ReservationContext | null>;
   /** Called when starting to wait for a model (for job tracking) */
   onWaitingForModel?: (modelId: string, maxWaitMS: number) => void;
 }

@@ -34,7 +34,9 @@ const runManualTest = async (): Promise<void> => {
   log(`Duration: ${data.metadata.durationMs}ms`);
   log(`Timeline events: ${data.timeline.length}`);
   log(`Snapshots taken: ${data.snapshots.length}`);
-  log(`Jobs: ${data.summary.totalJobs} total, ${data.summary.completed} completed, ${data.summary.failed} failed`);
+  log(
+    `Jobs: ${data.summary.totalJobs} total, ${data.summary.completed} completed, ${data.summary.failed} failed`
+  );
 
   if (data.summary.avgDurationMs !== null) {
     log(`Avg job duration: ${data.summary.avgDurationMs.toFixed(1)}ms`);

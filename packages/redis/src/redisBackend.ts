@@ -85,7 +85,10 @@ class RedisBackendImpl {
     if (modelCapacities === undefined || resourceEstimationsPerJob === undefined) return;
     const { keys, redis } = this;
     // Build job type resources with ratios
-    const jobTypeResources: Record<string, { estimatedUsedTokens: number; estimatedNumberOfRequests: number; ratio: number }> = {};
+    const jobTypeResources: Record<
+      string,
+      { estimatedUsedTokens: number; estimatedNumberOfRequests: number; ratio: number }
+    > = {};
     const jobTypeIds = Object.keys(resourceEstimationsPerJob);
     let specifiedTotal = 0;
     const specifiedRatios = new Map<string, number>();

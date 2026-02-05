@@ -74,10 +74,7 @@ const buildInstanceMapping = (events: RawEvent[]): Record<string, string> => {
 };
 
 /** Build job records from events */
-const buildJobRecords = (
-  jobsSent: RawJobSent[],
-  events: RawEvent[]
-): Record<string, JobRecord> => {
+const buildJobRecords = (jobsSent: RawJobSent[], events: RawEvent[]): Record<string, JobRecord> => {
   const jobs: Record<string, JobRecord> = {};
 
   // Initialize from sent jobs
@@ -226,19 +223,14 @@ const buildTimeline = (events: RawEvent[]): TimelineEvent[] => {
 };
 
 /** Transform model stats to compact format */
-const transformModelState = (
-  modelId: string,
-  stats: Record<string, unknown>
-): CompactModelState | null => {
+const transformModelState = (modelId: string, stats: Record<string, unknown>): CompactModelState | null => {
   const rpm = stats.requestsPerMinute as { current: number; remaining: number } | undefined;
   const tpm = stats.tokensPerMinute as { current: number; remaining: number } | undefined;
   const conc = stats.concurrency as { active: number; available: number } | undefined;
 
   // Skip if all zeros
   const hasActivity =
-    (rpm?.current ?? ZERO) > ZERO ||
-    (tpm?.current ?? ZERO) > ZERO ||
-    (conc?.active ?? ZERO) > ZERO;
+    (rpm?.current ?? ZERO) > ZERO || (tpm?.current ?? ZERO) > ZERO || (conc?.active ?? ZERO) > ZERO;
 
   if (!hasActivity) {
     return null;
@@ -260,9 +252,7 @@ const transformModelState = (
 };
 
 /** Transform job type stats to compact format */
-const transformJobTypeState = (
-  state: Record<string, unknown>
-): CompactJobTypeState | null => {
+const transformJobTypeState = (state: Record<string, unknown>): CompactJobTypeState | null => {
   const inFlight = state.inFlight as number;
 
   // Skip if no activity
@@ -292,7 +282,9 @@ const transformInstanceState = (state: InstanceState): CompactInstanceState => {
   }
 
   // Transform job types
-  const jobTypeStats = state.stats.jobTypes as { jobTypes: Record<string, Record<string, unknown>> } | undefined;
+  const jobTypeStats = state.stats.jobTypes as
+    | { jobTypes: Record<string, Record<string, unknown>> }
+    | undefined;
   if (jobTypeStats?.jobTypes !== undefined) {
     for (const [jobTypeId, jtState] of Object.entries(jobTypeStats.jobTypes)) {
       const compact = transformJobTypeState(jtState);
@@ -340,10 +332,7 @@ const buildSummary = (jobs: Record<string, JobRecord>): TestSummary => {
   const byJobType: Record<string, JobSummaryByCategory> = {};
   const byModel: Record<string, JobSummaryByCategory> = {};
 
-  const ensureCategory = (
-    map: Record<string, JobSummaryByCategory>,
-    key: string
-  ): JobSummaryByCategory => {
+  const ensureCategory = (map: Record<string, JobSummaryByCategory>, key: string): JobSummaryByCategory => {
     if (map[key] === undefined) {
       map[key] = { completed: ZERO, failed: ZERO, total: ZERO };
     }

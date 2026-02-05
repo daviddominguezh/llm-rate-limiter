@@ -12,7 +12,12 @@ import type {
   UsageEntry,
 } from '../multiModelTypes.js';
 import type { InternalJobResult, InternalLimiterInstance, ReservationContext } from '../types.js';
-import { DelegationError, type DelegationUsage, buildJobArgs, calculateTotalCost } from './jobExecutionHelpers.js';
+import {
+  DelegationError,
+  type DelegationUsage,
+  buildJobArgs,
+  calculateTotalCost,
+} from './jobExecutionHelpers.js';
 
 /** Mutable state for job execution callbacks */
 export interface JobExecutionState {

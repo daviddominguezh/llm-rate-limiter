@@ -69,8 +69,15 @@ export const executeOnModel = async <T, Args extends ArgsWithoutModelId = ArgsWi
     emitJobAdjustment: dctx.emitJobAdjustment,
     releaseResources: (result) => {
       dctx.memoryManager?.release(ctx.jobType);
-      const actual = { requests: result.requestCount, tokens: result.usage.input + result.usage.output + result.usage.cached };
-      releaseBackend(dctx.backendCtx(modelId, ctx.jobId, ctx.jobType), actual, reservationContext.windowStarts);
+      const actual = {
+        requests: result.requestCount,
+        tokens: result.usage.input + result.usage.output + result.usage.cached,
+      };
+      releaseBackend(
+        dctx.backendCtx(modelId, ctx.jobId, ctx.jobType),
+        actual,
+        reservationContext.windowStarts
+      );
     },
   });
 };
@@ -101,7 +108,11 @@ const handleError = async <T, Args extends ArgsWithoutModelId = ArgsWithoutModel
       }
     : { requests: ZERO, tokens: ZERO };
 
-  releaseBackend(dctx.backendCtx(modelId, ctx.jobId, ctx.jobType), actualUsage, reservationContext.windowStarts);
+  releaseBackend(
+    dctx.backendCtx(modelId, ctx.jobId, ctx.jobType),
+    actualUsage,
+    reservationContext.windowStarts
+  );
 
   if (isDelegationError(error)) {
     if (dctx.getAvailableModelExcluding(ctx.triedModels) === null) {
@@ -119,7 +130,11 @@ export const executeWithDelegation = async <T, Args extends ArgsWithoutModelId =
   dctx: DelegationContext,
   ctx: JobExecutionContext<T, Args>
 ): Promise<LLMJobResult<T>> => {
-  const { modelId: selectedModel, reservationContext, allModelsExhausted } = await selectModelWithWait({
+  const {
+    modelId: selectedModel,
+    reservationContext,
+    allModelsExhausted,
+  } = await selectModelWithWait({
     escalationOrder: dctx.escalationOrder,
     triedModels: ctx.triedModels,
     hasCapacityForModel: dctx.hasCapacityForModel,

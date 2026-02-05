@@ -13,21 +13,15 @@ npm run format      # Prettier
 npm run lint        # ESLint
 npm run typecheck   # TypeScript
 
-# Build
-npm run build                # All packages
-npm run build:core           # Core only
-npm run build:redis          # Redis only
-
 # Test
 npm test                     # All packages
 npm run test:core            # Core package
 npm run test:redis           # Redis package (unit)
-npm run test:redis-e2e       # Redis package (e2e)
 
 # E2E distributed tests (requires Redis running on localhost:6379)
-npm run test:e2e                 # Run full test suite
+npm run test:e2e                                                  # Run full test suite
 npm run test:e2e:single -- --testPathPatterns=exactCapacity.test  # Run specific test
-npm run test:e2e:verifySetup     # Verify infrastructure setup works
+npm run test:e2e:verifySetup                                      # Verify infrastructure setup works
 ```
 
 ## Architecture
@@ -91,9 +85,10 @@ When hitting these limits, **refactor properly**:
 ## Design Documents
 
 Detailed designs in `docs/`:
-- `distributed-slots-design.md` - Pool-based allocation, local ratio management
-- `distributed-capacity-tracking-design.md` - Global usage propagation across instances
-- `actual-usage-adjustment-design.md` - Refund/overage handling, error scenarios
-- `memory-based-slots-design.md` - Memory as local constraint
-- `max-wait-timeout-design.md` - Queue timeout configuration per job type/model
-- `e2e-distributed-tests-design.md` - Test architecture and config presets
+- `distributed-slots-allocation.md` - Pool-based allocation, local ratio management
+- `distributed-capacity-tracking.md` - Global usage propagation across instances
+- `actual-usage-adjustment.md` - Refund/overage handling, error scenarios
+- `memory-based-slots.md` - Memory as local constraint
+- `max-wait-timeout.md` - Queue timeout configuration per job type/model
+- `e2e-testing-guide.md` - E2E testing framework, how to run and write tests
+- `e2e-test-reference.md` - Reference for individual test files and their purpose

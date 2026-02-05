@@ -35,7 +35,7 @@ export interface DelegationContext {
   escalationOrder: readonly string[];
   resourceEstimationsPerJob: ResourceEstimationsPerJob;
   activeJobs: Map<string, ActiveJobInfo>;
-  memoryManager: { acquire: (m: string) => Promise<void>; release: (m: string) => void } | null;
+  memoryManager: { acquire: (jobType: string) => Promise<void>; release: (jobType: string) => void } | null;
   hasCapacityForModel: (modelId: string) => boolean;
   /** Atomically reserve capacity for a model. Returns ReservationContext if reserved, null if no capacity. */
   tryReserveForModel: (modelId: string) => ReservationContext | null;
@@ -68,7 +68,7 @@ export const executeOnModel = async <T, Args extends ArgsWithoutModelId = ArgsWi
     },
     emitJobAdjustment: dctx.emitJobAdjustment,
     releaseResources: (result) => {
-      dctx.memoryManager?.release(modelId);
+      dctx.memoryManager?.release(ctx.jobType);
       const actual = { requests: result.requestCount, tokens: result.usage.input + result.usage.output + result.usage.cached };
       releaseBackend(dctx.backendCtx(modelId, ctx.jobId, ctx.jobType), actual, reservationContext.windowStarts);
     },
@@ -89,7 +89,7 @@ const handleError = async <T, Args extends ArgsWithoutModelId = ArgsWithoutModel
   params: HandleErrorParams<T, Args>
 ): Promise<LLMJobResult<T>> => {
   const { dctx, ctx, modelId, reservationContext, error } = params;
-  dctx.memoryManager?.release(modelId);
+  dctx.memoryManager?.release(ctx.jobType);
 
   // Extract actual usage from DelegationError, or use zero for other errors
   // When reject(usage) is called, DelegationError carries the actual usage
@@ -141,9 +141,9 @@ export const executeWithDelegation = async <T, Args extends ArgsWithoutModelId =
   ctx.triedModels.add(selectedModel);
   addJobTriedModel(dctx.activeJobs, ctx.jobId, selectedModel);
 
-  // Try to acquire memory
+  // Try to acquire memory for this job type
   try {
-    await dctx.memoryManager?.acquire(selectedModel);
+    await dctx.memoryManager?.acquire(ctx.jobType);
   } catch {
     // Release the reserved capacity since we can't proceed (respects time windows)
     dctx.releaseReservationForModel(selectedModel, reservationContext);
@@ -152,7 +152,7 @@ export const executeWithDelegation = async <T, Args extends ArgsWithoutModelId =
 
   // Try to acquire backend
   if (!(await acquireBackend(dctx.backendCtx(selectedModel, ctx.jobId, ctx.jobType)))) {
-    dctx.memoryManager?.release(selectedModel);
+    dctx.memoryManager?.release(ctx.jobType);
     dctx.releaseReservationForModel(selectedModel, reservationContext);
     if (ctx.triedModels.size >= dctx.escalationOrder.length) {
       throw new Error('All models rejected by backend');

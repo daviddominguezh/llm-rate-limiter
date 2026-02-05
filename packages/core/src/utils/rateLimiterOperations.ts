@@ -198,11 +198,12 @@ export const createOptionalJobTypeManager = (
   resourceEstimationsPerJob: ResourceEstimationsPerJob | undefined,
   ratioAdjustmentConfig: RatioAdjustmentConfig | undefined,
   label: string,
-  onLog?: LogFn
+  onLog?: LogFn,
+  onRatioChange?: (ratios: Map<string, number>) => void
 ): JobTypeManager | null =>
   resourceEstimationsPerJob === undefined
     ? null
-    : createJobTypeManager({ resourceEstimationsPerJob, ratioAdjustmentConfig, label, onLog });
+    : createJobTypeManager({ resourceEstimationsPerJob, ratioAdjustmentConfig, label, onLog, onRatioChange });
 
 /** Acquire job type slot params. */
 export interface AcquireJobTypeSlotParams {

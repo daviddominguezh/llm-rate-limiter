@@ -30,6 +30,9 @@ const ZERO = 0;
 const ONE = 1;
 const PRECISION_DIGITS = 4;
 
+/** Callback when ratios change */
+export type OnRatioChangeCallback = (ratios: Map<string, number>) => void;
+
 /**
  * Configuration for creating a JobTypeManager.
  */
@@ -38,6 +41,8 @@ export interface JobTypeManagerConfig {
   ratioAdjustmentConfig?: RatioAdjustmentConfig;
   label: string;
   onLog?: LogFn;
+  /** Called when ratios are adjusted (for memory manager to resize pools) */
+  onRatioChange?: OnRatioChangeCallback;
 }
 
 /** Waiter in the queue for a job type slot */
@@ -79,13 +84,15 @@ class JobTypeManagerImpl implements JobTypeManager {
   private readonly config: Required<RatioAdjustmentConfig>;
   private readonly log: (message: string, data?: Record<string, unknown>) => void;
   private readonly waitQueues: Map<string, QueuedWaiter[]>;
+  private readonly onRatioChange?: OnRatioChangeCallback;
   private totalCapacity: number = ZERO;
   private lastAdjustmentTime: number | null = null;
   private releasesSinceAdjustment: number = ZERO;
   private adjustmentInterval: ReturnType<typeof setInterval> | null = null;
 
   constructor(managerConfig: JobTypeManagerConfig) {
-    const { resourceEstimationsPerJob, ratioAdjustmentConfig, label, onLog } = managerConfig;
+    const { resourceEstimationsPerJob, ratioAdjustmentConfig, label, onLog, onRatioChange } = managerConfig;
+    this.onRatioChange = onRatioChange;
 
     validateJobTypeConfig(resourceEstimationsPerJob);
     const calculated = calculateInitialRatios(resourceEstimationsPerJob);
@@ -207,6 +214,17 @@ class JobTypeManagerImpl implements JobTypeManager {
     this.totalCapacity = Math.max(ZERO, totalSlots);
     recalculateAllocatedSlots(this.states, this.totalCapacity);
     this.log('Total capacity updated', { totalSlots: this.totalCapacity });
+    this.notifyRatioChange();
+  }
+
+  /** Notify listeners of current ratios (for memory manager to resize pools) */
+  private notifyRatioChange(): void {
+    if (this.onRatioChange === undefined) return;
+    const ratios = new Map<string, number>();
+    for (const [id, state] of this.states) {
+      ratios.set(id, state.currentRatio);
+    }
+    this.onRatioChange(ratios);
   }
 
   getTotalCapacity(): number {
@@ -238,6 +256,7 @@ class JobTypeManagerImpl implements JobTypeManager {
     recalculateAllocatedSlots(this.states, this.totalCapacity);
     this.lastAdjustmentTime = Date.now();
     this.logAdjustment(donors, receivers);
+    this.notifyRatioChange();
   }
 
   private logAdjustment(donors: JobTypeLoadMetrics[], receivers: JobTypeLoadMetrics[]): void {

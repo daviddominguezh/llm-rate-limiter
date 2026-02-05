@@ -89,8 +89,8 @@ class LLMRateLimiter implements LLMRateLimiterInstance<string> {
     this.modelLimiters = initializeModelLimiters(config.models, this.label, config.onLog, estimated);
     this.memoryManager = createMemoryManager({
       config,
+      resourceEstimationsPerJob: this.resourceEstimationsPerJob,
       label: this.label,
-      estimatedUsedMemoryKB: estimated.estimatedUsedMemoryKB,
       onLog: config.onLog,
       onAvailabilityChange: (r, modelId) => {
         this.emitAvailabilityChange(r, modelId);
@@ -101,7 +101,10 @@ class LLMRateLimiter implements LLMRateLimiterInstance<string> {
       this.resourceEstimationsPerJob,
       config.ratioAdjustmentConfig,
       this.label,
-      config.onLog
+      config.onLog,
+      (ratios) => {
+        this.memoryManager?.setRatios(ratios);
+      }
     );
     const jobTypeCapacity = calculateJobTypeCapacity(config.models, this.resourceEstimationsPerJob);
     initializeJobTypeCapacity(this.jobTypeManager, jobTypeCapacity);
@@ -224,10 +227,8 @@ class LLMRateLimiter implements LLMRateLimiterInstance<string> {
     return this.getAvailableModel() !== null;
   }
   hasCapacityForModel(modelId: string): boolean {
-    return (
-      this.getModelLimiter(modelId).hasCapacity() &&
-      (this.memoryManager === null || this.memoryManager.hasCapacity(modelId))
-    );
+    // Note: Memory capacity is checked per-job-type during acquire, not per-model
+    return this.getModelLimiter(modelId).hasCapacity();
   }
   getAvailableModel(): string | null {
     return this.escalationOrder.find((m) => this.hasCapacityForModel(m)) ?? null;

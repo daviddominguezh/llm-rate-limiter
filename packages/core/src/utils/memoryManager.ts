@@ -1,9 +1,13 @@
 /**
  * Memory management for the LLM Rate Limiter.
- * Uses a singleton semaphore shared across all rate limiter instances in the same process.
+ * Uses per-job-type semaphores where each job type gets a share of total memory
+ * based on its ratio. When ratios change dynamically, memory pools resize accordingly.
  */
+import type { ResourceEstimationsPerJob } from '../jobTypeTypes.js';
 import type { AvailabilityChangeReason, LLMRateLimiterConfig } from '../multiModelTypes.js';
 import type { InternalLimiterStats, LogFn } from '../types.js';
+
+import { calculateInitialRatios } from './jobTypeValidation.js';
 import { getAvailableMemoryKB } from './memoryUtils.js';
 import { Semaphore } from './semaphore.js';
 
@@ -16,174 +20,213 @@ const MEMORY_REASON: AvailabilityChangeReason = 'memory';
 /** Memory manager configuration */
 export interface MemoryManagerConfig {
   config: LLMRateLimiterConfig;
+  resourceEstimationsPerJob: ResourceEstimationsPerJob;
   label: string;
-  estimatedUsedMemoryKB: number;
   onLog?: LogFn;
   onAvailabilityChange?: (reason: AvailabilityChangeReason, modelId: string) => void;
 }
 
 /** Memory manager instance */
 export interface MemoryManagerInstance {
-  hasCapacity: (modelId: string) => boolean;
-  acquire: (modelId: string) => Promise<void>;
-  release: (modelId: string) => void;
+  hasCapacity: (jobType: string) => boolean;
+  acquire: (jobType: string) => Promise<void>;
+  release: (jobType: string) => void;
+  setRatios: (ratios: Map<string, number>) => void;
   getStats: () => InternalLimiterStats['memory'] | undefined;
   stop: () => void;
 }
 
-/** Singleton state for shared memory management */
-interface SharedMemoryState {
+/** State for a single job type's memory pool */
+interface JobTypeMemoryState {
   semaphore: Semaphore;
-  intervalId: NodeJS.Timeout;
-  referenceCount: number;
-  availabilityCallbacks: Set<(reason: AvailabilityChangeReason, modelId: string) => void>;
-  freeMemoryRatio: number;
+  estimatedUsedMemoryKB: number;
+  currentRatio: number;
+  allocatedMemoryKB: number;
 }
 
-let sharedState: SharedMemoryState | null = null;
+/** Per-job-type memory manager implementation */
+class PerJobTypeMemoryManager implements MemoryManagerInstance {
+  private readonly jobTypeStates: Map<string, JobTypeMemoryState>;
+  private readonly freeMemoryRatio: number;
+  private readonly onAvailabilityChange?: (reason: AvailabilityChangeReason, modelId: string) => void;
+  private readonly log: (message: string, data?: Record<string, unknown>) => void;
+  private totalMemoryKB: number;
+  private intervalId: NodeJS.Timeout | null = null;
 
-/** Calculate memory capacity based on available memory and ratio */
-const calculateCapacity = (freeMemoryRatio: number): number => {
-  const availableKB = getAvailableMemoryKB();
-  return Math.floor(availableKB * freeMemoryRatio);
-};
+  constructor(managerConfig: MemoryManagerConfig) {
+    const { config, resourceEstimationsPerJob, label, onLog, onAvailabilityChange } = managerConfig;
 
-/** Initialize or get the shared memory state */
-const getOrCreateSharedState = (
-  config: LLMRateLimiterConfig,
-  label: string,
-  onLog?: LogFn
-): SharedMemoryState => {
-  if (sharedState !== null) {
-    sharedState.referenceCount += ONE;
-    return sharedState;
+    this.freeMemoryRatio = config.memory?.freeMemoryRatio ?? DEFAULT_FREE_MEMORY_RATIO;
+    this.totalMemoryKB = Math.floor(getAvailableMemoryKB() * this.freeMemoryRatio);
+    this.onAvailabilityChange = onAvailabilityChange;
+    this.log = onLog !== undefined ? (msg, data) => onLog(`${label}| ${msg}`, data) : () => undefined;
+    this.jobTypeStates = new Map();
+
+    // Calculate initial ratios using the same logic as JobTypeManager
+    const calculated = calculateInitialRatios(resourceEstimationsPerJob);
+    const jobTypeCount = Object.keys(resourceEstimationsPerJob).length;
+    const defaultRatio = jobTypeCount > ZERO ? ONE / jobTypeCount : ONE;
+
+    // Create per-job-type semaphores
+    for (const [jobType, jobConfig] of Object.entries(resourceEstimationsPerJob)) {
+      const ratio = calculated.ratios.get(jobType) ?? defaultRatio;
+      const allocatedMemoryKB = Math.floor(this.totalMemoryKB * ratio);
+      const estimatedUsedMemoryKB = jobConfig.estimatedUsedMemoryKB ?? ZERO;
+
+      this.jobTypeStates.set(jobType, {
+        semaphore: new Semaphore(
+          Math.max(ONE, allocatedMemoryKB),
+          `${label}/Memory/${jobType}`,
+          onLog
+        ),
+        estimatedUsedMemoryKB,
+        currentRatio: ratio,
+        allocatedMemoryKB,
+      });
+    }
+
+    this.log('PerJobTypeMemoryManager initialized', {
+      totalMemoryKB: this.totalMemoryKB,
+      jobTypes: Array.from(this.jobTypeStates.keys()),
+      allocations: Object.fromEntries(
+        Array.from(this.jobTypeStates.entries()).map(([id, s]) => [id, s.allocatedMemoryKB])
+      ),
+    });
+
+    // Start periodic memory recalculation
+    this.startRecalculationInterval(config.memory?.recalculationIntervalMs ?? DEFAULT_RECALCULATION_INTERVAL_MS);
   }
 
-  const freeMemoryRatio = config.memory?.freeMemoryRatio ?? DEFAULT_FREE_MEMORY_RATIO;
-  const recalculationIntervalMs = config.memory?.recalculationIntervalMs ?? DEFAULT_RECALCULATION_INTERVAL_MS;
+  private startRecalculationInterval(intervalMs: number): void {
+    this.intervalId = setInterval(() => {
+      const newTotalMemory = Math.floor(getAvailableMemoryKB() * this.freeMemoryRatio);
+      if (newTotalMemory !== this.totalMemoryKB) {
+        this.totalMemoryKB = newTotalMemory;
+        this.resizeAllPools();
+        this.onAvailabilityChange?.(MEMORY_REASON, '*');
+      }
+    }, intervalMs);
+  }
 
-  const semaphore = new Semaphore(calculateCapacity(freeMemoryRatio), `${label}/Memory`, onLog);
-  const availabilityCallbacks = new Set<(reason: AvailabilityChangeReason, modelId: string) => void>();
-
-  const intervalId = setInterval(() => {
-    const newCapacity = calculateCapacity(freeMemoryRatio);
-    if (newCapacity !== semaphore.getStats().max) {
-      semaphore.resize(newCapacity);
-      for (const callback of availabilityCallbacks) {
-        callback(MEMORY_REASON, '*');
+  /** Resize all pools based on current ratios and total memory */
+  private resizeAllPools(): void {
+    for (const [jobType, state] of this.jobTypeStates) {
+      const newAllocatedKB = Math.floor(this.totalMemoryKB * state.currentRatio);
+      if (newAllocatedKB !== state.allocatedMemoryKB) {
+        state.allocatedMemoryKB = newAllocatedKB;
+        state.semaphore.resize(Math.max(ONE, newAllocatedKB));
+        this.log(`Resized memory pool for ${jobType}`, {
+          allocatedMemoryKB: newAllocatedKB,
+          ratio: state.currentRatio,
+        });
       }
     }
-  }, recalculationIntervalMs);
-
-  sharedState = {
-    semaphore,
-    intervalId,
-    referenceCount: ONE,
-    availabilityCallbacks,
-    freeMemoryRatio,
-  };
-
-  return sharedState;
-};
-
-/** Release reference to shared state, cleanup if last reference */
-const releaseSharedState = (callback?: (reason: AvailabilityChangeReason, modelId: string) => void): void => {
-  if (sharedState === null) {
-    return;
   }
 
-  if (callback !== undefined) {
-    sharedState.availabilityCallbacks.delete(callback);
-  }
-
-  sharedState.referenceCount -= ONE;
-  if (sharedState.referenceCount <= ZERO) {
-    clearInterval(sharedState.intervalId);
-    sharedState = null;
-  }
-};
-
-/** Create hasCapacity function */
-const createHasCapacity =
-  (state: SharedMemoryState, estimatedMemoryKB: number): MemoryManagerInstance['hasCapacity'] =>
-  (_modelId) =>
-    state.semaphore.getAvailablePermits() >= estimatedMemoryKB;
-
-/** Create acquire function */
-const createAcquire =
-  (
-    state: SharedMemoryState,
-    estimatedMemoryKB: number,
-    onAvailabilityChange?: (reason: AvailabilityChangeReason, modelId: string) => void
-  ): MemoryManagerInstance['acquire'] =>
-  async (modelId) => {
-    if (estimatedMemoryKB > ZERO) {
-      await state.semaphore.acquire(estimatedMemoryKB);
-      onAvailabilityChange?.(MEMORY_REASON, modelId);
+  hasCapacity(jobType: string): boolean {
+    const state = this.jobTypeStates.get(jobType);
+    if (state === undefined) {
+      return true; // Unknown job type = no memory limit
     }
-  };
-
-/** Create release function */
-const createRelease =
-  (
-    state: SharedMemoryState,
-    estimatedMemoryKB: number,
-    onAvailabilityChange?: (reason: AvailabilityChangeReason, modelId: string) => void
-  ): MemoryManagerInstance['release'] =>
-  (modelId) => {
-    if (estimatedMemoryKB > ZERO) {
-      state.semaphore.release(estimatedMemoryKB);
-      onAvailabilityChange?.(MEMORY_REASON, modelId);
+    if (state.estimatedUsedMemoryKB === ZERO) {
+      return true; // No memory estimate = always has capacity
     }
-  };
+    return state.semaphore.getAvailablePermits() >= state.estimatedUsedMemoryKB;
+  }
 
-/** Create getStats function */
-const createGetStats =
-  (state: SharedMemoryState): MemoryManagerInstance['getStats'] =>
-  () => {
-    const { inUse, max, available } = state.semaphore.getStats();
+  async acquire(jobType: string): Promise<void> {
+    const state = this.jobTypeStates.get(jobType);
+    if (state === undefined || state.estimatedUsedMemoryKB === ZERO) {
+      return;
+    }
+    await state.semaphore.acquire(state.estimatedUsedMemoryKB);
+    this.onAvailabilityChange?.(MEMORY_REASON, '*');
+  }
+
+  release(jobType: string): void {
+    const state = this.jobTypeStates.get(jobType);
+    if (state === undefined || state.estimatedUsedMemoryKB === ZERO) {
+      return;
+    }
+    state.semaphore.release(state.estimatedUsedMemoryKB);
+    this.onAvailabilityChange?.(MEMORY_REASON, '*');
+  }
+
+  setRatios(ratios: Map<string, number>): void {
+    // Update ratios and resize pools
+    for (const [jobType, newRatio] of ratios) {
+      const state = this.jobTypeStates.get(jobType);
+      if (state === undefined) continue;
+
+      state.currentRatio = newRatio;
+      const newAllocatedKB = Math.floor(this.totalMemoryKB * newRatio);
+      if (newAllocatedKB !== state.allocatedMemoryKB) {
+        state.allocatedMemoryKB = newAllocatedKB;
+        state.semaphore.resize(Math.max(ONE, newAllocatedKB));
+      }
+    }
+
+    this.log('Ratios updated', {
+      ratios: Object.fromEntries(ratios),
+      allocations: Object.fromEntries(
+        Array.from(this.jobTypeStates.entries()).map(([id, s]) => [id, s.allocatedMemoryKB])
+      ),
+    });
+
+    this.onAvailabilityChange?.(MEMORY_REASON, '*');
+  }
+
+  getStats(): InternalLimiterStats['memory'] | undefined {
+    // Aggregate stats across all job type pools
+    let totalActive = ZERO;
+    let totalMax = ZERO;
+    let totalAvailable = ZERO;
+
+    for (const state of this.jobTypeStates.values()) {
+      const stats = state.semaphore.getStats();
+      totalActive += stats.inUse;
+      totalMax += stats.max;
+      totalAvailable += stats.available;
+    }
+
     return {
-      activeKB: inUse,
-      maxCapacityKB: max,
-      availableKB: available,
+      activeKB: totalActive,
+      maxCapacityKB: totalMax,
+      availableKB: totalAvailable,
       systemAvailableKB: Math.round(getAvailableMemoryKB()),
     };
-  };
+  }
 
-/** Create a memory manager instance (shares underlying semaphore with other instances) */
+  stop(): void {
+    if (this.intervalId !== null) {
+      clearInterval(this.intervalId);
+      this.intervalId = null;
+    }
+    this.log('PerJobTypeMemoryManager stopped');
+  }
+}
+
+/** Create a memory manager instance with per-job-type semaphores */
 export const createMemoryManager = (managerConfig: MemoryManagerConfig): MemoryManagerInstance | null => {
-  const { config, label, estimatedUsedMemoryKB, onLog, onAvailabilityChange } = managerConfig;
+  const { config, resourceEstimationsPerJob } = managerConfig;
+
   if (config.memory === undefined) {
     return null;
   }
-  if (estimatedUsedMemoryKB === ZERO) {
-    throw new Error(
-      'resourcesPerJob.estimatedUsedMemoryKB is required in at least one job type when memory limits are configured'
-    );
+
+  // Check if any job type has memory estimate
+  const hasMemoryEstimates = Object.values(resourceEstimationsPerJob).some(
+    (jobConfig) => jobConfig.estimatedUsedMemoryKB !== undefined && jobConfig.estimatedUsedMemoryKB > ZERO
+  );
+
+  if (!hasMemoryEstimates) {
+    return null;
   }
 
-  const state = getOrCreateSharedState(config, label, onLog);
-
-  // Register callback for interval-based capacity changes
-  if (onAvailabilityChange !== undefined) {
-    state.availabilityCallbacks.add(onAvailabilityChange);
-  }
-
-  return {
-    hasCapacity: createHasCapacity(state, estimatedUsedMemoryKB),
-    acquire: createAcquire(state, estimatedUsedMemoryKB, onAvailabilityChange),
-    release: createRelease(state, estimatedUsedMemoryKB, onAvailabilityChange),
-    getStats: createGetStats(state),
-    stop: (): void => {
-      releaseSharedState(onAvailabilityChange);
-    },
-  };
+  return new PerJobTypeMemoryManager(managerConfig);
 };
 
 /** Reset shared state (for testing purposes only) */
 export const resetSharedMemoryState = (): void => {
-  if (sharedState !== null) {
-    clearInterval(sharedState.intervalId);
-    sharedState = null;
-  }
+  // No longer using shared state, but keep for API compatibility
 };

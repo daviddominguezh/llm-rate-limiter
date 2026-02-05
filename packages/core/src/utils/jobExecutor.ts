@@ -103,6 +103,7 @@ const addSuccessUsage = <T>(
 ): void => {
   const usageEntry: UsageEntry = {
     modelId,
+    requestCount: result.requestCount,
     inputTokens: result.inputTokens,
     cachedTokens: result.cachedTokens,
     outputTokens: result.outputTokens,

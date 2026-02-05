@@ -13,7 +13,7 @@ This document summarizes the analysis of design documents in `/docs` against the
 | memory-based-slot-calculation.md | ✅ Matches | None |
 | e2e-distributed-tests-design.md | ✅ Updated | None |
 | maxWaitMS-design.md | ✅ Matches | None |
-| actual-usage-adjustment-design.md | ✅ Matches | Minor update |
+| actual-usage-adjustment-design.md | ✅ Matches | None |
 | distributed-capacity-tracking-design.md | ✅ Updated | None |
 | distributed-slots-design.md | ✅ Matches | Minor cleanup |
 
@@ -74,7 +74,7 @@ All key features implemented as specified:
 
 ### 4. actual-usage-adjustment-design.md
 
-**Status:** ✅ Implementation matches documentation (minor discrepancy)
+**Status:** ✅ Implementation matches documentation
 
 Core behaviors correctly implemented:
 
@@ -85,12 +85,7 @@ Core behaviors correctly implemented:
   2. **Job throws without reject():** Time-windowed capacity NOT released, memory/concurrency ARE released
   3. **Job calls reject(usage):** Same adjustment flow as success
 - Overage events emitted when `actual > estimated`
-
-**Minor Discrepancy:**
-
-| Aspect | Documentation | Implementation |
-|--------|---------------|----------------|
-| `requestCount` in `reject()` | Required field | Optional (defaults to 1) |
+- `requestCount` is required in `TokenUsageEntry` (used by reject callback)
 
 **Key Files:**
 - `packages/core/src/rateLimiter.ts` - `recordActualUsage()`, `queueJobWithReservedCapacity()`
@@ -139,6 +134,4 @@ The implementation accurately represents the documented pool-based design:
 
 ## Remaining Recommendations
 
-1. **Low Priority:** Clarify in `actual-usage-adjustment-design.md` that `requestCount` defaults to 1
-2. **Low Priority:** Remove debug `console.log` statements from `multiModelRateLimiter.ts`
-3. **Medium Priority:** Add E2E test coverage for `slotCalc-memory` configuration
+1. **Low Priority:** Remove debug `console.log` statements from `multiModelRateLimiter.ts`

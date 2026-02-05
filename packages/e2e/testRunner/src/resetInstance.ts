@@ -20,7 +20,8 @@ export type ConfigPresetName =
   | 'slotCalc-tpm-rpm'
   | 'slotCalc-multi-model'
   | 'slotCalc-ratios'
-  | 'slotCalc-uneven-ratios';
+  | 'slotCalc-uneven-ratios'
+  | 'slotCalc-memory';
 
 /** Options for resetting an instance */
 export interface ResetOptions {

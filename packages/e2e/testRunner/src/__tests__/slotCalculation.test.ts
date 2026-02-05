@@ -309,6 +309,54 @@ describe('Pool-Based Slot Calculation', () => {
     });
   });
 
+  describe('Memory-Based Slot Calculation (slotCalc-memory)', () => {
+    /**
+     * Config:
+     * model: 10M TPM (very high, won't be limiting)
+     * heavyMemoryJob: 10MB per job, ratio 0.5
+     * lightMemoryJob: 1MB per job, ratio 0.5
+     *
+     * Memory is a LOCAL constraint: finalSlots = min(distributedSlots, memorySlots)
+     *
+     * With high TPM, distributed slots are very high (2500+), but memory
+     * becomes the limiting factor:
+     * - heavyMemoryJob: limited by memory (10MB per job)
+     * - lightMemoryJob: limited by memory (1MB per job, so more slots)
+     */
+    beforeAll(async () => {
+      await setupInstances('slotCalc-memory');
+    }, BEFORE_ALL_TIMEOUT_MS);
+
+    it('should report 2 instances', async () => {
+      const response = await fetchAllocation(INSTANCE_A_URL);
+      expect(response.allocation?.instanceCount).toBe(2);
+    });
+
+    it('should have pool allocation for test-model', async () => {
+      const response = await fetchAllocation(INSTANCE_A_URL);
+      const pool = response.allocation?.pools?.['test-model'];
+      expect(pool).toBeDefined();
+      expect(pool?.totalSlots).toBeGreaterThan(0);
+    });
+
+    it('should have high distributed slots due to high TPM', async () => {
+      const response = await fetchAllocation(INSTANCE_A_URL);
+      const pool = response.allocation?.pools?.['test-model'];
+      // With 10M TPM and 1K estimated tokens, distributed slots should be high
+      // floor((10M / 1K) / 2) = 5000 slots per instance
+      expect(pool?.totalSlots).toBeGreaterThanOrEqual(1000);
+    });
+
+    it('should report memory stats in debug endpoint', async () => {
+      // Memory is a local constraint - verify stats endpoint shows memory info
+      const response = await fetch(`${INSTANCE_A_URL}/api/debug/stats`);
+      const stats = await response.json() as { stats: { memory?: { maxCapacityKB: number } } };
+      // Memory stats should be present when memory is configured
+      expect(stats.stats.memory).toBeDefined();
+      expect(stats.stats.memory?.maxCapacityKB).toBeGreaterThan(0);
+    });
+  });
+
   describe('Pool Slots Scale with Instance Count', () => {
     /**
      * Test pool calculations with different instance counts (1, 2, 3).

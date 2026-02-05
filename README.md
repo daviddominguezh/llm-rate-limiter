@@ -48,13 +48,20 @@ const limiter = createLLMRateLimiter({
 // Queue a job
 const result = await limiter.queueJob({
   jobId: 'my-job-1',
-  job: async ({ modelId }, resolve, reject) => {
+  job: async ({ modelId }, reject) => {
     try {
       const response = await callOpenAI(modelId, 'Hello, world!');
-      resolve({ modelId, inputTokens: 10, cachedTokens: 0, outputTokens: 20 });
-      return { success: true, data: response };
+      // Return JobResult with usage info and data
+      return {
+        requestCount: 1,
+        inputTokens: 10,
+        cachedTokens: 0,
+        outputTokens: 20,
+        data: { success: true, response },
+      };
     } catch (error) {
-      reject({ modelId, inputTokens: 10, cachedTokens: 0, outputTokens: 0 });
+      // Report actual usage before failing
+      reject({ requestCount: 1, inputTokens: 10, cachedTokens: 0, outputTokens: 0 });
       throw error;
     }
   },
@@ -88,14 +95,20 @@ const limiter = createLLMRateLimiter({
 // Job automatically falls back to next model if current one is exhausted
 const result = await limiter.queueJob({
   jobId: 'my-job',
-  job: async ({ modelId }, resolve, reject) => {
+  job: async ({ modelId }, reject) => {
     try {
       const response = await callLLM(modelId, prompt);
-      resolve({ modelId, inputTokens: 100, cachedTokens: 0, outputTokens: 50 });
-      return response;
+      // Return JobResult with usage info and data
+      return {
+        requestCount: 1,
+        inputTokens: 100,
+        cachedTokens: 0,
+        outputTokens: 50,
+        data: response,
+      };
     } catch (error) {
-      // Delegate to next model on failure
-      reject({ modelId, inputTokens: 100, cachedTokens: 0, outputTokens: 0 }, { delegate: true });
+      // Delegate to next model on failure (delegate: true is default)
+      reject({ requestCount: 1, inputTokens: 100, cachedTokens: 0, outputTokens: 0 }, { delegate: true });
       throw error;
     }
   },

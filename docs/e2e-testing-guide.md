@@ -106,12 +106,34 @@ import { bootProxy, killProxy } from '../proxyLifecycle.js';
 
 | Function | Description |
 |----------|-------------|
-| `bootInstance(port, configPreset)` | Boot a server instance on the specified port with a config preset |
+| `bootInstance(port, configPreset, options?)` | Boot a server instance on the specified port with a config preset |
 | `killInstance(port)` | Kill a specific instance by port |
 | `killAllInstances()` | Kill all managed instances |
 | `bootProxy(targetPorts, port?)` | Boot the proxy, routing to the specified target ports |
 | `killProxy()` | Kill the proxy |
 | `cleanRedis()` | Delete all rate limiter keys from Redis |
+
+#### Boot Instance Options
+
+The `bootInstance` function accepts an optional third parameter with configuration options:
+
+```typescript
+interface BootInstanceOptions {
+  redisUrl?: string;    // Redis URL (default: 'redis://localhost:6379')
+  maxMemoryMB?: number; // Memory limit for the spawned instance
+}
+```
+
+**Memory Constraints:**
+
+To test memory-related scenarios (e.g., how the rate limiter behaves under memory pressure), you can constrain the memory of spawned instances:
+
+```typescript
+// Boot an instance with 256MB memory limit
+await bootInstance(3001, 'slotCalc-memory', { maxMemoryMB: 256 });
+```
+
+This passes `--max-old-space-size=256` to the Node.js process via `NODE_OPTIONS`. The memory constraint applies to the spawned server instance, not the test runner.
 
 ### Shared Infrastructure Helpers
 

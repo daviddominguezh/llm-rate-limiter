@@ -3,12 +3,12 @@
  * Provides functions to boot, kill, and query server instances programmatically.
  */
 import type { AllocationInfo } from '@llm-rate-limiter/core';
-import { Redis } from 'ioredis';
 import { type ChildProcess, spawn } from 'node:child_process';
 import { once } from 'node:events';
 import { resolve } from 'node:path';
 import { setTimeout as setTimeoutPromise } from 'node:timers/promises';
 
+import { cleanRedis } from './redisCleanup.js';
 import type { ConfigPresetName } from './resetInstance.js';
 
 const HTTP_OK = 200;
@@ -17,8 +17,6 @@ const INSTANCE_READY_TIMEOUT_MS = 30000;
 const POLL_INTERVAL_MS = 200;
 const FORCE_KILL_TIMEOUT_MS = 5000;
 const DEFAULT_ALLOCATION_TIMEOUT_MS = 10000;
-const ZERO = 0;
-const BATCH_SIZE = 100;
 
 interface ManagedInstance {
   process: ChildProcess;
@@ -35,9 +33,6 @@ export interface AllocationResponse {
   timestamp: number;
   allocation: AllocationInfo | null;
 }
-
-/** Default key prefixes used by the rate limiter */
-const KEY_PREFIXES = ['llm-rl:', 'llm-rate-limiter:'];
 
 /**
  * Sleep helper using native timers/promises
@@ -233,19 +228,38 @@ async function waitForInstanceReady(port: number): Promise<void> {
   }
 }
 
+/** Options for booting an instance */
+export interface BootInstanceOptions {
+  redisUrl?: string;
+  maxMemoryMB?: number;
+}
+
+/**
+ * Build NODE_OPTIONS string for memory constraint
+ */
+const buildNodeOptions = (maxMemoryMB: number | undefined): string | undefined => {
+  if (maxMemoryMB === undefined) {
+    return undefined;
+  }
+  return `--max-old-space-size=${maxMemoryMB}`;
+};
+
 /**
  * Boot a new server instance on the specified port.
  */
 export async function bootInstance(
   port: number,
   configPreset: ConfigPresetName,
-  redisUrl = DEFAULT_REDIS_URL
+  options: BootInstanceOptions = {}
 ): Promise<void> {
+  const { redisUrl = DEFAULT_REDIS_URL, maxMemoryMB } = options;
+
   if (instances.has(port)) {
     throw new Error(`Instance already running on port ${port}`);
   }
 
   const serverPath = resolve(import.meta.dirname, '../../serverInstance/src/main.ts');
+  const nodeOptions = buildNodeOptions(maxMemoryMB);
 
   const proc = spawn('npx', ['tsx', serverPath], {
     env: {
@@ -253,6 +267,7 @@ export async function bootInstance(
       PORT: port.toString(),
       REDIS_URL: redisUrl,
       CONFIG_PRESET: configPreset,
+      ...(nodeOptions === undefined ? {} : { NODE_OPTIONS: nodeOptions }),
     },
     stdio: ['ignore', 'pipe', 'pipe'],
   });
@@ -270,99 +285,5 @@ export async function bootInstance(
   await waitForInstanceReady(port);
 }
 
-/**
- * Scan result from Redis
- */
-interface ScanIterationResult {
-  cursor: string;
-  keys: string[];
-}
-
-/**
- * Execute single scan iteration
- */
-const executeScanIteration = async (
-  redis: Redis,
-  cursor: string,
-  prefix: string
-): Promise<ScanIterationResult> => {
-  const result = await redis.scan(cursor, 'MATCH', `${prefix}*`, 'COUNT', BATCH_SIZE);
-  const [nextCursor, keys] = result;
-  return { cursor: nextCursor, keys };
-};
-
-/**
- * Delete keys from current scan iteration
- */
-const deleteKeysFromIteration = async (redis: Redis, keys: string[]): Promise<number> => {
-  if (keys.length > ZERO) {
-    await redis.del(...keys);
-    return keys.length;
-  }
-  return ZERO;
-};
-
-/**
- * Delete keys recursively using scan
- */
-const deleteKeysRecursive = async (
-  redis: Redis,
-  prefix: string,
-  cursor: string,
-  deletedSoFar: number
-): Promise<number> => {
-  const iterResult = await executeScanIteration(redis, cursor, prefix);
-  const deletedCount = await deleteKeysFromIteration(redis, iterResult.keys);
-  const totalDeleted = deletedSoFar + deletedCount;
-
-  if (iterResult.cursor === '0') {
-    return totalDeleted;
-  }
-
-  return await deleteKeysRecursive(redis, prefix, iterResult.cursor, totalDeleted);
-};
-
-/**
- * Delete keys with a specific prefix from Redis
- */
-async function deleteKeysWithPrefix(redis: Redis, prefix: string): Promise<number> {
-  return await deleteKeysRecursive(redis, prefix, '0', ZERO);
-}
-
-/**
- * Delete keys for a single prefix
- */
-const deleteSinglePrefix = async (redis: Redis, prefix: string): Promise<number> => {
-  const deletedCount = await deleteKeysWithPrefix(redis, prefix);
-  return deletedCount;
-};
-
-/**
- * Delete keys for all prefixes using reduce
- */
-const deleteAllPrefixes = async (redis: Redis): Promise<number> => {
-  const deletePrefix = async (totalSoFar: number, prefix: string): Promise<number> => {
-    const count = await deleteSinglePrefix(redis, prefix);
-    return totalSoFar + count;
-  };
-
-  const total = await KEY_PREFIXES.reduce(async (accPromise, prefix) => {
-    const acc = await accPromise;
-    return await deletePrefix(acc, prefix);
-  }, Promise.resolve(ZERO));
-
-  return total;
-};
-
-/**
- * Clean all rate limiter keys from Redis.
- */
-export async function cleanRedis(redisUrl = DEFAULT_REDIS_URL): Promise<number> {
-  const redis = new Redis(redisUrl);
-
-  try {
-    return await deleteAllPrefixes(redis);
-  } finally {
-    await redis.quit();
-  }
-}
+// Re-export cleanRedis for backward compatibility
+export { cleanRedis };

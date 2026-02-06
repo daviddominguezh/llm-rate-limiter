@@ -1,14 +1,10 @@
 /**
  * Job Type Manager - Manages job type state, capacity allocation, and dynamic ratio adjustment.
  */
-import type {
-  JobTypeLoadMetrics,
-  JobTypeState,
-  JobTypeStats,
-  RatioAdjustmentConfig,
-  ResourceEstimationsPerJob,
-} from '../jobTypeTypes.js';
+import type { ModelPoolAllocation } from '../backendTypes.js';
+import type { JobTypeState, JobTypeStats, RatioAdjustmentConfig } from '../jobTypeTypes.js';
 import type { LogFn } from '../types.js';
+import { validateCapacityInvariant } from './capacityInvariantCheck.js';
 import {
   applyRatioTransfers,
   calculateDonorContributions,
@@ -16,55 +12,28 @@ import {
   createInitialStates,
   identifyDonors,
   identifyReceivers,
+  logRatioAdjustment,
   mergeRatioConfig,
   normalizeRatios,
   recalculateAllocatedSlots,
 } from './jobTypeHelpers.js';
+import type { JobTypeManager, JobTypeManagerConfig, QueuedWaiter } from './jobTypeManagerTypes.js';
+import {
+  type HasCapacityParams,
+  type ModelJobTypeTracker,
+  createModelJobTypeTracker,
+} from './jobTypeModelState.js';
+import { calculateModelJobTypeSlots } from './jobTypeSlotCalculation.js';
 import {
   calculateInitialRatios,
   validateCalculatedRatios,
   validateJobTypeConfig,
 } from './jobTypeValidation.js';
 
+export type { JobTypeManager, JobTypeManagerConfig, OnRatioChangeCallback } from './jobTypeManagerTypes.js';
+
 const ZERO = 0;
 const ONE = 1;
-const PRECISION_DIGITS = 4;
-
-/** Callback when ratios change */
-export type OnRatioChangeCallback = (ratios: Map<string, number>) => void;
-
-/**
- * Configuration for creating a JobTypeManager.
- */
-export interface JobTypeManagerConfig {
-  resourceEstimationsPerJob: ResourceEstimationsPerJob;
-  ratioAdjustmentConfig?: RatioAdjustmentConfig;
-  label: string;
-  onLog?: LogFn;
-  /** Called when ratios are adjusted (for memory manager to resize pools) */
-  onRatioChange?: OnRatioChangeCallback;
-}
-
-/** Waiter in the queue for a job type slot */
-interface QueuedWaiter {
-  resolve: () => void;
-}
-
-/**
- * Interface for the JobTypeManager.
- */
-export interface JobTypeManager {
-  getState: (jobTypeId: string) => JobTypeState | undefined;
-  getAllStates: () => Record<string, JobTypeState>;
-  hasCapacity: (jobTypeId: string) => boolean;
-  acquire: (jobTypeId: string) => Promise<void>;
-  release: (jobTypeId: string) => void;
-  setTotalCapacity: (totalSlots: number) => void;
-  getTotalCapacity: () => number;
-  adjustRatios: () => void;
-  getStats: () => JobTypeStats;
-  stop: () => void;
-}
 
 /** Create a no-op logger */
 const createNoOpLogger = (): ((message: string, data?: Record<string, unknown>) => void) => () => undefined;
@@ -76,6 +45,18 @@ const createPrefixedLogger =
     onLog(`${label}| ${msg}`, data);
   };
 
+/** Build HasCapacityParams for a model+jobType, returns undefined if job type unknown */
+const buildCapacityParams = (
+  states: Map<string, JobTypeState>,
+  minCapacity: number,
+  modelId: string,
+  jobTypeId: string
+): HasCapacityParams | undefined => {
+  const state = states.get(jobTypeId);
+  if (state === undefined) return undefined;
+  return { modelId, jobTypeId, ratio: state.currentRatio, resources: state.resources, minCapacity };
+};
+
 /**
  * Internal implementation of JobTypeManager.
  */
@@ -84,15 +65,26 @@ class JobTypeManagerImpl implements JobTypeManager {
   private readonly config: Required<RatioAdjustmentConfig>;
   private readonly log: (message: string, data?: Record<string, unknown>) => void;
   private readonly waitQueues: Map<string, QueuedWaiter[]>;
-  private readonly onRatioChange?: OnRatioChangeCallback;
+  private readonly onRatioChange?: (ratios: Map<string, number>) => void;
+  private readonly onModelCapacityRelease?: (modelId: string) => void;
+  private readonly modelState: ModelJobTypeTracker;
   private totalCapacity: number = ZERO;
   private lastAdjustmentTime: number | null = null;
   private releasesSinceAdjustment: number = ZERO;
   private adjustmentInterval: ReturnType<typeof setInterval> | null = null;
 
   constructor(managerConfig: JobTypeManagerConfig) {
-    const { resourceEstimationsPerJob, ratioAdjustmentConfig, label, onLog, onRatioChange } = managerConfig;
+    const {
+      resourceEstimationsPerJob,
+      ratioAdjustmentConfig,
+      label,
+      onLog,
+      onRatioChange,
+      onModelCapacityRelease,
+    } = managerConfig;
     this.onRatioChange = onRatioChange;
+    this.onModelCapacityRelease = onModelCapacityRelease;
+    this.modelState = createModelJobTypeTracker();
 
     validateJobTypeConfig(resourceEstimationsPerJob);
     const calculated = calculateInitialRatios(resourceEstimationsPerJob);
@@ -141,31 +133,20 @@ class JobTypeManagerImpl implements JobTypeManager {
     if (state === undefined) {
       throw new Error(`Unknown job type: ${jobTypeId}`);
     }
-
     const queue = this.waitQueues.get(jobTypeId);
     if (queue === undefined) {
       throw new Error(`No wait queue for job type: ${jobTypeId}`);
     }
-
-    // If capacity available and no one waiting, acquire immediately
     if (state.inFlight < state.allocatedSlots && queue.length === ZERO) {
       state.inFlight += ONE;
-      this.log('Acquired slot', {
-        jobTypeId,
-        inFlight: state.inFlight,
-        allocatedSlots: state.allocatedSlots,
-      });
       return;
     }
-
-    // Otherwise, wait in queue
     const { promise, resolve } = Promise.withResolvers<undefined>();
     queue.push({
       resolve: () => {
         resolve(undefined);
       },
     });
-    this.log('Waiting for slot', { jobTypeId, queueLength: queue.length });
     await promise;
   }
 
@@ -174,29 +155,68 @@ class JobTypeManagerImpl implements JobTypeManager {
     if (state === undefined || state.inFlight <= ZERO) {
       return;
     }
-
     const queue = this.waitQueues.get(jobTypeId);
     const nextWaiter = queue?.[ZERO];
-
     if (nextWaiter !== undefined && state.inFlight <= state.allocatedSlots) {
-      // Transfer slot directly to next waiter (don't decrement inFlight)
       queue?.shift();
-      this.log('Transferred slot to waiter', {
-        jobTypeId,
-        inFlight: state.inFlight,
-        queueLength: queue?.length,
-      });
       nextWaiter.resolve();
     } else {
-      // No waiter, just release the slot
       state.inFlight -= ONE;
-      this.log('Released slot', {
-        jobTypeId,
-        inFlight: state.inFlight,
-        allocatedSlots: state.allocatedSlots,
-      });
     }
+    this.releasesSinceAdjustment += ONE;
+    this.maybeAdjustOnRelease();
+  }
 
+  setModelPool(modelId: string, pool: ModelPoolAllocation): void {
+    this.modelState.setModelPool(modelId, pool);
+    this.validateInvariant();
+  }
+
+  hasCapacityForModel(modelId: string, jobTypeId: string): boolean {
+    const params = buildCapacityParams(this.states, this.config.minJobTypeCapacity, modelId, jobTypeId);
+    return params !== undefined && this.modelState.hasCapacity(params);
+  }
+
+  getModelJobTypeInfo(
+    modelId: string,
+    jobTypeId: string
+  ): { allocated: number; inFlight: number } | undefined {
+    const params = buildCapacityParams(this.states, this.config.minJobTypeCapacity, modelId, jobTypeId);
+    if (params === undefined) return undefined;
+    return {
+      allocated: this.modelState.getAllocated(params),
+      inFlight: this.modelState.getInFlight(modelId, jobTypeId),
+    };
+  }
+
+  acquireForModel(modelId: string, jobTypeId: string): void {
+    const windowMs = this.getWindowMsForModel(modelId, jobTypeId);
+    this.modelState.acquire(modelId, jobTypeId, windowMs);
+    const state = this.states.get(jobTypeId);
+    if (state !== undefined) {
+      state.inFlight += ONE;
+    }
+  }
+
+  private getWindowMsForModel(modelId: string, jobTypeId: string): number {
+    const pool = this.modelState.getModelPool(modelId);
+    const state = this.states.get(jobTypeId);
+    if (pool === undefined || state === undefined) return ZERO;
+    return calculateModelJobTypeSlots(
+      pool,
+      state.currentRatio,
+      state.resources,
+      this.config.minJobTypeCapacity
+    ).windowMs;
+  }
+
+  releaseForModel(modelId: string, jobTypeId: string): void {
+    this.modelState.release(modelId, jobTypeId);
+    const state = this.states.get(jobTypeId);
+    if (state !== undefined && state.inFlight > ZERO) {
+      state.inFlight -= ONE;
+    }
+    this.onModelCapacityRelease?.(modelId);
     this.releasesSinceAdjustment += ONE;
     this.maybeAdjustOnRelease();
   }
@@ -213,11 +233,10 @@ class JobTypeManagerImpl implements JobTypeManager {
   setTotalCapacity(totalSlots: number): void {
     this.totalCapacity = Math.max(ZERO, totalSlots);
     recalculateAllocatedSlots(this.states, this.totalCapacity, this.config.minJobTypeCapacity);
-    this.log('Total capacity updated', { totalSlots: this.totalCapacity });
     this.notifyRatioChange();
+    this.validateInvariant();
   }
 
-  /** Notify listeners of current ratios (for memory manager to resize pools) */
   private notifyRatioChange(): void {
     if (this.onRatioChange === undefined) return;
     const ratios = new Map<string, number>();
@@ -236,37 +255,24 @@ class JobTypeManagerImpl implements JobTypeManager {
     const metrics = collectLoadMetrics(this.states);
     const donors = identifyDonors(metrics, this.config.lowLoadThreshold, this.config.minRatio);
     const receivers = identifyReceivers(metrics, this.config.highLoadThreshold);
-
     if (donors.length === ZERO || receivers.length === ZERO) {
       return;
     }
-
     const donorContributions = calculateDonorContributions(donors, this.states, this.config);
     let availableToTransfer = ZERO;
     for (const contribution of donorContributions.values()) {
       availableToTransfer += contribution;
     }
-
     if (availableToTransfer <= ZERO) {
       return;
     }
-
     applyRatioTransfers(this.states, donorContributions, receivers, availableToTransfer);
     normalizeRatios(this.states);
     recalculateAllocatedSlots(this.states, this.totalCapacity, this.config.minJobTypeCapacity);
     this.lastAdjustmentTime = Date.now();
-    this.logAdjustment(donors, receivers);
+    logRatioAdjustment(this.log, this.states, donors, receivers);
     this.notifyRatioChange();
-  }
-
-  private logAdjustment(donors: JobTypeLoadMetrics[], receivers: JobTypeLoadMetrics[]): void {
-    this.log('Ratios adjusted', {
-      ratios: Object.fromEntries(
-        Array.from(this.states.entries()).map(([id, s]) => [id, s.currentRatio.toFixed(PRECISION_DIGITS)])
-      ),
-      donors: donors.map((d) => d.jobTypeId),
-      receivers: receivers.map((r) => r.jobTypeId),
-    });
+    this.validateInvariant();
   }
 
   getStats(): JobTypeStats {
@@ -275,6 +281,15 @@ class JobTypeManagerImpl implements JobTypeManager {
       totalSlots: this.totalCapacity,
       lastAdjustmentTime: this.lastAdjustmentTime,
     };
+  }
+
+  private validateInvariant(): void {
+    validateCapacityInvariant({
+      modelPools: this.modelState.getModelPools(),
+      states: this.states,
+      minCapacity: this.config.minJobTypeCapacity,
+      log: this.log,
+    });
   }
 
   stop(): void {

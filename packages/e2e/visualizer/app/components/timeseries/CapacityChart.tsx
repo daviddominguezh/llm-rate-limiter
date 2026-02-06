@@ -1,7 +1,7 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
 import type { CapacityDataPoint, CapacityMetric } from '@/lib/timeseries/capacityTypes';
+import { useEffect, useRef, useState } from 'react';
 
 interface CapacityChartProps {
   data: CapacityDataPoint[];
@@ -13,9 +13,9 @@ interface CapacityChartProps {
 
 const DEFAULT_HEIGHT = 80;
 
-// Colors for capacity visualization
-const USAGE_COLOR = '#3182bd';
-const CAPACITY_COLOR = '#e0e0e0';
+// Colors for capacity visualization (matching ResourceDashboard)
+const USAGE_COLOR = '#E8715A';
+const CAPACITY_COLOR = 'rgba(255,255,255,0.1)';
 
 function getValues(
   data: CapacityDataPoint[],
@@ -143,9 +143,20 @@ export function CapacityChart({
         className="w-40 flex items-center px-3 bg-muted/30 border-r border-border"
         style={{ textShadow: '0 1px 0 rgba(255,255,255,.5)' }}
       >
-        <span className="text-sm truncate" title={metric.label}>
+        <div
+          title={metric.label}
+          style={{
+            fontSize: '12px',
+            color: '#555',
+            margin: '4px 0 0',
+            fontFamily: 'monospace',
+            outline: 0,
+            border: 0,
+            textShadow: 'none'
+          }}
+        >
           {metric.label}
-        </span>
+        </div>
       </div>
       <div ref={containerRef} className="flex-1 min-w-0 relative">
         <canvas ref={canvasRef} height={height} className="w-full block" />

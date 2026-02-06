@@ -8,6 +8,8 @@
 interface QueuedWaiter<T> {
   /** Resolve the promise with context (capacity acquired) or null (timed out) */
   resolve: (result: T | null) => void;
+  /** Function that attempts to atomically reserve capacity for this waiter */
+  tryReserve: () => T | null;
   /** Timeout handle for cleanup */
   timeoutId: NodeJS.Timeout | null;
   /** Whether this waiter has been resolved (to prevent double resolution) */
@@ -28,6 +30,8 @@ const SPLICE_COUNT = 1;
 export class CapacityWaitQueue<T = unknown> {
   private readonly queue: Array<QueuedWaiter<T>> = [];
   private readonly name: string;
+  /** Guard against re-entrant processQueue calls (e.g. tryReserve → releaseReservation → notify) */
+  private processing = false;
 
   constructor(name = 'CapacityWaitQueue') {
     this.name = name;
@@ -64,6 +68,7 @@ export class CapacityWaitQueue<T = unknown> {
         }
         resolve(result);
       },
+      tryReserve,
       timeoutId: null,
       resolved: false,
     };
@@ -82,11 +87,10 @@ export class CapacityWaitQueue<T = unknown> {
 
   /**
    * Notify the queue that capacity may be available.
-   * Attempts to serve waiters in FIFO order.
-   * @param tryReserve Function that attempts to atomically reserve capacity.
+   * Attempts to serve waiters in FIFO order using each waiter's own tryReserve.
    */
-  notifyCapacityAvailable(tryReserve: () => T | null): void {
-    this.processQueue(tryReserve);
+  notifyCapacityAvailable(): void {
+    this.processQueue();
   }
 
   /**
@@ -98,24 +102,33 @@ export class CapacityWaitQueue<T = unknown> {
 
   /**
    * Process the queue and serve waiters that can acquire capacity.
+   * Each waiter uses its own tryReserve function (supports composed capacity checks).
    */
-  private processQueue(tryReserve: () => T | null): void {
+  private processQueue(): void {
+    if (this.processing) {
+      return;
+    }
+    this.processing = true;
+    try {
+      this.drainQueue();
+    } finally {
+      this.processing = false;
+    }
+  }
+
+  private drainQueue(): void {
     while (this.queue.length > ZERO) {
       const firstWaiter = this.peekFirstWaiter();
       if (firstWaiter === undefined || firstWaiter.resolved) {
-        // Remove stale entry
         this.queue.shift();
         continue;
       }
-
-      // Try to reserve for this waiter
-      const result = tryReserve();
+      const result = firstWaiter.tryReserve();
       if (result === null) {
-        // No more capacity available, stop processing
         break;
       }
       this.queue.shift();
-      firstWaiter.resolve(result); // Capacity acquired with context
+      firstWaiter.resolve(result);
     }
   }
 

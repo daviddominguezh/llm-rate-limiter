@@ -47,6 +47,13 @@ export interface DelegationContext {
   addUsageWithCost: (ctx: { usage: JobUsage }, modelId: string, usage: UsageEntry) => void;
   emitAvailabilityChange: (reason: AvailabilityChangeReason, modelId: string) => void;
   emitJobAdjustment: (jobType: string, result: InternalJobResult, modelId: string) => void;
+  /** Wait for capacity on a model (may include composed JTM per-model check) */
+  waitForCapacityWithTimeoutForModel: (
+    modelId: string,
+    maxWaitMS: number
+  ) => Promise<ReservationContext | null>;
+  /** Release per-model job type slot (no-op when JTM is not configured) */
+  releaseJobTypeForModel: (modelId: string) => void;
 }
 
 /** Execute job on a specific model */
@@ -68,6 +75,7 @@ export const executeOnModel = async <T, Args extends ArgsWithoutModelId = ArgsWi
     },
     emitJobAdjustment: dctx.emitJobAdjustment,
     releaseResources: (result) => {
+      dctx.releaseJobTypeForModel(modelId);
       dctx.memoryManager?.release(ctx.jobType);
       const actual = {
         requests: result.requestCount,
@@ -96,6 +104,7 @@ const handleError = async <T, Args extends ArgsWithoutModelId = ArgsWithoutModel
   params: HandleErrorParams<T, Args>
 ): Promise<LLMJobResult<T>> => {
   const { dctx, ctx, modelId, reservationContext, error } = params;
+  dctx.releaseJobTypeForModel(modelId);
   dctx.memoryManager?.release(ctx.jobType);
 
   // Extract actual usage from DelegationError, or use zero for other errors
@@ -149,6 +158,7 @@ const tryAcquireMemory = async (
   try {
     await dctx.memoryManager?.acquire(jobType);
   } catch (memoryError: unknown) {
+    dctx.releaseJobTypeForModel(selectedModel);
     dctx.releaseReservationForModel(selectedModel, reservationContext);
     throw new Error('Failed to acquire memory', { cause: memoryError });
   }
@@ -161,6 +171,7 @@ const handleBackendRejection = async <T, Args extends ArgsWithoutModelId>(
   selectedModel: string,
   reservationContext: ReservationContext
 ): Promise<LLMJobResult<T>> => {
+  dctx.releaseJobTypeForModel(selectedModel);
   dctx.memoryManager?.release(ctx.jobType);
   dctx.releaseReservationForModel(selectedModel, reservationContext);
   if (ctx.triedModels.size >= dctx.escalationOrder.length) {
@@ -185,7 +196,7 @@ export const executeWithDelegation = async <T, Args extends ArgsWithoutModelId =
     tryReserveForModel: dctx.tryReserveForModel,
     getMaxWaitMSForModel: (m) => getMaxWaitMS(dctx.resourceEstimationsPerJob, ctx.jobType, m),
     waitForCapacityWithTimeoutForModel: async (m, maxWaitMS) =>
-      await dctx.getModelLimiter(m).waitForCapacityWithTimeout(maxWaitMS),
+      await dctx.waitForCapacityWithTimeoutForModel(m, maxWaitMS),
     onWaitingForModel: (modelId, maxWaitMS) => {
       updateJobWaiting(dctx.activeJobs, ctx.jobId, modelId, maxWaitMS);
     },

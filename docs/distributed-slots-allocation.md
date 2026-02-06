@@ -4,44 +4,82 @@
 
 This document describes the Redis backend's slot allocation system, which uses a **pool-based approach** where Redis tracks capacity per-model and local instances distribute that capacity across job types.
 
-## Two Independent Capacity Constraints
+## Two Layers of Capacity Enforcement
 
-The rate limiter enforces two fundamentally different constraints. Understanding the distinction is essential:
+The rate limiter enforces capacity at two levels. Understanding the distinction is essential:
 
-### Slots (Concurrent In-Flight Limit)
+### Layer 1: Model-Level Slots (Redis Pool)
 
-Slots control how many jobs can **execute simultaneously** on a given model per instance.
+Redis divides each model's global capacity into per-instance pools:
 
-- **Recycle immediately**: when a job completes (100ms later), its slot is available for the next job.
-- **Derived from time-window limits**: `totalSlots = floor(remainingCapacity / avgEstimatedResourcePerJob / instanceCount)`.
-- **Distributed by ratio**: each job type gets `floor(totalSlots × ratio)` slots per model.
-- **Local enforcement**: each instance manages its own slot counts independently.
+- `totalSlots = floor(remainingCapacity / avgEstimatedResourcePerJob / instanceCount)`
+- These are **concurrency slots** that recycle when a job completes
+- The Redis acquire/release scripts track global in-flight counts
 
-Slots answer the question: *"Can I start another job right now?"*
+Model-level slots answer: *"Does this instance have room for another job on this model?"*
 
-### TPM / RPM / TPD / RPD (Cumulative Time-Window Budget)
+### Layer 2: Per-Model-Per-JobType Slots (Local JTM)
 
-Time-window counters track the **total tokens and requests consumed** within a fixed window (minute or day).
+Each instance's JobTypeManager (JTM) further partitions capacity by job type using `calculateModelJobTypeSlots`. This function evaluates **five dimensions** and picks the most restrictive:
 
-- **Do NOT recycle on job completion**: once 10,000 tokens are consumed, they remain counted until the window resets.
-- **Reset at window boundaries**: the minute window resets at the next minute mark, the day window at the next day mark.
-- **Global via Redis**: all instances share the same counters, so usage from instance A reduces availability for instance B.
-- **Refunds only within the same window**: if a job completes in the same window it started, the difference between estimated and actual usage is refunded. Cross-window completions get no refund.
+| Dimension | Window | Slot formula | Behavior on job finish |
+|-----------|--------|-------------|----------------------|
+| TPM | 60s (minute) | `floor(perInstanceTPM × ratio / estimatedTokens)` | Slot NOT freed (rate) |
+| RPM | 60s (minute) | `floor(perInstanceRPM × ratio / estimatedRequests)` | Slot NOT freed (rate) |
+| TPD | 86,400s (day) | `floor(perInstanceTPD × ratio / estimatedTokens)` | Slot NOT freed (rate) |
+| RPD | 86,400s (day) | `floor(perInstanceRPD × ratio / estimatedRequests)` | Slot NOT freed (rate) |
+| totalSlots | 0 (concurrency) | `floor(totalSlots × ratio / 1)` | Slot freed (concurrency) |
 
-Time-window counters answer the question: *"Have I exceeded the provider's rate limit for this period?"*
+**Rate-based slots** (`windowMs > 0`): Tracked by a window counter that auto-resets lazily at the window boundary (`Math.floor(Date.now() / windowMs)`). A finishing job decrements `inFlight` but NOT the window counter — the rate capacity stays consumed until the window resets.
+
+**Concurrency-based slots** (`windowMs === 0`): Tracked by `inFlight` counter. A finishing job frees the slot immediately.
+
+**Tie-breaking**: When two dimensions yield the same slot count, the one with the larger `windowMs` wins (most restrictive tracking — daily over minute, rate-based over concurrency).
+
+Per-model-per-jobType slots answer: *"Can this job type start another job on this model within the current rate/concurrency budget?"*
 
 ### How They Interact
 
-Both constraints must be satisfied for a job to start:
+Both layers must pass for a job to start:
 
-1. **Slot check**: is there a free slot for this (model, jobType) pair? → If not, the job waits in the queue.
-2. **Rate limit check**: does the model have remaining TPM/RPM budget? → If not, the job waits for the window to reset.
+1. **Model-level** (Redis): `pool[model].totalSlots > 0` → concurrency permit
+2. **Per-model-per-jobType** (Local JTM): rate or concurrency check depending on winning dimension
 
-A practical example: with `openai/gpt-5.2` at 500,000 TPM across 2 instances, and jobs estimating 10,000 tokens each:
-- **Slots** allow ~59 concurrent jobs per instance (TPM-bottlenecked), recycling as each 100ms job finishes.
-- **TPM** allows 50 total jobs per minute (500,000 ÷ 10,000). Once 50 jobs have run — even if they all finished instantly — the 51st must wait for the minute window to reset.
+### Practical Example
 
-Slots limit concurrency; time-window counters limit throughput.
+With `openai/gpt-5.2` at 500,000 TPM, 500 RPM, 2 instances, and "summary" jobs (ratio=0.3, 10,000 tokens, 1 request):
+
+```
+Per-instance pool from Redis:
+  tokensPerMinute = 250,000    requestsPerMinute = 250
+
+Per-model-per-jobType candidates for summary:
+  TPM: floor(250,000 × 0.3 / 10,000) =  7 slots  (windowMs = 60,000)
+  RPM: floor(250 × 0.3 / 1)          = 75 slots  (windowMs = 60,000)
+
+Winner: TPM with 7 rate slots per minute window
+```
+
+- First 7 summary jobs start immediately on each instance (14 total)
+- Job #15 cannot start: window counter is full (7/7) even though all 7 jobs may have already finished
+- Job #15 waits until the next minute boundary, when the window counter lazily resets to 0
+- After reset: job #15 starts on openai (not escalated to another model)
+
+### Cross-Case Safety
+
+When rate-based wins, `rateSlots <= concurrencySlots` by definition (rate was the min). Since every in-flight job was acquired in the current window, `inFlight <= windowAcquired`. Checking `windowAcquired < rateSlots` implicitly ensures concurrency is within bounds. No double-check needed.
+
+### Signaling: How Waiters Wake Up
+
+| Event | Signal path | JTM result |
+|-------|-------------|------------|
+| Job finishes (rate-limited) | `onModelCapacityRelease` → wake waiters | **FAIL** — window counter still full |
+| Job finishes (concurrency-limited) | Same path | **PASS** — inFlight decremented |
+| Minute/day boundary | Timer fires `notifyCapacityAvailable` | **PASS** — window counter lazily resets |
+| New allocation from backend | `notifyAllModelLimiters` | **PASS** — new pool may increase slots |
+| Ratio adjustment | `notifyAllModelLimiters` | **PASS** — more slots for this job type |
+
+The wake-up on job finish is not wasted — it's needed for concurrency-limited dimensions and other job types. The window counter simply makes `hasCapacity` return false, so the waiter goes back to sleep.
 
 ## Architecture: Pool-Based Allocation
 
@@ -142,16 +180,21 @@ Local layer decides job type distribution.
 ```
 Job arrives for "summary" job type on "gpt-4" model:
 
-1. LOCAL CHECK: "Do I have summary capacity?"
-   → inFlight[summary] < localSlots[summary]
-   → Pass: 0 < 8
+1. MODEL-LEVEL CHECK (Redis):
+   → pool[gpt-4].totalSlots > 0
+   → Pass: decrement pool slot, increment model in-flight
 
-2. REDIS CHECK: "Can I use 1 slot from gpt-4 pool?"
-   → backend.acquire(instanceId, modelId)
-   → Pass: pool[gpt-4].totalSlots > 0
-   → Decrement pool slot
+2. PER-MODEL-PER-JOBTYPE CHECK (Local JTM):
+   → calculateModelJobTypeSlots(pool, ratio, resources, minCapacity)
+   → Returns { slots: 7, windowMs: 60000 }  (TPM won)
+   → windowMs > 0, so check: windowCount < 7
+   → Pass: 0 < 7
 
-3. Job proceeds
+3. ACQUIRE COUNTERS:
+   → Increment inFlight (always, for monitoring)
+   → Increment window counter (only when windowMs > 0)
+
+4. Job proceeds
 ```
 
 ### Release
@@ -159,7 +202,10 @@ Job arrives for "summary" job type on "gpt-4" model:
 ```
 Job completes with actual usage:
 
-1. LOCAL: Decrement inFlight[summary]
+1. LOCAL JTM:
+   → Decrement inFlight[model][summary] (always)
+   → Window counter is NOT decremented (rate capacity stays consumed)
+   → Fire onModelCapacityRelease (wakes waiters, but JTM check may reject)
 
 2. REDIS: backend.release({
      instanceId, modelId,
@@ -347,8 +393,10 @@ Remaining jobs wait in local queue.
 
 1. **Pool Sum**: `sum(instance.pool[model].slots) <= globalCapacity / estimatedResource`
 2. **Local Ratio Sum**: `sum(localRatio[jobType]) ≈ 1.0`
-3. **In-Flight Constraint**: `inFlight[jobType] <= floor(pool.slots * ratio[jobType])`
-4. **Global Usage**: `sum(instance.actualUsage) == globalActualUsage`
+3. **Rate Capacity**: When rate-based dimension wins, `windowCount[model][jobType] <= slots` within the current window
+4. **Concurrency Capacity**: When concurrency-based dimension wins, `inFlight[model][jobType] <= slots`
+5. **Cross-case safety**: `inFlight <= windowCount` always (every in-flight job was acquired in this window)
+6. **Global Usage**: `sum(instance.actualUsage) == globalActualUsage`
 
 ## Design Principles
 

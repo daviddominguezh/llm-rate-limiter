@@ -2,35 +2,47 @@
  * Per-model-per-jobtype enrichment for compact snapshots.
  *
  * Computes slots and inFlight for each (model, jobType) pair using:
- * - allocation.pools[model].totalSlots (per-model pool)
- * - jobTypes[type].currentRatio (global ratios)
+ * - allocation.pools[model] (per-model pool with TPM/RPM/TPD/RPD)
+ * - jobTypes[type].currentRatio and .resources (global ratios + per-job estimates)
  * - activeJobs filtered by (currentModelId, jobType)
+ *
+ * Uses the same slot formula as the core JTM:
+ *   slots = min(floor(pool.TPM * ratio / estTokens), floor(pool.RPM * ratio / estReqs), ...)
+ *   fallback = floor(pool.totalSlots * ratio) for concurrency-only models
  */
-import type { ActiveJobInfo } from '@llm-rate-limiter/core';
+import { calculateModelJobTypeSlots } from '@llm-rate-limiter/core';
+import type { ActiveJobInfo, ModelPoolAllocation } from '@llm-rate-limiter/core';
 import type { CompactModelJobTypeState, CompactModelState } from '@llm-rate-limiter/e2e-test-results';
 
 import type { InstanceState } from './stateAggregator.js';
 
 const ZERO = 0;
 const ONE = 1;
+const MIN_CAPACITY = 0;
+
+/** Per-job-type info extracted from stats */
+interface JobTypeInfo {
+  ratio: number;
+  resources: { estimatedUsedTokens?: number; estimatedNumberOfRequests?: number };
+}
 
 /** InFlight counts keyed by modelId → jobType → count */
 type InFlightByModel = Map<string, Map<string, number>>;
 
-/** Extract job type ratios from stats */
-const getJobTypeRatios = (state: InstanceState): Record<string, number> => {
-  const ratios: Record<string, number> = {};
+/** Extract job type info (ratios + resources) from stats */
+const getJobTypeInfoMap = (state: InstanceState): Record<string, JobTypeInfo> => {
+  const result: Record<string, JobTypeInfo> = {};
   const {
     stats: { jobTypes },
   } = state;
   if (jobTypes === undefined) {
-    return ratios;
+    return result;
   }
   for (const [jtId, jtState] of Object.entries(jobTypes.jobTypes)) {
-    const { currentRatio } = jtState;
-    ratios[jtId] = currentRatio;
+    const { currentRatio, resources } = jtState;
+    result[jtId] = { ratio: currentRatio, resources };
   }
-  return ratios;
+  return result;
 };
 
 /** Check if job is actively processing (consuming a slot) */
@@ -54,15 +66,15 @@ const buildInFlightByModel = (activeJobs: ActiveJobInfo[]): InFlightByModel => {
   return counts;
 };
 
-/** Build per-jobtype state for a single model */
+/** Build per-jobtype state for a single model using correct slot formula */
 const buildModelJobTypes = (
-  poolSlots: number,
-  ratios: Record<string, number>,
+  pool: ModelPoolAllocation,
+  jobTypeInfos: Record<string, JobTypeInfo>,
   modelInFlight: Map<string, number> | undefined
 ): Record<string, CompactModelJobTypeState> => {
   const result: Record<string, CompactModelJobTypeState> = {};
-  for (const [jtId, ratio] of Object.entries(ratios)) {
-    const slots = Math.floor(poolSlots * ratio);
+  for (const [jtId, info] of Object.entries(jobTypeInfos)) {
+    const { slots } = calculateModelJobTypeSlots(pool, info.ratio, info.resources, MIN_CAPACITY);
     const inFlight = modelInFlight?.get(jtId) ?? ZERO;
     result[jtId] = { slots, inFlight };
   }
@@ -80,11 +92,11 @@ const buildEmptyModelState = (): CompactModelState => ({
 /** Enrich existing model with jobTypes breakdown */
 const enrichModel = (
   modelState: CompactModelState,
-  poolSlots: number,
-  ratios: Record<string, number>,
+  pool: ModelPoolAllocation,
+  jobTypeInfos: Record<string, JobTypeInfo>,
   modelInFlight: Map<string, number> | undefined
 ): CompactModelState => {
-  const modelJobTypes = buildModelJobTypes(poolSlots, ratios, modelInFlight);
+  const modelJobTypes = buildModelJobTypes(pool, jobTypeInfos, modelInFlight);
   return { ...modelState, jobTypes: modelJobTypes };
 };
 
@@ -97,7 +109,7 @@ export const enrichModelsWithJobTypes = (
   if (allocation === null) {
     return models;
   }
-  const ratios = getJobTypeRatios(state);
+  const jobTypeInfos = getJobTypeInfoMap(state);
   const inFlightByModel = buildInFlightByModel(state.activeJobs);
   const enriched: Record<string, CompactModelState> = {};
   const { pools } = allocation;
@@ -108,7 +120,7 @@ export const enrichModelsWithJobTypes = (
       enriched[modelId] = modelState;
       continue;
     }
-    enriched[modelId] = enrichModel(modelState, pool.totalSlots, ratios, inFlightByModel.get(modelId));
+    enriched[modelId] = enrichModel(modelState, pool, jobTypeInfos, inFlightByModel.get(modelId));
   }
 
   for (const [modelId, pool] of Object.entries(pools)) {
@@ -116,7 +128,7 @@ export const enrichModelsWithJobTypes = (
       continue;
     }
     const base = buildEmptyModelState();
-    enriched[modelId] = enrichModel(base, pool.totalSlots, ratios, inFlightByModel.get(modelId));
+    enriched[modelId] = enrichModel(base, pool, jobTypeInfos, inFlightByModel.get(modelId));
   }
 
   return enriched;

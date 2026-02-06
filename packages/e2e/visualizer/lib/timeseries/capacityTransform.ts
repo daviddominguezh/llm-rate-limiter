@@ -153,62 +153,6 @@ function countActiveJobsPerInterval(
   return points;
 }
 
-/** Get capacity (slots) for an interval from the most recent snapshot */
-function getCapacityForInterval(
-  snapshots: TestData['snapshots'],
-  intervalTime: number,
-  instanceIdMap: Map<string, string>
-): Record<string, number> {
-  const capacity: Record<string, number> = {};
-
-  // Find the most recent snapshot before or at this interval time (don't assume sorted order)
-  let relevantSnapshot: TestData['snapshots'][0] | null = null;
-  let relevantTimestamp = -Infinity;
-  for (const snapshot of snapshots) {
-    if (snapshot.timestamp <= intervalTime && snapshot.timestamp > relevantTimestamp) {
-      relevantSnapshot = snapshot;
-      relevantTimestamp = snapshot.timestamp;
-    }
-  }
-
-  if (!relevantSnapshot) return capacity;
-
-  // Sum slots from per-model-per-jobtype breakdown
-  for (const [fullId, state] of Object.entries(relevantSnapshot.instances)) {
-    const shortId = instanceIdMap.get(fullId) ?? fullId;
-    let totalSlots = 0;
-    for (const modelState of Object.values(state.models)) {
-      if (modelState.jobTypes === undefined) continue;
-      for (const jtState of Object.values(modelState.jobTypes)) {
-        totalSlots += jtState.slots;
-      }
-    }
-    capacity[shortId] = totalSlots;
-  }
-
-  return capacity;
-}
-
-/** Calculate capacity (slots) per interval and log it */
-function logCapacityPerInterval(
-  testData: TestData,
-  points: CapacityDataPoint[],
-  minTime: number,
-  instanceIdMap: Map<string, string>
-): void {
-  const capacityLog = points.slice(0, 50).map((p) => {
-    const intervalTime = minTime + p.time * MS_TO_SECONDS;
-    const capacity = getCapacityForInterval(testData.snapshots, intervalTime, instanceIdMap);
-    const row: Record<string, string | number> = { time: p.time.toFixed(2) };
-    for (const [instId, slots] of Object.entries(capacity)) {
-      row[instId] = slots;
-    }
-    return row;
-  });
-  console.log('=== Capacity (slots) per instance (first 50 intervals) ===');
-  console.table(capacityLog);
-}
-
 /** Transform test data to capacity data points */
 export function transformToCapacityData(testData: TestData): CapacityDataPoint[] {
   const instanceIdMap = buildInstanceIdMap(testData);
@@ -233,9 +177,6 @@ export function transformToCapacityData(testData: TestData): CapacityDataPoint[]
     }
   }
   points.push(paddingPoint);
-
-  // Log capacity per interval
-  logCapacityPerInterval(testData, points, minTime, instanceIdMap);
 
   return points;
 }

@@ -23,7 +23,7 @@ interface QueueJobContext {
   activeJobs: Map<string, ActiveJobInfo>;
   jobTypeManager: JobTypeManager | null;
   resourceEstimationsPerJob: ResourceEstimationsPerJob;
-  buildDelegationContext: () => DelegationContext;
+  buildDelegationContext: (jobType: string) => DelegationContext;
 }
 
 /**
@@ -58,7 +58,7 @@ export const executeQueueJob = async <T, Args extends ArgsWithoutModelId = ArgsW
     onError: options.onError,
   };
   try {
-    return await executeWithDelegation(buildDelegationContext(), ctx);
+    return await executeWithDelegation(buildDelegationContext(jobType), ctx);
   } finally {
     if (acquired) {
       manager?.release(jobType);

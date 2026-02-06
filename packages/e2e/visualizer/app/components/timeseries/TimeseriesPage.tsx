@@ -7,8 +7,10 @@ import type { CapacityDataPoint, InstanceConfig } from '@/lib/timeseries/capacit
 import type { TestData } from '@llm-rate-limiter/e2e-test-results';
 import { useEffect, useState } from 'react';
 
-import { CapacityContext, FocusInfo } from './CapacityContext';
+import { CapacityContext } from './CapacityContext';
 import { DatasetSelector } from './DatasetSelector';
+import { MetricsRow } from './MetricsRow';
+import { ResourceDashboard } from './ResourceDashboard';
 
 async function loadDatasetJson(datasetId: string): Promise<TestData | null> {
   switch (datasetId) {
@@ -82,23 +84,32 @@ export function TimeseriesPage() {
     <div className="w-full m-0 px-3">
       <Card className="shadow-none ring-0">
         <CardHeader>
-          <CardTitle className="flex gap-4 items-center justify-between">
-            <span>E2E Test Results - Capacity Visualization</span>
+          <CardTitle className="flex flex-col gap-3 items-center justify-between">
+            <h1
+              style={{
+                fontSize: '24px',
+                fontWeight: 700,
+                color: '#eee',
+                margin: 0,
+                letterSpacing: '-0.5px',
+              }}
+            >
+              E2E Test Results - Capacity Visualization
+            </h1>
             <DatasetSelector value={selectedDataset} onValueChange={setSelectedDataset} />
-            <div className="w-[200px] flex items-center justify-between">
-              <FocusInfo
-                focusData={focusIndex !== null ? chartData[focusIndex] : null}
-                isHovering={focusIndex !== null}
-              />
-            </div>
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-0">
           {loading ? (
             <div className="h-[400px] flex items-center justify-center text-muted-foreground">Loading...</div>
           ) : (
-            <CapacityContext data={chartData} instances={instances} onFocusChange={setFocusIndex} />
+            <>
+              {testData && <MetricsRow testData={testData} instances={instances} />}
+              <CapacityContext data={chartData} instances={instances}  />
+            </>
           )}
+
+          {testData && <ResourceDashboard />}
 
           {testData && <SummarySection testData={testData} />}
         </CardContent>

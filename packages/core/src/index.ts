@@ -55,6 +55,7 @@ export type {
   BackendEstimatedResources,
   BackendActualResources,
   AllocationInfo,
+  ModelPoolAllocation,
   DynamicLimitConfig,
   DynamicLimits,
   AllocationCallback,
@@ -69,3 +70,4 @@ export { isDistributedBackendFactory } from './multiModelTypes.js';
 
 // Helper functions
 export { getDefaultMaxWaitMS } from './utils/jobExecutionHelpers.js';
+export { calculateModelJobTypeSlots } from './utils/jobTypeSlotCalculation.js';

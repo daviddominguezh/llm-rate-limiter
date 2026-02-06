@@ -13,7 +13,6 @@ import type {
 import { CapacityWaitQueue } from './capacityWaitQueue.js';
 import { validateConfig } from './configValidation.js';
 import { isDelegationError } from './jobExecutionHelpers.js';
-import { getAvailableMemoryKB } from './memoryUtils.js';
 import {
   type CapacityEstimates,
   type CountersSet,
@@ -26,20 +25,20 @@ import {
   reserveTimeWindowCapacity,
 } from './rateLimiterCapacityHelpers.js';
 import { buildLimiterStats, createDelegationResult } from './rateLimiterInitHelpers.js';
+import {
+  createConcurrencyLimiter,
+  createMemoryLimiter,
+  createTimeWindowCounters,
+} from './rateLimiterInternalInit.js';
 import { recordActualUsage } from './rateLimiterUsageHelpers.js';
-import { Semaphore } from './semaphore.js';
-import { TimeWindowCounter } from './timeWindowCounter.js';
+import type { Semaphore } from './semaphore.js';
+import type { TimeWindowCounter } from './timeWindowCounter.js';
 
 const ZERO = 0;
 const ONE = 1;
-const MS_PER_MINUTE = 60000;
-const MS_PER_DAY = 86400000;
 const DEFAULT_POLL_INTERVAL_MS = 100;
-const DEFAULT_FREE_MEMORY_RATIO = 0.8;
-const DEFAULT_RECALCULATION_INTERVAL_MS = 1000;
 const DEFAULT_LABEL = 'LLMRateLimiter';
-const calculateMemoryCapacityKB = (freeMemoryRatio: number): number =>
-  Math.round(getAvailableMemoryKB() * freeMemoryRatio);
+
 export class LLMRateLimiterInternal implements InternalLimiterInstance {
   private readonly config: InternalLimiterConfig;
   private readonly label: string;
@@ -64,9 +63,7 @@ export class LLMRateLimiterInternal implements InternalLimiterInstance {
     };
     this.estimatedUsedMemoryKB = config.estimatedUsedMemoryKB ?? ZERO;
     this.capacityWaitQueue = new CapacityWaitQueue(`${this.label}/WaitQueue`);
-    this.initializeMemoryLimiter();
-    this.initializeConcurrencyLimiter();
-    this.initializeTimeWindowCounters();
+    this.initializeLimiters();
     this.log('Initialized', {
       estimatedUsedTokens: this.estimates.estimatedUsedTokens,
       estimatedNumberOfRequests: this.estimates.estimatedNumberOfRequests,
@@ -84,34 +81,21 @@ export class LLMRateLimiterInternal implements InternalLimiterInstance {
       tpdCounter: this.tpdCounter,
     };
   }
-  private initializeMemoryLimiter(): void {
-    const { config } = this;
-    const { memory } = config;
-    if (memory === undefined) return;
-    const freeMemoryRatio = memory.freeMemoryRatio ?? DEFAULT_FREE_MEMORY_RATIO;
-    const recalculationIntervalMs = memory.recalculationIntervalMs ?? DEFAULT_RECALCULATION_INTERVAL_MS;
-    const initialCapacity = calculateMemoryCapacityKB(freeMemoryRatio);
-    this.memorySemaphore = new Semaphore(initialCapacity, `${this.label}/Memory`);
-    this.memoryRecalculationIntervalId = setInterval(() => {
-      const newCapacity = calculateMemoryCapacityKB(freeMemoryRatio);
-      this.memorySemaphore?.setMax(newCapacity);
-    }, recalculationIntervalMs);
-  }
-  private initializeConcurrencyLimiter(): void {
-    const { config } = this;
-    const { maxConcurrentRequests } = config;
-    if (maxConcurrentRequests === undefined || maxConcurrentRequests <= ZERO) return;
-    this.concurrencySemaphore = new Semaphore(maxConcurrentRequests, `${this.label}/Concurrency`);
-  }
-  private createCounter(limit: number | undefined, windowMs: number, name: string): TimeWindowCounter | null {
-    if (limit === undefined || limit <= ZERO) return null;
-    return new TimeWindowCounter(limit, windowMs, `${this.label}/${name}`);
-  }
-  private initializeTimeWindowCounters(): void {
-    this.rpmCounter = this.createCounter(this.config.requestsPerMinute, MS_PER_MINUTE, 'RPM');
-    this.rpdCounter = this.createCounter(this.config.requestsPerDay, MS_PER_DAY, 'RPD');
-    this.tpmCounter = this.createCounter(this.config.tokensPerMinute, MS_PER_MINUTE, 'TPM');
-    this.tpdCounter = this.createCounter(this.config.tokensPerDay, MS_PER_DAY, 'TPD');
+  private initializeLimiters(): void {
+    if (this.config.memory !== undefined) {
+      const { semaphore, intervalId } = createMemoryLimiter(this.config.memory, this.label);
+      this.memorySemaphore = semaphore;
+      this.memoryRecalculationIntervalId = intervalId;
+    }
+    this.concurrencySemaphore = createConcurrencyLimiter(this.config.maxConcurrentRequests, this.label);
+    const { rpmCounter, rpdCounter, tpmCounter, tpdCounter } = createTimeWindowCounters(
+      this.config,
+      this.label
+    );
+    this.rpmCounter = rpmCounter;
+    this.rpdCounter = rpdCounter;
+    this.tpmCounter = tpmCounter;
+    this.tpdCounter = tpdCounter;
   }
   private async waitForTimeWindowCapacity(): Promise<JobWindowStarts> {
     const { estimates } = this;
@@ -198,8 +182,17 @@ export class LLMRateLimiterInternal implements InternalLimiterInstance {
   async waitForCapacityWithTimeout(maxWaitMS: number): Promise<ReservationContext | null> {
     return await this.capacityWaitQueue.waitForCapacity(() => this.tryReserve(), maxWaitMS);
   }
+  async waitForCapacityWithCustomReserve(
+    customTryReserve: () => ReservationContext | null,
+    maxWaitMS: number
+  ): Promise<ReservationContext | null> {
+    return await this.capacityWaitQueue.waitForCapacity(customTryReserve, maxWaitMS);
+  }
+  notifyExternalCapacityChange(): void {
+    this.capacityWaitQueue.notifyCapacityAvailable();
+  }
   private notifyCapacityAvailable(): void {
-    this.capacityWaitQueue.notifyCapacityAvailable(() => this.tryReserve());
+    this.capacityWaitQueue.notifyCapacityAvailable();
     this.scheduleWindowResetNotification();
   }
   private scheduleWindowResetNotification(): void {

@@ -12,6 +12,7 @@ import {
 
 const ZERO = 0;
 const ONE = 1;
+const PRECISION_DIGITS = 4;
 
 /** Merge a single config value with default */
 const withDefault = <K extends keyof RatioAdjustmentConfig>(
@@ -152,6 +153,22 @@ export const normalizeRatios = (states: Map<string, JobTypeState>): void => {
       state.currentRatio /= totalRatio;
     }
   }
+};
+
+/** Log ratio adjustment details */
+export const logRatioAdjustment = (
+  log: (message: string, data?: Record<string, unknown>) => void,
+  states: Map<string, JobTypeState>,
+  donors: JobTypeLoadMetrics[],
+  receivers: JobTypeLoadMetrics[]
+): void => {
+  log('Ratios adjusted', {
+    ratios: Object.fromEntries(
+      Array.from(states.entries()).map(([id, s]) => [id, s.currentRatio.toFixed(PRECISION_DIGITS)])
+    ),
+    donors: donors.map((d) => d.jobTypeId),
+    receivers: receivers.map((r) => r.jobTypeId),
+  });
 };
 
 /** Recalculate allocated slots based on current ratios, enforcing minCapacity per job type */

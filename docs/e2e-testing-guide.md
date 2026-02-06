@@ -290,6 +290,31 @@ Step 2: Calculate per-limit-type slots using averages
 
 **Note:** Job type ratios are NOT part of Redis pool calculation. Ratios are applied locally by each instance's JobTypeManager.
 
+### Per-Model-Per-JobType Slot Calculation (Local)
+
+After receiving pool allocations from Redis, each instance's JTM calculates per-model-per-jobType slots using `calculateModelJobTypeSlots`. This evaluates five dimensions and picks the most restrictive:
+
+```
+For each (model, jobType) pair:
+
+  TPM slots: floor(pool.tokensPerMinute × ratio / estimatedTokens)        windowMs = 60,000
+  RPM slots: floor(pool.requestsPerMinute × ratio / estimatedRequests)    windowMs = 60,000
+  TPD slots: floor(pool.tokensPerDay × ratio / estimatedTokens)           windowMs = 86,400,000
+  RPD slots: floor(pool.requestsPerDay × ratio / estimatedRequests)       windowMs = 86,400,000
+  Concurrency slots: floor(pool.totalSlots × ratio / 1)                   windowMs = 0
+
+  Result = min(all applicable candidates) → { slots, windowMs }
+```
+
+The `windowMs` determines the tracking mode:
+- **`windowMs > 0` (rate-based)**: Slots represent jobs that can START per window. Tracked by a window counter that resets lazily at the window boundary. A finishing job does NOT free a slot.
+- **`windowMs === 0` (concurrency-based)**: Slots represent concurrent in-flight jobs. A finishing job frees a slot immediately.
+
+**Example:** openai/gpt-5.2 (TPM=500K, RPM=500), summary (tokens=10K, requests=1, ratio=0.3), 2 instances:
+- TPM: floor(250K × 0.3 / 10K) = 7 slots (windowMs=60,000) ← **wins**
+- RPM: floor(250 × 0.3 / 1) = 75 slots (windowMs=60,000)
+- Result: 7 rate slots per minute. Job #8 must wait for the next minute.
+
 ---
 
 ## Data Structures

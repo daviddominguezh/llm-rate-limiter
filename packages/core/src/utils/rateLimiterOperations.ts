@@ -65,6 +65,13 @@ export const getModelStatsWithMemory = (
   return mem === undefined ? stats : { ...stats, memory: mem };
 };
 
+/** Notify all model limiter wait queues that external capacity changed. */
+export const notifyAllModelLimiters = (modelLimiters: Map<string, InternalLimiterInstance>): void => {
+  for (const limiter of modelLimiters.values()) {
+    limiter.notifyExternalCapacityChange();
+  }
+};
+
 /**
  * Stop all resources.
  */
@@ -198,6 +205,8 @@ export interface CreateOptionalJobTypeManagerOptions {
   label: string;
   onLog?: LogFn;
   onRatioChange?: (ratios: Map<string, number>) => void;
+  /** Called when a per-model slot is released (for notifying model limiter wait queues) */
+  onModelCapacityRelease?: (modelId: string) => void;
 }
 
 /**
@@ -206,10 +215,23 @@ export interface CreateOptionalJobTypeManagerOptions {
 export const createOptionalJobTypeManager = (
   options: CreateOptionalJobTypeManagerOptions
 ): JobTypeManager | null => {
-  const { resourceEstimationsPerJob, ratioAdjustmentConfig, label, onLog, onRatioChange } = options;
-  return resourceEstimationsPerJob === undefined
-    ? null
-    : createJobTypeManager({ resourceEstimationsPerJob, ratioAdjustmentConfig, label, onLog, onRatioChange });
+  const {
+    resourceEstimationsPerJob,
+    ratioAdjustmentConfig,
+    label,
+    onLog,
+    onRatioChange,
+    onModelCapacityRelease,
+  } = options;
+  if (resourceEstimationsPerJob === undefined) return null;
+  return createJobTypeManager({
+    resourceEstimationsPerJob,
+    ratioAdjustmentConfig,
+    label,
+    onLog,
+    onRatioChange,
+    onModelCapacityRelease,
+  });
 };
 
 /** Acquire job type slot params. */

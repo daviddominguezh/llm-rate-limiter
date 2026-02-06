@@ -460,25 +460,54 @@ model-alpha: maxConcurrentRequests = 10
 
 **Complexity:** Low
 
-**Purpose:** Send capacity + 1 jobs and verify the 51st job waits for the rate limit window to reset before completing.
+**Purpose:** Validate window-based per-model-per-jobType rate limiting. Sends capacity + 1 "summary" jobs and verifies the overflow job waits for the next minute window, not just for a slot to free up.
 
 **Config Preset:** `default`
 
+**Key concept — rate slots vs concurrency slots:**
+
+The per-model-per-jobType slot calculation (`calculateModelJobTypeSlots`) evaluates multiple dimensions (TPM, RPM, TPD, RPD, totalSlots) and picks the most restrictive. Each dimension has a window duration:
+- TPM/RPM → 60s (minute window)
+- TPD/RPD → 86,400s (day window)
+- totalSlots → 0 (concurrency, no window)
+
+When the winning dimension is rate-based (`windowMs > 0`), slots represent **jobs that can START per window**, not concurrent jobs. A finishing job does NOT free a rate slot — the tokens remain consumed for the entire window. New capacity only appears when the window resets.
+
+**Capacity calculation (per-model-per-jobType):**
+
+```
+Model: openai/gpt-5.2 (TPM=500,000, RPM=500)
+Job type: summary (estimatedTokens=10,000, estimatedRequests=1, ratio=0.3)
+Instances: 2
+
+Per-instance pool from Redis:
+  tokensPerMinute = 500,000 / 2 = 250,000
+  requestsPerMinute = 500 / 2 = 250
+
+Slot candidates per dimension:
+  TPM: floor(250,000 × 0.3 / 10,000) =  7 slots  (windowMs = 60,000)
+  RPM: floor(250 × 0.3 / 1)          = 75 slots  (windowMs = 60,000)
+
+Winner: TPM with 7 rate slots per minute (most restrictive)
+Total across 2 instances: 14 rate slots per minute window
+```
+
 **Configuration:**
 - 2 instances share jobs evenly (proxy ratio 1:1)
-- Each instance has 250,000 TPM = 25 jobs of 10,000 tokens
-- Total capacity = 500,000 TPM = 50 jobs
-- 51 jobs x 10,000 tokens = 510,000 tokens (exceeds capacity by 1 job)
+- 15 "summary" jobs sent (14 capacity + 1 overflow)
+- Each job takes 100ms to process
 
 ### Test Cases
 
 | What We Check | Expected Result |
 |---------------|-----------------|
-| Job count | 51 jobs sent |
-| Completions | All 51 jobs eventually complete |
+| Job count | 15 jobs sent |
+| Completions | All 15 jobs complete |
 | Failures | No jobs rejected |
-| First 50 jobs | Complete quickly (< 500ms queue time) |
-| 51st job | Waits for rate limit reset (> 1s queue time) |
+| First 14 jobs | Start immediately (< 500ms queue time) |
+| 15th job timing | Sent in minute N, started in minute N+1 |
+| 15th job model | Ran on openai (not escalated) |
+| Full lifecycle | All jobs go through queued → started → completed |
 
 ---
 

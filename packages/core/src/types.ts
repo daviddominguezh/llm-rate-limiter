@@ -288,4 +288,17 @@ export interface InternalLimiterInstance {
   getStats: () => InternalLimiterStats;
   /** Update rate limits dynamically (for distributed coordination) */
   setRateLimits: (update: RateLimitUpdate) => void;
+  /** Notify wait queue that external capacity changed (e.g., JTM per-model slot freed) */
+  notifyExternalCapacityChange: () => void;
+  /**
+   * Wait for capacity using a custom reserve function.
+   * Allows composing multiple capacity checks (e.g., model + JTM per-model) into one atomic reserve.
+   * @param tryReserve Custom function that checks and reserves capacity atomically
+   * @param maxWaitMS Maximum time to wait (0 = fail fast)
+   * @returns Promise resolving to ReservationContext if reserved, null if timed out
+   */
+  waitForCapacityWithCustomReserve: (
+    tryReserve: () => ReservationContext | null,
+    maxWaitMS: number
+  ) => Promise<ReservationContext | null>;
 }

@@ -8,66 +8,7 @@ interface MetricsRowProps {
   instances: InstanceConfig[];
 }
 
-interface MetricCardProps {
-  label: string;
-  value: string | number;
-  subtext?: string;
-  color?: string;
-}
-
 const MS_PER_SECOND = 1000;
-
-function MetricCard({ label, value, subtext, color }: MetricCardProps) {
-  return (
-    <div
-      style={{
-        background: 'rgb(18,18,22)',
-        border: '1px solid rgba(255,255,255,0.06)',
-        borderRadius: '12px',
-        padding: '16px 20px',
-        minWidth: '140px',
-        position: 'relative',
-        overflow: 'hidden',
-      }}
-    >
-      <div
-        style={{
-          fontSize: '11px',
-          color: '#666',
-          textTransform: 'uppercase',
-          letterSpacing: '1.5px',
-          marginBottom: '6px',
-          fontFamily: "'JetBrains Mono', monospace",
-        }}
-      >
-        {label}
-      </div>
-      <div
-        style={{
-          fontSize: '28px',
-          fontWeight: 700,
-          color: color ?? '#eee',
-          fontFamily: "'Space Grotesk', sans-serif",
-          lineHeight: 1.1,
-        }}
-      >
-        {value}
-      </div>
-      {subtext && (
-        <div
-          style={{
-            fontSize: '11px',
-            color: '#555',
-            marginTop: '4px',
-            fontFamily: "'JetBrains Mono', monospace",
-          }}
-        >
-          {subtext}
-        </div>
-      )}
-    </div>
-  );
-}
 
 export function MetricsRow({ testData, instances }: MetricsRowProps) {
   const { summary, metadata } = testData;
@@ -75,23 +16,39 @@ export function MetricsRow({ testData, instances }: MetricsRowProps) {
 
   return (
     <div
-      className="px-12 py-1.5 pb-6 w-full flex justify-evenly"
+      className="w-full flex justify-center items-center gap-6 pt-0 pb-4"
       style={{
-        color: '#ccc',
-        fontFamily: "'Space Grotesk', sans-serif",
+        color: '#888',
+        fontSize: '13px',
+        fontFamily: "'JetBrains Mono', monospace",
       }}
     >
-      <div className="w-full flex justify-center gap-3">
-        <MetricCard
-          label="Total Jobs"
-          value={summary.totalJobs}
-          subtext={`${summary.failed} failed`}
-          color="#E8715A"
-        />
-        <MetricCard label="Completed" value={summary.completed} subtext="jobs finished" color="#5A9CE8" />
-        <MetricCard label="Instances" value={instances.length} subtext="distributed nodes" color="#6EC97D" />
-        <MetricCard label="Duration" value={`${durationSec}s`} subtext="total runtime" color="#D4A843" />
-      </div>
+      <span>
+        <span style={{ color: '#666' }}>Total Jobs:</span>{' '}
+        <span style={{ color: '#E8715A', fontWeight: 600 }}>{summary.totalJobs}</span>
+      </span>
+      <span style={{ color: '#333' }}>·</span>
+      <span>
+        <span style={{ color: '#666' }}>Completed:</span>{' '}
+        <span style={{ color: '#5A9CE8', fontWeight: 600 }}>{summary.completed}</span>
+      </span>
+      <span style={{ color: '#333' }}>·</span>
+      <span>
+        <span style={{ color: '#666' }}>Failed:</span>{' '}
+        <span style={{ color: summary.failed > 0 ? '#E8715A' : '#6EC97D', fontWeight: 600 }}>
+          {summary.failed}
+        </span>
+      </span>
+      <span style={{ color: '#333' }}>·</span>
+      <span>
+        <span style={{ color: '#666' }}>Instances:</span>{' '}
+        <span style={{ color: '#6EC97D', fontWeight: 600 }}>{instances.length}</span>
+      </span>
+      <span style={{ color: '#333' }}>·</span>
+      <span>
+        <span style={{ color: '#666' }}>Duration:</span>{' '}
+        <span style={{ color: '#D4A843', fontWeight: 600 }}>{durationSec}s</span>
+      </span>
     </div>
   );
 }

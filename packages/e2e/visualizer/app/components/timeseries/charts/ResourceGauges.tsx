@@ -28,23 +28,23 @@ export function ResourceGauges({ data, jobTypes, instanceId }: ResourceGaugesPro
 
   const slotSegments = jobTypes.map((jt) => ({
     color: jt.color,
-    value: typeof latest[`${instanceId}_${jt.id}_slots`] === 'number'
-      ? (latest[`${instanceId}_${jt.id}_slots`] as number)
-      : 0,
+    value:
+      typeof latest[`${instanceId}_${jt.id}_slots`] === 'number'
+        ? (latest[`${instanceId}_${jt.id}_slots`] as number)
+        : 0,
   }));
 
   const inFlightSegments = jobTypes.map((jt) => ({
     color: jt.color,
-    value: typeof latest[`${instanceId}_${jt.id}_inFlight`] === 'number'
-      ? (latest[`${instanceId}_${jt.id}_inFlight`] as number)
-      : 0,
+    value:
+      typeof latest[`${instanceId}_${jt.id}_inFlight`] === 'number'
+        ? (latest[`${instanceId}_${jt.id}_inFlight`] as number)
+        : 0,
   }));
 
   return (
     <ChartContainer>
-      <SectionHeader subtitle="Current snapshot across all job types">
-        Resource Utilization
-      </SectionHeader>
+      <SectionHeader subtitle="Current snapshot across all job types">Resource Utilization</SectionHeader>
 
       <ResourceGauge
         label="Total Slots"

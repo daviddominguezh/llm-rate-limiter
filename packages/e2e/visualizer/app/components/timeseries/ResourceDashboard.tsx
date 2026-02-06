@@ -56,7 +56,16 @@ const INSTANCE_COLORS = ['#E8715A', '#5A9CE8', '#6EC97D'];
 
 // --- Real Data Extraction ---
 
-const JOB_TYPE_PALETTE = ['#E85E3B', '#3B8EE8', '#5EBB6E', '#D4A843', '#9B59B6', '#E67E22', '#1ABC9C', '#E74C3C'];
+const JOB_TYPE_PALETTE = [
+  '#E85E3B',
+  '#3B8EE8',
+  '#5EBB6E',
+  '#D4A843',
+  '#9B59B6',
+  '#E67E22',
+  '#1ABC9C',
+  '#E74C3C',
+];
 
 interface GaugeSegment {
   jobType: string;
@@ -129,10 +138,7 @@ function assignJobTypeColors(jobTypeIds: string[]): Record<string, string> {
   return colors;
 }
 
-function makeSegments(
-  usage: Record<string, number>,
-  colors: Record<string, string>,
-): GaugeSegment[] {
+function makeSegments(usage: Record<string, number>, colors: Record<string, string>): GaugeSegment[] {
   return Object.entries(usage)
     .map(([jt, used]) => ({ jobType: jt, used, color: colors[jt] ?? '#888' }))
     .sort((a, b) => b.used - a.used);
@@ -141,15 +147,25 @@ function makeSegments(
 function buildGauges(
   jobUsage: JobTypeUsage,
   capacity: { rpm: number; tpm: number },
-  colors: Record<string, string>,
+  colors: Record<string, string>
 ): GaugeData[] {
   const gauges: GaugeData[] = [];
 
   if (capacity.rpm > 0) {
-    gauges.push({ resource: 'RPM', total: capacity.rpm, used: jobUsage.totalJobs, segments: makeSegments(jobUsage.jobCount, colors) });
+    gauges.push({
+      resource: 'RPM',
+      total: capacity.rpm,
+      used: jobUsage.totalJobs,
+      segments: makeSegments(jobUsage.jobCount, colors),
+    });
   }
   if (capacity.tpm > 0 && jobUsage.totalTokens > 0) {
-    gauges.push({ resource: 'TPM', total: capacity.tpm, used: jobUsage.totalTokens, segments: makeSegments(jobUsage.tokenUsage, colors) });
+    gauges.push({
+      resource: 'TPM',
+      total: capacity.tpm,
+      used: jobUsage.totalTokens,
+      segments: makeSegments(jobUsage.tokenUsage, colors),
+    });
   }
 
   gauges.sort((a, b) => {
@@ -448,8 +464,7 @@ export function ResourceDashboard({ testData }: ResourceDashboardProps) {
   const gauges = buildGauges(jobUsage, capacity, jobTypeColors);
   const realJobTypes = buildJobTypeInfo(jobUsage, jobTypeColors);
 
-
-const [data, setData] = useState<DataEntry[]>(() => generateTimeSeriesData(60));
+  const [data, setData] = useState<DataEntry[]>(() => generateTimeSeriesData(60));
   const [selectedResource, setSelectedResource] = useState('TPM');
   const [isLive, setIsLive] = useState(false);
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
@@ -519,9 +534,6 @@ const [data, setData] = useState<DataEntry[]>(() => generateTimeSeriesData(60));
   }, [isLive, addPoint]);
 
   const latest = data[data.length - 1];
-  const totalUsedTPM = JOB_TYPES.reduce((s, jt) => s + (Number(latest[`${jt.id}_TPM_used`]) || 0), 0);
-  const totalUsedRPM = JOB_TYPES.reduce((s, jt) => s + (Number(latest[`${jt.id}_RPM_used`]) || 0), 0);
-  const activeJobs = JOB_TYPES.reduce((s, jt) => s + (Number(latest[`${jt.id}_Concurrent_used`]) || 0), 0);
 
   const stackedAreaData = data.map((d) => {
     const entry: Record<string, string | number> = { time: d.time };
@@ -532,9 +544,12 @@ const [data, setData] = useState<DataEntry[]>(() => generateTimeSeriesData(60));
     return entry;
   });
 
+  const firstUppsercase = (str: string = '') =>
+    str.length > 1 ? str.substring(0, 1).toUpperCase() + str.substring(1) : str.toUpperCase();
+
   return (
     <div
-    className='px-6 py-6'
+      className="px-6 py-6"
       style={{
         color: '#ccc',
         fontFamily: "'Space Grotesk', sans-serif",
@@ -647,7 +662,7 @@ const [data, setData] = useState<DataEntry[]>(() => generateTimeSeriesData(60));
               }}
             >
               <div style={{ width: 10, height: 10, borderRadius: '2px', background: jt.color }} />
-              <span style={{ color: '#888' }}>{jt.id}</span>
+              <span style={{ color: '#888' }}>{firstUppsercase(jt.id)}</span>
               <span style={{ color: '#555' }}>({jt.slotsRatio}%)</span>
             </div>
           ))}

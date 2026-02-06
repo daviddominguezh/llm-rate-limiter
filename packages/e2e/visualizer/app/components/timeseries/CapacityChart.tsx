@@ -102,6 +102,29 @@ function renderChart(
       totalSlots,
     });
   }
+
+  // Fill remaining space with blue bars using last non-zero blue height
+  const n = data.length;
+  const step = barWidth + 1;
+
+  // Find last non-zero blue height
+  let lastBlueHeight = 0;
+  for (let i = n - 1; i >= 0; i -= 1) {
+    if (barLog[i].blue.h > 0) {
+      lastBlueHeight = barLog[i].blue.h;
+      break;
+    }
+  }
+
+  // Draw additional bars to fill remaining space
+  let extraBarIndex = n;
+  let extraBarX = extraBarIndex * step;
+  while (extraBarX + barWidth <= width && lastBlueHeight > 0) {
+    ctx.fillStyle = ALLOCATED_COLOR;
+    ctx.fillRect(extraBarX, height - lastBlueHeight, barWidth, lastBlueHeight);
+    extraBarIndex += 1;
+    extraBarX = extraBarIndex * step;
+  }
   // console.log('bars:', barLog);
 }
 

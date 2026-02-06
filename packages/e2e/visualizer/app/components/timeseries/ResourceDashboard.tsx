@@ -84,14 +84,23 @@ interface JobTypeUsage {
   totalTokens: number;
 }
 
+function sumJobTokens(job: { usage: Array<{ inputTokens: number; outputTokens: number }> }): number {
+  let tokens = 0;
+  for (const entry of job.usage) {
+    tokens += entry.inputTokens + entry.outputTokens;
+  }
+  return tokens;
+}
+
 function computeJobUsage(testData: TestData): JobTypeUsage {
   const result: JobTypeUsage = { jobCount: {}, tokenUsage: {}, totalJobs: 0, totalTokens: 0 };
 
   for (const job of Object.values(testData.jobs)) {
+    const tokens = sumJobTokens(job);
     result.jobCount[job.jobType] = (result.jobCount[job.jobType] ?? 0) + 1;
-    result.tokenUsage[job.jobType] = (result.tokenUsage[job.jobType] ?? 0) + job.totalCost;
+    result.tokenUsage[job.jobType] = (result.tokenUsage[job.jobType] ?? 0) + tokens;
     result.totalJobs += 1;
-    result.totalTokens += job.totalCost;
+    result.totalTokens += tokens;
   }
 
   return result;
@@ -439,17 +448,6 @@ export function ResourceDashboard({ testData }: ResourceDashboardProps) {
   const gauges = buildGauges(jobUsage, capacity, jobTypeColors);
   const realJobTypes = buildJobTypeInfo(jobUsage, jobTypeColors);
 
-  // Debug TPM: log a sample of jobs to inspect totalCost values
-  const sampleJobs = Object.values(testData.jobs).slice(0, 5);
-  console.log('[TPM Debug] sample jobs:', sampleJobs.map((j) => ({
-    jobId: j.jobId, jobType: j.jobType, totalCost: j.totalCost, status: j.status,
-    events: j.events.map((e) => ({ type: e.type, cost: e.cost })),
-  })));
-  console.log('[TPM Debug] capacity:', JSON.stringify(capacity));
-  console.log('[TPM Debug] jobUsage.tokenUsage:', JSON.stringify(jobUsage.tokenUsage));
-  console.log('[TPM Debug] jobUsage.totalTokens:', jobUsage.totalTokens);
-  console.log('[TPM Debug] jobUsage.jobCount:', JSON.stringify(jobUsage.jobCount));
-  console.log('[TPM Debug] jobUsage.totalJobs:', jobUsage.totalJobs);
 
 const [data, setData] = useState<DataEntry[]>(() => generateTimeSeriesData(60));
   const [selectedResource, setSelectedResource] = useState('TPM');

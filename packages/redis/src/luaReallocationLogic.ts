@@ -106,23 +106,27 @@ local function recalculateAllocations(instancesKey, allocationsKey, channel, mod
     local rpd = 0
 
     if isValidNumber(model.tokensPerMinute) then
+      local baseAllocation = math.floor(model.tokensPerMinute / instanceCount)
       local remaining = math.max(0, model.tokensPerMinute - usage.tpmUsed)
-      tpm = math.floor(remaining / instanceCount)
+      tpm = math.max(baseAllocation, math.floor(remaining / instanceCount))
       dynamicLimits[modelId].tokensPerMinute = tpm
     end
     if isValidNumber(model.requestsPerMinute) then
+      local baseAllocation = math.floor(model.requestsPerMinute / instanceCount)
       local remaining = math.max(0, model.requestsPerMinute - usage.rpmUsed)
-      rpm = math.floor(remaining / instanceCount)
+      rpm = math.max(baseAllocation, math.floor(remaining / instanceCount))
       dynamicLimits[modelId].requestsPerMinute = rpm
     end
     if isValidNumber(model.tokensPerDay) then
+      local baseAllocation = math.floor(model.tokensPerDay / instanceCount)
       local remaining = math.max(0, model.tokensPerDay - usage.tpdUsed)
-      tpd = math.floor(remaining / instanceCount)
+      tpd = math.max(baseAllocation, math.floor(remaining / instanceCount))
       dynamicLimits[modelId].tokensPerDay = tpd
     end
     if isValidNumber(model.requestsPerDay) then
+      local baseAllocation = math.floor(model.requestsPerDay / instanceCount)
       local remaining = math.max(0, model.requestsPerDay - usage.rpdUsed)
-      rpd = math.floor(remaining / instanceCount)
+      rpd = math.max(baseAllocation, math.floor(remaining / instanceCount))
       dynamicLimits[modelId].requestsPerDay = rpd
     end
 

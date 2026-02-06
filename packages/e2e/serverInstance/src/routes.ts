@@ -94,6 +94,7 @@ const createCompletionHandler =
       modelUsed,
       totalCost,
       durationMs,
+      usage: context.usage,
     });
 
     jobHistoryTracker.recordCompleted({
@@ -135,6 +136,7 @@ const createErrorHandler =
       error: error.message,
       modelsTried: tracking.modelsTried,
       totalCost,
+      usage: context.usage,
     });
 
     jobHistoryTracker.recordFailed({
@@ -165,6 +167,7 @@ const handleQueueError = (error: unknown, params: ErrorHandlerParams): void => {
     error: errorMessage,
     modelsTried: tracking.modelsTried,
     totalCost: ZERO_COST,
+    usage: [],
   });
 
   jobHistoryTracker.recordFailed({

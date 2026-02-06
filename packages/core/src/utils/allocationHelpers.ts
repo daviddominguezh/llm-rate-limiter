@@ -26,6 +26,10 @@ const calculateLimitValue = (
   instanceCount: number
 ): number | undefined => {
   if (dynamicValue !== undefined) {
+    if (configValue !== undefined) {
+      const baseAllocation = Math.floor(configValue / instanceCount);
+      return Math.max(dynamicValue, baseAllocation);
+    }
     return dynamicValue;
   }
   if (configValue !== undefined) {

@@ -20,6 +20,22 @@ export interface TestMetadata {
 
 export type JobStatus = 'pending' | 'queued' | 'started' | 'completed' | 'failed';
 
+/** Actual resource usage reported by a single model attempt */
+export interface ActualUsageEntry {
+  /** Model that was used for this attempt */
+  modelId: string;
+  /** Number of input tokens consumed */
+  inputTokens: number;
+  /** Number of cached tokens (from prompt caching) */
+  cachedTokens: number;
+  /** Number of output tokens generated */
+  outputTokens: number;
+  /** Number of LLM API requests made */
+  requestCount: number;
+  /** Calculated cost in USD based on model pricing */
+  cost: number;
+}
+
 export interface JobEventRecord {
   type: 'queued' | 'started' | 'completed' | 'failed';
   timestamp: number;
@@ -52,6 +68,8 @@ export interface JobRecord {
   processingDurationMs: number | null;
   /** Total time from queued to completed/failed (ms) */
   totalDurationMs: number | null;
+  /** Actual usage reported by the job (one entry per model attempt) */
+  usage: ActualUsageEntry[];
 }
 
 // =============================================================================

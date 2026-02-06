@@ -1,4 +1,5 @@
 export type {
+  ActualUsageEntry,
   CompactInstanceState,
   CompactModelJobTypeState,
   CompactModelState,

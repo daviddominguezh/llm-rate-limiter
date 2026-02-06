@@ -4,6 +4,7 @@
 import type { JobEventRecord, JobRecord } from '@llm-rate-limiter/e2e-test-results';
 
 import type { RawEvent, RawEventData, RawJobSent } from './testDataTransformTypes.js';
+import { getPayloadUsage } from './testDataTransformUsage.js';
 
 const ZERO = 0;
 
@@ -44,6 +45,7 @@ const createJobRecord = (sent: RawJobSent): JobRecord => ({
   queueDurationMs: null,
   processingDurationMs: null,
   totalDurationMs: null,
+  usage: [],
 });
 
 /**
@@ -107,6 +109,7 @@ const createCompletedUpdate = (
   status: 'completed',
   modelUsed: getPayloadString(payload, 'modelUsed'),
   totalCost: getPayloadNumber(payload, 'totalCost'),
+  usage: getPayloadUsage(payload),
   events: [
     ...job.events,
     {
@@ -128,6 +131,7 @@ const createFailedUpdate = (
   ...job,
   status: 'failed',
   totalCost: getPayloadNumber(payload, 'totalCost'),
+  usage: getPayloadUsage(payload),
   events: [
     ...job.events,
     {

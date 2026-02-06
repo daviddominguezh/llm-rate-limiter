@@ -1,4 +1,4 @@
-import type { Availability, AvailabilityChangeReason } from '@llm-rate-limiter/core';
+import type { Availability, AvailabilityChangeReason, UsageEntryWithCost } from '@llm-rate-limiter/core';
 
 // =============================================================================
 // Historical Job Types
@@ -84,6 +84,8 @@ export interface JobCompletedPayload {
   totalCost: number;
   /** Duration from queued to completed (ms) */
   durationMs: number;
+  /** Actual usage from all model attempts */
+  usage: UsageEntryWithCost[];
 }
 
 /** Payload for job:failed events */
@@ -98,6 +100,8 @@ export interface JobFailedPayload {
   modelsTried: string[];
   /** Total cost across all model attempts (USD) */
   totalCost: number;
+  /** Actual usage from all model attempts */
+  usage: UsageEntryWithCost[];
 }
 
 /** Payload for availability events */

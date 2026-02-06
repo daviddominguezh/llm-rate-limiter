@@ -190,7 +190,7 @@ export function CapacityChart({
 
   return (
     <div className="flex items-stretch border-t border-border pr-2" style={{ minHeight: height }}>
-      <div ref={containerRef} className="flex-1 min-w-0 relative">
+      <div ref={containerRef} className="flex-1 min-w-0 relative ml-1">
         <canvas ref={canvasRef} height={height} className="w-full block" />
         <div
           className="absolute top-1 right-2 text-xs tabular-nums"

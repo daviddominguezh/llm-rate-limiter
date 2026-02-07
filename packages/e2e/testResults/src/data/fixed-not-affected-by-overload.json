@@ -873,9 +873,7 @@
       "instances": {
         "inst-1770406753382-ionsrr7rn": {
           "activeJobs": 1,
-          "activeJobIds": [
-            "overload-flex-a-1770406753378-0"
-          ],
+          "activeJobIds": ["overload-flex-a-1770406753378-0"],
           "models": {
             "test-model": {
               "rpm": 0,
@@ -939,9 +937,7 @@
       "instances": {
         "inst-1770406753382-ionsrr7rn": {
           "activeJobs": 1,
-          "activeJobIds": [
-            "overload-flex-a-1770406753378-0"
-          ],
+          "activeJobIds": ["overload-flex-a-1770406753378-0"],
           "models": {
             "test-model": {
               "rpm": 0,
@@ -970,9 +966,7 @@
         },
         "inst-1770406753386-bawz4y9sf": {
           "activeJobs": 1,
-          "activeJobIds": [
-            "overload-flex-a-1770406753378-1"
-          ],
+          "activeJobIds": ["overload-flex-a-1770406753378-1"],
           "models": {
             "test-model": {
               "rpm": 0,
@@ -1007,10 +1001,7 @@
       "instances": {
         "inst-1770406753382-ionsrr7rn": {
           "activeJobs": 2,
-          "activeJobIds": [
-            "overload-flex-a-1770406753378-0",
-            "overload-flex-a-1770406753378-2"
-          ],
+          "activeJobIds": ["overload-flex-a-1770406753378-0", "overload-flex-a-1770406753378-2"],
           "models": {
             "test-model": {
               "rpm": 0,
@@ -1039,9 +1030,7 @@
         },
         "inst-1770406753386-bawz4y9sf": {
           "activeJobs": 1,
-          "activeJobIds": [
-            "overload-flex-a-1770406753378-1"
-          ],
+          "activeJobIds": ["overload-flex-a-1770406753378-1"],
           "models": {
             "test-model": {
               "rpm": 0,
@@ -1076,10 +1065,7 @@
       "instances": {
         "inst-1770406753382-ionsrr7rn": {
           "activeJobs": 2,
-          "activeJobIds": [
-            "overload-flex-a-1770406753378-0",
-            "overload-flex-a-1770406753378-2"
-          ],
+          "activeJobIds": ["overload-flex-a-1770406753378-0", "overload-flex-a-1770406753378-2"],
           "models": {
             "test-model": {
               "rpm": 0,
@@ -1108,10 +1094,7 @@
         },
         "inst-1770406753386-bawz4y9sf": {
           "activeJobs": 2,
-          "activeJobIds": [
-            "overload-flex-a-1770406753378-1",
-            "overload-flex-a-1770406753378-3"
-          ],
+          "activeJobIds": ["overload-flex-a-1770406753378-1", "overload-flex-a-1770406753378-3"],
           "models": {
             "test-model": {
               "rpm": 0,
@@ -1179,10 +1162,7 @@
         },
         "inst-1770406753386-bawz4y9sf": {
           "activeJobs": 2,
-          "activeJobIds": [
-            "overload-flex-a-1770406753378-1",
-            "overload-flex-a-1770406753378-3"
-          ],
+          "activeJobIds": ["overload-flex-a-1770406753378-1", "overload-flex-a-1770406753378-3"],
           "models": {
             "test-model": {
               "rpm": 0,
@@ -2259,10 +2239,7 @@
       "instances": {
         "inst-1770406753382-ionsrr7rn": {
           "activeJobs": 2,
-          "activeJobIds": [
-            "overload-flex-a-1770406753378-2",
-            "overload-flex-b-1770406753378-2"
-          ],
+          "activeJobIds": ["overload-flex-a-1770406753378-2", "overload-flex-b-1770406753378-2"],
           "models": {
             "test-model": {
               "rpm": 0,
@@ -2291,10 +2268,7 @@
         },
         "inst-1770406753386-bawz4y9sf": {
           "activeJobs": 2,
-          "activeJobIds": [
-            "overload-flex-a-1770406753378-3",
-            "overload-flex-b-1770406753378-3"
-          ],
+          "activeJobIds": ["overload-flex-a-1770406753378-3", "overload-flex-b-1770406753378-3"],
           "models": {
             "test-model": {
               "rpm": 0,
@@ -2329,10 +2303,7 @@
       "instances": {
         "inst-1770406753382-ionsrr7rn": {
           "activeJobs": 2,
-          "activeJobIds": [
-            "overload-flex-a-1770406753378-2",
-            "overload-flex-b-1770406753378-2"
-          ],
+          "activeJobIds": ["overload-flex-a-1770406753378-2", "overload-flex-b-1770406753378-2"],
           "models": {
             "test-model": {
               "rpm": 0,
@@ -2361,10 +2332,7 @@
         },
         "inst-1770406753386-bawz4y9sf": {
           "activeJobs": 2,
-          "activeJobIds": [
-            "overload-flex-a-1770406753378-3",
-            "overload-flex-b-1770406753378-3"
-          ],
+          "activeJobIds": ["overload-flex-a-1770406753378-3", "overload-flex-b-1770406753378-3"],
           "models": {
             "test-model": {
               "rpm": 0,

@@ -1155,9 +1155,7 @@
       "instances": {
         "inst-1770406680393-cn11tytxe": {
           "activeJobs": 1,
-          "activeJobIds": [
-            "capacity-test-1770406680381-0"
-          ],
+          "activeJobIds": ["capacity-test-1770406680381-0"],
           "models": {
             "openai/gpt-5.2": {
               "rpm": 5,
@@ -1373,9 +1371,7 @@
       "instances": {
         "inst-1770406680393-cn11tytxe": {
           "activeJobs": 1,
-          "activeJobIds": [
-            "capacity-test-1770406680381-0"
-          ],
+          "activeJobIds": ["capacity-test-1770406680381-0"],
           "models": {
             "openai/gpt-5.2": {
               "rpm": 5,
@@ -1480,9 +1476,7 @@
         },
         "inst-1770406680403-23a4z7moh": {
           "activeJobs": 1,
-          "activeJobIds": [
-            "capacity-test-1770406680381-1"
-          ],
+          "activeJobIds": ["capacity-test-1770406680381-1"],
           "models": {
             "openai/gpt-5.2": {
               "rpm": 5,
@@ -1593,10 +1587,7 @@
       "instances": {
         "inst-1770406680393-cn11tytxe": {
           "activeJobs": 2,
-          "activeJobIds": [
-            "capacity-test-1770406680381-0",
-            "capacity-test-1770406680381-2"
-          ],
+          "activeJobIds": ["capacity-test-1770406680381-0", "capacity-test-1770406680381-2"],
           "models": {
             "openai/gpt-5.2": {
               "rpm": 10,
@@ -1701,9 +1692,7 @@
         },
         "inst-1770406680403-23a4z7moh": {
           "activeJobs": 1,
-          "activeJobIds": [
-            "capacity-test-1770406680381-1"
-          ],
+          "activeJobIds": ["capacity-test-1770406680381-1"],
           "models": {
             "openai/gpt-5.2": {
               "rpm": 5,
@@ -1814,10 +1803,7 @@
       "instances": {
         "inst-1770406680393-cn11tytxe": {
           "activeJobs": 2,
-          "activeJobIds": [
-            "capacity-test-1770406680381-0",
-            "capacity-test-1770406680381-2"
-          ],
+          "activeJobIds": ["capacity-test-1770406680381-0", "capacity-test-1770406680381-2"],
           "models": {
             "openai/gpt-5.2": {
               "rpm": 10,
@@ -1922,10 +1908,7 @@
         },
         "inst-1770406680403-23a4z7moh": {
           "activeJobs": 2,
-          "activeJobIds": [
-            "capacity-test-1770406680381-1",
-            "capacity-test-1770406680381-3"
-          ],
+          "activeJobIds": ["capacity-test-1770406680381-1", "capacity-test-1770406680381-3"],
           "models": {
             "openai/gpt-5.2": {
               "rpm": 10,
@@ -2145,10 +2128,7 @@
         },
         "inst-1770406680403-23a4z7moh": {
           "activeJobs": 2,
-          "activeJobIds": [
-            "capacity-test-1770406680381-1",
-            "capacity-test-1770406680381-3"
-          ],
+          "activeJobIds": ["capacity-test-1770406680381-1", "capacity-test-1770406680381-3"],
           "models": {
             "openai/gpt-5.2": {
               "rpm": 10,
@@ -6123,10 +6103,7 @@
       "instances": {
         "inst-1770406680393-cn11tytxe": {
           "activeJobs": 2,
-          "activeJobIds": [
-            "capacity-test-1770406680381-10",
-            "capacity-test-1770406680381-12"
-          ],
+          "activeJobIds": ["capacity-test-1770406680381-10", "capacity-test-1770406680381-12"],
           "models": {
             "openai/gpt-5.2": {
               "rpm": 15,
@@ -6346,9 +6323,7 @@
       "instances": {
         "inst-1770406680393-cn11tytxe": {
           "activeJobs": 1,
-          "activeJobIds": [
-            "capacity-test-1770406680381-12"
-          ],
+          "activeJobIds": ["capacity-test-1770406680381-12"],
           "models": {
             "openai/gpt-5.2": {
               "rpm": 11,
@@ -6453,10 +6428,7 @@
         },
         "inst-1770406680403-23a4z7moh": {
           "activeJobs": 2,
-          "activeJobIds": [
-            "capacity-test-1770406680381-11",
-            "capacity-test-1770406680381-13"
-          ],
+          "activeJobIds": ["capacity-test-1770406680381-11", "capacity-test-1770406680381-13"],
           "models": {
             "openai/gpt-5.2": {
               "rpm": 15,
@@ -6567,9 +6539,7 @@
       "instances": {
         "inst-1770406680393-cn11tytxe": {
           "activeJobs": 1,
-          "activeJobIds": [
-            "capacity-test-1770406680381-12"
-          ],
+          "activeJobIds": ["capacity-test-1770406680381-12"],
           "models": {
             "openai/gpt-5.2": {
               "rpm": 11,
@@ -6674,10 +6644,7 @@
         },
         "inst-1770406680403-23a4z7moh": {
           "activeJobs": 2,
-          "activeJobIds": [
-            "capacity-test-1770406680381-11",
-            "capacity-test-1770406680381-13"
-          ],
+          "activeJobIds": ["capacity-test-1770406680381-11", "capacity-test-1770406680381-13"],
           "models": {
             "openai/gpt-5.2": {
               "rpm": 15,
@@ -6893,9 +6860,7 @@
         },
         "inst-1770406680403-23a4z7moh": {
           "activeJobs": 1,
-          "activeJobIds": [
-            "capacity-test-1770406680381-13"
-          ],
+          "activeJobIds": ["capacity-test-1770406680381-13"],
           "models": {
             "openai/gpt-5.2": {
               "rpm": 11,
@@ -7111,9 +7076,7 @@
         },
         "inst-1770406680403-23a4z7moh": {
           "activeJobs": 1,
-          "activeJobIds": [
-            "capacity-test-1770406680381-13"
-          ],
+          "activeJobIds": ["capacity-test-1770406680381-13"],
           "models": {
             "openai/gpt-5.2": {
               "rpm": 11,

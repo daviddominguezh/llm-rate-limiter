@@ -34,6 +34,12 @@ export const JOB_TYPE_COLORS: Record<string, string> = {
 
 export const INSTANCE_COLORS = ['#E8715A', '#5A9CE8', '#6EC97D', '#D4A843'];
 
+export const MODEL_COLORS = ['#E85E3B', '#3B8EE8', '#5EBB6E', '#D4A843', '#9B59B6', '#E67E22'];
+
+export type ResourceType = 'TPM' | 'RPM' | 'RPD' | 'TPD' | 'Concurrent' | 'Memory';
+
+export const ALL_RESOURCE_TYPES: ResourceType[] = ['TPM', 'RPM', 'RPD', 'TPD', 'Concurrent', 'Memory'];
+
 export const TOOLTIP_STYLE = {
   background: 'rgba(15, 15, 20, 0.95)',
   border: '1px solid rgba(255,255,255,0.08)',

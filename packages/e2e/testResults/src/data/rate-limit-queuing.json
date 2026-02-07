@@ -1545,9 +1545,7 @@
       "instances": {
         "inst-1770406991391-sb92pme9y": {
           "activeJobs": 1,
-          "activeJobIds": [
-            "queuing-test-1770406991375-0"
-          ],
+          "activeJobIds": ["queuing-test-1770406991375-0"],
           "models": {
             "openai/gpt-5.2": {
               "rpm": 5,
@@ -1763,9 +1761,7 @@
       "instances": {
         "inst-1770406991391-sb92pme9y": {
           "activeJobs": 1,
-          "activeJobIds": [
-            "queuing-test-1770406991375-0"
-          ],
+          "activeJobIds": ["queuing-test-1770406991375-0"],
           "models": {
             "openai/gpt-5.2": {
               "rpm": 5,
@@ -1870,9 +1866,7 @@
         },
         "inst-1770406991401-8anlmn53d": {
           "activeJobs": 1,
-          "activeJobIds": [
-            "queuing-test-1770406991375-1"
-          ],
+          "activeJobIds": ["queuing-test-1770406991375-1"],
           "models": {
             "openai/gpt-5.2": {
               "rpm": 5,
@@ -1983,10 +1977,7 @@
       "instances": {
         "inst-1770406991391-sb92pme9y": {
           "activeJobs": 2,
-          "activeJobIds": [
-            "queuing-test-1770406991375-0",
-            "queuing-test-1770406991375-2"
-          ],
+          "activeJobIds": ["queuing-test-1770406991375-0", "queuing-test-1770406991375-2"],
           "models": {
             "openai/gpt-5.2": {
               "rpm": 10,
@@ -2091,10 +2082,7 @@
         },
         "inst-1770406991401-8anlmn53d": {
           "activeJobs": 2,
-          "activeJobIds": [
-            "queuing-test-1770406991375-1",
-            "queuing-test-1770406991375-3"
-          ],
+          "activeJobIds": ["queuing-test-1770406991375-1", "queuing-test-1770406991375-3"],
           "models": {
             "openai/gpt-5.2": {
               "rpm": 10,
@@ -2205,10 +2193,7 @@
       "instances": {
         "inst-1770406991391-sb92pme9y": {
           "activeJobs": 2,
-          "activeJobIds": [
-            "queuing-test-1770406991375-0",
-            "queuing-test-1770406991375-2"
-          ],
+          "activeJobIds": ["queuing-test-1770406991375-0", "queuing-test-1770406991375-2"],
           "models": {
             "openai/gpt-5.2": {
               "rpm": 10,
@@ -2313,10 +2298,7 @@
         },
         "inst-1770406991401-8anlmn53d": {
           "activeJobs": 2,
-          "activeJobIds": [
-            "queuing-test-1770406991375-1",
-            "queuing-test-1770406991375-3"
-          ],
+          "activeJobIds": ["queuing-test-1770406991375-1", "queuing-test-1770406991375-3"],
           "models": {
             "openai/gpt-5.2": {
               "rpm": 5,
@@ -2536,10 +2518,7 @@
         },
         "inst-1770406991401-8anlmn53d": {
           "activeJobs": 2,
-          "activeJobIds": [
-            "queuing-test-1770406991375-1",
-            "queuing-test-1770406991375-3"
-          ],
+          "activeJobIds": ["queuing-test-1770406991375-1", "queuing-test-1770406991375-3"],
           "models": {
             "openai/gpt-5.2": {
               "rpm": 10,

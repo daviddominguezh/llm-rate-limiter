@@ -743,9 +743,7 @@
       "instances": {
         "inst-1770406861122-lbt9xdn5b": {
           "activeJobs": 1,
-          "activeJobIds": [
-            "heavy-flex-a-1770406861112-0"
-          ],
+          "activeJobIds": ["heavy-flex-a-1770406861112-0"],
           "models": {
             "test-model": {
               "rpm": 0,
@@ -809,9 +807,7 @@
       "instances": {
         "inst-1770406861122-lbt9xdn5b": {
           "activeJobs": 1,
-          "activeJobIds": [
-            "heavy-flex-a-1770406861112-0"
-          ],
+          "activeJobIds": ["heavy-flex-a-1770406861112-0"],
           "models": {
             "test-model": {
               "rpm": 0,
@@ -840,9 +836,7 @@
         },
         "inst-1770406861128-3yhvglexg": {
           "activeJobs": 1,
-          "activeJobIds": [
-            "heavy-flex-a-1770406861112-1"
-          ],
+          "activeJobIds": ["heavy-flex-a-1770406861112-1"],
           "models": {
             "test-model": {
               "rpm": 0,
@@ -877,10 +871,7 @@
       "instances": {
         "inst-1770406861122-lbt9xdn5b": {
           "activeJobs": 2,
-          "activeJobIds": [
-            "heavy-flex-a-1770406861112-0",
-            "heavy-flex-a-1770406861112-2"
-          ],
+          "activeJobIds": ["heavy-flex-a-1770406861112-0", "heavy-flex-a-1770406861112-2"],
           "models": {
             "test-model": {
               "rpm": 0,
@@ -909,10 +900,7 @@
         },
         "inst-1770406861128-3yhvglexg": {
           "activeJobs": 2,
-          "activeJobIds": [
-            "heavy-flex-a-1770406861112-1",
-            "heavy-flex-a-1770406861112-3"
-          ],
+          "activeJobIds": ["heavy-flex-a-1770406861112-1", "heavy-flex-a-1770406861112-3"],
           "models": {
             "test-model": {
               "rpm": 0,
@@ -947,10 +935,7 @@
       "instances": {
         "inst-1770406861122-lbt9xdn5b": {
           "activeJobs": 2,
-          "activeJobIds": [
-            "heavy-flex-a-1770406861112-0",
-            "heavy-flex-a-1770406861112-2"
-          ],
+          "activeJobIds": ["heavy-flex-a-1770406861112-0", "heavy-flex-a-1770406861112-2"],
           "models": {
             "test-model": {
               "rpm": 0,
@@ -979,10 +964,7 @@
         },
         "inst-1770406861128-3yhvglexg": {
           "activeJobs": 2,
-          "activeJobIds": [
-            "heavy-flex-a-1770406861112-1",
-            "heavy-flex-a-1770406861112-3"
-          ],
+          "activeJobIds": ["heavy-flex-a-1770406861112-1", "heavy-flex-a-1770406861112-3"],
           "models": {
             "test-model": {
               "rpm": 0,
@@ -1050,10 +1032,7 @@
         },
         "inst-1770406861128-3yhvglexg": {
           "activeJobs": 2,
-          "activeJobIds": [
-            "heavy-flex-a-1770406861112-1",
-            "heavy-flex-a-1770406861112-3"
-          ],
+          "activeJobIds": ["heavy-flex-a-1770406861112-1", "heavy-flex-a-1770406861112-3"],
           "models": {
             "test-model": {
               "rpm": 0,
@@ -1678,10 +1657,7 @@
       "instances": {
         "inst-1770406861122-lbt9xdn5b": {
           "activeJobs": 2,
-          "activeJobIds": [
-            "heavy-flex-a-1770406861112-2",
-            "heavy-flex-a-1770406861112-4"
-          ],
+          "activeJobIds": ["heavy-flex-a-1770406861112-2", "heavy-flex-a-1770406861112-4"],
           "models": {
             "test-model": {
               "rpm": 0,
@@ -1710,10 +1686,7 @@
         },
         "inst-1770406861128-3yhvglexg": {
           "activeJobs": 2,
-          "activeJobIds": [
-            "heavy-flex-a-1770406861112-3",
-            "fixed-protected-1770406861112-3"
-          ],
+          "activeJobIds": ["heavy-flex-a-1770406861112-3", "fixed-protected-1770406861112-3"],
           "models": {
             "test-model": {
               "rpm": 0,
@@ -1748,10 +1721,7 @@
       "instances": {
         "inst-1770406861122-lbt9xdn5b": {
           "activeJobs": 2,
-          "activeJobIds": [
-            "heavy-flex-a-1770406861112-2",
-            "heavy-flex-a-1770406861112-4"
-          ],
+          "activeJobIds": ["heavy-flex-a-1770406861112-2", "heavy-flex-a-1770406861112-4"],
           "models": {
             "test-model": {
               "rpm": 0,
@@ -1780,10 +1750,7 @@
         },
         "inst-1770406861128-3yhvglexg": {
           "activeJobs": 2,
-          "activeJobIds": [
-            "heavy-flex-a-1770406861112-3",
-            "fixed-protected-1770406861112-3"
-          ],
+          "activeJobIds": ["heavy-flex-a-1770406861112-3", "fixed-protected-1770406861112-3"],
           "models": {
             "test-model": {
               "rpm": 0,
@@ -1818,10 +1785,7 @@
       "instances": {
         "inst-1770406861122-lbt9xdn5b": {
           "activeJobs": 2,
-          "activeJobIds": [
-            "heavy-flex-a-1770406861112-2",
-            "heavy-flex-a-1770406861112-4"
-          ],
+          "activeJobIds": ["heavy-flex-a-1770406861112-2", "heavy-flex-a-1770406861112-4"],
           "models": {
             "test-model": {
               "rpm": 0,
@@ -1850,9 +1814,7 @@
         },
         "inst-1770406861128-3yhvglexg": {
           "activeJobs": 1,
-          "activeJobIds": [
-            "heavy-flex-a-1770406861112-3"
-          ],
+          "activeJobIds": ["heavy-flex-a-1770406861112-3"],
           "models": {
             "test-model": {
               "rpm": 0,
@@ -1887,10 +1849,7 @@
       "instances": {
         "inst-1770406861122-lbt9xdn5b": {
           "activeJobs": 2,
-          "activeJobIds": [
-            "heavy-flex-a-1770406861112-2",
-            "heavy-flex-a-1770406861112-4"
-          ],
+          "activeJobIds": ["heavy-flex-a-1770406861112-2", "heavy-flex-a-1770406861112-4"],
           "models": {
             "test-model": {
               "rpm": 0,
@@ -1919,9 +1878,7 @@
         },
         "inst-1770406861128-3yhvglexg": {
           "activeJobs": 1,
-          "activeJobIds": [
-            "heavy-flex-a-1770406861112-3"
-          ],
+          "activeJobIds": ["heavy-flex-a-1770406861112-3"],
           "models": {
             "test-model": {
               "rpm": 0,
@@ -1956,10 +1913,7 @@
       "instances": {
         "inst-1770406861122-lbt9xdn5b": {
           "activeJobs": 2,
-          "activeJobIds": [
-            "heavy-flex-a-1770406861112-2",
-            "heavy-flex-a-1770406861112-4"
-          ],
+          "activeJobIds": ["heavy-flex-a-1770406861112-2", "heavy-flex-a-1770406861112-4"],
           "models": {
             "test-model": {
               "rpm": 0,
@@ -1988,9 +1942,7 @@
         },
         "inst-1770406861128-3yhvglexg": {
           "activeJobs": 1,
-          "activeJobIds": [
-            "heavy-flex-a-1770406861112-3"
-          ],
+          "activeJobIds": ["heavy-flex-a-1770406861112-3"],
           "models": {
             "test-model": {
               "rpm": 0,
@@ -2025,9 +1977,7 @@
       "instances": {
         "inst-1770406861122-lbt9xdn5b": {
           "activeJobs": 1,
-          "activeJobIds": [
-            "heavy-flex-a-1770406861112-4"
-          ],
+          "activeJobIds": ["heavy-flex-a-1770406861112-4"],
           "models": {
             "test-model": {
               "rpm": 0,
@@ -2056,9 +2006,7 @@
         },
         "inst-1770406861128-3yhvglexg": {
           "activeJobs": 1,
-          "activeJobIds": [
-            "heavy-flex-a-1770406861112-3"
-          ],
+          "activeJobIds": ["heavy-flex-a-1770406861112-3"],
           "models": {
             "test-model": {
               "rpm": 0,
@@ -2093,9 +2041,7 @@
       "instances": {
         "inst-1770406861122-lbt9xdn5b": {
           "activeJobs": 1,
-          "activeJobIds": [
-            "heavy-flex-a-1770406861112-4"
-          ],
+          "activeJobIds": ["heavy-flex-a-1770406861112-4"],
           "models": {
             "test-model": {
               "rpm": 0,

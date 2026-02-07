@@ -613,9 +613,7 @@
       "instances": {
         "inst-1770406752500-wayxhru2r": {
           "activeJobs": 1,
-          "activeJobIds": [
-            "fixed-basic-1770406752484-0"
-          ],
+          "activeJobIds": ["fixed-basic-1770406752484-0"],
           "models": {
             "test-model": {
               "rpm": 0,
@@ -644,9 +642,7 @@
         },
         "inst-1770406752508-kymo1mx2i": {
           "activeJobs": 1,
-          "activeJobIds": [
-            "fixed-basic-1770406752484-1"
-          ],
+          "activeJobIds": ["fixed-basic-1770406752484-1"],
           "models": {
             "test-model": {
               "rpm": 0,
@@ -681,10 +677,7 @@
       "instances": {
         "inst-1770406752500-wayxhru2r": {
           "activeJobs": 2,
-          "activeJobIds": [
-            "fixed-basic-1770406752484-0",
-            "fixed-basic-1770406752484-2"
-          ],
+          "activeJobIds": ["fixed-basic-1770406752484-0", "fixed-basic-1770406752484-2"],
           "models": {
             "test-model": {
               "rpm": 0,
@@ -713,10 +706,7 @@
         },
         "inst-1770406752508-kymo1mx2i": {
           "activeJobs": 2,
-          "activeJobIds": [
-            "fixed-basic-1770406752484-1",
-            "fixed-basic-1770406752484-3"
-          ],
+          "activeJobIds": ["fixed-basic-1770406752484-1", "fixed-basic-1770406752484-3"],
           "models": {
             "test-model": {
               "rpm": 0,
@@ -1339,9 +1329,7 @@
       "instances": {
         "inst-1770406752500-wayxhru2r": {
           "activeJobs": 1,
-          "activeJobIds": [
-            "flex-b-basic-1770406752484-1"
-          ],
+          "activeJobIds": ["flex-b-basic-1770406752484-1"],
           "models": {
             "test-model": {
               "rpm": 0,
@@ -1370,10 +1358,7 @@
         },
         "inst-1770406752508-kymo1mx2i": {
           "activeJobs": 2,
-          "activeJobIds": [
-            "flex-b-basic-1770406752484-0",
-            "flex-a-basic-1770406752484-0"
-          ],
+          "activeJobIds": ["flex-b-basic-1770406752484-0", "flex-a-basic-1770406752484-0"],
           "models": {
             "test-model": {
               "rpm": 0,
@@ -1437,9 +1422,7 @@
         },
         "inst-1770406752508-kymo1mx2i": {
           "activeJobs": 1,
-          "activeJobIds": [
-            "flex-a-basic-1770406752484-0"
-          ],
+          "activeJobIds": ["flex-a-basic-1770406752484-0"],
           "models": {
             "test-model": {
               "rpm": 0,
@@ -1503,9 +1486,7 @@
         },
         "inst-1770406752508-kymo1mx2i": {
           "activeJobs": 1,
-          "activeJobIds": [
-            "flex-a-basic-1770406752484-0"
-          ],
+          "activeJobIds": ["flex-a-basic-1770406752484-0"],
           "models": {
             "test-model": {
               "rpm": 0,
@@ -1569,9 +1550,7 @@
         },
         "inst-1770406752508-kymo1mx2i": {
           "activeJobs": 1,
-          "activeJobIds": [
-            "flex-a-basic-1770406752484-0"
-          ],
+          "activeJobIds": ["flex-a-basic-1770406752484-0"],
           "models": {
             "test-model": {
               "rpm": 0,

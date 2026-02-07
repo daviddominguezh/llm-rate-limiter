@@ -68,6 +68,11 @@ function transformSnapshot(
         point[`${shortId}_${modelKey}_rpmCapacity`] = modelState.rpm + modelState.rpmRemaining;
         point[`${shortId}_${modelKey}_tpm`] = modelState.tpm - modelState.tpmRemaining;
         point[`${shortId}_${modelKey}_tpmCapacity`] = modelState.tpm;
+        if (modelState.concurrent !== undefined) {
+          point[`${shortId}_${modelKey}_concurrent`] = modelState.concurrent;
+          const available = modelState.concurrentAvailable ?? 0;
+          point[`${shortId}_${modelKey}_concurrentCapacity`] = modelState.concurrent + available;
+        }
       }
 
       // Aggregate job types across all models

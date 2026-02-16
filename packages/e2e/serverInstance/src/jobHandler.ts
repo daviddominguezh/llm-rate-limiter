@@ -113,8 +113,14 @@ export const processJob = async (params: ProcessJobParams): Promise<JobResult<Jo
   const durationMs = getPayloadNumber(payload, 'durationMs') ?? ZERO;
   await simulateProcessingTime(jobId, durationMs);
 
-  // Handle reject scenario: return reject usage as actual (adjusts counters like success)
+  // Handle explicit reject: call reject() to trigger rate limiter's rejection path
   const rejectUsage = getRejectUsage(payload);
+  if (payload.shouldReject === true && rejectUsage !== null && params.reject !== undefined) {
+    params.reject(rejectUsage, { delegate: false });
+    return buildRejectResult(jobId, jobType, rejectUsage);
+  }
+
+  // Handle reject usage as actual (adjusts counters like success without failing)
   if (rejectUsage !== null) {
     return buildRejectResult(jobId, jobType, rejectUsage);
   }

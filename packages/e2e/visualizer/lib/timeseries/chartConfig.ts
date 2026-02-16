@@ -25,6 +25,8 @@ export const DATASETS: DatasetInfo[] = [
   { id: 'slots-evolve-concurrent', label: 'Slots Evolve Concurrent' },
   { id: 'model-escalation', label: 'Model Escalation' },
   { id: 'dummy', label: 'Dummy' },
+  { id: 'mega-comprehensive', label: 'Mega Comprehensive' },
+  { id: 'mega-comprehensive-distributed', label: 'Mega Comprehensive (Distributed)' },
 ];
 
 /** Default metrics to show when chart loads */

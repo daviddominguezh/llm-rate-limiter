@@ -46,6 +46,16 @@ async function loadDatasetJson(datasetId: string): Promise<TestData | null> {
       const m = await import('@llm-rate-limiter/e2e-test-results/src/data/dummy.json');
       return m.default as unknown as TestData;
     }
+    case 'mega-comprehensive': {
+      const m = await import('@llm-rate-limiter/e2e-test-results/src/data/mega-comprehensive.json');
+      return m.default as unknown as TestData;
+    }
+    case 'mega-comprehensive-distributed': {
+      const m = await import(
+        '@llm-rate-limiter/e2e-test-results/src/data/mega-comprehensive-distributed.json'
+      );
+      return m.default as unknown as TestData;
+    }
     default:
       return null;
   }

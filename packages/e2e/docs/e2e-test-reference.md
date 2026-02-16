@@ -63,6 +63,8 @@ This document provides detailed documentation for each e2e test file, including 
 | `highConcurrency.test.ts` | [Highest](./complexity-highest.md#46-high-concurrency) | [x] | [x] |
 | `edgeCases.test.ts` | [Highest](./complexity-highest.md#47-edge-cases) | [x] | [x] |
 | `edgeCasesAdditional.test.ts` | [Highest](./complexity-highest.md#47-edge-cases) | [x] | [x] |
+| `megaComprehensive.test.ts` | [Comprehensive](./complexity-comprehensive.md#50-mega-comprehensive-test) | [ ] | [ ] |
+| `megaComprehensiveAdditional.test.ts` | [Comprehensive](./complexity-comprehensive.md#50-mega-comprehensive-test) | [ ] | [ ] |
 
 ## Detailed Documentation by Complexity
 
@@ -72,3 +74,4 @@ This document provides detailed documentation for each e2e test file, including 
 - [Medium-High Complexity Tests](./complexity-medium-high.md) - Ratio adjustments, memory constraints, model escalation basics
 - [High Complexity Tests](./complexity-high.md) - Multi-model, distributed basics, time windows
 - [Highest Complexity Tests](./complexity-highest.md) - Advanced distributed scenarios, edge cases
+- [Comprehensive Mega Test](./complexity-comprehensive.md) - 50/52 features in a single 3-minute run

@@ -92,7 +92,8 @@ export type ConfigPresetName =
   | 'high-multiResource-mixedOverage'
   | 'medium-refund-partialRequest'
   | 'highest-edgeZeroFloorDiv'
-  | 'highest-memoryDistributed-lowTPM';
+  | 'highest-memoryDistributed-lowTPM'
+  | 'mega-comprehensive';
 
 /** Options for resetting an instance */
 export interface ResetOptions {

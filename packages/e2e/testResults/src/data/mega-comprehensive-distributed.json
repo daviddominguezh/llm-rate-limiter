@@ -1,0 +1,974 @@
+{
+  "metadata": {
+    "startTime": 1771264670472,
+    "endTime": 1771264681797,
+    "durationMs": 11325,
+    "instances": {
+      "http://localhost:4001": "inst-1771264665509-7qs14winz",
+      "http://localhost:4002": "inst-1771264668446-357hf65np"
+    }
+  },
+  "jobs": {},
+  "timeline": [
+    {
+      "t": 1771264670477,
+      "event": "connected",
+      "instanceId": "inst-1771264665509-7qs14winz"
+    },
+    {
+      "t": 1771264670478,
+      "event": "connected",
+      "instanceId": "inst-1771264668446-357hf65np"
+    },
+    {
+      "t": 1771264670619,
+      "event": "job:queued",
+      "instanceId": "inst-1771264665509-7qs14winz",
+      "jobId": "dist-a1",
+      "jobType": "standard"
+    },
+    {
+      "t": 1771264670623,
+      "event": "job:started",
+      "instanceId": "inst-1771264665509-7qs14winz",
+      "jobId": "dist-a1",
+      "jobType": "standard",
+      "modelId": "model-alpha"
+    },
+    {
+      "t": 1771264670631,
+      "event": "job:queued",
+      "instanceId": "inst-1771264668446-357hf65np",
+      "jobId": "dist-b1",
+      "jobType": "standard"
+    },
+    {
+      "t": 1771264670636,
+      "event": "job:started",
+      "instanceId": "inst-1771264668446-357hf65np",
+      "jobId": "dist-b1",
+      "jobType": "standard",
+      "modelId": "model-alpha"
+    },
+    {
+      "t": 1771264671626,
+      "event": "job:completed",
+      "instanceId": "inst-1771264665509-7qs14winz",
+      "jobId": "dist-a1",
+      "jobType": "standard",
+      "modelId": "model-alpha",
+      "data": {
+        "cost": 0,
+        "durationMs": 1007
+      }
+    },
+    {
+      "t": 1771264671640,
+      "event": "job:completed",
+      "instanceId": "inst-1771264668446-357hf65np",
+      "jobId": "dist-b1",
+      "jobType": "standard",
+      "modelId": "model-alpha",
+      "data": {
+        "cost": 0,
+        "durationMs": 1009
+      }
+    },
+    {
+      "t": 1771264671661,
+      "event": "job:queued",
+      "instanceId": "inst-1771264665509-7qs14winz",
+      "jobId": "wq-a1",
+      "jobType": "critical"
+    },
+    {
+      "t": 1771264671663,
+      "event": "job:queued",
+      "instanceId": "inst-1771264665509-7qs14winz",
+      "jobId": "wq-a2",
+      "jobType": "critical"
+    },
+    {
+      "t": 1771264671664,
+      "event": "job:started",
+      "instanceId": "inst-1771264665509-7qs14winz",
+      "jobId": "wq-a1",
+      "jobType": "critical",
+      "modelId": "model-alpha"
+    },
+    {
+      "t": 1771264671665,
+      "event": "job:queued",
+      "instanceId": "inst-1771264668446-357hf65np",
+      "jobId": "wq-b1",
+      "jobType": "critical"
+    },
+    {
+      "t": 1771264671667,
+      "event": "job:started",
+      "instanceId": "inst-1771264668446-357hf65np",
+      "jobId": "wq-b1",
+      "jobType": "critical",
+      "modelId": "model-alpha"
+    },
+    {
+      "t": 1771264674667,
+      "event": "job:completed",
+      "instanceId": "inst-1771264665509-7qs14winz",
+      "jobId": "wq-a1",
+      "jobType": "critical",
+      "modelId": "model-alpha",
+      "data": {
+        "cost": 0,
+        "durationMs": 3006
+      }
+    },
+    {
+      "t": 1771264674671,
+      "event": "job:started",
+      "instanceId": "inst-1771264665509-7qs14winz",
+      "jobId": "wq-a2",
+      "jobType": "critical",
+      "modelId": "model-alpha"
+    },
+    {
+      "t": 1771264674674,
+      "event": "job:completed",
+      "instanceId": "inst-1771264668446-357hf65np",
+      "jobId": "wq-b1",
+      "jobType": "critical",
+      "modelId": "model-alpha",
+      "data": {
+        "cost": 0,
+        "durationMs": 3009
+      }
+    },
+    {
+      "t": 1771264677674,
+      "event": "job:completed",
+      "instanceId": "inst-1771264665509-7qs14winz",
+      "jobId": "wq-a2",
+      "jobType": "critical",
+      "modelId": "model-alpha",
+      "data": {
+        "cost": 0,
+        "durationMs": 6011
+      }
+    },
+    {
+      "t": 1771264677733,
+      "event": "job:queued",
+      "instanceId": "inst-1771264665509-7qs14winz",
+      "jobId": "fill-alloc",
+      "jobType": "critical"
+    },
+    {
+      "t": 1771264677735,
+      "event": "job:started",
+      "instanceId": "inst-1771264665509-7qs14winz",
+      "jobId": "fill-alloc",
+      "jobType": "critical",
+      "modelId": "model-alpha"
+    },
+    {
+      "t": 1771264678236,
+      "event": "job:queued",
+      "instanceId": "inst-1771264665509-7qs14winz",
+      "jobId": "queued-alloc",
+      "jobType": "critical"
+    },
+    {
+      "t": 1771264680737,
+      "event": "job:completed",
+      "instanceId": "inst-1771264665509-7qs14winz",
+      "jobId": "fill-alloc",
+      "jobType": "critical",
+      "modelId": "model-alpha",
+      "data": {
+        "cost": 0,
+        "durationMs": 3004
+      }
+    },
+    {
+      "t": 1771264680737,
+      "event": "job:started",
+      "instanceId": "inst-1771264665509-7qs14winz",
+      "jobId": "queued-alloc",
+      "jobType": "critical",
+      "modelId": "model-alpha"
+    },
+    {
+      "t": 1771264681740,
+      "event": "job:completed",
+      "instanceId": "inst-1771264665509-7qs14winz",
+      "jobId": "queued-alloc",
+      "jobType": "critical",
+      "modelId": "model-alpha",
+      "data": {
+        "cost": 0,
+        "durationMs": 3504
+      }
+    }
+  ],
+  "snapshots": [
+    {
+      "timestamp": 1771264670582,
+      "trigger": "initial",
+      "instances": {
+        "inst-1771264665509-7qs14winz": {
+          "activeJobs": 0,
+          "activeJobIds": [],
+          "models": {
+            "model-gamma": {
+              "rpm": 0,
+              "rpmRemaining": 0,
+              "tpm": 0,
+              "tpmRemaining": 0,
+              "jobTypes": {
+                "critical": {
+                  "slots": 60,
+                  "totalSlots": 60,
+                  "inFlight": 0
+                },
+                "standard": {
+                  "slots": 45,
+                  "totalSlots": 45,
+                  "inFlight": 0
+                },
+                "lowPriority": {
+                  "slots": 15,
+                  "totalSlots": 15,
+                  "inFlight": 0
+                },
+                "fixedBatch": {
+                  "slots": 30,
+                  "totalSlots": 30,
+                  "inFlight": 0
+                }
+              }
+            },
+            "model-alpha": {
+              "rpm": 0,
+              "rpmRemaining": 0,
+              "tpm": 0,
+              "tpmRemaining": 0,
+              "jobTypes": {
+                "critical": {
+                  "slots": 0,
+                  "totalSlots": 0,
+                  "inFlight": 0
+                },
+                "standard": {
+                  "slots": 0,
+                  "totalSlots": 0,
+                  "inFlight": 0
+                },
+                "lowPriority": {
+                  "slots": 0,
+                  "totalSlots": 0,
+                  "inFlight": 0
+                },
+                "fixedBatch": {
+                  "slots": 0,
+                  "totalSlots": 0,
+                  "inFlight": 0
+                }
+              }
+            },
+            "model-beta": {
+              "rpm": 0,
+              "rpmRemaining": 0,
+              "tpm": 0,
+              "tpmRemaining": 0,
+              "jobTypes": {
+                "critical": {
+                  "slots": 6,
+                  "totalSlots": 6,
+                  "inFlight": 0
+                },
+                "standard": {
+                  "slots": 4,
+                  "totalSlots": 4,
+                  "inFlight": 0
+                },
+                "lowPriority": {
+                  "slots": 1,
+                  "totalSlots": 1,
+                  "inFlight": 0
+                },
+                "fixedBatch": {
+                  "slots": 3,
+                  "totalSlots": 3,
+                  "inFlight": 0
+                }
+              }
+            }
+          }
+        },
+        "inst-1771264668446-357hf65np": {
+          "activeJobs": 0,
+          "activeJobIds": [],
+          "models": {
+            "model-gamma": {
+              "rpm": 0,
+              "rpmRemaining": 0,
+              "tpm": 0,
+              "tpmRemaining": 0,
+              "jobTypes": {
+                "critical": {
+                  "slots": 60,
+                  "totalSlots": 60,
+                  "inFlight": 0
+                },
+                "standard": {
+                  "slots": 45,
+                  "totalSlots": 45,
+                  "inFlight": 0
+                },
+                "lowPriority": {
+                  "slots": 15,
+                  "totalSlots": 15,
+                  "inFlight": 0
+                },
+                "fixedBatch": {
+                  "slots": 30,
+                  "totalSlots": 30,
+                  "inFlight": 0
+                }
+              }
+            },
+            "model-alpha": {
+              "rpm": 0,
+              "rpmRemaining": 0,
+              "tpm": 0,
+              "tpmRemaining": 0,
+              "jobTypes": {
+                "critical": {
+                  "slots": 0,
+                  "totalSlots": 0,
+                  "inFlight": 0
+                },
+                "standard": {
+                  "slots": 0,
+                  "totalSlots": 0,
+                  "inFlight": 0
+                },
+                "lowPriority": {
+                  "slots": 0,
+                  "totalSlots": 0,
+                  "inFlight": 0
+                },
+                "fixedBatch": {
+                  "slots": 0,
+                  "totalSlots": 0,
+                  "inFlight": 0
+                }
+              }
+            },
+            "model-beta": {
+              "rpm": 0,
+              "rpmRemaining": 0,
+              "tpm": 0,
+              "tpmRemaining": 0,
+              "jobTypes": {
+                "critical": {
+                  "slots": 6,
+                  "totalSlots": 6,
+                  "inFlight": 0
+                },
+                "standard": {
+                  "slots": 4,
+                  "totalSlots": 4,
+                  "inFlight": 0
+                },
+                "lowPriority": {
+                  "slots": 1,
+                  "totalSlots": 1,
+                  "inFlight": 0
+                },
+                "fixedBatch": {
+                  "slots": 3,
+                  "totalSlots": 3,
+                  "inFlight": 0
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "timestamp": 1771264670597,
+      "trigger": "phase-6-complete",
+      "instances": {
+        "inst-1771264665509-7qs14winz": {
+          "activeJobs": 0,
+          "activeJobIds": [],
+          "models": {
+            "model-gamma": {
+              "rpm": 0,
+              "rpmRemaining": 0,
+              "tpm": 0,
+              "tpmRemaining": 0,
+              "jobTypes": {
+                "critical": {
+                  "slots": 60,
+                  "totalSlots": 60,
+                  "inFlight": 0
+                },
+                "standard": {
+                  "slots": 45,
+                  "totalSlots": 45,
+                  "inFlight": 0
+                },
+                "lowPriority": {
+                  "slots": 15,
+                  "totalSlots": 15,
+                  "inFlight": 0
+                },
+                "fixedBatch": {
+                  "slots": 30,
+                  "totalSlots": 30,
+                  "inFlight": 0
+                }
+              }
+            },
+            "model-alpha": {
+              "rpm": 0,
+              "rpmRemaining": 0,
+              "tpm": 0,
+              "tpmRemaining": 0,
+              "jobTypes": {
+                "critical": {
+                  "slots": 0,
+                  "totalSlots": 0,
+                  "inFlight": 0
+                },
+                "standard": {
+                  "slots": 0,
+                  "totalSlots": 0,
+                  "inFlight": 0
+                },
+                "lowPriority": {
+                  "slots": 0,
+                  "totalSlots": 0,
+                  "inFlight": 0
+                },
+                "fixedBatch": {
+                  "slots": 0,
+                  "totalSlots": 0,
+                  "inFlight": 0
+                }
+              }
+            },
+            "model-beta": {
+              "rpm": 0,
+              "rpmRemaining": 0,
+              "tpm": 0,
+              "tpmRemaining": 0,
+              "jobTypes": {
+                "critical": {
+                  "slots": 6,
+                  "totalSlots": 6,
+                  "inFlight": 0
+                },
+                "standard": {
+                  "slots": 4,
+                  "totalSlots": 4,
+                  "inFlight": 0
+                },
+                "lowPriority": {
+                  "slots": 1,
+                  "totalSlots": 1,
+                  "inFlight": 0
+                },
+                "fixedBatch": {
+                  "slots": 3,
+                  "totalSlots": 3,
+                  "inFlight": 0
+                }
+              }
+            }
+          }
+        },
+        "inst-1771264668446-357hf65np": {
+          "activeJobs": 0,
+          "activeJobIds": [],
+          "models": {
+            "model-gamma": {
+              "rpm": 0,
+              "rpmRemaining": 0,
+              "tpm": 0,
+              "tpmRemaining": 0,
+              "jobTypes": {
+                "critical": {
+                  "slots": 60,
+                  "totalSlots": 60,
+                  "inFlight": 0
+                },
+                "standard": {
+                  "slots": 45,
+                  "totalSlots": 45,
+                  "inFlight": 0
+                },
+                "lowPriority": {
+                  "slots": 15,
+                  "totalSlots": 15,
+                  "inFlight": 0
+                },
+                "fixedBatch": {
+                  "slots": 30,
+                  "totalSlots": 30,
+                  "inFlight": 0
+                }
+              }
+            },
+            "model-alpha": {
+              "rpm": 0,
+              "rpmRemaining": 0,
+              "tpm": 0,
+              "tpmRemaining": 0,
+              "jobTypes": {
+                "critical": {
+                  "slots": 0,
+                  "totalSlots": 0,
+                  "inFlight": 0
+                },
+                "standard": {
+                  "slots": 0,
+                  "totalSlots": 0,
+                  "inFlight": 0
+                },
+                "lowPriority": {
+                  "slots": 0,
+                  "totalSlots": 0,
+                  "inFlight": 0
+                },
+                "fixedBatch": {
+                  "slots": 0,
+                  "totalSlots": 0,
+                  "inFlight": 0
+                }
+              }
+            },
+            "model-beta": {
+              "rpm": 0,
+              "rpmRemaining": 0,
+              "tpm": 0,
+              "tpmRemaining": 0,
+              "jobTypes": {
+                "critical": {
+                  "slots": 6,
+                  "totalSlots": 6,
+                  "inFlight": 0
+                },
+                "standard": {
+                  "slots": 4,
+                  "totalSlots": 4,
+                  "inFlight": 0
+                },
+                "lowPriority": {
+                  "slots": 1,
+                  "totalSlots": 1,
+                  "inFlight": 0
+                },
+                "fixedBatch": {
+                  "slots": 3,
+                  "totalSlots": 3,
+                  "inFlight": 0
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "timestamp": 1771264677727,
+      "trigger": "phase-7-complete",
+      "instances": {
+        "inst-1771264665509-7qs14winz": {
+          "activeJobs": 0,
+          "activeJobIds": [],
+          "models": {
+            "model-gamma": {
+              "rpm": 0,
+              "rpmRemaining": 0,
+              "tpm": 0,
+              "tpmRemaining": 0,
+              "jobTypes": {
+                "critical": {
+                  "slots": 60,
+                  "totalSlots": 60,
+                  "inFlight": 0
+                },
+                "standard": {
+                  "slots": 45,
+                  "totalSlots": 45,
+                  "inFlight": 0
+                },
+                "lowPriority": {
+                  "slots": 15,
+                  "totalSlots": 15,
+                  "inFlight": 0
+                },
+                "fixedBatch": {
+                  "slots": 30,
+                  "totalSlots": 30,
+                  "inFlight": 0
+                }
+              }
+            },
+            "model-alpha": {
+              "rpm": 0,
+              "rpmRemaining": 0,
+              "tpm": 0,
+              "tpmRemaining": 0,
+              "jobTypes": {
+                "critical": {
+                  "slots": 0,
+                  "totalSlots": 0,
+                  "inFlight": 0
+                },
+                "standard": {
+                  "slots": 0,
+                  "totalSlots": 0,
+                  "inFlight": 0
+                },
+                "lowPriority": {
+                  "slots": 0,
+                  "totalSlots": 0,
+                  "inFlight": 0
+                },
+                "fixedBatch": {
+                  "slots": 0,
+                  "totalSlots": 0,
+                  "inFlight": 0
+                }
+              }
+            },
+            "model-beta": {
+              "rpm": 0,
+              "rpmRemaining": 0,
+              "tpm": 0,
+              "tpmRemaining": 0,
+              "jobTypes": {
+                "critical": {
+                  "slots": 6,
+                  "totalSlots": 6,
+                  "inFlight": 0
+                },
+                "standard": {
+                  "slots": 4,
+                  "totalSlots": 4,
+                  "inFlight": 0
+                },
+                "lowPriority": {
+                  "slots": 1,
+                  "totalSlots": 1,
+                  "inFlight": 0
+                },
+                "fixedBatch": {
+                  "slots": 3,
+                  "totalSlots": 3,
+                  "inFlight": 0
+                }
+              }
+            }
+          }
+        },
+        "inst-1771264668446-357hf65np": {
+          "activeJobs": 0,
+          "activeJobIds": [],
+          "models": {
+            "model-gamma": {
+              "rpm": 0,
+              "rpmRemaining": 0,
+              "tpm": 0,
+              "tpmRemaining": 0,
+              "jobTypes": {
+                "critical": {
+                  "slots": 60,
+                  "totalSlots": 60,
+                  "inFlight": 0
+                },
+                "standard": {
+                  "slots": 45,
+                  "totalSlots": 45,
+                  "inFlight": 0
+                },
+                "lowPriority": {
+                  "slots": 15,
+                  "totalSlots": 15,
+                  "inFlight": 0
+                },
+                "fixedBatch": {
+                  "slots": 30,
+                  "totalSlots": 30,
+                  "inFlight": 0
+                }
+              }
+            },
+            "model-alpha": {
+              "rpm": 0,
+              "rpmRemaining": 0,
+              "tpm": 0,
+              "tpmRemaining": 0,
+              "jobTypes": {
+                "critical": {
+                  "slots": 0,
+                  "totalSlots": 0,
+                  "inFlight": 0
+                },
+                "standard": {
+                  "slots": 0,
+                  "totalSlots": 0,
+                  "inFlight": 0
+                },
+                "lowPriority": {
+                  "slots": 0,
+                  "totalSlots": 0,
+                  "inFlight": 0
+                },
+                "fixedBatch": {
+                  "slots": 0,
+                  "totalSlots": 0,
+                  "inFlight": 0
+                }
+              }
+            },
+            "model-beta": {
+              "rpm": 0,
+              "rpmRemaining": 0,
+              "tpm": 0,
+              "tpmRemaining": 0,
+              "jobTypes": {
+                "critical": {
+                  "slots": 6,
+                  "totalSlots": 6,
+                  "inFlight": 0
+                },
+                "standard": {
+                  "slots": 4,
+                  "totalSlots": 4,
+                  "inFlight": 0
+                },
+                "lowPriority": {
+                  "slots": 1,
+                  "totalSlots": 1,
+                  "inFlight": 0
+                },
+                "fixedBatch": {
+                  "slots": 3,
+                  "totalSlots": 3,
+                  "inFlight": 0
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "timestamp": 1771264681783,
+      "trigger": "phase-8-complete",
+      "instances": {
+        "inst-1771264665509-7qs14winz": {
+          "activeJobs": 0,
+          "activeJobIds": [],
+          "models": {
+            "model-gamma": {
+              "rpm": 0,
+              "rpmRemaining": 0,
+              "tpm": 0,
+              "tpmRemaining": 0,
+              "jobTypes": {
+                "critical": {
+                  "slots": 120,
+                  "totalSlots": 60,
+                  "inFlight": 0
+                },
+                "standard": {
+                  "slots": 90,
+                  "totalSlots": 45,
+                  "inFlight": 0
+                },
+                "lowPriority": {
+                  "slots": 30,
+                  "totalSlots": 15,
+                  "inFlight": 0
+                },
+                "fixedBatch": {
+                  "slots": 60,
+                  "totalSlots": 30,
+                  "inFlight": 0
+                }
+              }
+            },
+            "model-alpha": {
+              "rpm": 0,
+              "rpmRemaining": 0,
+              "tpm": 0,
+              "tpmRemaining": 0,
+              "jobTypes": {
+                "critical": {
+                  "slots": 1,
+                  "totalSlots": 0,
+                  "inFlight": 0
+                },
+                "standard": {
+                  "slots": 0,
+                  "totalSlots": 0,
+                  "inFlight": 0
+                },
+                "lowPriority": {
+                  "slots": 0,
+                  "totalSlots": 0,
+                  "inFlight": 0
+                },
+                "fixedBatch": {
+                  "slots": 0,
+                  "totalSlots": 0,
+                  "inFlight": 0
+                }
+              }
+            },
+            "model-beta": {
+              "rpm": 0,
+              "rpmRemaining": 0,
+              "tpm": 0,
+              "tpmRemaining": 0,
+              "jobTypes": {
+                "critical": {
+                  "slots": 12,
+                  "totalSlots": 6,
+                  "inFlight": 0
+                },
+                "standard": {
+                  "slots": 9,
+                  "totalSlots": 4,
+                  "inFlight": 0
+                },
+                "lowPriority": {
+                  "slots": 3,
+                  "totalSlots": 1,
+                  "inFlight": 0
+                },
+                "fixedBatch": {
+                  "slots": 6,
+                  "totalSlots": 3,
+                  "inFlight": 0
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "timestamp": 1771264681790,
+      "trigger": "final",
+      "instances": {
+        "inst-1771264665509-7qs14winz": {
+          "activeJobs": 0,
+          "activeJobIds": [],
+          "models": {
+            "model-gamma": {
+              "rpm": 0,
+              "rpmRemaining": 0,
+              "tpm": 0,
+              "tpmRemaining": 0,
+              "jobTypes": {
+                "critical": {
+                  "slots": 120,
+                  "totalSlots": 60,
+                  "inFlight": 0
+                },
+                "standard": {
+                  "slots": 90,
+                  "totalSlots": 45,
+                  "inFlight": 0
+                },
+                "lowPriority": {
+                  "slots": 30,
+                  "totalSlots": 15,
+                  "inFlight": 0
+                },
+                "fixedBatch": {
+                  "slots": 60,
+                  "totalSlots": 30,
+                  "inFlight": 0
+                }
+              }
+            },
+            "model-alpha": {
+              "rpm": 0,
+              "rpmRemaining": 0,
+              "tpm": 0,
+              "tpmRemaining": 0,
+              "jobTypes": {
+                "critical": {
+                  "slots": 1,
+                  "totalSlots": 0,
+                  "inFlight": 0
+                },
+                "standard": {
+                  "slots": 0,
+                  "totalSlots": 0,
+                  "inFlight": 0
+                },
+                "lowPriority": {
+                  "slots": 0,
+                  "totalSlots": 0,
+                  "inFlight": 0
+                },
+                "fixedBatch": {
+                  "slots": 0,
+                  "totalSlots": 0,
+                  "inFlight": 0
+                }
+              }
+            },
+            "model-beta": {
+              "rpm": 0,
+              "rpmRemaining": 0,
+              "tpm": 0,
+              "tpmRemaining": 0,
+              "jobTypes": {
+                "critical": {
+                  "slots": 12,
+                  "totalSlots": 6,
+                  "inFlight": 0
+                },
+                "standard": {
+                  "slots": 9,
+                  "totalSlots": 4,
+                  "inFlight": 0
+                },
+                "lowPriority": {
+                  "slots": 3,
+                  "totalSlots": 1,
+                  "inFlight": 0
+                },
+                "fixedBatch": {
+                  "slots": 6,
+                  "totalSlots": 3,
+                  "inFlight": 0
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  ],
+  "summary": {
+    "totalJobs": 0,
+    "completed": 0,
+    "failed": 0,
+    "avgDurationMs": null,
+    "byInstance": {},
+    "byJobType": {},
+    "byModel": {}
+  }
+}

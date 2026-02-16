@@ -76,6 +76,7 @@ import {
   mediumMaxWaitTwoModelConfig,
   mediumQueueConcurrentConfig,
 } from './mediumTestConfigs.js';
+import { megaComprehensiveConfig } from './megaComprehensiveConfig.js';
 import {
   memCalcBasicConfig,
   memCalcDistributedWinsConfig,
@@ -198,6 +199,7 @@ export const configPresets: Record<ConfigPresetName, RateLimiterPreset> = {
   'medium-refund-partialRequest': mediumRefundPartialRequestConfig,
   'highest-edgeZeroFloorDiv': highestEdgeZeroFloorDivConfig,
   'highest-memoryDistributed-lowTPM': highestMemoryDistributedLowTpmConfig,
+  'mega-comprehensive': megaComprehensiveConfig,
 };
 
 /** Get a configuration preset by name */

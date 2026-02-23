@@ -17,6 +17,7 @@ export const CHART_COLORS = [
 
 /** Available test result datasets */
 export const DATASETS: DatasetInfo[] = [
+  { id: 'mega-comprehensive', label: 'Mega Comprehensive' },
   { id: 'capacity-plus-one', label: 'Capacity Plus One' },
   { id: 'exact-capacity', label: 'Exact Capacity' },
   { id: 'rate-limit-queuing', label: 'Rate Limit Queuing' },
@@ -25,8 +26,6 @@ export const DATASETS: DatasetInfo[] = [
   { id: 'slots-evolve-concurrent', label: 'Slots Evolve Concurrent' },
   { id: 'model-escalation', label: 'Model Escalation' },
   { id: 'dummy', label: 'Dummy' },
-  { id: 'mega-comprehensive', label: 'Mega Comprehensive' },
-  { id: 'mega-comprehensive-distributed', label: 'Mega Comprehensive (Distributed)' },
 ];
 
 /** Default metrics to show when chart loads */

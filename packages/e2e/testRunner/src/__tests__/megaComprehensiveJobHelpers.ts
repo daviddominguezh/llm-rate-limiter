@@ -1,8 +1,17 @@
 /**
  * Job submission, result polling, and payload factories for mega comprehensive test.
  */
+import type { TestDataCollector } from '../testDataCollector.js';
 import { sleep } from '../testUtils.js';
 import { HTTP_OK } from './megaComprehensiveHelpers.js';
+
+// Module-level collector for recording job submissions
+let activeCollector: TestDataCollector | null = null;
+
+/** Set the active data collector for job recording. Pass null to clear. */
+export const setActiveCollector = (collector: TestDataCollector | null): void => {
+  activeCollector = collector;
+};
 
 // Polling constants
 const POLL_INTERVAL_MS = 100;
@@ -70,14 +79,16 @@ export interface JobResultResponse {
 const isJobResult = (value: unknown): value is JobResultResponse =>
   typeof value === 'object' && value !== null && 'jobId' in value && 'status' in value;
 
-/** Submit a job to a specific port */
+/** Submit a job to a specific port and record it in the active collector */
 export const submitJob = async (
   port: number,
   jobId: string,
   jobType: string,
   payload: JobPayload
 ): Promise<number> => {
-  const response = await fetch(`http://localhost:${port}/api/queue-job`, {
+  const targetUrl = `http://localhost:${String(port)}`;
+  activeCollector?.recordJobSent(jobId, jobType, targetUrl);
+  const response = await fetch(`${targetUrl}/api/queue-job`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ jobId, jobType, payload }),

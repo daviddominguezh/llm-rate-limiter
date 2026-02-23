@@ -1,15 +1,21 @@
 /**
  * Data collection helpers for mega comprehensive test.
  * Uses TestDataCollector + StateAggregator standalone for visualizer JSON output.
+ *
+ * Matches the suiteRunner.ts pattern:
+ * - Event-triggered snapshots on job:queued/completed/failed
+ * - Periodic snapshots every SNAPSHOT_INTERVAL_MS
+ * - Proper collector.recordJobSent() via setActiveCollector in job helpers
  */
 import { mkdir } from 'node:fs/promises';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 import { StateAggregator } from '../stateAggregator.js';
-import { TestDataCollector } from '../testDataCollector.js';
+import { type JobEvent, TestDataCollector } from '../testDataCollector.js';
 
 const JSON_INDENT_SPACES = 2;
+const SNAPSHOT_INTERVAL_MS = 500;
 
 /** Get the output directory for test result data */
 const getOutputDir = (): string => {
@@ -24,13 +30,65 @@ const getOutputPath = (suiteName: string): string => join(getOutputDir(), `${sui
 export interface DataCollectionContext {
   collector: TestDataCollector;
   aggregator: StateAggregator;
+  stopPeriodicSnapshots: () => void;
 }
 
-/** Create data collection context for given instance URLs */
+/** Create event-triggered snapshot handler (like suiteRunner's createCollector) */
+const createEventSnapshotHandler =
+  (
+    aggregator: StateAggregator,
+    collectorRef: { current: TestDataCollector | null }
+  ): ((event: JobEvent) => void) =>
+  (event: JobEvent): void => {
+    if (collectorRef.current === null) {
+      return;
+    }
+    const { current: collector } = collectorRef;
+    aggregator
+      .fetchState()
+      .then((states) => {
+        collector.addSnapshot(`${event.type}:${event.jobId}`, states);
+      })
+      .catch(() => {
+        // Ignore snapshot errors during rapid event processing
+      });
+  };
+
+/** Start periodic snapshot polling, returns a stop function */
+const startPeriodicSnapshots = (
+  aggregator: StateAggregator,
+  collector: TestDataCollector,
+  intervalMs: number
+): { stop: () => void } => {
+  const intervalId = setInterval(() => {
+    aggregator
+      .fetchState()
+      .then((states) => {
+        collector.addSnapshot('periodic', states);
+      })
+      .catch(() => {
+        // Ignore periodic snapshot errors
+      });
+  }, intervalMs);
+
+  return {
+    stop: () => {
+      clearInterval(intervalId);
+    },
+  };
+};
+
+/** Create data collection context with event-triggered + periodic snapshots */
 export const createDataCollection = (instanceUrls: string[]): DataCollectionContext => {
   const aggregator = new StateAggregator(instanceUrls);
-  const collector = new TestDataCollector(instanceUrls);
-  return { collector, aggregator };
+  const collectorRef: { current: TestDataCollector | null } = { current: null };
+  const onJobEvent = createEventSnapshotHandler(aggregator, collectorRef);
+  const collector = new TestDataCollector(instanceUrls, { onJobEvent });
+  collectorRef.current = collector;
+
+  const periodic = startPeriodicSnapshots(aggregator, collector, SNAPSHOT_INTERVAL_MS);
+
+  return { collector, aggregator, stopPeriodicSnapshots: periodic.stop };
 };
 
 /** Start data collection: SSE listeners + initial snapshot */
@@ -48,6 +106,8 @@ export const addSnapshot = async (ctx: DataCollectionContext, label: string): Pr
 
 /** Stop collection and save to JSON file */
 export const saveAndStopCollection = async (ctx: DataCollectionContext, suiteName: string): Promise<void> => {
+  ctx.stopPeriodicSnapshots();
+
   const finalStates = await ctx.aggregator.fetchState();
   ctx.collector.addSnapshot('final', finalStates);
   ctx.collector.stopEventListeners();

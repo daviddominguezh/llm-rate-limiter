@@ -50,19 +50,13 @@ async function loadDatasetJson(datasetId: string): Promise<TestData | null> {
       const m = await import('@llm-rate-limiter/e2e-test-results/src/data/mega-comprehensive.json');
       return m.default as unknown as TestData;
     }
-    case 'mega-comprehensive-distributed': {
-      const m = await import(
-        '@llm-rate-limiter/e2e-test-results/src/data/mega-comprehensive-distributed.json'
-      );
-      return m.default as unknown as TestData;
-    }
     default:
       return null;
   }
 }
 
 export function TimeseriesPage() {
-  const [selectedDataset, setSelectedDataset] = useState('capacity-plus-one');
+  const [selectedDataset, setSelectedDataset] = useState('mega-comprehensive');
   const [testData, setTestData] = useState<TestData | null>(null);
   const [chartData, setChartData] = useState<CapacityDataPoint[]>([]);
   const [instances, setInstances] = useState<InstanceConfig[]>([]);

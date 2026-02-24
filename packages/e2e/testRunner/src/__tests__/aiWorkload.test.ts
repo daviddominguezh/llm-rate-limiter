@@ -67,8 +67,14 @@ const EXPECTED_QUEUED = 1;
 // Phase 3: 13 brainstorm + 1 summarize to trigger brainstorm ratio recovery
 const BRAINSTORM_FILL_COUNT = 13;
 const PHASE3_SUMMARIZE_COUNT = 1;
-// Submit Phase 3 jobs 3s before Phase 2 summarize jobs finish (overlap)
+// Submit Phase 3 jobs 3s before the earliest Phase 2 summarize can finish (guarantees overlap)
 const PHASE3_EARLY_SUBMIT_MS = 3000;
+// Time from Phase 3 submit until all Phase 2 summarize drain (worst case):
+// MAX_DURATION - (MIN_DURATION - EARLY_SUBMIT) = 35s - 17s = 18s
+const PHASE2_DRAIN_FROM_P3_MS =
+  SUMMARIZE_MAX_DURATION_MS - SUMMARIZE_MIN_DURATION_MS + PHASE3_EARLY_SUBMIT_MS;
+// Total wait after Phase 3 submit: drain + ratio adjustment cycle
+const PHASE3_RATIO_WAIT_MS = PHASE2_DRAIN_FROM_P3_MS + RATIO_CHECK_DELAY_MS;
 
 let ctx: DataCollectionContext | null = null;
 
@@ -114,9 +120,9 @@ describe('Real World - Slot Allocation & Ratio Adjustment', () => {
   it(
     'Phase 3: Brainstorm recovery after load shift',
     async () => {
-      await sleep(SUMMARIZE_MAX_DURATION_MS - RATIO_CHECK_DELAY_MS - PHASE3_EARLY_SUBMIT_MS);
+      await sleep(SUMMARIZE_MIN_DURATION_MS - RATIO_CHECK_DELAY_MS - PHASE3_EARLY_SUBMIT_MS);
       await submitMixedBatch();
-      await sleep(RATIO_CHECK_DELAY_MS);
+      await sleep(PHASE3_RATIO_WAIT_MS);
       await verifyRecoveredRatios();
     },
     PHASE_TIMEOUT_MS

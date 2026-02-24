@@ -139,7 +139,7 @@ pool[model].totalSlots = floor((remainingCapacity / estimatedResourcePerJob) / i
 
 Where:
 - `remainingCapacity`: Global limit minus global actual usage (from dynamicLimits)
-- `estimatedResourcePerJob`: Weighted average or maximum across job types
+- `estimatedResourcePerJob`: Arithmetic mean of `estimatedUsedTokens` (or `estimatedNumberOfRequests`) across all job types. The mean is ratio-agnostic by design — Redis does not know job type ratios (they are local to each instance and change dynamically), so a weighted average is not possible at this layer.
 - `instanceCount`: Number of active instances
 
 ## Local Distribution

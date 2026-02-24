@@ -7,8 +7,10 @@ import { validateCapacityInvariant } from './capacityInvariantCheck.js';
 import {
   applyMemoryConstraints,
   applyRatioTransfers,
+  buildCapacityParams,
   calculateDonorContributions,
   collectLoadMetrics,
+  collectPrimaryModelLoadMetrics,
   createInitialStates,
   identifyDonors,
   identifyReceivers,
@@ -18,11 +20,7 @@ import {
   recalculateAllocatedSlots,
 } from './jobTypeHelpers.js';
 import type { JobTypeManager, JobTypeManagerConfig, QueuedWaiter } from './jobTypeManagerTypes.js';
-import {
-  type HasCapacityParams,
-  type ModelJobTypeTracker,
-  createModelJobTypeTracker,
-} from './jobTypeModelState.js';
+import { type ModelJobTypeTracker, createModelJobTypeTracker } from './jobTypeModelState.js';
 import { calculateModelJobTypeSlots } from './jobTypeSlotCalculation.js';
 import {
   calculateInitialRatios,
@@ -35,18 +33,6 @@ export type { JobTypeManager, JobTypeManagerConfig, OnRatioChangeCallback } from
 const ZERO = 0;
 const ONE = 1;
 
-/** Build HasCapacityParams for a model+jobType, returns undefined if job type unknown */
-const buildCapacityParams = (
-  states: Map<string, JobTypeState>,
-  minCapacity: number,
-  modelId: string,
-  jobTypeId: string
-): HasCapacityParams | undefined => {
-  const state = states.get(jobTypeId);
-  if (state === undefined) return undefined;
-  return { modelId, jobTypeId, ratio: state.currentRatio, resources: state.resources, minCapacity };
-};
-
 /**
  * Internal implementation of JobTypeManager.
  */
@@ -58,6 +44,7 @@ class JobTypeManagerImpl implements JobTypeManager {
   private readonly onRatioChange?: (ratios: Map<string, number>) => void;
   private readonly onModelCapacityRelease?: (modelId: string) => void;
   private readonly modelState: ModelJobTypeTracker;
+  private readonly primaryModelId: string | undefined;
   private totalCapacity: number = ZERO;
   private memoryCapacityKB: number | null = null;
   private lastAdjustmentTime: number | null = null;
@@ -69,10 +56,12 @@ class JobTypeManagerImpl implements JobTypeManager {
       resourceEstimationsPerJob,
       ratioAdjustmentConfig,
       label,
+      primaryModelId,
       onLog,
       onRatioChange,
       onModelCapacityRelease,
     } = managerConfig;
+    this.primaryModelId = primaryModelId;
     this.onRatioChange = onRatioChange;
     this.onModelCapacityRelease = onModelCapacityRelease;
     this.modelState = createModelJobTypeTracker();
@@ -240,9 +229,21 @@ class JobTypeManagerImpl implements JobTypeManager {
     return this.totalCapacity;
   }
 
+  private collectMetricsForAdjustment(): ReturnType<typeof collectLoadMetrics> {
+    if (this.primaryModelId !== undefined && this.modelState.hasModelPools()) {
+      return collectPrimaryModelLoadMetrics(
+        this.states,
+        this.modelState,
+        this.primaryModelId,
+        this.config.minJobTypeCapacity
+      );
+    }
+    return collectLoadMetrics(this.states);
+  }
+
   adjustRatios(): void {
     this.releasesSinceAdjustment = ZERO;
-    const metrics = collectLoadMetrics(this.states);
+    const metrics = this.collectMetricsForAdjustment();
     const donors = identifyDonors(metrics, this.config.lowLoadThreshold, this.config.minRatio);
     const receivers = identifyReceivers(metrics, this.config.highLoadThreshold);
     if (donors.length === ZERO || receivers.length === ZERO) {

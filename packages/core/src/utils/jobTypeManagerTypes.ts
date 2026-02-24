@@ -20,6 +20,8 @@ export interface JobTypeManagerConfig {
   resourceEstimationsPerJob: ResourceEstimationsPerJob;
   ratioAdjustmentConfig?: RatioAdjustmentConfig;
   label: string;
+  /** First model in escalation order — ratio adjustment uses this model's load instead of aggregate */
+  primaryModelId?: string;
   onLog?: LogFn;
   /** Called when ratios are adjusted (for memory manager to resize pools) */
   onRatioChange?: OnRatioChangeCallback;

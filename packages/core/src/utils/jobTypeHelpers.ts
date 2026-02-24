@@ -9,6 +9,7 @@ import {
   type RatioAdjustmentConfig,
   type ResourceEstimationsPerJob,
 } from '../jobTypeTypes.js';
+import type { HasCapacityParams, ModelJobTypeTracker } from './jobTypeModelState.js';
 
 const ZERO = 0;
 const ONE = 1;
@@ -74,6 +75,39 @@ export const collectLoadMetrics = (states: Map<string, JobTypeState>): JobTypeLo
       flexible: state.flexible,
       currentRatio: state.currentRatio,
     });
+  }
+
+  return metrics;
+};
+
+/** Build HasCapacityParams for a model+jobType, returns undefined if job type unknown */
+export const buildCapacityParams = (
+  states: Map<string, JobTypeState>,
+  minCapacity: number,
+  modelId: string,
+  jobTypeId: string
+): HasCapacityParams | undefined => {
+  const state = states.get(jobTypeId);
+  if (state === undefined) return undefined;
+  return { modelId, jobTypeId, ratio: state.currentRatio, resources: state.resources, minCapacity };
+};
+
+/** Collect load metrics using only the primary model's per-jobType inFlight/allocated */
+export const collectPrimaryModelLoadMetrics = (
+  states: Map<string, JobTypeState>,
+  modelState: ModelJobTypeTracker,
+  primaryModelId: string,
+  minCapacity: number
+): JobTypeLoadMetrics[] => {
+  const metrics: JobTypeLoadMetrics[] = [];
+
+  for (const [jobTypeId, state] of states) {
+    const params = buildCapacityParams(states, minCapacity, primaryModelId, jobTypeId);
+    const allocated = params === undefined ? ZERO : modelState.getAllocated(params);
+    const inFlight = params === undefined ? ZERO : modelState.getInFlight(params);
+    const loadPercentage = allocated > ZERO ? inFlight / allocated : ZERO;
+
+    metrics.push({ jobTypeId, loadPercentage, flexible: state.flexible, currentRatio: state.currentRatio });
   }
 
   return metrics;

@@ -59,7 +59,7 @@ import {
 } from './rateLimiterOperations.js';
 
 const INITIAL_INSTANCE_COUNT = 0;
-
+const FIRST_MODEL_INDEX = 0;
 /** Internal LLM Rate Limiter class. Use createLLMRateLimiter factory instead. */
 export class LLMRateLimiter implements LLMRateLimiterInstance<string> {
   private readonly config: LLMRateLimiterConfig;
@@ -116,6 +116,7 @@ export class LLMRateLimiter implements LLMRateLimiterInstance<string> {
       resourceEstimationsPerJob: this.resourceEstimationsPerJob,
       ratioAdjustmentConfig: config.ratioAdjustmentConfig,
       label: this.label,
+      primaryModelId: this.escalationOrder[FIRST_MODEL_INDEX],
       onLog: config.onLog,
       onRatioChange: (ratios) => {
         this.memoryManager?.setRatios(ratios);
@@ -143,7 +144,6 @@ export class LLMRateLimiter implements LLMRateLimiterInstance<string> {
   private log(message: string, data?: Record<string, unknown>): void {
     this.config.onLog?.(`${this.label}| ${message}`, data);
   }
-
   getInstanceId(): string {
     return this.instanceId;
   }
@@ -174,7 +174,6 @@ export class LLMRateLimiter implements LLMRateLimiterInstance<string> {
       });
     }
   }
-
   private applyAllocationToLimiters(allocation: AllocationInfo): void {
     const { instanceCount, dynamicLimits, pools } = allocation;
     if (shouldSkipAllocation(instanceCount, this.currentInstanceCount)) {
@@ -204,7 +203,6 @@ export class LLMRateLimiter implements LLMRateLimiterInstance<string> {
     this.log('JTM capacity updated', { totalPoolSlots, jtmStats: this.jobTypeManager?.getStats() });
     notifyAllModelLimiters(this.modelLimiters);
   }
-
   private getModelLimiter(modelId: string): InternalLimiterInstance {
     return getModelLimiterById(this.modelLimiters, modelId);
   }

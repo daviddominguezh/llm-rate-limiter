@@ -203,6 +203,8 @@ export interface CreateOptionalJobTypeManagerOptions {
   resourceEstimationsPerJob: ResourceEstimationsPerJob | undefined;
   ratioAdjustmentConfig: RatioAdjustmentConfig | undefined;
   label: string;
+  /** First model in escalation order — ratio adjustment uses this model's load */
+  primaryModelId?: string;
   onLog?: LogFn;
   onRatioChange?: (ratios: Map<string, number>) => void;
   /** Called when a per-model slot is released (for notifying model limiter wait queues) */
@@ -219,6 +221,7 @@ export const createOptionalJobTypeManager = (
     resourceEstimationsPerJob,
     ratioAdjustmentConfig,
     label,
+    primaryModelId,
     onLog,
     onRatioChange,
     onModelCapacityRelease,
@@ -228,6 +231,7 @@ export const createOptionalJobTypeManager = (
     resourceEstimationsPerJob,
     ratioAdjustmentConfig,
     label,
+    primaryModelId,
     onLog,
     onRatioChange,
     onModelCapacityRelease,

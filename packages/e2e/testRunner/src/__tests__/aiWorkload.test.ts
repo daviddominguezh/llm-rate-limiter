@@ -2,7 +2,7 @@
  * Test suite: AI Workload (distributed test with data collection)
  *
  * Phase 1: Verify initial per-model per-job-type slot allocation (1 instance)
- * Phase 2: Fill Summarize capacity on Anthropic, verify queuing and ratio adjustment
+ * Phase 2: Overload Summarize (7 jobs, 9 slots = 78% load), verify queuing and ratio adjustment
  */
 import {
   AFTER_ALL_TIMEOUT_MS,
@@ -28,6 +28,7 @@ import {
   RATIO_CHECK_DELAY_MS,
   RUNNING_CHECK_DELAY_MS,
   countQueuedByType,
+  countRunningByType,
   fetchActiveJobs,
   fetchStats,
   getJobTypeInFlight,
@@ -40,8 +41,10 @@ import {
 } from './aiWorkloadHelpers.js';
 import {
   type DataCollectionContext,
-  SUMMARIZE_JOB_DURATION_MS,
+  SUMMARIZE_MAX_DURATION_MS,
+  SUMMARIZE_MIN_DURATION_MS,
   createDataCollection,
+  randomDurationMs,
   saveAndStopCollection,
   setActiveCollector,
   startDataCollection,
@@ -49,8 +52,10 @@ import {
 } from './aiWorkloadJobHelpers.js';
 
 const SUITE_NAME = 'ai-workload';
+// 4 summarize jobs: 3 run on Anthropic (3 slots), 1 queued waiting for maxWaitMS before escalation
+// Primary model (Anthropic) load = 3/3 = 100% → triggers ratio adjustment
 const SUMMARIZE_FILL_COUNT = 4;
-const EXPECTED_RUNNING = 3;
+const EXPECTED_IN_FLIGHT = 4;
 const EXPECTED_QUEUED = 1;
 
 let ctx: DataCollectionContext | null = null;
@@ -132,12 +137,12 @@ async function submitSummarizeJobs(): Promise<void> {
   await Promise.all(submissions);
 }
 
-/** Verify 3 running and 1 queued summarize jobs */
+/** Verify 3 running on Anthropic + 1 queued (waiting for maxWaitMS before escalation) */
 async function verifyRunningAndQueued(): Promise<void> {
   const stats = await fetchStats(PORT_A);
   const jtStats = getJobTypeStats(stats);
   const inFlight = getJobTypeInFlight(jtStats, JOB_SUMMARIZE);
-  expect(inFlight).toBe(EXPECTED_RUNNING);
+  expect(inFlight).toBe(EXPECTED_IN_FLIGHT);
 
   const activeJobs = await fetchActiveJobs(PORT_A);
   const queued = countQueuedByType(activeJobs.activeJobs, JOB_SUMMARIZE);

@@ -1,0 +1,1517 @@
+{
+  "metadata": {
+    "startTime": 1771941101395,
+    "endTime": 1771941109578,
+    "durationMs": 8183,
+    "instances": {
+      "http://localhost:4001": "inst-1771941099182-7pj5lnh3v"
+    }
+  },
+  "jobs": {
+    "summarize-0": {
+      "jobId": "summarize-0",
+      "jobType": "summarize",
+      "sentAt": 1771941101504,
+      "instanceId": "inst-1771941099182-7pj5lnh3v",
+      "events": [
+        {
+          "type": "queued",
+          "timestamp": 1771941101514
+        },
+        {
+          "type": "started",
+          "timestamp": 1771941101516,
+          "modelId": "anthropic-opus-4.6"
+        }
+      ],
+      "status": "started",
+      "modelUsed": null,
+      "totalCost": 0,
+      "queueDurationMs": 2,
+      "processingDurationMs": null,
+      "totalDurationMs": null,
+      "usage": []
+    },
+    "summarize-1": {
+      "jobId": "summarize-1",
+      "jobType": "summarize",
+      "sentAt": 1771941101504,
+      "instanceId": "inst-1771941099182-7pj5lnh3v",
+      "events": [
+        {
+          "type": "queued",
+          "timestamp": 1771941101516
+        },
+        {
+          "type": "started",
+          "timestamp": 1771941101517,
+          "modelId": "anthropic-opus-4.6"
+        }
+      ],
+      "status": "started",
+      "modelUsed": null,
+      "totalCost": 0,
+      "queueDurationMs": 1,
+      "processingDurationMs": null,
+      "totalDurationMs": null,
+      "usage": []
+    },
+    "summarize-2": {
+      "jobId": "summarize-2",
+      "jobType": "summarize",
+      "sentAt": 1771941101505,
+      "instanceId": "inst-1771941099182-7pj5lnh3v",
+      "events": [
+        {
+          "type": "queued",
+          "timestamp": 1771941101518
+        },
+        {
+          "type": "started",
+          "timestamp": 1771941104187,
+          "modelId": "anthropic-opus-4.6"
+        }
+      ],
+      "status": "started",
+      "modelUsed": null,
+      "totalCost": 0,
+      "queueDurationMs": 2669,
+      "processingDurationMs": null,
+      "totalDurationMs": null,
+      "usage": []
+    },
+    "summarize-3": {
+      "jobId": "summarize-3",
+      "jobType": "summarize",
+      "sentAt": 1771941101505,
+      "instanceId": "inst-1771941099182-7pj5lnh3v",
+      "events": [
+        {
+          "type": "queued",
+          "timestamp": 1771941101517
+        },
+        {
+          "type": "started",
+          "timestamp": 1771941101517,
+          "modelId": "anthropic-opus-4.6"
+        }
+      ],
+      "status": "started",
+      "modelUsed": null,
+      "totalCost": 0,
+      "queueDurationMs": 0,
+      "processingDurationMs": null,
+      "totalDurationMs": null,
+      "usage": []
+    }
+  },
+  "timeline": [
+    {
+      "t": 1771941101398,
+      "event": "connected",
+      "instanceId": "inst-1771941099182-7pj5lnh3v"
+    },
+    {
+      "t": 1771941101514,
+      "event": "job:queued",
+      "instanceId": "inst-1771941099182-7pj5lnh3v",
+      "jobId": "summarize-0",
+      "jobType": "summarize"
+    },
+    {
+      "t": 1771941101516,
+      "event": "job:started",
+      "instanceId": "inst-1771941099182-7pj5lnh3v",
+      "jobId": "summarize-0",
+      "jobType": "summarize",
+      "modelId": "anthropic-opus-4.6"
+    },
+    {
+      "t": 1771941101516,
+      "event": "job:queued",
+      "instanceId": "inst-1771941099182-7pj5lnh3v",
+      "jobId": "summarize-1",
+      "jobType": "summarize"
+    },
+    {
+      "t": 1771941101517,
+      "event": "job:queued",
+      "instanceId": "inst-1771941099182-7pj5lnh3v",
+      "jobId": "summarize-3",
+      "jobType": "summarize"
+    },
+    {
+      "t": 1771941101517,
+      "event": "job:started",
+      "instanceId": "inst-1771941099182-7pj5lnh3v",
+      "jobId": "summarize-1",
+      "jobType": "summarize",
+      "modelId": "anthropic-opus-4.6"
+    },
+    {
+      "t": 1771941101517,
+      "event": "job:started",
+      "instanceId": "inst-1771941099182-7pj5lnh3v",
+      "jobId": "summarize-3",
+      "jobType": "summarize",
+      "modelId": "anthropic-opus-4.6"
+    },
+    {
+      "t": 1771941101518,
+      "event": "job:queued",
+      "instanceId": "inst-1771941099182-7pj5lnh3v",
+      "jobId": "summarize-2",
+      "jobType": "summarize"
+    },
+    {
+      "t": 1771941104187,
+      "event": "job:started",
+      "instanceId": "inst-1771941099182-7pj5lnh3v",
+      "jobId": "summarize-2",
+      "jobType": "summarize",
+      "modelId": "anthropic-opus-4.6"
+    }
+  ],
+  "snapshots": [
+    {
+      "timestamp": 1771941101499,
+      "trigger": "initial",
+      "instances": {
+        "inst-1771941099182-7pj5lnh3v": {
+          "activeJobs": 0,
+          "activeJobIds": [],
+          "models": {
+            "openai-gpt-5.2": {
+              "rpm": 0,
+              "rpmRemaining": 0,
+              "tpm": 0,
+              "tpmRemaining": 0,
+              "jobTypes": {
+                "brainstorm": {
+                  "slots": 9,
+                  "totalSlots": 9,
+                  "inFlight": 0
+                },
+                "summarize": {
+                  "slots": 6,
+                  "totalSlots": 6,
+                  "inFlight": 0
+                },
+                "analyzePDF": {
+                  "slots": 10,
+                  "totalSlots": 10,
+                  "inFlight": 0
+                }
+              }
+            },
+            "anthropic-opus-4.6": {
+              "rpm": 0,
+              "rpmRemaining": 0,
+              "tpm": 0,
+              "tpmRemaining": 0,
+              "jobTypes": {
+                "brainstorm": {
+                  "slots": 4,
+                  "totalSlots": 4,
+                  "inFlight": 0
+                },
+                "summarize": {
+                  "slots": 3,
+                  "totalSlots": 3,
+                  "inFlight": 0
+                },
+                "analyzePDF": {
+                  "slots": 4,
+                  "totalSlots": 4,
+                  "inFlight": 0
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "timestamp": 1771941101515,
+      "trigger": "job:queued:summarize-0",
+      "instances": {
+        "inst-1771941099182-7pj5lnh3v": {
+          "activeJobs": 1,
+          "activeJobIds": [
+            "summarize-0"
+          ],
+          "models": {
+            "anthropic-opus-4.6": {
+              "rpm": 1,
+              "rpmRemaining": 999,
+              "tpm": 30000,
+              "tpmRemaining": 420000,
+              "jobTypes": {
+                "brainstorm": {
+                  "slots": 4,
+                  "totalSlots": 4,
+                  "inFlight": 0
+                },
+                "summarize": {
+                  "slots": 3,
+                  "totalSlots": 3,
+                  "inFlight": 1
+                },
+                "analyzePDF": {
+                  "slots": 4,
+                  "totalSlots": 4,
+                  "inFlight": 0
+                }
+              }
+            },
+            "openai-gpt-5.2": {
+              "rpm": 0,
+              "rpmRemaining": 0,
+              "tpm": 0,
+              "tpmRemaining": 0,
+              "jobTypes": {
+                "brainstorm": {
+                  "slots": 9,
+                  "totalSlots": 9,
+                  "inFlight": 0
+                },
+                "summarize": {
+                  "slots": 6,
+                  "totalSlots": 6,
+                  "inFlight": 0
+                },
+                "analyzePDF": {
+                  "slots": 10,
+                  "totalSlots": 10,
+                  "inFlight": 0
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "timestamp": 1771941101517,
+      "trigger": "job:queued:summarize-1",
+      "instances": {
+        "inst-1771941099182-7pj5lnh3v": {
+          "activeJobs": 3,
+          "activeJobIds": [
+            "summarize-0",
+            "summarize-1",
+            "summarize-3"
+          ],
+          "models": {
+            "anthropic-opus-4.6": {
+              "rpm": 3,
+              "rpmRemaining": 997,
+              "tpm": 90000,
+              "tpmRemaining": 360000,
+              "jobTypes": {
+                "brainstorm": {
+                  "slots": 4,
+                  "totalSlots": 4,
+                  "inFlight": 0
+                },
+                "summarize": {
+                  "slots": 3,
+                  "totalSlots": 3,
+                  "inFlight": 3
+                },
+                "analyzePDF": {
+                  "slots": 4,
+                  "totalSlots": 4,
+                  "inFlight": 0
+                }
+              }
+            },
+            "openai-gpt-5.2": {
+              "rpm": 0,
+              "rpmRemaining": 0,
+              "tpm": 0,
+              "tpmRemaining": 0,
+              "jobTypes": {
+                "brainstorm": {
+                  "slots": 9,
+                  "totalSlots": 9,
+                  "inFlight": 0
+                },
+                "summarize": {
+                  "slots": 6,
+                  "totalSlots": 6,
+                  "inFlight": 0
+                },
+                "analyzePDF": {
+                  "slots": 10,
+                  "totalSlots": 10,
+                  "inFlight": 0
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "timestamp": 1771941101518,
+      "trigger": "job:queued:summarize-3",
+      "instances": {
+        "inst-1771941099182-7pj5lnh3v": {
+          "activeJobs": 4,
+          "activeJobIds": [
+            "summarize-0",
+            "summarize-1",
+            "summarize-3",
+            "summarize-2"
+          ],
+          "models": {
+            "anthropic-opus-4.6": {
+              "rpm": 3,
+              "rpmRemaining": 997,
+              "tpm": 90000,
+              "tpmRemaining": 360000,
+              "jobTypes": {
+                "brainstorm": {
+                  "slots": 4,
+                  "totalSlots": 4,
+                  "inFlight": 0
+                },
+                "summarize": {
+                  "slots": 3,
+                  "totalSlots": 3,
+                  "inFlight": 3
+                },
+                "analyzePDF": {
+                  "slots": 4,
+                  "totalSlots": 4,
+                  "inFlight": 0
+                }
+              }
+            },
+            "openai-gpt-5.2": {
+              "rpm": 0,
+              "rpmRemaining": 0,
+              "tpm": 0,
+              "tpmRemaining": 0,
+              "jobTypes": {
+                "brainstorm": {
+                  "slots": 9,
+                  "totalSlots": 9,
+                  "inFlight": 0
+                },
+                "summarize": {
+                  "slots": 6,
+                  "totalSlots": 6,
+                  "inFlight": 0
+                },
+                "analyzePDF": {
+                  "slots": 10,
+                  "totalSlots": 10,
+                  "inFlight": 0
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "timestamp": 1771941101518,
+      "trigger": "job:queued:summarize-2",
+      "instances": {
+        "inst-1771941099182-7pj5lnh3v": {
+          "activeJobs": 4,
+          "activeJobIds": [
+            "summarize-0",
+            "summarize-1",
+            "summarize-3",
+            "summarize-2"
+          ],
+          "models": {
+            "anthropic-opus-4.6": {
+              "rpm": 3,
+              "rpmRemaining": 997,
+              "tpm": 90000,
+              "tpmRemaining": 360000,
+              "jobTypes": {
+                "brainstorm": {
+                  "slots": 4,
+                  "totalSlots": 4,
+                  "inFlight": 0
+                },
+                "summarize": {
+                  "slots": 3,
+                  "totalSlots": 3,
+                  "inFlight": 3
+                },
+                "analyzePDF": {
+                  "slots": 4,
+                  "totalSlots": 4,
+                  "inFlight": 0
+                }
+              }
+            },
+            "openai-gpt-5.2": {
+              "rpm": 0,
+              "rpmRemaining": 0,
+              "tpm": 0,
+              "tpmRemaining": 0,
+              "jobTypes": {
+                "brainstorm": {
+                  "slots": 9,
+                  "totalSlots": 9,
+                  "inFlight": 0
+                },
+                "summarize": {
+                  "slots": 6,
+                  "totalSlots": 6,
+                  "inFlight": 0
+                },
+                "analyzePDF": {
+                  "slots": 10,
+                  "totalSlots": 10,
+                  "inFlight": 0
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "timestamp": 1771941101896,
+      "trigger": "periodic",
+      "instances": {
+        "inst-1771941099182-7pj5lnh3v": {
+          "activeJobs": 4,
+          "activeJobIds": [
+            "summarize-0",
+            "summarize-1",
+            "summarize-3",
+            "summarize-2"
+          ],
+          "models": {
+            "anthropic-opus-4.6": {
+              "rpm": 3,
+              "rpmRemaining": 997,
+              "tpm": 90000,
+              "tpmRemaining": 360000,
+              "jobTypes": {
+                "brainstorm": {
+                  "slots": 4,
+                  "totalSlots": 4,
+                  "inFlight": 0
+                },
+                "summarize": {
+                  "slots": 3,
+                  "totalSlots": 3,
+                  "inFlight": 3
+                },
+                "analyzePDF": {
+                  "slots": 4,
+                  "totalSlots": 4,
+                  "inFlight": 0
+                }
+              }
+            },
+            "openai-gpt-5.2": {
+              "rpm": 0,
+              "rpmRemaining": 0,
+              "tpm": 0,
+              "tpmRemaining": 0,
+              "jobTypes": {
+                "brainstorm": {
+                  "slots": 9,
+                  "totalSlots": 9,
+                  "inFlight": 0
+                },
+                "summarize": {
+                  "slots": 6,
+                  "totalSlots": 6,
+                  "inFlight": 0
+                },
+                "analyzePDF": {
+                  "slots": 10,
+                  "totalSlots": 10,
+                  "inFlight": 0
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "timestamp": 1771941102396,
+      "trigger": "periodic",
+      "instances": {
+        "inst-1771941099182-7pj5lnh3v": {
+          "activeJobs": 4,
+          "activeJobIds": [
+            "summarize-0",
+            "summarize-1",
+            "summarize-3",
+            "summarize-2"
+          ],
+          "models": {
+            "anthropic-opus-4.6": {
+              "rpm": 3,
+              "rpmRemaining": 997,
+              "tpm": 90000,
+              "tpmRemaining": 360000,
+              "jobTypes": {
+                "brainstorm": {
+                  "slots": 4,
+                  "totalSlots": 4,
+                  "inFlight": 0
+                },
+                "summarize": {
+                  "slots": 3,
+                  "totalSlots": 3,
+                  "inFlight": 3
+                },
+                "analyzePDF": {
+                  "slots": 4,
+                  "totalSlots": 4,
+                  "inFlight": 0
+                }
+              }
+            },
+            "openai-gpt-5.2": {
+              "rpm": 0,
+              "rpmRemaining": 0,
+              "tpm": 0,
+              "tpmRemaining": 0,
+              "jobTypes": {
+                "brainstorm": {
+                  "slots": 9,
+                  "totalSlots": 9,
+                  "inFlight": 0
+                },
+                "summarize": {
+                  "slots": 6,
+                  "totalSlots": 6,
+                  "inFlight": 0
+                },
+                "analyzePDF": {
+                  "slots": 10,
+                  "totalSlots": 10,
+                  "inFlight": 0
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "timestamp": 1771941102898,
+      "trigger": "periodic",
+      "instances": {
+        "inst-1771941099182-7pj5lnh3v": {
+          "activeJobs": 4,
+          "activeJobIds": [
+            "summarize-0",
+            "summarize-1",
+            "summarize-3",
+            "summarize-2"
+          ],
+          "models": {
+            "anthropic-opus-4.6": {
+              "rpm": 3,
+              "rpmRemaining": 997,
+              "tpm": 90000,
+              "tpmRemaining": 360000,
+              "jobTypes": {
+                "brainstorm": {
+                  "slots": 4,
+                  "totalSlots": 4,
+                  "inFlight": 0
+                },
+                "summarize": {
+                  "slots": 3,
+                  "totalSlots": 3,
+                  "inFlight": 3
+                },
+                "analyzePDF": {
+                  "slots": 4,
+                  "totalSlots": 4,
+                  "inFlight": 0
+                }
+              }
+            },
+            "openai-gpt-5.2": {
+              "rpm": 0,
+              "rpmRemaining": 0,
+              "tpm": 0,
+              "tpmRemaining": 0,
+              "jobTypes": {
+                "brainstorm": {
+                  "slots": 9,
+                  "totalSlots": 9,
+                  "inFlight": 0
+                },
+                "summarize": {
+                  "slots": 6,
+                  "totalSlots": 6,
+                  "inFlight": 0
+                },
+                "analyzePDF": {
+                  "slots": 10,
+                  "totalSlots": 10,
+                  "inFlight": 0
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "timestamp": 1771941103398,
+      "trigger": "periodic",
+      "instances": {
+        "inst-1771941099182-7pj5lnh3v": {
+          "activeJobs": 4,
+          "activeJobIds": [
+            "summarize-0",
+            "summarize-1",
+            "summarize-3",
+            "summarize-2"
+          ],
+          "models": {
+            "anthropic-opus-4.6": {
+              "rpm": 3,
+              "rpmRemaining": 997,
+              "tpm": 90000,
+              "tpmRemaining": 360000,
+              "jobTypes": {
+                "brainstorm": {
+                  "slots": 4,
+                  "totalSlots": 4,
+                  "inFlight": 0
+                },
+                "summarize": {
+                  "slots": 3,
+                  "totalSlots": 3,
+                  "inFlight": 3
+                },
+                "analyzePDF": {
+                  "slots": 4,
+                  "totalSlots": 4,
+                  "inFlight": 0
+                }
+              }
+            },
+            "openai-gpt-5.2": {
+              "rpm": 0,
+              "rpmRemaining": 0,
+              "tpm": 0,
+              "tpmRemaining": 0,
+              "jobTypes": {
+                "brainstorm": {
+                  "slots": 9,
+                  "totalSlots": 9,
+                  "inFlight": 0
+                },
+                "summarize": {
+                  "slots": 6,
+                  "totalSlots": 6,
+                  "inFlight": 0
+                },
+                "analyzePDF": {
+                  "slots": 10,
+                  "totalSlots": 10,
+                  "inFlight": 0
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "timestamp": 1771941103899,
+      "trigger": "periodic",
+      "instances": {
+        "inst-1771941099182-7pj5lnh3v": {
+          "activeJobs": 4,
+          "activeJobIds": [
+            "summarize-0",
+            "summarize-1",
+            "summarize-3",
+            "summarize-2"
+          ],
+          "models": {
+            "anthropic-opus-4.6": {
+              "rpm": 3,
+              "rpmRemaining": 997,
+              "tpm": 90000,
+              "tpmRemaining": 360000,
+              "jobTypes": {
+                "brainstorm": {
+                  "slots": 4,
+                  "totalSlots": 4,
+                  "inFlight": 0
+                },
+                "summarize": {
+                  "slots": 3,
+                  "totalSlots": 3,
+                  "inFlight": 3
+                },
+                "analyzePDF": {
+                  "slots": 4,
+                  "totalSlots": 4,
+                  "inFlight": 0
+                }
+              }
+            },
+            "openai-gpt-5.2": {
+              "rpm": 0,
+              "rpmRemaining": 0,
+              "tpm": 0,
+              "tpmRemaining": 0,
+              "jobTypes": {
+                "brainstorm": {
+                  "slots": 9,
+                  "totalSlots": 9,
+                  "inFlight": 0
+                },
+                "summarize": {
+                  "slots": 6,
+                  "totalSlots": 6,
+                  "inFlight": 0
+                },
+                "analyzePDF": {
+                  "slots": 10,
+                  "totalSlots": 10,
+                  "inFlight": 0
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "timestamp": 1771941104399,
+      "trigger": "periodic",
+      "instances": {
+        "inst-1771941099182-7pj5lnh3v": {
+          "activeJobs": 4,
+          "activeJobIds": [
+            "summarize-0",
+            "summarize-1",
+            "summarize-3",
+            "summarize-2"
+          ],
+          "models": {
+            "anthropic-opus-4.6": {
+              "rpm": 4,
+              "rpmRemaining": 996,
+              "tpm": 120000,
+              "tpmRemaining": 330000,
+              "jobTypes": {
+                "brainstorm": {
+                  "slots": 1,
+                  "totalSlots": 1,
+                  "inFlight": 0
+                },
+                "summarize": {
+                  "slots": 6,
+                  "totalSlots": 6,
+                  "inFlight": 4
+                },
+                "analyzePDF": {
+                  "slots": 4,
+                  "totalSlots": 4,
+                  "inFlight": 0
+                }
+              }
+            },
+            "openai-gpt-5.2": {
+              "rpm": 0,
+              "rpmRemaining": 0,
+              "tpm": 0,
+              "tpmRemaining": 0,
+              "jobTypes": {
+                "brainstorm": {
+                  "slots": 3,
+                  "totalSlots": 3,
+                  "inFlight": 0
+                },
+                "summarize": {
+                  "slots": 13,
+                  "totalSlots": 13,
+                  "inFlight": 0
+                },
+                "analyzePDF": {
+                  "slots": 10,
+                  "totalSlots": 10,
+                  "inFlight": 0
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "timestamp": 1771941104900,
+      "trigger": "periodic",
+      "instances": {
+        "inst-1771941099182-7pj5lnh3v": {
+          "activeJobs": 4,
+          "activeJobIds": [
+            "summarize-0",
+            "summarize-1",
+            "summarize-3",
+            "summarize-2"
+          ],
+          "models": {
+            "anthropic-opus-4.6": {
+              "rpm": 4,
+              "rpmRemaining": 996,
+              "tpm": 120000,
+              "tpmRemaining": 330000,
+              "jobTypes": {
+                "brainstorm": {
+                  "slots": 1,
+                  "totalSlots": 1,
+                  "inFlight": 0
+                },
+                "summarize": {
+                  "slots": 6,
+                  "totalSlots": 6,
+                  "inFlight": 4
+                },
+                "analyzePDF": {
+                  "slots": 4,
+                  "totalSlots": 4,
+                  "inFlight": 0
+                }
+              }
+            },
+            "openai-gpt-5.2": {
+              "rpm": 0,
+              "rpmRemaining": 0,
+              "tpm": 0,
+              "tpmRemaining": 0,
+              "jobTypes": {
+                "brainstorm": {
+                  "slots": 3,
+                  "totalSlots": 3,
+                  "inFlight": 0
+                },
+                "summarize": {
+                  "slots": 13,
+                  "totalSlots": 13,
+                  "inFlight": 0
+                },
+                "analyzePDF": {
+                  "slots": 10,
+                  "totalSlots": 10,
+                  "inFlight": 0
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "timestamp": 1771941105400,
+      "trigger": "periodic",
+      "instances": {
+        "inst-1771941099182-7pj5lnh3v": {
+          "activeJobs": 4,
+          "activeJobIds": [
+            "summarize-0",
+            "summarize-1",
+            "summarize-3",
+            "summarize-2"
+          ],
+          "models": {
+            "anthropic-opus-4.6": {
+              "rpm": 4,
+              "rpmRemaining": 996,
+              "tpm": 120000,
+              "tpmRemaining": 330000,
+              "jobTypes": {
+                "brainstorm": {
+                  "slots": 1,
+                  "totalSlots": 1,
+                  "inFlight": 0
+                },
+                "summarize": {
+                  "slots": 6,
+                  "totalSlots": 6,
+                  "inFlight": 4
+                },
+                "analyzePDF": {
+                  "slots": 4,
+                  "totalSlots": 4,
+                  "inFlight": 0
+                }
+              }
+            },
+            "openai-gpt-5.2": {
+              "rpm": 0,
+              "rpmRemaining": 0,
+              "tpm": 0,
+              "tpmRemaining": 0,
+              "jobTypes": {
+                "brainstorm": {
+                  "slots": 3,
+                  "totalSlots": 3,
+                  "inFlight": 0
+                },
+                "summarize": {
+                  "slots": 13,
+                  "totalSlots": 13,
+                  "inFlight": 0
+                },
+                "analyzePDF": {
+                  "slots": 10,
+                  "totalSlots": 10,
+                  "inFlight": 0
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "timestamp": 1771941105902,
+      "trigger": "periodic",
+      "instances": {
+        "inst-1771941099182-7pj5lnh3v": {
+          "activeJobs": 4,
+          "activeJobIds": [
+            "summarize-0",
+            "summarize-1",
+            "summarize-3",
+            "summarize-2"
+          ],
+          "models": {
+            "anthropic-opus-4.6": {
+              "rpm": 4,
+              "rpmRemaining": 996,
+              "tpm": 120000,
+              "tpmRemaining": 330000,
+              "jobTypes": {
+                "brainstorm": {
+                  "slots": 1,
+                  "totalSlots": 1,
+                  "inFlight": 0
+                },
+                "summarize": {
+                  "slots": 6,
+                  "totalSlots": 6,
+                  "inFlight": 4
+                },
+                "analyzePDF": {
+                  "slots": 4,
+                  "totalSlots": 4,
+                  "inFlight": 0
+                }
+              }
+            },
+            "openai-gpt-5.2": {
+              "rpm": 0,
+              "rpmRemaining": 0,
+              "tpm": 0,
+              "tpmRemaining": 0,
+              "jobTypes": {
+                "brainstorm": {
+                  "slots": 3,
+                  "totalSlots": 3,
+                  "inFlight": 0
+                },
+                "summarize": {
+                  "slots": 13,
+                  "totalSlots": 13,
+                  "inFlight": 0
+                },
+                "analyzePDF": {
+                  "slots": 10,
+                  "totalSlots": 10,
+                  "inFlight": 0
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "timestamp": 1771941106401,
+      "trigger": "periodic",
+      "instances": {
+        "inst-1771941099182-7pj5lnh3v": {
+          "activeJobs": 4,
+          "activeJobIds": [
+            "summarize-0",
+            "summarize-1",
+            "summarize-3",
+            "summarize-2"
+          ],
+          "models": {
+            "anthropic-opus-4.6": {
+              "rpm": 4,
+              "rpmRemaining": 996,
+              "tpm": 120000,
+              "tpmRemaining": 330000,
+              "jobTypes": {
+                "brainstorm": {
+                  "slots": 1,
+                  "totalSlots": 1,
+                  "inFlight": 0
+                },
+                "summarize": {
+                  "slots": 6,
+                  "totalSlots": 6,
+                  "inFlight": 4
+                },
+                "analyzePDF": {
+                  "slots": 4,
+                  "totalSlots": 4,
+                  "inFlight": 0
+                }
+              }
+            },
+            "openai-gpt-5.2": {
+              "rpm": 0,
+              "rpmRemaining": 0,
+              "tpm": 0,
+              "tpmRemaining": 0,
+              "jobTypes": {
+                "brainstorm": {
+                  "slots": 3,
+                  "totalSlots": 3,
+                  "inFlight": 0
+                },
+                "summarize": {
+                  "slots": 13,
+                  "totalSlots": 13,
+                  "inFlight": 0
+                },
+                "analyzePDF": {
+                  "slots": 10,
+                  "totalSlots": 10,
+                  "inFlight": 0
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "timestamp": 1771941106903,
+      "trigger": "periodic",
+      "instances": {
+        "inst-1771941099182-7pj5lnh3v": {
+          "activeJobs": 4,
+          "activeJobIds": [
+            "summarize-0",
+            "summarize-1",
+            "summarize-3",
+            "summarize-2"
+          ],
+          "models": {
+            "anthropic-opus-4.6": {
+              "rpm": 4,
+              "rpmRemaining": 996,
+              "tpm": 120000,
+              "tpmRemaining": 330000,
+              "jobTypes": {
+                "brainstorm": {
+                  "slots": 1,
+                  "totalSlots": 1,
+                  "inFlight": 0
+                },
+                "summarize": {
+                  "slots": 6,
+                  "totalSlots": 6,
+                  "inFlight": 4
+                },
+                "analyzePDF": {
+                  "slots": 4,
+                  "totalSlots": 4,
+                  "inFlight": 0
+                }
+              }
+            },
+            "openai-gpt-5.2": {
+              "rpm": 0,
+              "rpmRemaining": 0,
+              "tpm": 0,
+              "tpmRemaining": 0,
+              "jobTypes": {
+                "brainstorm": {
+                  "slots": 3,
+                  "totalSlots": 3,
+                  "inFlight": 0
+                },
+                "summarize": {
+                  "slots": 13,
+                  "totalSlots": 13,
+                  "inFlight": 0
+                },
+                "analyzePDF": {
+                  "slots": 10,
+                  "totalSlots": 10,
+                  "inFlight": 0
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "timestamp": 1771941107402,
+      "trigger": "periodic",
+      "instances": {
+        "inst-1771941099182-7pj5lnh3v": {
+          "activeJobs": 4,
+          "activeJobIds": [
+            "summarize-0",
+            "summarize-1",
+            "summarize-3",
+            "summarize-2"
+          ],
+          "models": {
+            "anthropic-opus-4.6": {
+              "rpm": 4,
+              "rpmRemaining": 996,
+              "tpm": 120000,
+              "tpmRemaining": 330000,
+              "jobTypes": {
+                "brainstorm": {
+                  "slots": 1,
+                  "totalSlots": 1,
+                  "inFlight": 0
+                },
+                "summarize": {
+                  "slots": 6,
+                  "totalSlots": 6,
+                  "inFlight": 4
+                },
+                "analyzePDF": {
+                  "slots": 4,
+                  "totalSlots": 4,
+                  "inFlight": 0
+                }
+              }
+            },
+            "openai-gpt-5.2": {
+              "rpm": 0,
+              "rpmRemaining": 0,
+              "tpm": 0,
+              "tpmRemaining": 0,
+              "jobTypes": {
+                "brainstorm": {
+                  "slots": 3,
+                  "totalSlots": 3,
+                  "inFlight": 0
+                },
+                "summarize": {
+                  "slots": 13,
+                  "totalSlots": 13,
+                  "inFlight": 0
+                },
+                "analyzePDF": {
+                  "slots": 10,
+                  "totalSlots": 10,
+                  "inFlight": 0
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "timestamp": 1771941107903,
+      "trigger": "periodic",
+      "instances": {
+        "inst-1771941099182-7pj5lnh3v": {
+          "activeJobs": 4,
+          "activeJobIds": [
+            "summarize-0",
+            "summarize-1",
+            "summarize-3",
+            "summarize-2"
+          ],
+          "models": {
+            "anthropic-opus-4.6": {
+              "rpm": 4,
+              "rpmRemaining": 996,
+              "tpm": 120000,
+              "tpmRemaining": 330000,
+              "jobTypes": {
+                "brainstorm": {
+                  "slots": 1,
+                  "totalSlots": 1,
+                  "inFlight": 0
+                },
+                "summarize": {
+                  "slots": 6,
+                  "totalSlots": 6,
+                  "inFlight": 4
+                },
+                "analyzePDF": {
+                  "slots": 4,
+                  "totalSlots": 4,
+                  "inFlight": 0
+                }
+              }
+            },
+            "openai-gpt-5.2": {
+              "rpm": 0,
+              "rpmRemaining": 0,
+              "tpm": 0,
+              "tpmRemaining": 0,
+              "jobTypes": {
+                "brainstorm": {
+                  "slots": 3,
+                  "totalSlots": 3,
+                  "inFlight": 0
+                },
+                "summarize": {
+                  "slots": 13,
+                  "totalSlots": 13,
+                  "inFlight": 0
+                },
+                "analyzePDF": {
+                  "slots": 10,
+                  "totalSlots": 10,
+                  "inFlight": 0
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "timestamp": 1771941108402,
+      "trigger": "periodic",
+      "instances": {
+        "inst-1771941099182-7pj5lnh3v": {
+          "activeJobs": 4,
+          "activeJobIds": [
+            "summarize-0",
+            "summarize-1",
+            "summarize-3",
+            "summarize-2"
+          ],
+          "models": {
+            "anthropic-opus-4.6": {
+              "rpm": 4,
+              "rpmRemaining": 996,
+              "tpm": 120000,
+              "tpmRemaining": 330000,
+              "jobTypes": {
+                "brainstorm": {
+                  "slots": 1,
+                  "totalSlots": 1,
+                  "inFlight": 0
+                },
+                "summarize": {
+                  "slots": 6,
+                  "totalSlots": 6,
+                  "inFlight": 4
+                },
+                "analyzePDF": {
+                  "slots": 4,
+                  "totalSlots": 4,
+                  "inFlight": 0
+                }
+              }
+            },
+            "openai-gpt-5.2": {
+              "rpm": 0,
+              "rpmRemaining": 0,
+              "tpm": 0,
+              "tpmRemaining": 0,
+              "jobTypes": {
+                "brainstorm": {
+                  "slots": 3,
+                  "totalSlots": 3,
+                  "inFlight": 0
+                },
+                "summarize": {
+                  "slots": 13,
+                  "totalSlots": 13,
+                  "inFlight": 0
+                },
+                "analyzePDF": {
+                  "slots": 10,
+                  "totalSlots": 10,
+                  "inFlight": 0
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "timestamp": 1771941108904,
+      "trigger": "periodic",
+      "instances": {
+        "inst-1771941099182-7pj5lnh3v": {
+          "activeJobs": 4,
+          "activeJobIds": [
+            "summarize-0",
+            "summarize-1",
+            "summarize-3",
+            "summarize-2"
+          ],
+          "models": {
+            "anthropic-opus-4.6": {
+              "rpm": 4,
+              "rpmRemaining": 996,
+              "tpm": 120000,
+              "tpmRemaining": 330000,
+              "jobTypes": {
+                "brainstorm": {
+                  "slots": 1,
+                  "totalSlots": 1,
+                  "inFlight": 0
+                },
+                "summarize": {
+                  "slots": 6,
+                  "totalSlots": 6,
+                  "inFlight": 4
+                },
+                "analyzePDF": {
+                  "slots": 4,
+                  "totalSlots": 4,
+                  "inFlight": 0
+                }
+              }
+            },
+            "openai-gpt-5.2": {
+              "rpm": 0,
+              "rpmRemaining": 0,
+              "tpm": 0,
+              "tpmRemaining": 0,
+              "jobTypes": {
+                "brainstorm": {
+                  "slots": 3,
+                  "totalSlots": 3,
+                  "inFlight": 0
+                },
+                "summarize": {
+                  "slots": 13,
+                  "totalSlots": 13,
+                  "inFlight": 0
+                },
+                "analyzePDF": {
+                  "slots": 10,
+                  "totalSlots": 10,
+                  "inFlight": 0
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "timestamp": 1771941109404,
+      "trigger": "periodic",
+      "instances": {
+        "inst-1771941099182-7pj5lnh3v": {
+          "activeJobs": 4,
+          "activeJobIds": [
+            "summarize-0",
+            "summarize-1",
+            "summarize-3",
+            "summarize-2"
+          ],
+          "models": {
+            "anthropic-opus-4.6": {
+              "rpm": 4,
+              "rpmRemaining": 996,
+              "tpm": 120000,
+              "tpmRemaining": 330000,
+              "jobTypes": {
+                "brainstorm": {
+                  "slots": 1,
+                  "totalSlots": 1,
+                  "inFlight": 0
+                },
+                "summarize": {
+                  "slots": 6,
+                  "totalSlots": 6,
+                  "inFlight": 4
+                },
+                "analyzePDF": {
+                  "slots": 4,
+                  "totalSlots": 4,
+                  "inFlight": 0
+                }
+              }
+            },
+            "openai-gpt-5.2": {
+              "rpm": 0,
+              "rpmRemaining": 0,
+              "tpm": 0,
+              "tpmRemaining": 0,
+              "jobTypes": {
+                "brainstorm": {
+                  "slots": 3,
+                  "totalSlots": 3,
+                  "inFlight": 0
+                },
+                "summarize": {
+                  "slots": 13,
+                  "totalSlots": 13,
+                  "inFlight": 0
+                },
+                "analyzePDF": {
+                  "slots": 10,
+                  "totalSlots": 10,
+                  "inFlight": 0
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "timestamp": 1771941109578,
+      "trigger": "final",
+      "instances": {}
+    }
+  ],
+  "summary": {
+    "totalJobs": 4,
+    "completed": 0,
+    "failed": 0,
+    "avgDurationMs": null,
+    "byInstance": {
+      "inst-1771941099182-7pj5lnh3v": {
+        "completed": 0,
+        "failed": 0,
+        "total": 4
+      }
+    },
+    "byJobType": {
+      "summarize": {
+        "completed": 0,
+        "failed": 0,
+        "total": 4
+      }
+    },
+    "byModel": {}
+  }
+}

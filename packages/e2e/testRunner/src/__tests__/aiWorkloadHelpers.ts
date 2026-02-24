@@ -28,12 +28,15 @@ export const JOB_SUMMARIZE = 'summarize';
 export const JOB_ANALYZE_PDF = 'analyzePDF';
 
 // ---- Expected per-model per-job-type slots (1 instance) ----
-// Anthropic: TPM=450K, RPM=1K
-export const ANTHROPIC_BRAINSTORM_SLOTS = 13;
+// Pool avgTokens = floor((10K+30K+50K)/3) = 30K
+// Anthropic pool: floor(450K/30K) = 15 | OpenAI pool: floor(1M/30K) = 33
+// Per-job-type = min(TPM dim, RPM dim, pool dim)
+// Anthropic brainstorm: min(floor(450K*0.3/10K)=13, floor(1K*0.3/1)=300, floor(15*0.3)=4) = 4
+export const ANTHROPIC_BRAINSTORM_SLOTS = 4;
 export const ANTHROPIC_SUMMARIZE_SLOTS = 3;
 export const ANTHROPIC_ANALYZE_PDF_SLOTS = 4;
-// OpenAI: TPM=1M, RPM=5K
-export const OPENAI_BRAINSTORM_SLOTS = 30;
+// OpenAI brainstorm: min(floor(1M*0.3/10K)=30, floor(5K*0.3/1)=1500, floor(33*0.3)=9) = 9
+export const OPENAI_BRAINSTORM_SLOTS = 9;
 export const OPENAI_SUMMARIZE_SLOTS = 6;
 export const OPENAI_ANALYZE_PDF_SLOTS = 10;
 
@@ -46,7 +49,10 @@ export const ALLOCATION_PROPAGATION_MS = 2000;
 export const BEFORE_ALL_TIMEOUT_MS = 60000;
 export const AFTER_ALL_TIMEOUT_MS = 30000;
 export const PHASE_TIMEOUT_MS = 90000;
-export const RUNNING_CHECK_DELAY_MS = 3000;
+// Check before first adjustment cycle (adjustmentIntervalMs=5s from boot)
+export const RUNNING_CHECK_DELAY_MS = 1000;
+// Wait long enough for at least one adjustment cycle after submission
+// Primary model (Anthropic) load = 3/3 = 100% → above 70% threshold → triggers adjustment
 export const RATIO_CHECK_DELAY_MS = 8000;
 
 // ---- Ratio thresholds ----
@@ -197,6 +203,10 @@ export const fetchActiveJobs = async (port: number): Promise<ActiveJobsResponse>
 /** Count queued jobs of a specific type */
 export const countQueuedByType = (activeJobs: ActiveJobInfo[], jobType: string): number =>
   activeJobs.filter((j) => j.jobType === jobType && j.status !== 'processing').length;
+
+/** Count running (processing) jobs of a specific type */
+export const countRunningByType = (activeJobs: ActiveJobInfo[], jobType: string): number =>
+  activeJobs.filter((j) => j.jobType === jobType && j.status === 'processing').length;
 
 // Re-exports
 export { killAllInstances } from '../instanceLifecycle.js';

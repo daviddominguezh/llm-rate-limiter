@@ -4,9 +4,13 @@
  * 2 models: anthropic-opus-4.6 (TPM=450K, RPM=1K), openai-gpt-5.2 (TPM=1M, RPM=5K)
  * 3 job types: brainstorm (0.3), summarize (0.2), analyzePDF (0.5 fixed)
  *
- * Expected slots (1 instance):
- * - Anthropic: brainstorm=13, summarize=3, analyzePDF=4
- * - OpenAI:    brainstorm=30, summarize=6, analyzePDF=10
+ * Pool totalSlots (avgTokens = floor((10K+30K+50K)/3) = 30K):
+ * - Anthropic: floor(450K/30K) = 15
+ * - OpenAI:    floor(1M/30K)   = 33
+ *
+ * Expected per-model per-jobType slots (1 instance, min of TPM/RPM/pool dimensions):
+ * - Anthropic: brainstorm=4, summarize=3, analyzePDF=4
+ * - OpenAI:    brainstorm=9, summarize=6, analyzePDF=10
  */
 import type { RateLimiterPreset } from './types.js';
 

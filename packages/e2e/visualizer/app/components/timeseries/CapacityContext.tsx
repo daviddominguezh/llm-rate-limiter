@@ -1,14 +1,17 @@
 'use client';
 
 import type { CapacityDataPoint, InstanceConfig } from '@/lib/timeseries/capacityTypes';
+import type { HighwayInstanceConfig } from '@/lib/timeseries/highwayTypes';
 import * as d3 from 'd3';
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { Fragment, useCallback, useEffect, useRef, useState } from 'react';
 
+import { HighwayInstanceSection } from './HighwayInstanceSection';
 import { InstanceSection } from './InstanceSection';
 
 interface CapacityContextProps {
   data: CapacityDataPoint[];
   instances: InstanceConfig[];
+  highwayInstances?: HighwayInstanceConfig[];
   onFocusChange?: (index: number | null) => void;
 }
 
@@ -23,7 +26,7 @@ const LEFT_MARGIN = 4;
 // Right padding matches pr-2 in CapacityChart (2 * 4px = 8px)
 const RIGHT_PADDING = 8;
 
-export function CapacityContext({ data, instances, onFocusChange }: CapacityContextProps) {
+export function CapacityContext({ data, instances, highwayInstances, onFocusChange }: CapacityContextProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const axisRef = useRef<SVGSVGElement>(null);
   const [focusIndex, setFocusIndex] = useState<number | null>(null);
@@ -108,15 +111,27 @@ export function CapacityContext({ data, instances, onFocusChange }: CapacityCont
         onMouseLeave={handleMouseLeave}
       >
         <div className="space-y-0">
-          {instances.map((instance) => (
-            <InstanceSection
-              key={instance.instanceId}
-              config={instance}
-              data={data}
-              focusIndex={focusIndex}
-              timeExtent={getTimeExtent(data)}
-            />
-          ))}
+          {instances.map((instance) => {
+            const hwConfig = highwayInstances?.find((h) => h.instanceId === instance.instanceId);
+            return (
+              <Fragment key={instance.instanceId}>
+                {hwConfig && (
+                  <HighwayInstanceSection
+                    config={hwConfig}
+                    data={data}
+                    focusIndex={focusIndex}
+                    timeExtent={getTimeExtent(data)}
+                  />
+                )}
+                <InstanceSection
+                  config={instance}
+                  data={data}
+                  focusIndex={focusIndex}
+                  timeExtent={getTimeExtent(data)}
+                />
+              </Fragment>
+            );
+          })}
         </div>
 
         {focusIndex !== null &&

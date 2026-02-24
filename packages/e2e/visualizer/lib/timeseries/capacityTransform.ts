@@ -76,6 +76,15 @@ interface ModelJobTypeEntry {
   inFlight: number;
 }
 
+/** Sum totalSlots across all job types for a model */
+function sumModelSlots(jobTypes: Record<string, { totalSlots: number }>): number {
+  let total = 0;
+  for (const jt of Object.values(jobTypes)) {
+    total += jt.totalSlots;
+  }
+  return total;
+}
+
 /** Collect model data from snapshot and populate running counts in data */
 function collectModelData(
   shortId: string,
@@ -88,11 +97,14 @@ function collectModelData(
     const modelKey = makeKey(modelId);
     if (!modelState.jobTypes) continue;
 
+    const modelTotalSlots = sumModelSlots(modelState.jobTypes);
+
     for (const [jobType, jtState] of Object.entries(modelState.jobTypes)) {
       const jtKey = makeKey(jobType);
       const prefix = `${shortId}_${modelKey}_${jtKey}`;
 
       data[`${prefix}_slots`] = jtState.totalSlots;
+      data[`${prefix}_model_slots`] = modelTotalSlots;
       data[`${prefix}_running`] = jtState.inFlight;
       data[`${prefix}_queued`] = 0;
 
@@ -290,12 +302,79 @@ function buildInstanceMetrics(shortId: string, info: InstanceMetricInfo): Capaci
         queuedKey: `${prefix}_queued`,
         capacityKey: `${prefix}_running`,
         slotsKey: `${prefix}_slots`,
+        modelSlotsKey: `${prefix}_model_slots`,
         type: 'jobType',
       });
     }
   }
 
   return metrics;
+}
+
+/** Compute earliest sentAt per (modelKey, jobType) from jobs */
+function buildEarliestTimestamps(jobs: Record<string, JobRecord>): Map<string, number> {
+  const earliest = new Map<string, number>();
+  for (const job of Object.values(jobs)) {
+    if (!job.modelUsed) continue;
+    const key = `${makeKey(job.modelUsed)}_${job.jobType}`;
+    const prev = earliest.get(key) ?? Infinity;
+    if (job.sentAt < prev) earliest.set(key, job.sentAt);
+  }
+  return earliest;
+}
+
+/** Compute earliest sentAt per jobType from jobs */
+function buildJobTypeOrder(jobs: Record<string, JobRecord>): Map<string, number> {
+  const earliest = new Map<string, number>();
+  for (const job of Object.values(jobs)) {
+    const prev = earliest.get(job.jobType) ?? Infinity;
+    if (job.sentAt < prev) earliest.set(job.jobType, job.sentAt);
+  }
+  return earliest;
+}
+
+/** Sort metrics: strict group by jobType (earliest first), then by model within group */
+function sortMetrics(metrics: CapacityMetric[], jobs: Record<string, JobRecord>): CapacityMetric[] {
+  const metricTimestamps = buildEarliestTimestamps(jobs);
+  const jobTypeOrder = buildJobTypeOrder(jobs);
+
+  // Group metrics by jobType
+  const groups = new Map<string, CapacityMetric[]>();
+  for (const m of metrics) {
+    const jt = extractJobType(m.label);
+    let group = groups.get(jt);
+    if (!group) {
+      group = [];
+      groups.set(jt, group);
+    }
+    group.push(m);
+  }
+
+  // Sort groups by earliest jobType timestamp, sort models within each
+  const sortedGroups = [...groups.entries()].sort(
+    (a, b) => (jobTypeOrder.get(a[0]) ?? Infinity) - (jobTypeOrder.get(b[0]) ?? Infinity)
+  );
+
+  return sortedGroups.flatMap(([, group]) =>
+    group.sort((a, b) => {
+      const aKey = extractModelJobTypeKey(a.label);
+      const bKey = extractModelJobTypeKey(b.label);
+      return (metricTimestamps.get(aKey) ?? Infinity) - (metricTimestamps.get(bKey) ?? Infinity);
+    })
+  );
+}
+
+/** Extract jobType from metric label like "model_alpha / critical" */
+function extractJobType(label: string): string {
+  const parts = label.split(' / ');
+  return parts.length > 1 ? parts[1] : label;
+}
+
+/** Extract "modelKey_jobType" from label for timestamp lookup */
+function extractModelJobTypeKey(label: string): string {
+  const parts = label.split(' / ');
+  if (parts.length > 1) return `${parts[0]}_${parts[1]}`;
+  return label;
 }
 
 /** Get instance configurations from test data */
@@ -307,11 +386,12 @@ export function getInstanceConfigs(testData: TestData): InstanceConfig[] {
   for (const [fullId, info] of aggregated) {
     const shortId = instanceIdMap.get(fullId) ?? fullId;
     const metrics = buildInstanceMetrics(shortId, info);
+    const sorted = sortMetrics(metrics, testData.jobs);
 
     configs.push({
       instanceId: shortId,
       fullId,
-      models: metrics,
+      models: sorted,
       jobTypes: [],
     });
   }

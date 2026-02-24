@@ -13,8 +13,10 @@ export interface CapacityMetric {
   queuedKey: string;
   /** Capacity value key in chart data */
   capacityKey: string;
-  /** Slots value key in chart data (optional) */
+  /** Slots value key in chart data (optional, per-job-type) */
   slotsKey?: string;
+  /** Model-level total slots key (sum across all job types for this model) */
+  modelSlotsKey?: string;
   /** Type of metric */
   type: 'model' | 'jobType';
 }

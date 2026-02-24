@@ -93,7 +93,8 @@ export type ConfigPresetName =
   | 'medium-refund-partialRequest'
   | 'highest-edgeZeroFloorDiv'
   | 'highest-memoryDistributed-lowTPM'
-  | 'mega-comprehensive';
+  | 'mega-comprehensive'
+  | 'ai-workload';
 
 /** Options for resetting an instance */
 export interface ResetOptions {

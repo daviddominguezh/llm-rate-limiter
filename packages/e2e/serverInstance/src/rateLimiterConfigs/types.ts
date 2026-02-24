@@ -116,4 +116,5 @@ export type ConfigPresetName =
   | 'medium-refund-partialRequest'
   | 'highest-edgeZeroFloorDiv'
   | 'highest-memoryDistributed-lowTPM'
-  | 'mega-comprehensive';
+  | 'mega-comprehensive'
+  | 'ai-workload';

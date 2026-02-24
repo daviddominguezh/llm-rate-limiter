@@ -4,8 +4,10 @@ import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { getInstanceConfigs, transformToCapacityData } from '@/lib/timeseries/capacityTransform';
 import type { CapacityDataPoint, InstanceConfig } from '@/lib/timeseries/capacityTypes';
+import { buildHighwayConfigs } from '@/lib/timeseries/highwayTransform';
+import type { HighwayInstanceConfig } from '@/lib/timeseries/highwayTypes';
 import type { TestData } from '@llm-rate-limiter/e2e-test-results';
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 
 import { CapacityContext } from './CapacityContext';
 import { DatasetSelector } from './DatasetSelector';
@@ -50,6 +52,12 @@ async function loadDatasetJson(datasetId: string): Promise<TestData | null> {
       const m = await import('@llm-rate-limiter/e2e-test-results/src/data/mega-comprehensive.json');
       return m.default as unknown as TestData;
     }
+    case 'mega-comprehensive-distributed': {
+      const m = await import(
+        '@llm-rate-limiter/e2e-test-results/src/data/mega-comprehensive-distributed.json'
+      );
+      return m.default as unknown as TestData;
+    }
     default:
       return null;
   }
@@ -62,6 +70,7 @@ export function TimeseriesPage() {
   const [instances, setInstances] = useState<InstanceConfig[]>([]);
   const [loading, setLoading] = useState(true);
   const [focusIndex, setFocusIndex] = useState<number | null>(null);
+  const highwayInstances: HighwayInstanceConfig[] = useMemo(() => buildHighwayConfigs(instances), [instances]);
 
   useEffect(() => {
     let cancelled = false;
@@ -109,7 +118,7 @@ export function TimeseriesPage() {
           ) : (
             <>
               {testData && <MetricsRow testData={testData} instances={instances} />}
-              <CapacityContext data={chartData} instances={instances}  />
+              <CapacityContext data={chartData} instances={instances} highwayInstances={highwayInstances} />
             </>
           )}
 

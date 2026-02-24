@@ -122,6 +122,7 @@ export {
   highestEdgeSingleFlexConfig,
 } from './edgeCaseConfigs.js';
 
+export { aiWorkloadConfig } from './aiWorkloadConfig.js';
 export { megaComprehensiveConfig } from './megaComprehensiveConfig.js';
 
 // Re-export registry and helpers from registry file

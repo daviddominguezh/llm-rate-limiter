@@ -1,6 +1,7 @@
 /**
  * Configuration preset registry and helper functions.
  */
+import { aiWorkloadConfig } from './aiWorkloadConfig.js';
 import { capacityPlusOneConfig, defaultConfig } from './defaultConfig.js';
 import {
   highestEdgeAllFixedConfig,
@@ -200,6 +201,7 @@ export const configPresets: Record<ConfigPresetName, RateLimiterPreset> = {
   'highest-edgeZeroFloorDiv': highestEdgeZeroFloorDivConfig,
   'highest-memoryDistributed-lowTPM': highestMemoryDistributedLowTpmConfig,
   'mega-comprehensive': megaComprehensiveConfig,
+  'ai-workload': aiWorkloadConfig,
 };
 
 /** Get a configuration preset by name */

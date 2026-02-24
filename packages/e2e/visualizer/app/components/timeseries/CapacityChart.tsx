@@ -33,29 +33,29 @@ interface ChartValues {
   running: number[];
   queued: number[];
   slots: number[];
+  modelSlots: number[];
+}
+
+function extractNumericArray(data: CapacityDataPoint[], key: string | undefined): number[] {
+  if (!key) return [];
+  return data.map((d) => {
+    const v = d[key];
+    return typeof v === 'number' ? v : 0;
+  });
 }
 
 function getValues(
   data: CapacityDataPoint[],
   runningKey: string,
   queuedKey: string,
-  slotsKey: string | undefined
+  slotsKey: string | undefined,
+  modelSlotsKey: string | undefined
 ): ChartValues {
-  const running = data.map((d) => {
-    const v = d[runningKey];
-    return typeof v === 'number' ? v : 0;
-  });
-  const queued = data.map((d) => {
-    const v = d[queuedKey];
-    return typeof v === 'number' ? v : 0;
-  });
-  const slots = slotsKey
-    ? data.map((d) => {
-        const v = d[slotsKey];
-        return typeof v === 'number' ? v : 0;
-      })
-    : [];
-  return { running, queued, slots };
+  const running = extractNumericArray(data, runningKey);
+  const queued = extractNumericArray(data, queuedKey);
+  const slots = extractNumericArray(data, slotsKey);
+  const modelSlots = extractNumericArray(data, modelSlotsKey);
+  return { running, queued, slots, modelSlots };
 }
 
 function renderChart(
@@ -86,16 +86,16 @@ function renderChart(
 
   for (let i = 0; i < data.length; i += 1) {
     const totalSlots = values.slots[i] ?? 0;
+    const modelTotalSlots = values.modelSlots[i] ?? totalSlots;
     const runningVal = values.running[i];
     const queuedVal = values.queued[i];
     const barX = i * barWidth + i;
 
-    // Blue bar is always full height (shows capacity)
-    const blueHeight = totalSlots > 0 ? height : 0;
-    // Queued + Running stacked; scale to max(totalSlots, totalActive)
-    // so queued bars stay visible even when active exceeds capacity
+    // Blue bar uses model-level allocation (continuous across all job types)
+    const blueHeight = modelTotalSlots > 0 ? height : 0;
+    // Scale activity bars relative to model capacity
     const totalActive = runningVal + queuedVal;
-    const activeScale = Math.max(totalSlots, totalActive);
+    const activeScale = Math.max(modelTotalSlots, totalActive);
     const rawRunningH = activeScale > 0 ? (runningVal / activeScale) * height : 0;
     const runningH = runningVal > 0 ? Math.max(MIN_ACTIVE_BAR_HEIGHT, rawRunningH) : 0;
     const rawQueuedH = activeScale > 0 ? (queuedVal / activeScale) * height : 0;
@@ -152,6 +152,27 @@ function renderChart(
   }
 }
 
+/** Resolve slots: prefer per-job-type, fall back to model-level */
+function resolveSlots(point: CapacityDataPoint | undefined, metric: CapacityMetric): number | null {
+  if (!point) return null;
+  const perJT = metric.slotsKey ? point[metric.slotsKey] : undefined;
+  if (typeof perJT === 'number') return perJT;
+  const model = metric.modelSlotsKey ? point[metric.modelSlotsKey] : undefined;
+  return typeof model === 'number' ? model : null;
+}
+
+/** Find last non-zero slots value scanning backward from interval 399 */
+function findLastNonZeroSlots(data: CapacityDataPoint[], metric: CapacityMetric): number | null {
+  const keys = [metric.slotsKey, metric.modelSlotsKey].filter(Boolean);
+  for (let i = 399; i >= 0; i -= 1) {
+    for (const key of keys) {
+      const v = key ? data[i]?.[key] : undefined;
+      if (typeof v === 'number' && v > 0) return v;
+    }
+  }
+  return null;
+}
+
 function formatValue(value: number): string {
   if (Math.abs(value) >= 1000) {
     return `${(value / 1000).toFixed(1)}k`;
@@ -198,7 +219,7 @@ export function CapacityChart({
     canvas.width = containerWidth;
     canvas.height = height;
 
-    const values = getValues(data, metric.usageKey, metric.queuedKey, metric.slotsKey);
+    const values = getValues(data, metric.usageKey, metric.queuedKey, metric.slotsKey, metric.modelSlotsKey);
     renderChart(ctx, data, values, containerWidth, height, timeExtent, metric.label);
   }, [data, metric, height, containerWidth, timeExtent]);
 
@@ -214,20 +235,13 @@ export function CapacityChart({
     // For padding/fill bars, show 0 used and last non-zero allocated
     runningVal = 0;
     queuedVal = 0;
-    for (let i = 399; i >= 0; i -= 1) {
-      const slots = metric.slotsKey ? data[i]?.[metric.slotsKey] : undefined;
-      if (typeof slots === 'number' && slots > 0) {
-        slotsVal = slots;
-        break;
-      }
-    }
+    slotsVal = findLastNonZeroSlots(data, metric);
   } else {
     const currentRunning = data[displayIndex]?.[metric.usageKey];
     const currentQueued = data[displayIndex]?.[metric.queuedKey];
-    const currentSlots = metric.slotsKey ? data[displayIndex]?.[metric.slotsKey] : undefined;
     runningVal = typeof currentRunning === 'number' ? currentRunning : 0;
     queuedVal = typeof currentQueued === 'number' ? currentQueued : 0;
-    slotsVal = typeof currentSlots === 'number' ? currentSlots : null;
+    slotsVal = resolveSlots(data[displayIndex], metric);
   }
 
   return (

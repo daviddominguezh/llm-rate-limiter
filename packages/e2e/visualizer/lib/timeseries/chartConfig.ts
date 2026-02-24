@@ -18,6 +18,7 @@ export const CHART_COLORS = [
 /** Available test result datasets */
 export const DATASETS: DatasetInfo[] = [
   { id: 'mega-comprehensive', label: 'Mega Comprehensive' },
+  { id: 'mega-comprehensive-distributed', label: 'Mega Comprehensive (Distributed)' },
   { id: 'capacity-plus-one', label: 'Capacity Plus One' },
   { id: 'exact-capacity', label: 'Exact Capacity' },
   { id: 'rate-limit-queuing', label: 'Rate Limit Queuing' },

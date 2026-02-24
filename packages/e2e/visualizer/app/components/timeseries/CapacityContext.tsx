@@ -3,7 +3,7 @@
 import type { CapacityDataPoint, InstanceConfig } from '@/lib/timeseries/capacityTypes';
 import type { HighwayInstanceConfig } from '@/lib/timeseries/highwayTypes';
 import * as d3 from 'd3';
-import { Fragment, useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 
 import { HighwayInstanceSection } from './HighwayInstanceSection';
 import { InstanceSection } from './InstanceSection';
@@ -113,25 +113,26 @@ export function CapacityContext({ data, instances, highwayInstances, onFocusChan
         <div className="space-y-0">
           {instances.map((instance) => {
             const hwConfig = highwayInstances?.find((h) => h.instanceId === instance.instanceId);
+            if (!hwConfig) return null;
             return (
-              <Fragment key={instance.instanceId}>
-                {hwConfig && (
-                  <HighwayInstanceSection
-                    config={hwConfig}
-                    data={data}
-                    focusIndex={focusIndex}
-                    timeExtent={getTimeExtent(data)}
-                  />
-                )}
-                <InstanceSection
-                  config={instance}
-                  data={data}
-                  focusIndex={focusIndex}
-                  timeExtent={getTimeExtent(data)}
-                />
-              </Fragment>
+              <HighwayInstanceSection
+                key={`hw-${instance.instanceId}`}
+                config={hwConfig}
+                data={data}
+                focusIndex={focusIndex}
+                timeExtent={getTimeExtent(data)}
+              />
             );
           })}
+          {instances.map((instance) => (
+            <InstanceSection
+              key={instance.instanceId}
+              config={instance}
+              data={data}
+              focusIndex={focusIndex}
+              timeExtent={getTimeExtent(data)}
+            />
+          ))}
         </div>
 
         {focusIndex !== null &&

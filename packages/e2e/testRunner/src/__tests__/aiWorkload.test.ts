@@ -4,13 +4,26 @@
  * Phase 1: Verify initial per-model per-job-type slot allocation (1 instance)
  * Phase 2: Fill Summarize on Anthropic (4 jobs, 3 slots), verify 3 running + 1 queued + ratio adjustment
  * Phase 3: Send mixed brainstorm+summarize batch, verify brainstorm recovers ratio from summarize
+ * Phase 4: Submit 35 jobs to single instance A, wait for escalation, verify A is heavily loaded
+ * Phase 5: Boot instance B, verify pools halved, B gets reduced capacity (not full half), invariant holds
+ * Phase 6: Wait for brainstorm to drain, verify B's capacity grows gradually, invariant still holds
  */
+import {
+  BRAINSTORM_DRAIN_WAIT_MS,
+  DIST_PHASE_TIMEOUT_MS,
+  ESCALATION_WAIT_MS,
+  bootAndVerifyDistribution,
+  submitDistributedJobs,
+  verifyCapacityGrowth,
+  verifyHeavyLoad,
+} from './aiWorkloadDistributedHelpers.js';
 import {
   AFTER_ALL_TIMEOUT_MS,
   ANTHROPIC_ANALYZE_PDF_SLOTS,
   ANTHROPIC_BRAINSTORM_SLOTS,
   ANTHROPIC_SUMMARIZE_SLOTS,
   BASE_URL_A,
+  BASE_URL_B,
   BEFORE_ALL_TIMEOUT_MS,
   FIXED_RATIO,
   HTTP_ACCEPTED,
@@ -89,7 +102,7 @@ afterAll(async () => {
 describe('Real World - Slot Allocation & Ratio Adjustment', () => {
   beforeAll(async () => {
     await setupSingleInstance();
-    ctx = createDataCollection([BASE_URL_A]);
+    ctx = createDataCollection([BASE_URL_A, BASE_URL_B]);
     setActiveCollector(ctx.collector);
     await startDataCollection(ctx);
   }, BEFORE_ALL_TIMEOUT_MS);
@@ -126,6 +139,39 @@ describe('Real World - Slot Allocation & Ratio Adjustment', () => {
       await verifyRecoveredRatios();
     },
     PHASE_TIMEOUT_MS
+  );
+});
+
+describe('Distributed Scaling - In-Flight-Aware Pool Allocation', () => {
+  beforeAll(async () => {
+    await setupSingleInstance();
+  }, BEFORE_ALL_TIMEOUT_MS);
+
+  it(
+    'Phase 4: Submit 35 jobs and verify A is heavily loaded after escalation',
+    async () => {
+      await submitDistributedJobs();
+      await sleep(ESCALATION_WAIT_MS);
+      await verifyHeavyLoad();
+    },
+    DIST_PHASE_TIMEOUT_MS
+  );
+
+  it(
+    'Phase 5: Boot B and verify in-flight-aware allocation',
+    async () => {
+      await bootAndVerifyDistribution();
+    },
+    DIST_PHASE_TIMEOUT_MS
+  );
+
+  it(
+    'Phase 6: Verify B capacity grows after brainstorm drains',
+    async () => {
+      await sleep(BRAINSTORM_DRAIN_WAIT_MS);
+      await verifyCapacityGrowth();
+    },
+    DIST_PHASE_TIMEOUT_MS
   );
 });
 

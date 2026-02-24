@@ -171,7 +171,7 @@ export interface JobTypeState {
 export interface ModelJobTypeInfo {
   /** Allocated slots for this (model, jobType) pair */
   allocated: number;
-  /** Effective in-flight: window counter for rate-based, concurrent count for concurrency-based */
+  /** Effective in-flight: window counter for rate-based, concurrent count for concurrency-based (resets at window boundary) */
   inFlight: number;
 }
 
@@ -273,7 +273,7 @@ export interface JobTypeLoadMetrics {
   /** Job type ID */
   jobTypeId: string;
 
-  /** Current load percentage (inFlight / allocatedSlots), 0 if no slots */
+  /** Current load percentage ((inFlight + queued) / allocatedSlots), 0 if no slots */
   loadPercentage: number;
 
   /** Whether this job type is flexible */

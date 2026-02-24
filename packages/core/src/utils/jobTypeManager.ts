@@ -231,14 +231,15 @@ class JobTypeManagerImpl implements JobTypeManager {
 
   private collectMetricsForAdjustment(): ReturnType<typeof collectLoadMetrics> {
     if (this.primaryModelId !== undefined && this.modelState.hasModelPools()) {
-      return collectPrimaryModelLoadMetrics(
-        this.states,
-        this.modelState,
-        this.primaryModelId,
-        this.config.minJobTypeCapacity
-      );
+      return collectPrimaryModelLoadMetrics({
+        states: this.states,
+        modelState: this.modelState,
+        primaryModelId: this.primaryModelId,
+        minCapacity: this.config.minJobTypeCapacity,
+        waitQueues: this.waitQueues,
+      });
     }
-    return collectLoadMetrics(this.states);
+    return collectLoadMetrics(this.states, this.waitQueues);
   }
 
   adjustRatios(): void {

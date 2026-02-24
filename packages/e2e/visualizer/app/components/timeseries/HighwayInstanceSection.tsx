@@ -16,6 +16,9 @@ interface HighwayInstanceSectionProps {
 /** Minimum chart height for the smallest highway */
 const MIN_CHART_HEIGHT = 20;
 
+/** Minimum height for the tallest highway chart */
+const MIN_MAX_CHART_HEIGHT = 200;
+
 /** Check if a highway has any running jobs across all lanes */
 function hasActivity(data: CapacityDataPoint[], highway: HighwayConfig): boolean {
   for (const lane of highway.lanes) {
@@ -50,6 +53,14 @@ function computeScaledHeights(
   highways.forEach((h, i) => {
     heights.set(h.modelKey, Math.round(peaks[i] * pixelsPerSlot));
   });
+
+  const maxHeight = Math.max(...heights.values());
+  if (maxHeight > 0 && maxHeight < MIN_MAX_CHART_HEIGHT) {
+    const scaleFactor = MIN_MAX_CHART_HEIGHT / maxHeight;
+    for (const [key, h] of heights) {
+      heights.set(key, Math.round(h * scaleFactor));
+    }
+  }
 
   return heights;
 }

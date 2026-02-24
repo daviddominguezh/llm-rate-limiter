@@ -55,10 +55,15 @@ export const RUNNING_CHECK_DELAY_MS = 1000;
 // Primary model (Anthropic) load = 3/3 = 100% → above 70% threshold → triggers adjustment
 export const RATIO_CHECK_DELAY_MS = 8000;
 
-// ---- Ratio thresholds ----
+// ---- Phase 2 ratio thresholds ----
 export const FIXED_RATIO = 0.5;
 export const MIN_ADJUSTED_SUMMARIZE_RATIO = 0.35;
 export const MAX_ADJUSTED_BRAINSTORM_RATIO = 0.15;
+
+// ---- Phase 3 ratio thresholds (brainstorm recovery) ----
+// Primary model brainstorm load = 100% → receiver; summarize load ≈ 17% → donor
+export const MIN_RECOVERED_BRAINSTORM_RATIO = 0.2;
+export const MAX_RECOVERED_SUMMARIZE_RATIO = 0.3;
 
 // ---- Types ----
 

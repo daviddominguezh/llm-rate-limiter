@@ -1,8 +1,9 @@
 /**
- * Test suite: AI Workload (distributed test with data collection)
+ * Test suite: Real World (distributed test with data collection)
  *
  * Phase 1: Verify initial per-model per-job-type slot allocation (1 instance)
- * Phase 2: Overload Summarize (7 jobs, 9 slots = 78% load), verify queuing and ratio adjustment
+ * Phase 2: Fill Summarize on Anthropic (4 jobs, 3 slots), verify 3 running + 1 queued + ratio adjustment
+ * Phase 3: Send mixed brainstorm+summarize batch, verify brainstorm recovers ratio from summarize
  */
 import {
   AFTER_ALL_TIMEOUT_MS,
@@ -17,7 +18,9 @@ import {
   JOB_BRAINSTORM,
   JOB_SUMMARIZE,
   MAX_ADJUSTED_BRAINSTORM_RATIO,
+  MAX_RECOVERED_SUMMARIZE_RATIO,
   MIN_ADJUSTED_SUMMARIZE_RATIO,
+  MIN_RECOVERED_BRAINSTORM_RATIO,
   MODEL_ANTHROPIC,
   MODEL_OPENAI,
   OPENAI_ANALYZE_PDF_SLOTS,
@@ -40,6 +43,8 @@ import {
   sleep,
 } from './aiWorkloadHelpers.js';
 import {
+  BRAINSTORM_MAX_DURATION_MS,
+  BRAINSTORM_MIN_DURATION_MS,
   type DataCollectionContext,
   SUMMARIZE_MAX_DURATION_MS,
   SUMMARIZE_MIN_DURATION_MS,
@@ -51,12 +56,19 @@ import {
   submitJob,
 } from './aiWorkloadJobHelpers.js';
 
-const SUITE_NAME = 'ai-workload';
-// 4 summarize jobs: 3 run on Anthropic (3 slots), 1 queued waiting for maxWaitMS before escalation
-// Primary model (Anthropic) load = 3/3 = 100% → triggers ratio adjustment
+const SUITE_NAME = 'realWorld';
+
+// Phase 2: 4 summarize jobs fill Anthropic (3 slots), 1 queued
 const SUMMARIZE_FILL_COUNT = 4;
+const EXPECTED_RUNNING = 3;
 const EXPECTED_IN_FLIGHT = 4;
 const EXPECTED_QUEUED = 1;
+
+// Phase 3: 13 brainstorm + 1 summarize to trigger brainstorm ratio recovery
+const BRAINSTORM_FILL_COUNT = 13;
+const PHASE3_SUMMARIZE_COUNT = 1;
+// Submit Phase 3 jobs 3s before Phase 2 summarize jobs finish (overlap)
+const PHASE3_EARLY_SUBMIT_MS = 3000;
 
 let ctx: DataCollectionContext | null = null;
 
@@ -68,7 +80,7 @@ afterAll(async () => {
   await killAllInstances();
 }, AFTER_ALL_TIMEOUT_MS);
 
-describe('AI Workload - Slot Allocation & Ratio Adjustment', () => {
+describe('Real World - Slot Allocation & Ratio Adjustment', () => {
   beforeAll(async () => {
     await setupSingleInstance();
     ctx = createDataCollection([BASE_URL_A]);
@@ -76,16 +88,11 @@ describe('AI Workload - Slot Allocation & Ratio Adjustment', () => {
     await startDataCollection(ctx);
   }, BEFORE_ALL_TIMEOUT_MS);
 
-  afterAll(async () => {
-    await killAllInstances();
-  }, AFTER_ALL_TIMEOUT_MS);
-
   it(
     'Phase 1: Initial slot allocation matches expected values',
     async () => {
       const stats = await fetchStats(PORT_A);
       const jtStats = getJobTypeStats(stats);
-
       verifyAnthropicSlots(jtStats);
       verifyOpenAISlots(jtStats);
     },
@@ -103,62 +110,103 @@ describe('AI Workload - Slot Allocation & Ratio Adjustment', () => {
     },
     PHASE_TIMEOUT_MS
   );
+
+  it(
+    'Phase 3: Brainstorm recovery after load shift',
+    async () => {
+      await sleep(SUMMARIZE_MAX_DURATION_MS - RATIO_CHECK_DELAY_MS - PHASE3_EARLY_SUBMIT_MS);
+      await submitMixedBatch();
+      await sleep(RATIO_CHECK_DELAY_MS);
+      await verifyRecoveredRatios();
+    },
+    PHASE_TIMEOUT_MS
+  );
 });
 
 /** Verify Anthropic per-model per-jobType slots */
 function verifyAnthropicSlots(jtStats: ReturnType<typeof getJobTypeStats>): void {
-  const brainstorm = getModelSlots(jtStats, MODEL_ANTHROPIC, JOB_BRAINSTORM);
-  const summarize = getModelSlots(jtStats, MODEL_ANTHROPIC, JOB_SUMMARIZE);
-  const analyzePDF = getModelSlots(jtStats, MODEL_ANTHROPIC, JOB_ANALYZE_PDF);
-
-  expect(brainstorm).toBe(ANTHROPIC_BRAINSTORM_SLOTS);
-  expect(summarize).toBe(ANTHROPIC_SUMMARIZE_SLOTS);
-  expect(analyzePDF).toBe(ANTHROPIC_ANALYZE_PDF_SLOTS);
+  expect(getModelSlots(jtStats, MODEL_ANTHROPIC, JOB_BRAINSTORM)).toBe(ANTHROPIC_BRAINSTORM_SLOTS);
+  expect(getModelSlots(jtStats, MODEL_ANTHROPIC, JOB_SUMMARIZE)).toBe(ANTHROPIC_SUMMARIZE_SLOTS);
+  expect(getModelSlots(jtStats, MODEL_ANTHROPIC, JOB_ANALYZE_PDF)).toBe(ANTHROPIC_ANALYZE_PDF_SLOTS);
 }
 
 /** Verify OpenAI per-model per-jobType slots */
 function verifyOpenAISlots(jtStats: ReturnType<typeof getJobTypeStats>): void {
-  const brainstorm = getModelSlots(jtStats, MODEL_OPENAI, JOB_BRAINSTORM);
-  const summarize = getModelSlots(jtStats, MODEL_OPENAI, JOB_SUMMARIZE);
-  const analyzePDF = getModelSlots(jtStats, MODEL_OPENAI, JOB_ANALYZE_PDF);
-
-  expect(brainstorm).toBe(OPENAI_BRAINSTORM_SLOTS);
-  expect(summarize).toBe(OPENAI_SUMMARIZE_SLOTS);
-  expect(analyzePDF).toBe(OPENAI_ANALYZE_PDF_SLOTS);
+  expect(getModelSlots(jtStats, MODEL_OPENAI, JOB_BRAINSTORM)).toBe(OPENAI_BRAINSTORM_SLOTS);
+  expect(getModelSlots(jtStats, MODEL_OPENAI, JOB_SUMMARIZE)).toBe(OPENAI_SUMMARIZE_SLOTS);
+  expect(getModelSlots(jtStats, MODEL_OPENAI, JOB_ANALYZE_PDF)).toBe(OPENAI_ANALYZE_PDF_SLOTS);
 }
 
-/** Submit 4 summarize jobs with long duration */
+/** Submit a job with random duration and verify accepted */
+async function submitExpectedJob(
+  jobId: string,
+  jobType: string,
+  minMs: number,
+  maxMs: number
+): Promise<void> {
+  const durationMs = randomDurationMs(minMs, maxMs);
+  const status = await submitJob(PORT_A, jobId, jobType, { durationMs });
+  expect(status).toBe(HTTP_ACCEPTED);
+}
+
+/** Submit 4 summarize jobs with random durations (20-35s each) */
 async function submitSummarizeJobs(): Promise<void> {
-  const payload = { durationMs: SUMMARIZE_JOB_DURATION_MS };
   const submissions = Array.from({ length: SUMMARIZE_FILL_COUNT }, async (_, i) => {
-    const status = await submitJob(PORT_A, `summarize-${String(i)}`, JOB_SUMMARIZE, payload);
-    expect(status).toBe(HTTP_ACCEPTED);
+    await submitExpectedJob(
+      `summarize-${String(i)}`,
+      JOB_SUMMARIZE,
+      SUMMARIZE_MIN_DURATION_MS,
+      SUMMARIZE_MAX_DURATION_MS
+    );
   });
   await Promise.all(submissions);
 }
 
-/** Verify 3 running on Anthropic + 1 queued (waiting for maxWaitMS before escalation) */
+/** Submit 13 brainstorm + 1 summarize jobs with random durations */
+async function submitMixedBatch(): Promise<void> {
+  const brainstormJobs = Array.from({ length: BRAINSTORM_FILL_COUNT }, async (_, i) => {
+    await submitExpectedJob(
+      `brainstorm-${String(i)}`,
+      JOB_BRAINSTORM,
+      BRAINSTORM_MIN_DURATION_MS,
+      BRAINSTORM_MAX_DURATION_MS
+    );
+  });
+  const summarizeJobs = Array.from({ length: PHASE3_SUMMARIZE_COUNT }, async (_, i) => {
+    await submitExpectedJob(
+      `summarize-p3-${String(i)}`,
+      JOB_SUMMARIZE,
+      SUMMARIZE_MIN_DURATION_MS,
+      SUMMARIZE_MAX_DURATION_MS
+    );
+  });
+  await Promise.all([...brainstormJobs, ...summarizeJobs]);
+}
+
+/** Verify 3 running on Anthropic + 1 queued */
 async function verifyRunningAndQueued(): Promise<void> {
   const stats = await fetchStats(PORT_A);
   const jtStats = getJobTypeStats(stats);
-  const inFlight = getJobTypeInFlight(jtStats, JOB_SUMMARIZE);
-  expect(inFlight).toBe(EXPECTED_IN_FLIGHT);
-
+  expect(getJobTypeInFlight(jtStats, JOB_SUMMARIZE)).toBe(EXPECTED_IN_FLIGHT);
   const activeJobs = await fetchActiveJobs(PORT_A);
-  const queued = countQueuedByType(activeJobs.activeJobs, JOB_SUMMARIZE);
-  expect(queued).toBe(EXPECTED_QUEUED);
+  expect(countRunningByType(activeJobs.activeJobs, JOB_SUMMARIZE)).toBe(EXPECTED_RUNNING);
+  expect(countQueuedByType(activeJobs.activeJobs, JOB_SUMMARIZE)).toBe(EXPECTED_QUEUED);
 }
 
-/** Verify ratio adjustment: Brainstorm donated to Summarize, AnalyzePDF unchanged */
+/** Verify Phase 2 ratio adjustment: Brainstorm donated to Summarize */
 async function verifyRatioAdjustment(): Promise<void> {
   const stats = await fetchStats(PORT_A);
   const jtStats = getJobTypeStats(stats);
+  expect(getJobTypeRatio(jtStats, JOB_ANALYZE_PDF)).toBe(FIXED_RATIO);
+  expect(getJobTypeRatio(jtStats, JOB_SUMMARIZE)).toBeGreaterThan(MIN_ADJUSTED_SUMMARIZE_RATIO);
+  expect(getJobTypeRatio(jtStats, JOB_BRAINSTORM)).toBeLessThan(MAX_ADJUSTED_BRAINSTORM_RATIO);
+}
 
-  const summarizeRatio = getJobTypeRatio(jtStats, JOB_SUMMARIZE);
-  const brainstormRatio = getJobTypeRatio(jtStats, JOB_BRAINSTORM);
-  const analyzePDFRatio = getJobTypeRatio(jtStats, JOB_ANALYZE_PDF);
-
-  expect(analyzePDFRatio).toBe(FIXED_RATIO);
-  expect(summarizeRatio).toBeGreaterThan(MIN_ADJUSTED_SUMMARIZE_RATIO);
-  expect(brainstormRatio).toBeLessThan(MAX_ADJUSTED_BRAINSTORM_RATIO);
+/** Verify Phase 3: Brainstorm recovered ratio, Summarize decreased */
+async function verifyRecoveredRatios(): Promise<void> {
+  const stats = await fetchStats(PORT_A);
+  const jtStats = getJobTypeStats(stats);
+  expect(getJobTypeRatio(jtStats, JOB_ANALYZE_PDF)).toBe(FIXED_RATIO);
+  expect(getJobTypeRatio(jtStats, JOB_BRAINSTORM)).toBeGreaterThan(MIN_RECOVERED_BRAINSTORM_RATIO);
+  expect(getJobTypeRatio(jtStats, JOB_SUMMARIZE)).toBeLessThan(MAX_RECOVERED_SUMMARIZE_RATIO);
 }

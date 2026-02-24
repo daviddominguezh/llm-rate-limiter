@@ -29,10 +29,12 @@ function findTimeSpan(testData: TestData): { minTime: number; maxTime: number } 
   }
 
   const minTime = jobs.reduce((min, j) => (j.sentAt < min ? j.sentAt : min), Infinity);
-  const maxTime = jobs.reduce((max, j) => {
+  const jobMaxTime = jobs.reduce((max, j) => {
     const end = j.events[j.events.length - 1]?.timestamp ?? 0;
     return end > max ? end : max;
   }, 0);
+  // Extend to test end so post-completion state changes (e.g. ratio recovery) are visible
+  const maxTime = Math.max(jobMaxTime, testData.metadata.endTime);
 
   return { minTime, maxTime };
 }

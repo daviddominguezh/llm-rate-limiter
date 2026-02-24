@@ -9,6 +9,7 @@ import {
   type RatioAdjustmentConfig,
   type ResourceEstimationsPerJob,
 } from '../jobTypeTypes.js';
+import type { QueuedWaiter } from './jobTypeManagerTypes.js';
 import type { HasCapacityParams, ModelJobTypeTracker } from './jobTypeModelState.js';
 
 const ZERO = 0;
@@ -62,12 +63,17 @@ export const createInitialStates = (
   return states;
 };
 
-/** Collect load metrics from all job types */
-export const collectLoadMetrics = (states: Map<string, JobTypeState>): JobTypeLoadMetrics[] => {
+/** Collect load metrics from all job types (includes queued demand in load) */
+export const collectLoadMetrics = (
+  states: Map<string, JobTypeState>,
+  waitQueues: Map<string, QueuedWaiter[]>
+): JobTypeLoadMetrics[] => {
   const metrics: JobTypeLoadMetrics[] = [];
 
   for (const [jobTypeId, state] of states) {
-    const loadPercentage = state.allocatedSlots > ZERO ? state.inFlight / state.allocatedSlots : ZERO;
+    const queueLength = waitQueues.get(jobTypeId)?.length ?? ZERO;
+    const demand = state.inFlight + queueLength;
+    const loadPercentage = state.allocatedSlots > ZERO ? demand / state.allocatedSlots : ZERO;
 
     metrics.push({
       jobTypeId,
@@ -92,20 +98,27 @@ export const buildCapacityParams = (
   return { modelId, jobTypeId, ratio: state.currentRatio, resources: state.resources, minCapacity };
 };
 
-/** Collect load metrics using only the primary model's per-jobType inFlight/allocated */
-export const collectPrimaryModelLoadMetrics = (
-  states: Map<string, JobTypeState>,
-  modelState: ModelJobTypeTracker,
-  primaryModelId: string,
-  minCapacity: number
-): JobTypeLoadMetrics[] => {
+/** Parameters for collecting primary model load metrics */
+export interface PrimaryModelLoadParams {
+  states: Map<string, JobTypeState>;
+  modelState: ModelJobTypeTracker;
+  primaryModelId: string;
+  minCapacity: number;
+  waitQueues: Map<string, QueuedWaiter[]>;
+}
+
+/** Collect load metrics using only the primary model's per-jobType inFlight/allocated (includes queued demand) */
+export const collectPrimaryModelLoadMetrics = (params: PrimaryModelLoadParams): JobTypeLoadMetrics[] => {
+  const { states, modelState, primaryModelId, minCapacity, waitQueues } = params;
   const metrics: JobTypeLoadMetrics[] = [];
 
   for (const [jobTypeId, state] of states) {
-    const params = buildCapacityParams(states, minCapacity, primaryModelId, jobTypeId);
-    const allocated = params === undefined ? ZERO : modelState.getAllocated(params);
-    const inFlight = params === undefined ? ZERO : modelState.getInFlight(params);
-    const loadPercentage = allocated > ZERO ? inFlight / allocated : ZERO;
+    const capacityParams = buildCapacityParams(states, minCapacity, primaryModelId, jobTypeId);
+    const allocated = capacityParams === undefined ? ZERO : modelState.getAllocated(capacityParams);
+    const inFlight = modelState.getConcurrentInFlight(primaryModelId, jobTypeId);
+    const queueLength = waitQueues.get(jobTypeId)?.length ?? ZERO;
+    const demand = inFlight + queueLength;
+    const loadPercentage = allocated > ZERO ? demand / allocated : ZERO;
 
     metrics.push({ jobTypeId, loadPercentage, flexible: state.flexible, currentRatio: state.currentRatio });
   }

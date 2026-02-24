@@ -1,26 +1,50 @@
 {
   "metadata": {
-    "startTime": 1771941101395,
-    "endTime": 1771941109578,
-    "durationMs": 8183,
+    "startTime": 1771941739289,
+    "endTime": 1771941747501,
+    "durationMs": 8212,
     "instances": {
-      "http://localhost:4001": "inst-1771941099182-7pj5lnh3v"
+      "http://localhost:4001": "inst-1771941737257-ck7bzjvg7"
     }
   },
   "jobs": {
     "summarize-0": {
       "jobId": "summarize-0",
       "jobType": "summarize",
-      "sentAt": 1771941101504,
-      "instanceId": "inst-1771941099182-7pj5lnh3v",
+      "sentAt": 1771941739401,
+      "instanceId": "inst-1771941737257-ck7bzjvg7",
       "events": [
         {
           "type": "queued",
-          "timestamp": 1771941101514
+          "timestamp": 1771941739416
         },
         {
           "type": "started",
-          "timestamp": 1771941101516,
+          "timestamp": 1771941739420,
+          "modelId": "anthropic-opus-4.6"
+        }
+      ],
+      "status": "started",
+      "modelUsed": null,
+      "totalCost": 0,
+      "queueDurationMs": 4,
+      "processingDurationMs": null,
+      "totalDurationMs": null,
+      "usage": []
+    },
+    "summarize-1": {
+      "jobId": "summarize-1",
+      "jobType": "summarize",
+      "sentAt": 1771941739402,
+      "instanceId": "inst-1771941737257-ck7bzjvg7",
+      "events": [
+        {
+          "type": "queued",
+          "timestamp": 1771941739420
+        },
+        {
+          "type": "started",
+          "timestamp": 1771941739422,
           "modelId": "anthropic-opus-4.6"
         }
       ],
@@ -32,50 +56,26 @@
       "totalDurationMs": null,
       "usage": []
     },
-    "summarize-1": {
-      "jobId": "summarize-1",
-      "jobType": "summarize",
-      "sentAt": 1771941101504,
-      "instanceId": "inst-1771941099182-7pj5lnh3v",
-      "events": [
-        {
-          "type": "queued",
-          "timestamp": 1771941101516
-        },
-        {
-          "type": "started",
-          "timestamp": 1771941101517,
-          "modelId": "anthropic-opus-4.6"
-        }
-      ],
-      "status": "started",
-      "modelUsed": null,
-      "totalCost": 0,
-      "queueDurationMs": 1,
-      "processingDurationMs": null,
-      "totalDurationMs": null,
-      "usage": []
-    },
     "summarize-2": {
       "jobId": "summarize-2",
       "jobType": "summarize",
-      "sentAt": 1771941101505,
-      "instanceId": "inst-1771941099182-7pj5lnh3v",
+      "sentAt": 1771941739403,
+      "instanceId": "inst-1771941737257-ck7bzjvg7",
       "events": [
         {
           "type": "queued",
-          "timestamp": 1771941101518
+          "timestamp": 1771941739421
         },
         {
           "type": "started",
-          "timestamp": 1771941104187,
+          "timestamp": 1771941739423,
           "modelId": "anthropic-opus-4.6"
         }
       ],
       "status": "started",
       "modelUsed": null,
       "totalCost": 0,
-      "queueDurationMs": 2669,
+      "queueDurationMs": 2,
       "processingDurationMs": null,
       "totalDurationMs": null,
       "usage": []
@@ -83,23 +83,23 @@
     "summarize-3": {
       "jobId": "summarize-3",
       "jobType": "summarize",
-      "sentAt": 1771941101505,
-      "instanceId": "inst-1771941099182-7pj5lnh3v",
+      "sentAt": 1771941739403,
+      "instanceId": "inst-1771941737257-ck7bzjvg7",
       "events": [
         {
           "type": "queued",
-          "timestamp": 1771941101517
+          "timestamp": 1771941739422
         },
         {
           "type": "started",
-          "timestamp": 1771941101517,
+          "timestamp": 1771941742260,
           "modelId": "anthropic-opus-4.6"
         }
       ],
       "status": "started",
       "modelUsed": null,
       "totalCost": 0,
-      "queueDurationMs": 0,
+      "queueDurationMs": 2838,
       "processingDurationMs": null,
       "totalDurationMs": null,
       "usage": []
@@ -107,77 +107,77 @@
   },
   "timeline": [
     {
-      "t": 1771941101398,
+      "t": 1771941739293,
       "event": "connected",
-      "instanceId": "inst-1771941099182-7pj5lnh3v"
+      "instanceId": "inst-1771941737257-ck7bzjvg7"
     },
     {
-      "t": 1771941101514,
+      "t": 1771941739416,
       "event": "job:queued",
-      "instanceId": "inst-1771941099182-7pj5lnh3v",
+      "instanceId": "inst-1771941737257-ck7bzjvg7",
       "jobId": "summarize-0",
       "jobType": "summarize"
     },
     {
-      "t": 1771941101516,
+      "t": 1771941739420,
       "event": "job:started",
-      "instanceId": "inst-1771941099182-7pj5lnh3v",
+      "instanceId": "inst-1771941737257-ck7bzjvg7",
       "jobId": "summarize-0",
       "jobType": "summarize",
       "modelId": "anthropic-opus-4.6"
     },
     {
-      "t": 1771941101516,
+      "t": 1771941739420,
       "event": "job:queued",
-      "instanceId": "inst-1771941099182-7pj5lnh3v",
+      "instanceId": "inst-1771941737257-ck7bzjvg7",
       "jobId": "summarize-1",
       "jobType": "summarize"
     },
     {
-      "t": 1771941101517,
+      "t": 1771941739421,
       "event": "job:queued",
-      "instanceId": "inst-1771941099182-7pj5lnh3v",
-      "jobId": "summarize-3",
+      "instanceId": "inst-1771941737257-ck7bzjvg7",
+      "jobId": "summarize-2",
       "jobType": "summarize"
     },
     {
-      "t": 1771941101517,
+      "t": 1771941739422,
       "event": "job:started",
-      "instanceId": "inst-1771941099182-7pj5lnh3v",
+      "instanceId": "inst-1771941737257-ck7bzjvg7",
       "jobId": "summarize-1",
       "jobType": "summarize",
       "modelId": "anthropic-opus-4.6"
     },
     {
-      "t": 1771941101517,
-      "event": "job:started",
-      "instanceId": "inst-1771941099182-7pj5lnh3v",
+      "t": 1771941739422,
+      "event": "job:queued",
+      "instanceId": "inst-1771941737257-ck7bzjvg7",
       "jobId": "summarize-3",
+      "jobType": "summarize"
+    },
+    {
+      "t": 1771941739423,
+      "event": "job:started",
+      "instanceId": "inst-1771941737257-ck7bzjvg7",
+      "jobId": "summarize-2",
       "jobType": "summarize",
       "modelId": "anthropic-opus-4.6"
     },
     {
-      "t": 1771941101518,
-      "event": "job:queued",
-      "instanceId": "inst-1771941099182-7pj5lnh3v",
-      "jobId": "summarize-2",
-      "jobType": "summarize"
-    },
-    {
-      "t": 1771941104187,
+      "t": 1771941742260,
       "event": "job:started",
-      "instanceId": "inst-1771941099182-7pj5lnh3v",
-      "jobId": "summarize-2",
+      "instanceId": "inst-1771941737257-ck7bzjvg7",
+      "jobId": "summarize-3",
       "jobType": "summarize",
       "modelId": "anthropic-opus-4.6"
     }
   ],
   "snapshots": [
     {
-      "timestamp": 1771941101499,
+      "timestamp": 1771941739393,
       "trigger": "initial",
       "instances": {
-        "inst-1771941099182-7pj5lnh3v": {
+        "inst-1771941737257-ck7bzjvg7": {
           "activeJobs": 0,
           "activeJobIds": [],
           "models": {
@@ -232,14 +232,12 @@
       }
     },
     {
-      "timestamp": 1771941101515,
+      "timestamp": 1771941739419,
       "trigger": "job:queued:summarize-0",
       "instances": {
-        "inst-1771941099182-7pj5lnh3v": {
+        "inst-1771941737257-ck7bzjvg7": {
           "activeJobs": 1,
-          "activeJobIds": [
-            "summarize-0"
-          ],
+          "activeJobIds": ["summarize-0"],
           "models": {
             "anthropic-opus-4.6": {
               "rpm": 1,
@@ -292,79 +290,12 @@
       }
     },
     {
-      "timestamp": 1771941101517,
+      "timestamp": 1771941739422,
       "trigger": "job:queued:summarize-1",
       "instances": {
-        "inst-1771941099182-7pj5lnh3v": {
-          "activeJobs": 3,
-          "activeJobIds": [
-            "summarize-0",
-            "summarize-1",
-            "summarize-3"
-          ],
-          "models": {
-            "anthropic-opus-4.6": {
-              "rpm": 3,
-              "rpmRemaining": 997,
-              "tpm": 90000,
-              "tpmRemaining": 360000,
-              "jobTypes": {
-                "brainstorm": {
-                  "slots": 4,
-                  "totalSlots": 4,
-                  "inFlight": 0
-                },
-                "summarize": {
-                  "slots": 3,
-                  "totalSlots": 3,
-                  "inFlight": 3
-                },
-                "analyzePDF": {
-                  "slots": 4,
-                  "totalSlots": 4,
-                  "inFlight": 0
-                }
-              }
-            },
-            "openai-gpt-5.2": {
-              "rpm": 0,
-              "rpmRemaining": 0,
-              "tpm": 0,
-              "tpmRemaining": 0,
-              "jobTypes": {
-                "brainstorm": {
-                  "slots": 9,
-                  "totalSlots": 9,
-                  "inFlight": 0
-                },
-                "summarize": {
-                  "slots": 6,
-                  "totalSlots": 6,
-                  "inFlight": 0
-                },
-                "analyzePDF": {
-                  "slots": 10,
-                  "totalSlots": 10,
-                  "inFlight": 0
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    {
-      "timestamp": 1771941101518,
-      "trigger": "job:queued:summarize-3",
-      "instances": {
-        "inst-1771941099182-7pj5lnh3v": {
+        "inst-1771941737257-ck7bzjvg7": {
           "activeJobs": 4,
-          "activeJobIds": [
-            "summarize-0",
-            "summarize-1",
-            "summarize-3",
-            "summarize-2"
-          ],
+          "activeJobIds": ["summarize-0", "summarize-1", "summarize-2", "summarize-3"],
           "models": {
             "anthropic-opus-4.6": {
               "rpm": 3,
@@ -417,17 +348,12 @@
       }
     },
     {
-      "timestamp": 1771941101518,
+      "timestamp": 1771941739423,
       "trigger": "job:queued:summarize-2",
       "instances": {
-        "inst-1771941099182-7pj5lnh3v": {
+        "inst-1771941737257-ck7bzjvg7": {
           "activeJobs": 4,
-          "activeJobIds": [
-            "summarize-0",
-            "summarize-1",
-            "summarize-3",
-            "summarize-2"
-          ],
+          "activeJobIds": ["summarize-0", "summarize-1", "summarize-2", "summarize-3"],
           "models": {
             "anthropic-opus-4.6": {
               "rpm": 3,
@@ -480,17 +406,12 @@
       }
     },
     {
-      "timestamp": 1771941101896,
-      "trigger": "periodic",
+      "timestamp": 1771941739423,
+      "trigger": "job:queued:summarize-3",
       "instances": {
-        "inst-1771941099182-7pj5lnh3v": {
+        "inst-1771941737257-ck7bzjvg7": {
           "activeJobs": 4,
-          "activeJobIds": [
-            "summarize-0",
-            "summarize-1",
-            "summarize-3",
-            "summarize-2"
-          ],
+          "activeJobIds": ["summarize-0", "summarize-1", "summarize-2", "summarize-3"],
           "models": {
             "anthropic-opus-4.6": {
               "rpm": 3,
@@ -543,17 +464,12 @@
       }
     },
     {
-      "timestamp": 1771941102396,
+      "timestamp": 1771941739792,
       "trigger": "periodic",
       "instances": {
-        "inst-1771941099182-7pj5lnh3v": {
+        "inst-1771941737257-ck7bzjvg7": {
           "activeJobs": 4,
-          "activeJobIds": [
-            "summarize-0",
-            "summarize-1",
-            "summarize-3",
-            "summarize-2"
-          ],
+          "activeJobIds": ["summarize-0", "summarize-1", "summarize-2", "summarize-3"],
           "models": {
             "anthropic-opus-4.6": {
               "rpm": 3,
@@ -606,17 +522,12 @@
       }
     },
     {
-      "timestamp": 1771941102898,
+      "timestamp": 1771941740292,
       "trigger": "periodic",
       "instances": {
-        "inst-1771941099182-7pj5lnh3v": {
+        "inst-1771941737257-ck7bzjvg7": {
           "activeJobs": 4,
-          "activeJobIds": [
-            "summarize-0",
-            "summarize-1",
-            "summarize-3",
-            "summarize-2"
-          ],
+          "activeJobIds": ["summarize-0", "summarize-1", "summarize-2", "summarize-3"],
           "models": {
             "anthropic-opus-4.6": {
               "rpm": 3,
@@ -669,17 +580,12 @@
       }
     },
     {
-      "timestamp": 1771941103398,
+      "timestamp": 1771941740793,
       "trigger": "periodic",
       "instances": {
-        "inst-1771941099182-7pj5lnh3v": {
+        "inst-1771941737257-ck7bzjvg7": {
           "activeJobs": 4,
-          "activeJobIds": [
-            "summarize-0",
-            "summarize-1",
-            "summarize-3",
-            "summarize-2"
-          ],
+          "activeJobIds": ["summarize-0", "summarize-1", "summarize-2", "summarize-3"],
           "models": {
             "anthropic-opus-4.6": {
               "rpm": 3,
@@ -732,17 +638,12 @@
       }
     },
     {
-      "timestamp": 1771941103899,
+      "timestamp": 1771941741293,
       "trigger": "periodic",
       "instances": {
-        "inst-1771941099182-7pj5lnh3v": {
+        "inst-1771941737257-ck7bzjvg7": {
           "activeJobs": 4,
-          "activeJobIds": [
-            "summarize-0",
-            "summarize-1",
-            "summarize-3",
-            "summarize-2"
-          ],
+          "activeJobIds": ["summarize-0", "summarize-1", "summarize-2", "summarize-3"],
           "models": {
             "anthropic-opus-4.6": {
               "rpm": 3,
@@ -795,17 +696,70 @@
       }
     },
     {
-      "timestamp": 1771941104399,
+      "timestamp": 1771941741795,
       "trigger": "periodic",
       "instances": {
-        "inst-1771941099182-7pj5lnh3v": {
+        "inst-1771941737257-ck7bzjvg7": {
           "activeJobs": 4,
-          "activeJobIds": [
-            "summarize-0",
-            "summarize-1",
-            "summarize-3",
-            "summarize-2"
-          ],
+          "activeJobIds": ["summarize-0", "summarize-1", "summarize-2", "summarize-3"],
+          "models": {
+            "anthropic-opus-4.6": {
+              "rpm": 3,
+              "rpmRemaining": 997,
+              "tpm": 90000,
+              "tpmRemaining": 360000,
+              "jobTypes": {
+                "brainstorm": {
+                  "slots": 4,
+                  "totalSlots": 4,
+                  "inFlight": 0
+                },
+                "summarize": {
+                  "slots": 3,
+                  "totalSlots": 3,
+                  "inFlight": 3
+                },
+                "analyzePDF": {
+                  "slots": 4,
+                  "totalSlots": 4,
+                  "inFlight": 0
+                }
+              }
+            },
+            "openai-gpt-5.2": {
+              "rpm": 0,
+              "rpmRemaining": 0,
+              "tpm": 0,
+              "tpmRemaining": 0,
+              "jobTypes": {
+                "brainstorm": {
+                  "slots": 9,
+                  "totalSlots": 9,
+                  "inFlight": 0
+                },
+                "summarize": {
+                  "slots": 6,
+                  "totalSlots": 6,
+                  "inFlight": 0
+                },
+                "analyzePDF": {
+                  "slots": 10,
+                  "totalSlots": 10,
+                  "inFlight": 0
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "timestamp": 1771941742295,
+      "trigger": "periodic",
+      "instances": {
+        "inst-1771941737257-ck7bzjvg7": {
+          "activeJobs": 4,
+          "activeJobIds": ["summarize-0", "summarize-1", "summarize-2", "summarize-3"],
           "models": {
             "anthropic-opus-4.6": {
               "rpm": 4,
@@ -858,17 +812,12 @@
       }
     },
     {
-      "timestamp": 1771941104900,
+      "timestamp": 1771941742796,
       "trigger": "periodic",
       "instances": {
-        "inst-1771941099182-7pj5lnh3v": {
+        "inst-1771941737257-ck7bzjvg7": {
           "activeJobs": 4,
-          "activeJobIds": [
-            "summarize-0",
-            "summarize-1",
-            "summarize-3",
-            "summarize-2"
-          ],
+          "activeJobIds": ["summarize-0", "summarize-1", "summarize-2", "summarize-3"],
           "models": {
             "anthropic-opus-4.6": {
               "rpm": 4,
@@ -921,17 +870,12 @@
       }
     },
     {
-      "timestamp": 1771941105400,
+      "timestamp": 1771941743296,
       "trigger": "periodic",
       "instances": {
-        "inst-1771941099182-7pj5lnh3v": {
+        "inst-1771941737257-ck7bzjvg7": {
           "activeJobs": 4,
-          "activeJobIds": [
-            "summarize-0",
-            "summarize-1",
-            "summarize-3",
-            "summarize-2"
-          ],
+          "activeJobIds": ["summarize-0", "summarize-1", "summarize-2", "summarize-3"],
           "models": {
             "anthropic-opus-4.6": {
               "rpm": 4,
@@ -984,17 +928,12 @@
       }
     },
     {
-      "timestamp": 1771941105902,
+      "timestamp": 1771941743797,
       "trigger": "periodic",
       "instances": {
-        "inst-1771941099182-7pj5lnh3v": {
+        "inst-1771941737257-ck7bzjvg7": {
           "activeJobs": 4,
-          "activeJobIds": [
-            "summarize-0",
-            "summarize-1",
-            "summarize-3",
-            "summarize-2"
-          ],
+          "activeJobIds": ["summarize-0", "summarize-1", "summarize-2", "summarize-3"],
           "models": {
             "anthropic-opus-4.6": {
               "rpm": 4,
@@ -1047,17 +986,12 @@
       }
     },
     {
-      "timestamp": 1771941106401,
+      "timestamp": 1771941744297,
       "trigger": "periodic",
       "instances": {
-        "inst-1771941099182-7pj5lnh3v": {
+        "inst-1771941737257-ck7bzjvg7": {
           "activeJobs": 4,
-          "activeJobIds": [
-            "summarize-0",
-            "summarize-1",
-            "summarize-3",
-            "summarize-2"
-          ],
+          "activeJobIds": ["summarize-0", "summarize-1", "summarize-2", "summarize-3"],
           "models": {
             "anthropic-opus-4.6": {
               "rpm": 4,
@@ -1110,17 +1044,12 @@
       }
     },
     {
-      "timestamp": 1771941106903,
+      "timestamp": 1771941744797,
       "trigger": "periodic",
       "instances": {
-        "inst-1771941099182-7pj5lnh3v": {
+        "inst-1771941737257-ck7bzjvg7": {
           "activeJobs": 4,
-          "activeJobIds": [
-            "summarize-0",
-            "summarize-1",
-            "summarize-3",
-            "summarize-2"
-          ],
+          "activeJobIds": ["summarize-0", "summarize-1", "summarize-2", "summarize-3"],
           "models": {
             "anthropic-opus-4.6": {
               "rpm": 4,
@@ -1173,17 +1102,12 @@
       }
     },
     {
-      "timestamp": 1771941107402,
+      "timestamp": 1771941745297,
       "trigger": "periodic",
       "instances": {
-        "inst-1771941099182-7pj5lnh3v": {
+        "inst-1771941737257-ck7bzjvg7": {
           "activeJobs": 4,
-          "activeJobIds": [
-            "summarize-0",
-            "summarize-1",
-            "summarize-3",
-            "summarize-2"
-          ],
+          "activeJobIds": ["summarize-0", "summarize-1", "summarize-2", "summarize-3"],
           "models": {
             "anthropic-opus-4.6": {
               "rpm": 4,
@@ -1236,17 +1160,12 @@
       }
     },
     {
-      "timestamp": 1771941107903,
+      "timestamp": 1771941745798,
       "trigger": "periodic",
       "instances": {
-        "inst-1771941099182-7pj5lnh3v": {
+        "inst-1771941737257-ck7bzjvg7": {
           "activeJobs": 4,
-          "activeJobIds": [
-            "summarize-0",
-            "summarize-1",
-            "summarize-3",
-            "summarize-2"
-          ],
+          "activeJobIds": ["summarize-0", "summarize-1", "summarize-2", "summarize-3"],
           "models": {
             "anthropic-opus-4.6": {
               "rpm": 4,
@@ -1299,17 +1218,12 @@
       }
     },
     {
-      "timestamp": 1771941108402,
+      "timestamp": 1771941746298,
       "trigger": "periodic",
       "instances": {
-        "inst-1771941099182-7pj5lnh3v": {
+        "inst-1771941737257-ck7bzjvg7": {
           "activeJobs": 4,
-          "activeJobIds": [
-            "summarize-0",
-            "summarize-1",
-            "summarize-3",
-            "summarize-2"
-          ],
+          "activeJobIds": ["summarize-0", "summarize-1", "summarize-2", "summarize-3"],
           "models": {
             "anthropic-opus-4.6": {
               "rpm": 4,
@@ -1362,17 +1276,12 @@
       }
     },
     {
-      "timestamp": 1771941108904,
+      "timestamp": 1771941746799,
       "trigger": "periodic",
       "instances": {
-        "inst-1771941099182-7pj5lnh3v": {
+        "inst-1771941737257-ck7bzjvg7": {
           "activeJobs": 4,
-          "activeJobIds": [
-            "summarize-0",
-            "summarize-1",
-            "summarize-3",
-            "summarize-2"
-          ],
+          "activeJobIds": ["summarize-0", "summarize-1", "summarize-2", "summarize-3"],
           "models": {
             "anthropic-opus-4.6": {
               "rpm": 4,
@@ -1425,17 +1334,12 @@
       }
     },
     {
-      "timestamp": 1771941109404,
+      "timestamp": 1771941747301,
       "trigger": "periodic",
       "instances": {
-        "inst-1771941099182-7pj5lnh3v": {
+        "inst-1771941737257-ck7bzjvg7": {
           "activeJobs": 4,
-          "activeJobIds": [
-            "summarize-0",
-            "summarize-1",
-            "summarize-3",
-            "summarize-2"
-          ],
+          "activeJobIds": ["summarize-0", "summarize-1", "summarize-2", "summarize-3"],
           "models": {
             "anthropic-opus-4.6": {
               "rpm": 4,
@@ -1488,7 +1392,7 @@
       }
     },
     {
-      "timestamp": 1771941109578,
+      "timestamp": 1771941747501,
       "trigger": "final",
       "instances": {}
     }
@@ -1499,7 +1403,7 @@
     "failed": 0,
     "avgDurationMs": null,
     "byInstance": {
-      "inst-1771941099182-7pj5lnh3v": {
+      "inst-1771941737257-ck7bzjvg7": {
         "completed": 0,
         "failed": 0,
         "total": 4

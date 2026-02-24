@@ -44,6 +44,10 @@ async function loadDatasetJson(datasetId: string): Promise<TestData | null> {
       const m = await import('@llm-rate-limiter/e2e-test-results/src/data/model-escalation.json');
       return m.default as unknown as TestData;
     }
+    case 'realWorld': {
+      const m = await import('@llm-rate-limiter/e2e-test-results/src/data/realWorld.json');
+      return m.default as unknown as TestData;
+    }
     case 'dummy': {
       const m = await import('@llm-rate-limiter/e2e-test-results/src/data/dummy.json');
       return m.default as unknown as TestData;
@@ -64,7 +68,7 @@ async function loadDatasetJson(datasetId: string): Promise<TestData | null> {
 }
 
 export function TimeseriesPage() {
-  const [selectedDataset, setSelectedDataset] = useState('mega-comprehensive');
+  const [selectedDataset, setSelectedDataset] = useState('realWorld');
   const [testData, setTestData] = useState<TestData | null>(null);
   const [chartData, setChartData] = useState<CapacityDataPoint[]>([]);
   const [instances, setInstances] = useState<InstanceConfig[]>([]);

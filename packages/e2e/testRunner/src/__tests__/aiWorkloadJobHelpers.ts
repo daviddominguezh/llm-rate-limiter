@@ -25,12 +25,16 @@ const SNAPSHOT_INTERVAL_MS = 500;
 const JSON_INDENT_SPACES = 2;
 
 // ---- Job duration ranges (random per job, as specified) ----
+export const BRAINSTORM_MIN_DURATION_MS = 10000;
+export const BRAINSTORM_MAX_DURATION_MS = 20000;
 export const SUMMARIZE_MIN_DURATION_MS = 20000;
 export const SUMMARIZE_MAX_DURATION_MS = 35000;
 
+const INCLUSIVE_OFFSET = 1;
+
 /** Generate a random integer duration between min and max (inclusive) */
 export const randomDurationMs = (min: number, max: number): number =>
-  Math.floor(Math.random() * (max - min + 1)) + min;
+  Math.floor(Math.random() * (max - min + INCLUSIVE_OFFSET)) + min;
 
 // ---- Types ----
 

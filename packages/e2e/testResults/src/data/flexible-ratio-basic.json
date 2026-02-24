@@ -483,9 +483,7 @@
       "instances": {
         "inst-1771941125438-xx8nki2b8": {
           "activeJobs": 1,
-          "activeJobIds": [
-            "flex-a-1771941125425-0"
-          ],
+          "activeJobIds": ["flex-a-1771941125425-0"],
           "models": {
             "flex-model": {
               "rpm": 0,
@@ -549,9 +547,7 @@
       "instances": {
         "inst-1771941125438-xx8nki2b8": {
           "activeJobs": 1,
-          "activeJobIds": [
-            "flex-a-1771941125425-0"
-          ],
+          "activeJobIds": ["flex-a-1771941125425-0"],
           "models": {
             "flex-model": {
               "rpm": 0,
@@ -580,9 +576,7 @@
         },
         "inst-1771941125445-lheaobjda": {
           "activeJobs": 1,
-          "activeJobIds": [
-            "flex-a-1771941125425-1"
-          ],
+          "activeJobIds": ["flex-a-1771941125425-1"],
           "models": {
             "flex-model": {
               "rpm": 0,
@@ -617,10 +611,7 @@
       "instances": {
         "inst-1771941125438-xx8nki2b8": {
           "activeJobs": 2,
-          "activeJobIds": [
-            "flex-a-1771941125425-0",
-            "flex-b-1771941125425-0"
-          ],
+          "activeJobIds": ["flex-a-1771941125425-0", "flex-b-1771941125425-0"],
           "models": {
             "flex-model": {
               "rpm": 0,
@@ -649,10 +640,7 @@
         },
         "inst-1771941125445-lheaobjda": {
           "activeJobs": 2,
-          "activeJobIds": [
-            "flex-a-1771941125425-1",
-            "flex-b-1771941125425-1"
-          ],
+          "activeJobIds": ["flex-a-1771941125425-1", "flex-b-1771941125425-1"],
           "models": {
             "flex-model": {
               "rpm": 0,
@@ -687,10 +675,7 @@
       "instances": {
         "inst-1771941125438-xx8nki2b8": {
           "activeJobs": 2,
-          "activeJobIds": [
-            "flex-a-1771941125425-0",
-            "flex-b-1771941125425-0"
-          ],
+          "activeJobIds": ["flex-a-1771941125425-0", "flex-b-1771941125425-0"],
           "models": {
             "flex-model": {
               "rpm": 0,
@@ -719,10 +704,7 @@
         },
         "inst-1771941125445-lheaobjda": {
           "activeJobs": 2,
-          "activeJobIds": [
-            "flex-a-1771941125425-1",
-            "flex-b-1771941125425-1"
-          ],
+          "activeJobIds": ["flex-a-1771941125425-1", "flex-b-1771941125425-1"],
           "models": {
             "flex-model": {
               "rpm": 0,
@@ -757,11 +739,7 @@
       "instances": {
         "inst-1771941125438-xx8nki2b8": {
           "activeJobs": 3,
-          "activeJobIds": [
-            "flex-a-1771941125425-0",
-            "flex-b-1771941125425-0",
-            "flex-c-1771941125425-0"
-          ],
+          "activeJobIds": ["flex-a-1771941125425-0", "flex-b-1771941125425-0", "flex-c-1771941125425-0"],
           "models": {
             "flex-model": {
               "rpm": 0,
@@ -790,10 +768,7 @@
         },
         "inst-1771941125445-lheaobjda": {
           "activeJobs": 2,
-          "activeJobIds": [
-            "flex-a-1771941125425-1",
-            "flex-b-1771941125425-1"
-          ],
+          "activeJobIds": ["flex-a-1771941125425-1", "flex-b-1771941125425-1"],
           "models": {
             "flex-model": {
               "rpm": 0,
@@ -828,11 +803,7 @@
       "instances": {
         "inst-1771941125438-xx8nki2b8": {
           "activeJobs": 3,
-          "activeJobIds": [
-            "flex-a-1771941125425-0",
-            "flex-b-1771941125425-0",
-            "flex-c-1771941125425-0"
-          ],
+          "activeJobIds": ["flex-a-1771941125425-0", "flex-b-1771941125425-0", "flex-c-1771941125425-0"],
           "models": {
             "flex-model": {
               "rpm": 0,
@@ -861,11 +832,7 @@
         },
         "inst-1771941125445-lheaobjda": {
           "activeJobs": 3,
-          "activeJobIds": [
-            "flex-a-1771941125425-1",
-            "flex-b-1771941125425-1",
-            "flex-c-1771941125425-1"
-          ],
+          "activeJobIds": ["flex-a-1771941125425-1", "flex-b-1771941125425-1", "flex-c-1771941125425-1"],
           "models": {
             "flex-model": {
               "rpm": 0,
@@ -900,10 +867,7 @@
       "instances": {
         "inst-1771941125438-xx8nki2b8": {
           "activeJobs": 2,
-          "activeJobIds": [
-            "flex-b-1771941125425-0",
-            "flex-c-1771941125425-0"
-          ],
+          "activeJobIds": ["flex-b-1771941125425-0", "flex-c-1771941125425-0"],
           "models": {
             "flex-model": {
               "rpm": 0,
@@ -932,11 +896,7 @@
         },
         "inst-1771941125445-lheaobjda": {
           "activeJobs": 3,
-          "activeJobIds": [
-            "flex-a-1771941125425-1",
-            "flex-b-1771941125425-1",
-            "flex-c-1771941125425-1"
-          ],
+          "activeJobIds": ["flex-a-1771941125425-1", "flex-b-1771941125425-1", "flex-c-1771941125425-1"],
           "models": {
             "flex-model": {
               "rpm": 0,
@@ -971,9 +931,7 @@
       "instances": {
         "inst-1771941125438-xx8nki2b8": {
           "activeJobs": 1,
-          "activeJobIds": [
-            "flex-c-1771941125425-0"
-          ],
+          "activeJobIds": ["flex-c-1771941125425-0"],
           "models": {
             "flex-model": {
               "rpm": 0,
@@ -1002,9 +960,7 @@
         },
         "inst-1771941125445-lheaobjda": {
           "activeJobs": 1,
-          "activeJobIds": [
-            "flex-c-1771941125425-1"
-          ],
+          "activeJobIds": ["flex-c-1771941125425-1"],
           "models": {
             "flex-model": {
               "rpm": 0,
@@ -1039,9 +995,7 @@
       "instances": {
         "inst-1771941125438-xx8nki2b8": {
           "activeJobs": 1,
-          "activeJobIds": [
-            "flex-c-1771941125425-0"
-          ],
+          "activeJobIds": ["flex-c-1771941125425-0"],
           "models": {
             "flex-model": {
               "rpm": 0,
@@ -1070,9 +1024,7 @@
         },
         "inst-1771941125445-lheaobjda": {
           "activeJobs": 1,
-          "activeJobIds": [
-            "flex-c-1771941125425-1"
-          ],
+          "activeJobIds": ["flex-c-1771941125425-1"],
           "models": {
             "flex-model": {
               "rpm": 0,
@@ -1107,9 +1059,7 @@
       "instances": {
         "inst-1771941125438-xx8nki2b8": {
           "activeJobs": 1,
-          "activeJobIds": [
-            "flex-c-1771941125425-0"
-          ],
+          "activeJobIds": ["flex-c-1771941125425-0"],
           "models": {
             "flex-model": {
               "rpm": 0,
@@ -1138,9 +1088,7 @@
         },
         "inst-1771941125445-lheaobjda": {
           "activeJobs": 1,
-          "activeJobIds": [
-            "flex-c-1771941125425-1"
-          ],
+          "activeJobIds": ["flex-c-1771941125425-1"],
           "models": {
             "flex-model": {
               "rpm": 0,
@@ -1204,9 +1152,7 @@
         },
         "inst-1771941125445-lheaobjda": {
           "activeJobs": 1,
-          "activeJobIds": [
-            "flex-c-1771941125425-1"
-          ],
+          "activeJobIds": ["flex-c-1771941125425-1"],
           "models": {
             "flex-model": {
               "rpm": 0,

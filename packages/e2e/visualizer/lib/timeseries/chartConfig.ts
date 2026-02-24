@@ -26,6 +26,7 @@ export const DATASETS: DatasetInfo[] = [
   { id: 'slots-evolve-interleaved', label: 'Slots Evolve Interleaved' },
   { id: 'slots-evolve-concurrent', label: 'Slots Evolve Concurrent' },
   { id: 'model-escalation', label: 'Model Escalation' },
+  { id: 'realWorld', label: 'Real World' },
   { id: 'dummy', label: 'Dummy' },
 ];
 

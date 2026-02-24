@@ -36,6 +36,8 @@ export interface ModelJobTypeTracker {
   release: (modelId: string, jobTypeId: string, hadRefund?: boolean) => void;
   /** Get effective inFlight: window counter for rate-based, concurrent count for concurrency-based */
   getInFlight: (params: HasCapacityParams) => number;
+  /** Get actual concurrent inFlight count (not window-based) for ratio adjustment */
+  getConcurrentInFlight: (modelId: string, jobTypeId: string) => number;
   /** Get allocated slots for a (model, jobType) pair */
   getAllocated: (params: HasCapacityParams) => number;
   /** Get info for all (model, jobType) pairs */
@@ -200,7 +202,7 @@ const buildSingleModelInfo = (
       state.resources,
       context.minCapacity
     );
-    const inFlight = computeEffectiveInFlight(slotResult, context.counters, context.modelId, jobTypeId);
+    const inFlight = context.counters.modelInFlight.get(context.modelId)?.get(jobTypeId) ?? ZERO;
     modelResult[jobTypeId] = { allocated: slotResult.slots, inFlight };
   }
   return modelResult;
@@ -273,6 +275,8 @@ export const createModelJobTypeTracker = (): ModelJobTypeTracker => {
       decrementWindowCounter(counters.windowCounters, modelId, jobTypeId);
     },
     getInFlight: (params) => resolveSlotState(modelPools, counters, params).inFlight,
+    getConcurrentInFlight: (modelId, jobTypeId) =>
+      counters.modelInFlight.get(modelId)?.get(jobTypeId) ?? ZERO,
     getAllocated: (params) =>
       getSlotResult(modelPools.get(params.modelId), params.ratio, params.resources, params.minCapacity).slots,
     getAllModelJobTypeInfo: createGetAllInfo(modelPools, counters),

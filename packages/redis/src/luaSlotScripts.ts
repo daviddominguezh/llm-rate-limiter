@@ -25,10 +25,15 @@ local alloc = cjson.decode(allocJson)
 -- Check pool slots (pool-based: per-model only)
 if not alloc.pools then return "0" end
 local poolAlloc = alloc.pools[modelId]
-if not poolAlloc or poolAlloc.totalSlots <= 0 then return "0" end
+if not poolAlloc then return "0" end
 
--- Decrement pool slot
-poolAlloc.totalSlots = poolAlloc.totalSlots - 1
+-- Use acquirableSlots (in-flight-aware), fall back to totalSlots for backwards compat
+local acquirable = poolAlloc.acquirableSlots
+if acquirable == nil then acquirable = poolAlloc.totalSlots end
+if not acquirable or acquirable <= 0 then return "0" end
+
+-- Decrement acquirable slot
+poolAlloc.acquirableSlots = acquirable - 1
 redis.call('HSET', allocationsKey, instanceId, cjson.encode(alloc))
 
 -- Increment in-flight

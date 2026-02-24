@@ -52,15 +52,23 @@ end
 
 -- Calculate pool-based slot allocations (per-model, no job type dimension)
 local function recalculateAllocations(instancesKey, allocationsKey, channel, modelCapacitiesKey, jobTypeResourcesKey)
-  -- Get instance count
+  -- Get instance count and per-instance in-flight data
   local instancesData = redis.call('HGETALL', instancesKey)
   local instanceCount = 0
   local instanceIds = {}
+  local instanceInFlight = {}
+  local globalInFlightByModel = {}
 
   for i = 1, #instancesData, 2 do
     instanceCount = instanceCount + 1
     local instId = instancesData[i]
     table.insert(instanceIds, instId)
+    local inst = cjson.decode(instancesData[i+1])
+    local inflight = inst.inFlightByModel or {}
+    instanceInFlight[instId] = inflight
+    for mid, cnt in pairs(inflight) do
+      globalInFlightByModel[mid] = (globalInFlightByModel[mid] or 0) + cnt
+    end
   end
 
   if instanceCount == 0 then return end
@@ -174,15 +182,51 @@ local function recalculateAllocations(instancesKey, allocationsKey, channel, mod
     }
   end
 
-  -- Store allocation for each instance (same pools for all instances)
+  -- Precompute per-model total budget (sum of each instance's max(0, totalSlots - instInFlight))
+  local totalBudgetByModel = {}
+  for _, modelId in ipairs(modelIds) do
+    local total = 0
+    for _, instId in ipairs(instanceIds) do
+      local inf = instanceInFlight[instId][modelId] or 0
+      total = total + math.max(0, pools[modelId].totalSlots - inf)
+    end
+    totalBudgetByModel[modelId] = total
+  end
+
+  -- Store per-instance allocation with in-flight-aware acquirableSlots
   for _, instId in ipairs(instanceIds) do
+    local instPools = {}
+    for _, modelId in ipairs(modelIds) do
+      local bp = pools[modelId]
+      local globalBase = bp.totalSlots * instanceCount
+      local globalInFlight = globalInFlightByModel[modelId] or 0
+      local available = math.max(0, globalBase - globalInFlight)
+      local inf = instanceInFlight[instId][modelId] or 0
+      local budget = math.max(0, bp.totalSlots - inf)
+      local totalBudget = totalBudgetByModel[modelId]
+      local acquirable = 0
+      if totalBudget > 0 and available > 0 then
+        if totalBudget <= available then
+          acquirable = budget
+        else
+          acquirable = math.floor(budget * available / totalBudget)
+        end
+      end
+      instPools[modelId] = {
+        totalSlots = bp.totalSlots,
+        acquirableSlots = acquirable,
+        tokensPerMinute = bp.tokensPerMinute,
+        requestsPerMinute = bp.requestsPerMinute,
+        tokensPerDay = bp.tokensPerDay,
+        requestsPerDay = bp.requestsPerDay
+      }
+    end
     local allocData = cjson.encode({
       instanceCount = instanceCount,
-      pools = pools,
+      pools = instPools,
       dynamicLimits = dynamicLimits
     })
     redis.call('HSET', allocationsKey, instId, allocData)
-    -- Publish update
     redis.call('PUBLISH', channel, cjson.encode({instanceId=instId, allocation=allocData}))
   end
 end

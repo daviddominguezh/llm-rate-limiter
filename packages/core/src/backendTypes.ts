@@ -27,8 +27,10 @@ export interface BackendActualResources {
 
 /** Per-model pool allocation (pool-based slot allocation) */
 export interface ModelPoolAllocation {
-  /** Total slots available for this model in this instance's pool */
+  /** Total slots available for this model in this instance's pool (used by JTM for ratio calculation) */
   totalSlots: number;
+  /** How many more slots this instance can acquire (in-flight-aware). Falls back to totalSlots if absent. */
+  acquirableSlots?: number;
   /** Per-instance tokens per minute limit for this model */
   tokensPerMinute: number;
   /** Per-instance requests per minute limit for this model */

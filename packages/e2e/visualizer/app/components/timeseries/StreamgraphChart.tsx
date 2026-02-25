@@ -111,9 +111,9 @@ function StreamgraphPanelView({ panel, height: propHeight, axisPosition, groupCu
   const handleMouseLeave = useCallback(() => setTooltip(null), []);
 
   return (
-    <div ref={containerRef} className="flex w-full min-w-0 overflow-hidden">
+    <div ref={containerRef} className="flex w-full min-w-0">
       <PanelLabel instanceId={panel.instanceId} modelId={panel.modelId} />
-      <div className="relative flex-1 min-w-0 overflow-hidden">
+      <div className="relative flex-1 min-w-0">
         <svg ref={svgRef} className="w-full block" onMouseMove={handleMouseMove} onMouseLeave={handleMouseLeave} />
         {tooltip && <CursorTooltip state={tooltip} />}
       </div>

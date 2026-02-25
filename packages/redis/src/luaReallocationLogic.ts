@@ -108,10 +108,10 @@ local function recalculateAllocations(instancesKey, allocationsKey, channel, mod
     dynamicLimits[modelId] = {}
 
     -- Calculate remaining capacity per instance: (globalLimit - actualUsage) / instanceCount
-    local tpm = 0
-    local rpm = 0
-    local tpd = 0
-    local rpd = 0
+    local tpm = -1
+    local rpm = -1
+    local tpd = -1
+    local rpd = -1
 
     if isValidNumber(model.tokensPerMinute) then
       local remaining = math.max(0, model.tokensPerMinute - usage.tpmUsed)

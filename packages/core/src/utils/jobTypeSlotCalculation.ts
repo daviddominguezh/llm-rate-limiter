@@ -41,7 +41,7 @@ const createCandidateAdder =
   ): ((poolValue: number, resourceEstimate: number | undefined, windowMs: number) => void) =>
   (poolValue, resourceEstimate, windowMs) => {
     const estimate = resourceEstimate ?? ZERO;
-    if (poolValue > ZERO && estimate > ZERO) {
+    if (poolValue >= ZERO && estimate > ZERO) {
       candidates.push({ slots: Math.floor((poolValue * ratio) / estimate), windowMs });
     }
   };

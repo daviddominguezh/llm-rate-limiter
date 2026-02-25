@@ -112,7 +112,7 @@ function countActiveByType(activeJobIds: string[], jobs: Record<string, JobRecor
 /** Build metrics for a single (model, jobType) entry */
 function toMetrics(jt: CompactModelJobTypeState, weight: number): JobTypeMetrics {
   const running = jt.inFlight;
-  const capacity = Math.max(jt.slots, running);
+  const capacity = Math.max(jt.totalSlots, running);
   return {
     running,
     queued: 0,

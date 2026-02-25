@@ -48,7 +48,7 @@ const TRANSITION_MS = 200;
 export const DEFAULT_DIMENSIONS: StreamgraphDimensions = {
   width: 800,
   height: 300,
-  margin: { top: 10, right: 10, bottom: 30, left: 10 },
+  margin: { top: 10, right: 10, bottom: 30, left: 16 },
 };
 
 // =============================================================================
@@ -223,6 +223,40 @@ export function renderCapacityLine(
     .attr('stroke', CAPACITY_LINE_COLOR)
     .attr('stroke-width', CAPACITY_LINE_WIDTH)
     .attr('fill', 'none');
+}
+
+// =============================================================================
+// Data start line — white vertical separator where data begins
+// =============================================================================
+
+const START_LINE_COLOR = '#ffffff';
+const START_LINE_WIDTH = 1;
+
+/** Render a vertical white line at the first interval with data */
+export function renderStartLine(
+  g: d3.Selection<SVGGElement, unknown, null, undefined>,
+  layout: StreamgraphLayout,
+  poolPerRow: number[],
+  times: number[],
+  innerH: number
+): void {
+  const startIdx = poolPerRow.findIndex((v) => v > 0);
+  if (startIdx < 0) {
+    g.selectAll('line.data-start').remove();
+    return;
+  }
+  const x = layout.xScale(times[startIdx]);
+  let line = g.select<SVGLineElement>('line.data-start');
+  if (line.empty()) {
+    line = g.append('line').attr('class', 'data-start');
+  }
+  line
+    .attr('x1', x)
+    .attr('x2', x)
+    .attr('y1', 0)
+    .attr('y2', innerH)
+    .attr('stroke', START_LINE_COLOR)
+    .attr('stroke-width', START_LINE_WIDTH);
 }
 
 // =============================================================================

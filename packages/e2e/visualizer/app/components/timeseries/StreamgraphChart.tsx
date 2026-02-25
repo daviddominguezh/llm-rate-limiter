@@ -19,6 +19,7 @@ import {
   renderCapacityLine,
   renderCursorLine,
   renderRunning,
+  renderStartLine,
 } from './streamgraphHelpers';
 import type { StreamgraphDimensions, StreamgraphLayout } from './streamgraphHelpers';
 import { ModelGroup } from './StreamgraphModelGroup';
@@ -175,6 +176,8 @@ function useRenderEffect(params: RenderEffectParams): void {
     renderRunning(g, layout, colorMap);
     const times = panel.capacityRows.map((r) => r.time);
     renderCapacityLine(g, layout, panel.poolPerRow, times);
+    const innerH = dims.height - dims.margin.top - dims.margin.bottom;
+    renderStartLine(g, layout, panel.poolPerRow, times, innerH);
     sel.selectAll('g.x-axis').remove();
     if (axisPosition !== 'none') {
       renderAxis(sel, layout.xScale, dims, axisPosition);

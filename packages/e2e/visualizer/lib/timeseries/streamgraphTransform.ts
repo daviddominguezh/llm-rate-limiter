@@ -1,8 +1,9 @@
 /**
  * Transform StructuredCapacityResult into per-(instance, model) streamgraph data.
  *
- * Produces one StreamgraphPanel per (instance, model) pair. Each panel's streams
- * are the job types, keyed by jobType name, with rows of { time, [jt]: runningHeight }.
+ * Each panel provides:
+ *   - capacityRows: { time, [jt]: capacityHeight } — stacked to form band boundaries
+ *   - runningRows:  { time, [jt]: runningHeight }  — filled within each band
  */
 import type { StructuredCapacityResult } from './structuredTransform';
 
@@ -25,7 +26,7 @@ export interface StreamgraphStream {
 export interface StreamgraphPanel {
   instanceId: string;
   modelId: string;
-  rows: StreamgraphRow[];
+  runningRows: StreamgraphRow[];
   capacityRows: StreamgraphRow[];
   streams: StreamgraphStream[];
 }
@@ -84,52 +85,32 @@ function discoverPanels(
 }
 
 // =============================================================================
-// Row building for a single panel
+// Row building
 // =============================================================================
-
-/** Build running-height rows for one (instance, model) panel */
-function buildRunningRows(
-  result: StructuredCapacityResult,
-  instanceId: string,
-  modelId: string,
-  jobTypeKeys: string[]
-): StreamgraphRow[] {
-  return result.data.map((interval) => buildRow(interval, instanceId, modelId, jobTypeKeys, 'runningHeight'));
-}
-
-/** Build capacity-height rows for one (instance, model) panel */
-function buildCapacityRows(
-  result: StructuredCapacityResult,
-  instanceId: string,
-  modelId: string,
-  jobTypeKeys: string[]
-): StreamgraphRow[] {
-  return result.data.map((interval) =>
-    buildRow(interval, instanceId, modelId, jobTypeKeys, 'capacityHeight')
-  );
-}
 
 type HeightField = 'capacityHeight' | 'runningHeight';
 
-/** Build a single row extracting the specified height field */
-function buildRow(
-  interval: StructuredCapacityResult['data'][number],
+/** Build rows extracting a specific height field for each job type */
+function buildRows(
+  result: StructuredCapacityResult,
   instanceId: string,
   modelId: string,
   jobTypeKeys: string[],
   field: HeightField
-): StreamgraphRow {
-  const row: StreamgraphRow = { time: interval.time };
-  for (const jt of jobTypeKeys) {
-    row[jt] = 0;
-  }
-  const modelData = interval.instances[instanceId]?.[modelId];
-  if (modelData !== undefined) {
-    for (const [jt, metrics] of Object.entries(modelData)) {
-      row[jt] = metrics[field];
+): StreamgraphRow[] {
+  return result.data.map((interval) => {
+    const row: StreamgraphRow = { time: interval.time };
+    for (const jt of jobTypeKeys) {
+      row[jt] = 0;
     }
-  }
-  return row;
+    const modelData = interval.instances[instanceId]?.[modelId];
+    if (modelData !== undefined) {
+      for (const [jt, metrics] of Object.entries(modelData)) {
+        row[jt] = metrics[field];
+      }
+    }
+    return row;
+  });
 }
 
 // =============================================================================
@@ -149,9 +130,16 @@ export function buildStreamgraphPanels(result: StructuredCapacityResult): Stream
       color: getJobTypeColor(jt, i),
     }));
 
-    const rows = buildRunningRows(result, panel.instanceId, panel.modelId, sortedJts);
-    const capacityRows = buildCapacityRows(result, panel.instanceId, panel.modelId, sortedJts);
-    panels.push({ instanceId: panel.instanceId, modelId: panel.modelId, rows, capacityRows, streams });
+    const runningRows = buildRows(result, panel.instanceId, panel.modelId, sortedJts, 'runningHeight');
+    const capacityRows = buildRows(result, panel.instanceId, panel.modelId, sortedJts, 'capacityHeight');
+
+    panels.push({
+      instanceId: panel.instanceId,
+      modelId: panel.modelId,
+      runningRows,
+      capacityRows,
+      streams,
+    });
   }
 
   return panels;

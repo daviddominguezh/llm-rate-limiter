@@ -13,8 +13,8 @@ import {
   DEFAULT_DIMENSIONS,
   highlightStream,
   renderAxis,
-  renderCapacityPaths,
-  renderPaths,
+  renderBands,
+  renderRunning,
 } from './streamgraphHelpers';
 
 // =============================================================================
@@ -141,7 +141,7 @@ function useRenderEffect(
 ): void {
   useEffect(() => {
     const svg = svgRef.current;
-    if (!svg || panel.rows.length === 0) return;
+    if (!svg || panel.runningRows.length === 0) return;
 
     const sel = d3.select(svg);
     sel.attr('width', dims.width).attr('height', dims.height);
@@ -151,10 +151,10 @@ function useRenderEffect(
     g.attr('transform', `translate(${dims.margin.left}, ${dims.margin.top})`);
 
     const keys = panel.streams.map((s) => s.key);
-    const layout = computeLayout({ rows: panel.rows, capacityRows: panel.capacityRows, keys, dims });
+    const layout = computeLayout({ runningRows: panel.runningRows, capacityRows: panel.capacityRows, keys, dims });
 
-    renderCapacityPaths(g, layout, colorMap);
-    renderPaths(g, layout, colorMap);
+    renderBands(g, layout, colorMap);
+    renderRunning(g, layout, colorMap, panel.runningRows);
     renderAxis(sel, layout.xScale, dims);
     applyTransitions(g);
   }, [svgRef, panel, dims, colorMap]);
@@ -171,7 +171,7 @@ function useStreamHover(
       if (!svg) return;
 
       const target = event.target as SVGElement;
-      const path = target.closest('path.stream');
+      const path = target.closest('path.running') ?? target.closest('path.band');
       if (!path) {
         setTooltip(null);
         highlightStream(d3.select(svg).select('g.chart-area'), null);

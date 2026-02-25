@@ -48,7 +48,11 @@ const MIN_WIDTH = 100;
 // =============================================================================
 
 export function StreamgraphChart({ data, height: propHeight }: StreamgraphChartProps) {
-  const panels = useMemo(() => buildStreamgraphPanels(data), [data]);
+  const panels = useMemo(() => {
+    const built = buildStreamgraphPanels(data);
+    built.sort((a, b) => a.modelId.localeCompare(b.modelId));
+    return built;
+  }, [data]);
 
   if (panels.length === 0) {
     return <div className="h-64 flex items-center justify-center text-muted-foreground">No data</div>;
@@ -92,10 +96,12 @@ function StreamgraphPanel({ panel, height: propHeight }: PanelProps) {
   const handleMouseLeave = useCursorLeave(svgRef, setTooltip);
 
   return (
-    <div ref={containerRef} className="relative w-full">
+    <div ref={containerRef} className="flex w-full">
       <PanelLabel instanceId={panel.instanceId} modelId={panel.modelId} />
-      <svg ref={svgRef} className="w-full block" onMouseMove={handleMouseMove} onMouseLeave={handleMouseLeave} />
-      {tooltip && <CursorTooltip state={tooltip} />}
+      <div className="relative flex-1 min-w-0">
+        <svg ref={svgRef} className="w-full block" onMouseMove={handleMouseMove} onMouseLeave={handleMouseLeave} />
+        {tooltip && <CursorTooltip state={tooltip} />}
+      </div>
     </div>
   );
 }
@@ -234,13 +240,20 @@ function useCursorLeave(
 
 function PanelLabel({ instanceId, modelId }: { instanceId: string; modelId: string }) {
   return (
-    <div
-      className="px-3 py-1 text-xs"
-      style={{ color: '#888', fontFamily: "'JetBrains Mono', monospace" }}
-    >
-      <span style={{ color: '#aaa', fontWeight: 600 }}>{instanceId}</span>
-      <span style={{ color: '#555' }}> / </span>
-      <span>{modelId}</span>
+    <div className="flex items-center justify-center shrink-0 pl-3" style={{ width: 40 }}>
+      <div
+        className="text-xs whitespace-nowrap"
+        style={{
+          writingMode: 'vertical-rl',
+          transform: 'rotate(180deg)',
+          color: '#888',
+          fontFamily: "'JetBrains Mono', monospace",
+        }}
+      >
+        <span style={{ color: '#aaa', fontWeight: 600 }}>{instanceId}</span>
+        <span style={{ color: '#555' }}> / </span>
+        <span>{modelId}</span>
+      </div>
     </div>
   );
 }

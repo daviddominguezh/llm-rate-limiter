@@ -49,7 +49,7 @@ const MIN_WIDTH = 100;
 export function StreamgraphChart({ data, height: propHeight }: StreamgraphChartProps) {
   const panels = useMemo(() => {
     const built = buildStreamgraphPanels(data);
-    built.sort((a, b) => a.modelId.localeCompare(b.modelId));
+    built.sort((a, b) => earliestDataTime(a) - earliestDataTime(b));
     return built;
   }, [data]);
   const axisPositions = useMemo(() => computeAxisPositions(panels), [panels]);
@@ -246,7 +246,6 @@ function useCursorHover(params: CursorHoverParams): (e: React.MouseEvent<SVGSVGE
       const hoveredKey = detectHoveredKey(event);
 
       onCursorChange({ index, hoveredKey });
-      logCursorDebug(panel, index);
 
       const tooltipRow = panel.tooltipData[index];
       setTooltip({
@@ -266,17 +265,6 @@ function useCursorHover(params: CursorHoverParams): (e: React.MouseEvent<SVGSVGE
   );
 }
 
-/** Log interval debug info */
-function logCursorDebug(panel: StreamgraphPanel, index: number): void {
-  const capRow = panel.capacityRows[index];
-  const runRow = panel.runningRows[index];
-  const tooltip = panel.tooltipData[index];
-  const details = panel.streams.map((s) => {
-    const raw = tooltip.values[s.jobType];
-    return `${s.jobType}: capH=${capRow[s.key].toFixed(2)} runH=${runRow[s.key].toFixed(2)} cap=${raw?.capacity ?? 0} run=${raw?.running ?? 0}`;
-  });
-  console.log(`[cursor] ${panel.instanceId}|${panel.modelId} idx=${index} t=${capRow.time}s\n  ${details.join('\n  ')}`);
-}
 
 /** Detect which job type the cursor is over */
 function detectHoveredKey(event: React.MouseEvent<SVGSVGElement>): string | null {
@@ -290,6 +278,13 @@ function detectHoveredKey(event: React.MouseEvent<SVGSVGElement>): string | null
 // =============================================================================
 // Axis position helpers
 // =============================================================================
+
+/** Find the earliest time a panel has data (first non-zero pool) */
+function earliestDataTime(panel: StreamgraphPanel): number {
+  const idx = panel.poolPerRow.findIndex((v) => v > 0);
+  if (idx < 0) return Infinity;
+  return panel.capacityRows[idx].time;
+}
 
 /** Group consecutive panels by modelId (panels must already be sorted) */
 function groupPanelsByModel(panels: StreamgraphPanel[]): StreamgraphPanel[][] {

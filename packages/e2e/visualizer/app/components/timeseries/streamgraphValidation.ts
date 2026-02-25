@@ -55,6 +55,11 @@ function rowStackHeight(row: StreamgraphRow): number {
   return total;
 }
 
+/** Check if all instances have non-zero contribution */
+function allInstancesActive(perInstance: Record<string, number>): boolean {
+  return Object.values(perInstance).every((v) => v > 0);
+}
+
 function validateModel(modelId: string, modelPanels: StreamgraphPanel[]): void {
   const intervalCount = modelPanels[0].capacityRows.length;
   const totals: ModelIntervalTotal[] = [];
@@ -81,21 +86,46 @@ function validateModel(modelId: string, modelPanels: StreamgraphPanel[]): void {
 }
 
 function logModelSummary(modelId: string, totals: ModelIntervalTotal[]): void {
-  const heights = totals.map((t) => t.totalHeight);
+  const allActive = totals.filter((t) => allInstancesActive(t.perInstance));
+  const partialActive = totals.filter((t) => !allInstancesActive(t.perInstance));
+
+  logPhase(modelId, 'ALL ACTIVE', allActive);
+  logPhase(modelId, 'PARTIAL (some inst=0)', partialActive);
+}
+
+function logPhase(modelId: string, phase: string, entries: ModelIntervalTotal[]): void {
+  if (entries.length === 0) return;
+
+  const heights = entries.map((t) => t.totalHeight);
   const min = Math.min(...heights);
   const max = Math.max(...heights);
+  const sampleSize = 5;
 
-  console.log(`[StreamgraphValidation] ${modelId}: intervals=${totals.length}, min=${min.toFixed(2)}, max=${max.toFixed(2)}`);
+  console.log(
+    `[Validation] ${modelId} — ${phase}: count=${entries.length}, min=${min.toFixed(2)}, max=${max.toFixed(2)}`
+  );
 
-  if (min !== max) {
-    const varying = totals.filter((t) => t.totalHeight !== totals[0].totalHeight);
-    const sampleSize = 5;
-    const sample = varying.slice(0, sampleSize);
-    for (const t of sample) {
-      console.log(`  [${t.intervalIdx}] t=${t.time.toFixed(1)}s total=${t.totalHeight.toFixed(2)}`, t.perInstance);
-    }
-    if (varying.length > sampleSize) {
-      console.log(`  ... and ${varying.length - sampleSize} more varying intervals`);
-    }
+  const uniqueHeights = [...new Set(heights.map((h) => h.toFixed(4)))];
+  logUniqueHeights(uniqueHeights);
+
+  const sample = pickSpreadSample(entries, sampleSize);
+  for (const t of sample) {
+    console.log(`  [${t.intervalIdx}] t=${t.time.toFixed(1)}s total=${t.totalHeight.toFixed(4)}`, t.perInstance);
   }
+}
+
+function logUniqueHeights(uniqueHeights: string[]): void {
+  const maxDisplay = 10;
+  if (uniqueHeights.length <= maxDisplay) {
+    console.log(`  unique totals: [${uniqueHeights.join(', ')}]`);
+  } else {
+    console.log(`  ${uniqueHeights.length} distinct totals`);
+  }
+}
+
+/** Pick entries spread evenly across the array */
+function pickSpreadSample(entries: ModelIntervalTotal[], count: number): ModelIntervalTotal[] {
+  if (entries.length <= count) return entries;
+  const step = (entries.length - 1) / (count - 1);
+  return Array.from({ length: count }, (_, i) => entries[Math.round(i * step)]);
 }

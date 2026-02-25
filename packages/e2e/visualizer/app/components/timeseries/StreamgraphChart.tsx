@@ -22,7 +22,6 @@ import {
 import type { StreamgraphDimensions, StreamgraphLayout } from './streamgraphHelpers';
 import type { CursorTooltipState } from './StreamgraphTooltip';
 import { CursorTooltip } from './StreamgraphTooltip';
-import { useValidateStackHeights } from './streamgraphValidation';
 
 // =============================================================================
 // Types
@@ -50,8 +49,6 @@ const MIN_WIDTH = 100;
 
 export function StreamgraphChart({ data, height: propHeight }: StreamgraphChartProps) {
   const panels = useMemo(() => buildStreamgraphPanels(data), [data]);
-
-  useValidateStackHeights(panels);
 
   if (panels.length === 0) {
     return <div className="h-64 flex items-center justify-center text-muted-foreground">No data</div>;
@@ -183,6 +180,7 @@ function useCursorHover(params: CursorHoverParams): (e: React.MouseEvent<SVGSVGE
       const rect = svg.getBoundingClientRect();
       const chartX = event.clientX - rect.left - dims.margin.left;
       const index = findNearestIndex(panel.capacityRows, layout.xScale, chartX);
+      console.log(`[cursor] ${panel.instanceId}|${panel.modelId} interval=${index} t=${panel.capacityRows[index].time}s`);
       const innerH = dims.height - dims.margin.top - dims.margin.bottom;
       renderCursorLine(g, layout.xScale(panel.capacityRows[index].time), innerH);
 

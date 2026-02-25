@@ -118,7 +118,7 @@ function toMetrics(jt: CompactModelJobTypeState, weight: number): JobTypeMetrics
     queued: 0,
     capacity,
     runningHeight: running,
-    capacityHeight: jt.slots,
+    capacityHeight: capacity,
     slots: jt.slots,
   };
 }
@@ -190,70 +190,6 @@ export function buildInstanceFullIdMap(testData: TestData): Record<string, strin
 }
 
 // =============================================================================
-// Capacity height normalization
-// =============================================================================
-
-/**
- * Normalize capacityHeight so that per-model totals across instances are
- * consistent.  Raw per-jt slots lose fractions to floor(), so we scale each
- * instance's jt heights to sum to the expected pool size.
- */
-function normalizeCapacityHeights(instances: InstanceMap, setup: CapacitySetup): void {
-  const modelIds = collectModelIds(instances);
-  for (const modelId of modelIds) {
-    const model = setup.models[modelId];
-    if (model === undefined) continue;
-    normalizeModel(instances, modelId, model.totalSlots);
-  }
-}
-
-/** Collect all model IDs present across instances */
-function collectModelIds(instances: InstanceMap): Set<string> {
-  const ids = new Set<string>();
-  for (const models of Object.values(instances)) {
-    for (const modelId of Object.keys(models)) {
-      ids.add(modelId);
-    }
-  }
-  return ids;
-}
-
-/** Scale each instance's capacityHeight so total across instances = totalSlots */
-function normalizeModel(instances: InstanceMap, modelId: string, totalSlots: number): void {
-  const activeCount = countActiveInstances(instances, modelId);
-  if (activeCount === 0) return;
-  const poolPerInstance = Math.floor(totalSlots / activeCount);
-
-  for (const models of Object.values(instances)) {
-    const jtMap = models[modelId];
-    if (jtMap === undefined) continue;
-    scaleJtHeights(jtMap, poolPerInstance);
-  }
-}
-
-function countActiveInstances(instances: InstanceMap, modelId: string): number {
-  let count = 0;
-  for (const models of Object.values(instances)) {
-    if (models[modelId] !== undefined) count += 1;
-  }
-  return count;
-}
-
-/** Scale job type capacityHeight values to sum to targetPool */
-function scaleJtHeights(jtMap: JobTypeMap, targetPool: number): void {
-  let rawSum = 0;
-  for (const m of Object.values(jtMap)) {
-    rawSum += m.capacityHeight;
-  }
-  if (rawSum === 0) return;
-  const scale = targetPool / rawSum;
-  for (const m of Object.values(jtMap)) {
-    m.capacityHeight *= scale;
-    m.runningHeight *= scale;
-  }
-}
-
-// =============================================================================
 // Main transform
 // =============================================================================
 
@@ -279,7 +215,6 @@ export function transformToStructuredData(testData: TestData): StructuredCapacit
         const shortId = idMap.get(fullId) ?? fullId;
         instances[shortId] = buildModelMap(state, testData.jobs, modelWeights);
       }
-      normalizeCapacityHeights(instances, setup);
     }
 
     data.push({

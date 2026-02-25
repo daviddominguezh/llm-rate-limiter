@@ -16,6 +16,7 @@ import {
   highlightStream,
   renderAxis,
   renderBands,
+  renderCapacityLine,
   renderCursorLine,
   renderRunning,
 } from './streamgraphHelpers';
@@ -80,7 +81,7 @@ export function StreamgraphChart({ data, height: propHeight }: StreamgraphChartP
 // Single panel — one SVG for one (instance, model)
 // =============================================================================
 
-function StreamgraphPanelView({ panel, height: propHeight, axisPosition, groupCursor, onCursorChange }: PanelProps) {
+function StreamgraphPanelView({ panel, height: propHeight, axisPosition, groupCursor, onCursorChange, groupYMax }: PanelProps) {
   const svgRef = useRef<SVGSVGElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const [width, setWidth] = useState(DEFAULT_DIMENSIONS.width);
@@ -97,8 +98,8 @@ function StreamgraphPanelView({ panel, height: propHeight, axisPosition, groupCu
     return { ...DEFAULT_DIMENSIONS, width, height: propHeight ?? DEFAULT_DIMENSIONS.height, margin };
   }, [width, propHeight, axisPosition]);
 
-  const layout = useLayout(panel, dims);
-  useRenderEffect({ svgRef, layout, dims, colorMap, axisPosition });
+  const layout = useLayout(panel, dims, groupYMax);
+  useRenderEffect({ svgRef, layout, dims, colorMap, axisPosition, panel });
   useCursorSync({ svgRef, layout, dims, groupCursor, panel });
 
   const handleMouseMove = useCursorHover({ svgRef, panel, layout, dims, setTooltip, onCursorChange });
@@ -119,12 +120,12 @@ function StreamgraphPanelView({ panel, height: propHeight, axisPosition, groupCu
 // Layout
 // =============================================================================
 
-function useLayout(panel: StreamgraphPanel, dims: StreamgraphDimensions): StreamgraphLayout | null {
+function useLayout(panel: StreamgraphPanel, dims: StreamgraphDimensions, groupYMax: number): StreamgraphLayout | null {
   return useMemo(() => {
     if (panel.runningRows.length === 0) return null;
     const keys = panel.streams.map((s) => s.key);
-    return computeLayout({ runningRows: panel.runningRows, capacityRows: panel.capacityRows, keys, dims });
-  }, [panel, dims]);
+    return computeLayout({ runningRows: panel.runningRows, capacityRows: panel.capacityRows, keys, dims, groupYMax });
+  }, [panel, dims, groupYMax]);
 }
 
 // =============================================================================
@@ -153,10 +154,11 @@ interface RenderEffectParams {
   dims: StreamgraphDimensions;
   colorMap: Map<string, string>;
   axisPosition: AxisPosition;
+  panel: StreamgraphPanel;
 }
 
 function useRenderEffect(params: RenderEffectParams): void {
-  const { svgRef, layout, dims, colorMap, axisPosition } = params;
+  const { svgRef, layout, dims, colorMap, axisPosition, panel } = params;
 
   useEffect(() => {
     const svg = svgRef.current;
@@ -171,12 +173,14 @@ function useRenderEffect(params: RenderEffectParams): void {
 
     renderBands(g, layout, colorMap);
     renderRunning(g, layout, colorMap);
+    const times = panel.capacityRows.map((r) => r.time);
+    renderCapacityLine(g, layout, panel.poolPerRow, times);
     sel.selectAll('g.x-axis').remove();
     if (axisPosition !== 'none') {
       renderAxis(sel, layout.xScale, dims, axisPosition);
     }
     applyTransitions(g);
-  }, [svgRef, layout, dims, colorMap, axisPosition]);
+  }, [svgRef, layout, dims, colorMap, axisPosition, panel]);
 }
 
 // =============================================================================
@@ -239,6 +243,7 @@ function useCursorHover(params: CursorHoverParams): (e: React.MouseEvent<SVGSVGE
       const hoveredKey = detectHoveredKey(event);
 
       onCursorChange({ index, hoveredKey });
+      logCursorDebug(panel, index);
 
       const tooltipRow = panel.tooltipData[index];
       setTooltip({
@@ -256,6 +261,18 @@ function useCursorHover(params: CursorHoverParams): (e: React.MouseEvent<SVGSVGE
     },
     [svgRef, panel, layout, dims, setTooltip, onCursorChange]
   );
+}
+
+/** Log interval debug info */
+function logCursorDebug(panel: StreamgraphPanel, index: number): void {
+  const capRow = panel.capacityRows[index];
+  const runRow = panel.runningRows[index];
+  const tooltip = panel.tooltipData[index];
+  const details = panel.streams.map((s) => {
+    const raw = tooltip.values[s.jobType];
+    return `${s.jobType}: capH=${capRow[s.key].toFixed(2)} runH=${runRow[s.key].toFixed(2)} cap=${raw?.capacity ?? 0} run=${raw?.running ?? 0}`;
+  });
+  console.log(`[cursor] ${panel.instanceId}|${panel.modelId} idx=${index} t=${capRow.time}s\n  ${details.join('\n  ')}`);
 }
 
 /** Detect which job type the cursor is over */

@@ -1,7 +1,7 @@
 'use client';
 
 import type { StreamgraphPanel } from '@/lib/timeseries/streamgraphTransform';
-import { useCallback, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 
 import type { AxisPosition, GroupCursorState, StreamgraphPanelComponent } from './streamgraphTypes';
 
@@ -21,6 +21,8 @@ export function ModelGroup({ group, propHeight, axisPositions, startIdx, PanelCo
   const [cursor, setCursor] = useState<GroupCursorState | null>(null);
   const handleGroupLeave = useCallback(() => setCursor(null), []);
 
+  const groupYMax = useMemo(() => computeGroupYMax(group), [group]);
+
   return (
     <div onMouseLeave={handleGroupLeave}>
       {group.map((panel, gi) => (
@@ -32,9 +34,28 @@ export function ModelGroup({ group, propHeight, axisPositions, startIdx, PanelCo
             axisPosition={axisPositions[startIdx + gi]}
             groupCursor={cursor}
             onCursorChange={setCursor}
+            groupYMax={groupYMax}
           />
         </div>
       ))}
     </div>
   );
+}
+
+/** Compute the maximum y value across all panels in the group */
+function computeGroupYMax(group: StreamgraphPanel[]): number {
+  let max = 1;
+  for (const panel of group) {
+    for (const poolVal of panel.poolPerRow) {
+      if (poolVal > max) max = poolVal;
+    }
+    for (const row of panel.capacityRows) {
+      let rowSum = 0;
+      for (const [key, val] of Object.entries(row)) {
+        if (key !== 'time') rowSum += val;
+      }
+      if (rowSum > max) max = rowSum;
+    }
+  }
+  return max;
 }

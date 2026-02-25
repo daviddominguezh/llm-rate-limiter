@@ -60,11 +60,13 @@ interface ComputeLayoutParams {
   capacityRows: StreamgraphRow[];
   keys: string[];
   dims: StreamgraphDimensions;
+  /** Shared yMax across all panels in a model group for consistent scale */
+  groupYMax?: number;
 }
 
 /** Stack capacity for band boundaries, compute running fills within bands */
 export function computeLayout(params: ComputeLayoutParams): StreamgraphLayout {
-  const { runningRows, capacityRows, keys, dims } = params;
+  const { runningRows, capacityRows, keys, dims, groupYMax } = params;
   const innerW = dims.width - dims.margin.left - dims.margin.right;
   const innerH = dims.height - dims.margin.top - dims.margin.bottom;
 
@@ -77,8 +79,13 @@ export function computeLayout(params: ComputeLayoutParams): StreamgraphLayout {
   const timeExtent = d3.extent(capacityRows, (r) => r.time) as [number, number];
   const xScale = d3.scaleLinear().domain(timeExtent).range([0, innerW]);
 
-  const yMax = d3.max(capacityStacked, (s) => d3.max(s, (d) => d[1])) ?? 1;
-  const yScale = d3.scaleLinear().domain([0, yMax]).range([innerH, 0]);
+  const dataMax = d3.max(capacityStacked, (s) => d3.max(s, (d) => d[1])) ?? 1;
+  const yMax = groupYMax ?? dataMax;
+  const Y_HEADROOM = 1.08;
+  const yScale = d3
+    .scaleLinear()
+    .domain([0, yMax * Y_HEADROOM])
+    .range([innerH, 0]);
 
   const runningLayers = buildRunningLayers(capacityStacked, runningRows, keys);
   const bandAreaGen = buildAreaGen(xScale, yScale, capacityRows);
@@ -185,6 +192,37 @@ export function renderAxis(
     .merge(axisGroup)
     .attr('transform', `translate(${margin.left}, ${yPos})`)
     .call(axisFn.ticks(AXIS_TICKS).tickFormat((d) => `${d}s`));
+}
+
+// =============================================================================
+// Capacity line — red horizontal line showing total pool per instance
+// =============================================================================
+
+const CAPACITY_LINE_COLOR = '#E53E3E';
+const CAPACITY_LINE_WIDTH = 2;
+
+/** Render a red horizontal line at the pool boundary for each interval */
+export function renderCapacityLine(
+  g: d3.Selection<SVGGElement, unknown, null, undefined>,
+  layout: StreamgraphLayout,
+  poolPerRow: number[],
+  times: number[]
+): void {
+  const lineGen = d3
+    .line<number>()
+    .defined((d) => d > 0)
+    .x((_d, i) => layout.xScale(times[i]))
+    .y((d) => layout.yScale(d))
+    .curve(d3.curveBasis);
+
+  g.selectAll('path.capacity-line')
+    .data([poolPerRow])
+    .join('path')
+    .attr('class', 'capacity-line')
+    .attr('d', lineGen)
+    .attr('stroke', CAPACITY_LINE_COLOR)
+    .attr('stroke-width', CAPACITY_LINE_WIDTH)
+    .attr('fill', 'none');
 }
 
 // =============================================================================

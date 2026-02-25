@@ -6,7 +6,7 @@
  *   - runningRows:  { time, [jt]: runningHeight }  — filled within each band
  *   - tooltipData:  raw running/capacity counts per time point for tooltip display
  */
-import type { StructuredCapacityResult } from './structuredTransform';
+import type { CapacityInterval, StructuredCapacityResult } from './structuredTransform';
 
 // =============================================================================
 // Types
@@ -37,6 +37,8 @@ export interface StreamgraphPanel {
   capacityRows: StreamgraphRow[];
   tooltipData: PanelTooltipRow[];
   streams: StreamgraphStream[];
+  /** Per-row pool size (total capacity for this instance's model at each interval) */
+  poolPerRow: number[];
 }
 
 /** All panels derived from a StructuredCapacityResult */
@@ -140,6 +142,29 @@ function buildTooltipData(
 }
 
 // =============================================================================
+// Pool per row — for the capacity line overlay
+// =============================================================================
+
+/** Count how many instances have a model active at one interval */
+function countActiveForModel(interval: CapacityInterval, modelId: string): number {
+  let count = 0;
+  for (const models of Object.values(interval.instances)) {
+    if (models[modelId] !== undefined) count += 1;
+  }
+  return count;
+}
+
+/** Compute per-row pool size; 0 when this instance is inactive */
+function computePoolPerRow(result: StructuredCapacityResult, instanceId: string, modelId: string): number[] {
+  const totalSlots = result.setup.models[modelId]?.totalSlots ?? 0;
+  return result.data.map((interval) => {
+    if (interval.instances[instanceId]?.[modelId] === undefined) return 0;
+    const active = countActiveForModel(interval, modelId);
+    return active > 0 ? Math.floor(totalSlots / active) : 0;
+  });
+}
+
+// =============================================================================
 // Public API
 // =============================================================================
 
@@ -158,15 +183,15 @@ export function buildStreamgraphPanels(result: StructuredCapacityResult): Stream
 
     const runningRows = buildRows(result, panel.instanceId, panel.modelId, sortedJts, 'runningHeight');
     const capacityRows = buildRows(result, panel.instanceId, panel.modelId, sortedJts, 'capacityHeight');
-    const tooltipData = buildTooltipData(result, panel.instanceId, panel.modelId);
 
     panels.push({
       instanceId: panel.instanceId,
       modelId: panel.modelId,
       runningRows,
       capacityRows,
-      tooltipData,
+      tooltipData: buildTooltipData(result, panel.instanceId, panel.modelId),
       streams,
+      poolPerRow: computePoolPerRow(result, panel.instanceId, panel.modelId),
     });
   }
 

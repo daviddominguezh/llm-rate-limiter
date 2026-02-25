@@ -18,6 +18,8 @@ export interface PanelProps {
   axisPosition: AxisPosition;
   groupCursor: GroupCursorState | null;
   onCursorChange: (c: GroupCursorState | null) => void;
+  /** Shared yMax across all panels in the model group for consistent scale */
+  groupYMax: number;
 }
 
 /** Component type for the panel, used to avoid circular imports */

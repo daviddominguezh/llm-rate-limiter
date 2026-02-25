@@ -47,19 +47,20 @@ const MIN_WIDTH = 100;
 // =============================================================================
 
 export function StreamgraphChart({ data, height: propHeight }: StreamgraphChartProps) {
-  const panels = useMemo(() => {
+  const { sortedPanels, groups } = useMemo(() => {
     const built = buildStreamgraphPanels(data);
-    built.sort((a, b) => earliestDataTime(a) - earliestDataTime(b));
-    return built;
+    const grouped = groupPanelsByModel(built);
+    grouped.sort((a, b) => groupEarliestTime(a) - groupEarliestTime(b));
+    const flat = grouped.flat();
+    return { sortedPanels: flat, groups: grouped };
   }, [data]);
-  const axisPositions = useMemo(() => computeAxisPositions(panels), [panels]);
+  const axisPositions = useMemo(() => computeAxisPositions(sortedPanels), [sortedPanels]);
 
-  if (panels.length === 0) {
+  if (sortedPanels.length === 0) {
     return <div className="h-64 flex items-center justify-center text-muted-foreground">No data</div>;
   }
 
-  const legend = panels[0].streams;
-  const groups = groupPanelsByModel(panels);
+  const legend = sortedPanels[0].streams;
 
   return (
     <div className="space-y-4">
@@ -69,7 +70,7 @@ export function StreamgraphChart({ data, height: propHeight }: StreamgraphChartP
           group={group}
           propHeight={propHeight}
           axisPositions={axisPositions}
-          startIdx={panels.indexOf(group[0])}
+          startIdx={sortedPanels.indexOf(group[0])}
           PanelComponent={StreamgraphPanelView}
         />
       ))}
@@ -286,18 +287,23 @@ function earliestDataTime(panel: StreamgraphPanel): number {
   return panel.capacityRows[idx].time;
 }
 
-/** Group consecutive panels by modelId (panels must already be sorted) */
+/** Earliest data time across all panels in a group */
+function groupEarliestTime(group: StreamgraphPanel[]): number {
+  return Math.min(...group.map(earliestDataTime));
+}
+
+/** Group panels by modelId */
 function groupPanelsByModel(panels: StreamgraphPanel[]): StreamgraphPanel[][] {
-  const groups: StreamgraphPanel[][] = [];
+  const map = new Map<string, StreamgraphPanel[]>();
   for (const panel of panels) {
-    const last = groups[groups.length - 1];
-    if (last !== undefined && last[0].modelId === panel.modelId) {
-      last.push(panel);
+    const existing = map.get(panel.modelId);
+    if (existing !== undefined) {
+      existing.push(panel);
     } else {
-      groups.push([panel]);
+      map.set(panel.modelId, [panel]);
     }
   }
-  return groups;
+  return [...map.values()];
 }
 
 /** First panel in a model group gets 'top', last gets 'bottom', others 'none' */

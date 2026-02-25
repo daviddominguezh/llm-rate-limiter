@@ -164,13 +164,18 @@ export function renderRunning(
     .attr('stroke', 'none');
 }
 
-/** Render the x-axis */
+/** Render the x-axis at top or bottom */
 export function renderAxis(
   svg: d3.Selection<SVGSVGElement, unknown, null, undefined>,
   xScale: d3.ScaleLinear<number, number>,
-  dims: StreamgraphDimensions
+  dims: StreamgraphDimensions,
+  position: 'top' | 'bottom'
 ): void {
   const { margin, height } = dims;
+  const isTop = position === 'top';
+  const yPos = isTop ? margin.top : height - margin.bottom;
+  const axisFn = isTop ? d3.axisTop(xScale) : d3.axisBottom(xScale);
+
   const axisGroup = svg.selectAll<SVGGElement, unknown>('g.x-axis').data([null]);
 
   axisGroup
@@ -178,13 +183,8 @@ export function renderAxis(
     .append('g')
     .attr('class', 'x-axis')
     .merge(axisGroup)
-    .attr('transform', `translate(${margin.left}, ${height - margin.bottom})`)
-    .call(
-      d3
-        .axisBottom(xScale)
-        .ticks(AXIS_TICKS)
-        .tickFormat((d) => `${d}s`)
-    );
+    .attr('transform', `translate(${margin.left}, ${yPos})`)
+    .call(axisFn.ticks(AXIS_TICKS).tickFormat((d) => `${d}s`));
 }
 
 // =============================================================================

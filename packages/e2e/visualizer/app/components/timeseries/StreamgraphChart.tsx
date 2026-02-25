@@ -32,9 +32,12 @@ interface StreamgraphChartProps {
   height?: number;
 }
 
+type AxisPosition = 'top' | 'bottom' | 'none';
+
 interface PanelProps {
   panel: StreamgraphPanel;
   height?: number;
+  axisPosition: AxisPosition;
 }
 
 // =============================================================================
@@ -53,6 +56,7 @@ export function StreamgraphChart({ data, height: propHeight }: StreamgraphChartP
     built.sort((a, b) => a.modelId.localeCompare(b.modelId));
     return built;
   }, [data]);
+  const axisPositions = useMemo(() => computeAxisPositions(panels), [panels]);
 
   if (panels.length === 0) {
     return <div className="h-64 flex items-center justify-center text-muted-foreground">No data</div>;
@@ -61,9 +65,23 @@ export function StreamgraphChart({ data, height: propHeight }: StreamgraphChartP
   const legend = panels[0].streams;
 
   return (
-    <div className="space-y-2">
-      {panels.map((panel) => (
-        <StreamgraphPanel key={`${panel.instanceId}|${panel.modelId}`} panel={panel} height={propHeight} />
+    <div className="space-y-4">
+      {groupPanelsByModel(panels).map((group) => (
+        <div key={group[0].modelId}>
+          {group.map((panel, gi) => {
+            const i = panels.indexOf(panel);
+            return (
+              <div key={`${panel.instanceId}|${panel.modelId}`}>
+                {gi > 0 && <div className="h-px" style={{ background: 'rgba(255,255,255,0.3)' }} />}
+                <StreamgraphPanel
+                  panel={panel}
+                  height={propHeight}
+                  axisPosition={axisPositions[i]}
+                />
+              </div>
+            );
+          })}
+        </div>
       ))}
       <StreamLegend streams={legend} />
     </div>
@@ -74,7 +92,7 @@ export function StreamgraphChart({ data, height: propHeight }: StreamgraphChartP
 // Single panel — one SVG for one (instance, model)
 // =============================================================================
 
-function StreamgraphPanel({ panel, height: propHeight }: PanelProps) {
+function StreamgraphPanel({ panel, height: propHeight, axisPosition }: PanelProps) {
   const svgRef = useRef<SVGSVGElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const [width, setWidth] = useState(DEFAULT_DIMENSIONS.width);
@@ -84,13 +102,15 @@ function StreamgraphPanel({ panel, height: propHeight }: PanelProps) {
 
   useResizeObserver(containerRef, setWidth);
 
-  const dims = useMemo(
-    () => ({ ...DEFAULT_DIMENSIONS, width, height: propHeight ?? DEFAULT_DIMENSIONS.height }),
-    [width, propHeight]
-  );
+  const dims = useMemo(() => {
+    const topMargin = axisPosition === 'top' ? 30 : 0;
+    const bottomMargin = axisPosition === 'bottom' ? 30 : 0;
+    const margin = { ...DEFAULT_DIMENSIONS.margin, top: topMargin, bottom: bottomMargin };
+    return { ...DEFAULT_DIMENSIONS, width, height: propHeight ?? DEFAULT_DIMENSIONS.height, margin };
+  }, [width, propHeight, axisPosition]);
 
   const layout = useLayout(panel, dims);
-  useRenderEffect(svgRef, layout, dims, colorMap);
+  useRenderEffect({ svgRef, layout, dims, colorMap, axisPosition });
 
   const handleMouseMove = useCursorHover({ svgRef, panel, layout, dims, setTooltip });
   const handleMouseLeave = useCursorLeave(svgRef, setTooltip);
@@ -138,12 +158,17 @@ function useResizeObserver(
   }, [ref, setWidth]);
 }
 
-function useRenderEffect(
-  svgRef: React.RefObject<SVGSVGElement | null>,
-  layout: StreamgraphLayout | null,
-  dims: StreamgraphDimensions,
-  colorMap: Map<string, string>
-): void {
+interface RenderEffectParams {
+  svgRef: React.RefObject<SVGSVGElement | null>;
+  layout: StreamgraphLayout | null;
+  dims: StreamgraphDimensions;
+  colorMap: Map<string, string>;
+  axisPosition: AxisPosition;
+}
+
+function useRenderEffect(params: RenderEffectParams): void {
+  const { svgRef, layout, dims, colorMap, axisPosition } = params;
+
   useEffect(() => {
     const svg = svgRef.current;
     if (!svg || !layout) return;
@@ -157,9 +182,12 @@ function useRenderEffect(
 
     renderBands(g, layout, colorMap);
     renderRunning(g, layout, colorMap);
-    renderAxis(sel, layout.xScale, dims);
+    sel.selectAll('g.x-axis').remove();
+    if (axisPosition !== 'none') {
+      renderAxis(sel, layout.xScale, dims, axisPosition);
+    }
     applyTransitions(g);
-  }, [svgRef, layout, dims, colorMap]);
+  }, [svgRef, layout, dims, colorMap, axisPosition]);
 }
 
 // =============================================================================
@@ -232,6 +260,36 @@ function useCursorLeave(
     highlightStream(g, null);
     hideCursorLine(g);
   }, [svgRef, setTooltip]);
+}
+
+// =============================================================================
+// Axis position per panel
+// =============================================================================
+
+/** Group consecutive panels by modelId (panels must already be sorted) */
+function groupPanelsByModel(panels: StreamgraphPanel[]): StreamgraphPanel[][] {
+  const groups: StreamgraphPanel[][] = [];
+  for (const panel of panels) {
+    const last = groups[groups.length - 1];
+    if (last !== undefined && last[0].modelId === panel.modelId) {
+      last.push(panel);
+    } else {
+      groups.push([panel]);
+    }
+  }
+  return groups;
+}
+
+/** First panel in a model group gets 'top', last gets 'bottom', others 'none' */
+function computeAxisPositions(panels: StreamgraphPanel[]): AxisPosition[] {
+  const positions: AxisPosition[] = panels.map(() => 'none' as AxisPosition);
+  for (let i = 0; i < panels.length; i += 1) {
+    const isFirst = i === 0 || panels[i].modelId !== panels[i - 1].modelId;
+    const isLast = i === panels.length - 1 || panels[i].modelId !== panels[i + 1].modelId;
+    if (isFirst) positions[i] = 'top';
+    if (isLast) positions[i] = 'bottom';
+  }
+  return positions;
 }
 
 // =============================================================================

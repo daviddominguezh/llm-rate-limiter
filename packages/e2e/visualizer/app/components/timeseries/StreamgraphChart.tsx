@@ -111,9 +111,9 @@ function StreamgraphPanelView({ panel, height: propHeight, axisPosition, groupCu
   const handleMouseLeave = useCallback(() => setTooltip(null), []);
 
   return (
-    <div ref={containerRef} className="flex w-full">
+    <div ref={containerRef} className="flex w-full min-w-0 overflow-hidden">
       <PanelLabel instanceId={panel.instanceId} modelId={panel.modelId} />
-      <div className="relative flex-1 min-w-0">
+      <div className="relative flex-1 min-w-0 overflow-hidden">
         <svg ref={svgRef} className="w-full block" onMouseMove={handleMouseMove} onMouseLeave={handleMouseLeave} />
         {tooltip && <CursorTooltip state={tooltip} />}
       </div>
@@ -170,7 +170,7 @@ function useRenderEffect(params: RenderEffectParams): void {
     if (!svg || !layout) return;
 
     const sel = d3.select(svg);
-    sel.attr('width', dims.width).attr('height', dims.height);
+    sel.attr('viewBox', `0 0 ${dims.width} ${dims.height}`).attr('height', dims.height);
 
     let g = sel.select<SVGGElement>('g.chart-area');
     if (g.empty()) g = sel.append('g').attr('class', 'chart-area');

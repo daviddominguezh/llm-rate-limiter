@@ -27,7 +27,7 @@ export function ModelGroup({ group, propHeight, axisPositions, startIdx, PanelCo
     <div onMouseLeave={handleGroupLeave}>
       {group.map((panel, gi) => (
         <div key={`${panel.instanceId}|${panel.modelId}`}>
-          {gi > 0 && <div style={{ height: 2, background: '#fff' }} />}
+          {gi > 0 && <div style={{ height: 2, background: '#fff', marginLeft: 40 }} />}
           <PanelComponent
             panel={panel}
             height={propHeight}

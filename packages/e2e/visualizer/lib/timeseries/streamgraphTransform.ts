@@ -4,6 +4,7 @@
  * Each panel provides:
  *   - capacityRows: { time, [jt]: capacityHeight } — stacked to form band boundaries
  *   - runningRows:  { time, [jt]: runningHeight }  — filled within each band
+ *   - tooltipData:  raw running/capacity counts per time point for tooltip display
  */
 import type { StructuredCapacityResult } from './structuredTransform';
 
@@ -22,12 +23,19 @@ export interface StreamgraphStream {
   color: string;
 }
 
+/** Raw metric values for tooltip display at one time point */
+export interface PanelTooltipRow {
+  time: number;
+  values: Record<string, { running: number; capacity: number }>;
+}
+
 /** One streamgraph for a specific (instance, model) pair */
 export interface StreamgraphPanel {
   instanceId: string;
   modelId: string;
   runningRows: StreamgraphRow[];
   capacityRows: StreamgraphRow[];
+  tooltipData: PanelTooltipRow[];
   streams: StreamgraphStream[];
 }
 
@@ -113,6 +121,24 @@ function buildRows(
   });
 }
 
+/** Build raw metric rows for tooltip display */
+function buildTooltipData(
+  result: StructuredCapacityResult,
+  instanceId: string,
+  modelId: string
+): PanelTooltipRow[] {
+  return result.data.map((interval) => {
+    const values: Record<string, { running: number; capacity: number }> = {};
+    const modelData = interval.instances[instanceId]?.[modelId];
+    if (modelData !== undefined) {
+      for (const [jt, metrics] of Object.entries(modelData)) {
+        values[jt] = { running: metrics.running, capacity: metrics.capacity };
+      }
+    }
+    return { time: interval.time, values };
+  });
+}
+
 // =============================================================================
 // Public API
 // =============================================================================
@@ -132,12 +158,14 @@ export function buildStreamgraphPanels(result: StructuredCapacityResult): Stream
 
     const runningRows = buildRows(result, panel.instanceId, panel.modelId, sortedJts, 'runningHeight');
     const capacityRows = buildRows(result, panel.instanceId, panel.modelId, sortedJts, 'capacityHeight');
+    const tooltipData = buildTooltipData(result, panel.instanceId, panel.modelId);
 
     panels.push({
       instanceId: panel.instanceId,
       modelId: panel.modelId,
       runningRows,
       capacityRows,
+      tooltipData,
       streams,
     });
   }

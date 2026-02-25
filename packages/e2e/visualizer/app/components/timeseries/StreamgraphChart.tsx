@@ -11,11 +11,18 @@ import {
   buildColorMap,
   computeLayout,
   DEFAULT_DIMENSIONS,
+  findNearestIndex,
+  hideCursorLine,
   highlightStream,
   renderAxis,
   renderBands,
+  renderCursorLine,
   renderRunning,
 } from './streamgraphHelpers';
+import type { StreamgraphDimensions, StreamgraphLayout } from './streamgraphHelpers';
+import type { CursorTooltipState } from './StreamgraphTooltip';
+import { CursorTooltip } from './StreamgraphTooltip';
+import { useValidateStackHeights } from './streamgraphValidation';
 
 // =============================================================================
 // Types
@@ -26,10 +33,9 @@ interface StreamgraphChartProps {
   height?: number;
 }
 
-interface TooltipState {
-  stream: StreamgraphStream;
-  x: number;
-  y: number;
+interface PanelProps {
+  panel: StreamgraphPanel;
+  height?: number;
 }
 
 // =============================================================================
@@ -45,6 +51,8 @@ const MIN_WIDTH = 100;
 export function StreamgraphChart({ data, height: propHeight }: StreamgraphChartProps) {
   const panels = useMemo(() => buildStreamgraphPanels(data), [data]);
 
+  useValidateStackHeights(panels);
+
   if (panels.length === 0) {
     return <div className="h-64 flex items-center justify-center text-muted-foreground">No data</div>;
   }
@@ -54,11 +62,7 @@ export function StreamgraphChart({ data, height: propHeight }: StreamgraphChartP
   return (
     <div className="space-y-2">
       {panels.map((panel) => (
-        <StreamgraphPanel
-          key={`${panel.instanceId}|${panel.modelId}`}
-          panel={panel}
-          height={propHeight}
-        />
+        <StreamgraphPanel key={`${panel.instanceId}|${panel.modelId}`} panel={panel} height={propHeight} />
       ))}
       <StreamLegend streams={legend} />
     </div>
@@ -69,23 +73,13 @@ export function StreamgraphChart({ data, height: propHeight }: StreamgraphChartP
 // Single panel — one SVG for one (instance, model)
 // =============================================================================
 
-interface PanelProps {
-  panel: StreamgraphPanel;
-  height?: number;
-}
-
 function StreamgraphPanel({ panel, height: propHeight }: PanelProps) {
   const svgRef = useRef<SVGSVGElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const [width, setWidth] = useState(DEFAULT_DIMENSIONS.width);
-  const [tooltip, setTooltip] = useState<TooltipState | null>(null);
+  const [tooltip, setTooltip] = useState<CursorTooltipState | null>(null);
 
   const colorMap = useMemo(() => buildColorMap(panel.streams), [panel.streams]);
-  const streamByKey = useMemo(() => {
-    const map = new Map<string, StreamgraphStream>();
-    for (const s of panel.streams) map.set(s.key, s);
-    return map;
-  }, [panel.streams]);
 
   useResizeObserver(containerRef, setWidth);
 
@@ -94,23 +88,31 @@ function StreamgraphPanel({ panel, height: propHeight }: PanelProps) {
     [width, propHeight]
   );
 
-  useRenderEffect(svgRef, panel, dims, colorMap);
+  const layout = useLayout(panel, dims);
+  useRenderEffect(svgRef, layout, dims, colorMap);
 
-  const handleMouseMove = useStreamHover(svgRef, streamByKey, setTooltip);
-  const handleMouseLeave = useStreamLeave(svgRef, setTooltip);
+  const handleMouseMove = useCursorHover({ svgRef, panel, layout, dims, setTooltip });
+  const handleMouseLeave = useCursorLeave(svgRef, setTooltip);
 
   return (
     <div ref={containerRef} className="relative w-full">
       <PanelLabel instanceId={panel.instanceId} modelId={panel.modelId} />
-      <svg
-        ref={svgRef}
-        className="w-full block"
-        onMouseMove={handleMouseMove}
-        onMouseLeave={handleMouseLeave}
-      />
-      {tooltip && <StreamTooltip tooltip={tooltip} />}
+      <svg ref={svgRef} className="w-full block" onMouseMove={handleMouseMove} onMouseLeave={handleMouseLeave} />
+      {tooltip && <CursorTooltip state={tooltip} />}
     </div>
   );
+}
+
+// =============================================================================
+// Layout
+// =============================================================================
+
+function useLayout(panel: StreamgraphPanel, dims: StreamgraphDimensions): StreamgraphLayout | null {
+  return useMemo(() => {
+    if (panel.runningRows.length === 0) return null;
+    const keys = panel.streams.map((s) => s.key);
+    return computeLayout({ runningRows: panel.runningRows, capacityRows: panel.capacityRows, keys, dims });
+  }, [panel, dims]);
 }
 
 // =============================================================================
@@ -135,13 +137,13 @@ function useResizeObserver(
 
 function useRenderEffect(
   svgRef: React.RefObject<SVGSVGElement | null>,
-  panel: StreamgraphPanel,
-  dims: typeof DEFAULT_DIMENSIONS,
+  layout: StreamgraphLayout | null,
+  dims: StreamgraphDimensions,
   colorMap: Map<string, string>
 ): void {
   useEffect(() => {
     const svg = svgRef.current;
-    if (!svg || panel.runningRows.length === 0) return;
+    if (!svg || !layout) return;
 
     const sel = d3.select(svg);
     sel.attr('width', dims.width).attr('height', dims.height);
@@ -150,57 +152,81 @@ function useRenderEffect(
     if (g.empty()) g = sel.append('g').attr('class', 'chart-area');
     g.attr('transform', `translate(${dims.margin.left}, ${dims.margin.top})`);
 
-    const keys = panel.streams.map((s) => s.key);
-    const layout = computeLayout({ runningRows: panel.runningRows, capacityRows: panel.capacityRows, keys, dims });
-
     renderBands(g, layout, colorMap);
-    renderRunning(g, layout, colorMap, panel.runningRows);
+    renderRunning(g, layout, colorMap);
     renderAxis(sel, layout.xScale, dims);
     applyTransitions(g);
-  }, [svgRef, panel, dims, colorMap]);
+  }, [svgRef, layout, dims, colorMap]);
 }
 
-function useStreamHover(
-  svgRef: React.RefObject<SVGSVGElement | null>,
-  streamByKey: Map<string, StreamgraphStream>,
-  setTooltip: (t: TooltipState | null) => void
-): (event: React.MouseEvent<SVGSVGElement>) => void {
+// =============================================================================
+// Cursor hover
+// =============================================================================
+
+interface CursorHoverParams {
+  svgRef: React.RefObject<SVGSVGElement | null>;
+  panel: StreamgraphPanel;
+  layout: StreamgraphLayout | null;
+  dims: StreamgraphDimensions;
+  setTooltip: (t: CursorTooltipState | null) => void;
+}
+
+function useCursorHover(params: CursorHoverParams): (e: React.MouseEvent<SVGSVGElement>) => void {
+  const { svgRef, panel, layout, dims, setTooltip } = params;
+
   return useCallback(
     (event: React.MouseEvent<SVGSVGElement>) => {
       const svg = svgRef.current;
-      if (!svg) return;
+      if (!svg || !layout) return;
 
-      const target = event.target as SVGElement;
-      const path = target.closest('path.running') ?? target.closest('path.band');
-      if (!path) {
-        setTooltip(null);
-        highlightStream(d3.select(svg).select('g.chart-area'), null);
-        return;
-      }
-
-      const datum = d3.select(path).datum() as { key: string } | undefined;
-      if (!datum) return;
-
-      const stream = streamByKey.get(datum.key);
-      if (!stream) return;
-
+      const g = d3.select(svg).select<SVGGElement>('g.chart-area');
       const rect = svg.getBoundingClientRect();
-      setTooltip({ stream, x: event.clientX - rect.left, y: event.clientY - rect.top });
-      highlightStream(d3.select(svg).select('g.chart-area'), datum.key);
+      const chartX = event.clientX - rect.left - dims.margin.left;
+      const index = findNearestIndex(panel.capacityRows, layout.xScale, chartX);
+      const innerH = dims.height - dims.margin.top - dims.margin.bottom;
+      renderCursorLine(g, layout.xScale(panel.capacityRows[index].time), innerH);
+
+      const hoveredKey = detectHoveredKey(event);
+      highlightStream(g, hoveredKey);
+
+      const tooltipRow = panel.tooltipData[index];
+      setTooltip({
+        x: event.clientX - rect.left,
+        y: event.clientY - rect.top,
+        time: tooltipRow.time,
+        hoveredKey,
+        entries: panel.streams.map((s) => ({
+          jobType: s.jobType,
+          color: s.color,
+          running: tooltipRow.values[s.jobType]?.running ?? 0,
+          capacity: tooltipRow.values[s.jobType]?.capacity ?? 0,
+        })),
+      });
     },
-    [svgRef, streamByKey, setTooltip]
+    [svgRef, panel, layout, dims, setTooltip]
   );
 }
 
-function useStreamLeave(
+/** Detect which job type the cursor is over */
+function detectHoveredKey(event: React.MouseEvent<SVGSVGElement>): string | null {
+  const target = event.target as SVGElement;
+  const path = target.closest('path.running') ?? target.closest('path.band');
+  if (!path) return null;
+  const datum = d3.select(path).datum() as { key: string } | undefined;
+  return datum?.key ?? null;
+}
+
+function useCursorLeave(
   svgRef: React.RefObject<SVGSVGElement | null>,
-  setTooltip: (t: TooltipState | null) => void
+  setTooltip: (t: CursorTooltipState | null) => void
 ): () => void {
   return useCallback(() => {
     const svg = svgRef.current;
     if (!svg) return;
+    const g = d3.select(svg).select<SVGGElement>('g.chart-area');
     setTooltip(null);
-    highlightStream(d3.select(svg).select('g.chart-area'), null);
+    highlightStream(g, null);
+    hideCursorLine(g);
   }, [svgRef, setTooltip]);
 }
 
@@ -217,31 +243,6 @@ function PanelLabel({ instanceId, modelId }: { instanceId: string; modelId: stri
       <span style={{ color: '#aaa', fontWeight: 600 }}>{instanceId}</span>
       <span style={{ color: '#555' }}> / </span>
       <span>{modelId}</span>
-    </div>
-  );
-}
-
-// =============================================================================
-// Tooltip
-// =============================================================================
-
-const TOOLTIP_OFFSET_X = 12;
-const TOOLTIP_OFFSET_Y = -10;
-
-function StreamTooltip({ tooltip }: { tooltip: TooltipState }) {
-  const { stream, x, y } = tooltip;
-  return (
-    <div
-      className="absolute pointer-events-none z-20 rounded px-2 py-1 text-xs"
-      style={{
-        left: x + TOOLTIP_OFFSET_X,
-        top: y + TOOLTIP_OFFSET_Y,
-        background: 'rgba(0,0,0,0.85)',
-        color: '#eee',
-        whiteSpace: 'nowrap',
-      }}
-    >
-      <span style={{ color: stream.color, fontWeight: 600 }}>{stream.jobType}</span>
     </div>
   );
 }

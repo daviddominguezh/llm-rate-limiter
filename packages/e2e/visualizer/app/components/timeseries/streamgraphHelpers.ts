@@ -25,6 +25,8 @@ export interface StreamgraphLayout {
   runningLayers: RunningLayer[];
   xScale: d3.ScaleLinear<number, number>;
   yScale: d3.ScaleLinear<number, number>;
+  bandAreaGen: d3.Area<[number, number]>;
+  runningAreaGen: d3.Area<[number, number]>;
 }
 
 export interface StreamgraphDimensions {
@@ -79,8 +81,10 @@ export function computeLayout(params: ComputeLayoutParams): StreamgraphLayout {
   const yScale = d3.scaleLinear().domain([0, yMax]).range([innerH, 0]);
 
   const runningLayers = buildRunningLayers(capacityStacked, runningRows, keys);
+  const bandAreaGen = buildAreaGen(xScale, yScale, capacityRows);
+  const runningAreaGen = buildAreaGen(xScale, yScale, runningRows);
 
-  return { capacityStacked, runningLayers, xScale, yScale };
+  return { capacityStacked, runningLayers, xScale, yScale, bandAreaGen, runningAreaGen };
 }
 
 /** Build running layers: each point's y0 = band bottom, y1 = band bottom + running */
@@ -99,6 +103,20 @@ function buildRunningLayers(
     });
     return { key, points };
   });
+}
+
+/** Create an area generator bound to a row set for x-indexing */
+function buildAreaGen(
+  xScale: d3.ScaleLinear<number, number>,
+  yScale: d3.ScaleLinear<number, number>,
+  rows: StreamgraphRow[]
+): d3.Area<[number, number]> {
+  return d3
+    .area<[number, number]>()
+    .x((_d, i) => xScale(rows[i].time))
+    .y0((d) => yScale(d[0]))
+    .y1((d) => yScale(d[1]))
+    .curve(d3.curveBasis);
 }
 
 // =============================================================================
@@ -120,13 +138,11 @@ export function renderBands(
   layout: StreamgraphLayout,
   colorMap: Map<string, string>
 ): void {
-  const areaGen = makeBandArea(layout);
-
   g.selectAll('path.band')
     .data(layout.capacityStacked)
     .join('path')
     .attr('class', 'band')
-    .attr('d', (d) => areaGen(d as unknown as [number, number][]))
+    .attr('d', (d) => layout.bandAreaGen(d as unknown as [number, number][]))
     .attr('fill', (d) => colorMap.get(d.key) ?? '#888')
     .attr('opacity', BAND_OPACITY)
     .attr('stroke', 'none');
@@ -136,39 +152,16 @@ export function renderBands(
 export function renderRunning(
   g: d3.Selection<SVGGElement, unknown, null, undefined>,
   layout: StreamgraphLayout,
-  colorMap: Map<string, string>,
-  rows: StreamgraphRow[]
+  colorMap: Map<string, string>
 ): void {
-  const { xScale, yScale } = layout;
-
-  const areaGen = d3
-    .area<[number, number]>()
-    .x((_d, i) => xScale(rows[i].time))
-    .y0((d) => yScale(d[0]))
-    .y1((d) => yScale(d[1]))
-    .curve(d3.curveBasis);
-
   g.selectAll('path.running')
     .data(layout.runningLayers)
     .join('path')
     .attr('class', 'running')
-    .attr('d', (d) => areaGen(d.points))
+    .attr('d', (d) => layout.runningAreaGen(d.points))
     .attr('fill', (d) => colorMap.get(d.key) ?? '#888')
     .attr('opacity', FULL_OPACITY)
     .attr('stroke', 'none');
-}
-
-/** Create area generator for capacity bands */
-function makeBandArea(layout: StreamgraphLayout): d3.Area<[number, number]> {
-  const { xScale, yScale, capacityStacked } = layout;
-  const rows = capacityStacked[0];
-
-  return d3
-    .area<[number, number]>()
-    .x((_d, i) => xScale(rows[i].data.time))
-    .y0((d) => yScale(d[0]))
-    .y1((d) => yScale(d[1]))
-    .curve(d3.curveBasis);
 }
 
 /** Render the x-axis */
@@ -192,6 +185,46 @@ export function renderAxis(
         .ticks(AXIS_TICKS)
         .tickFormat((d) => `${d}s`)
     );
+}
+
+// =============================================================================
+// Cursor line
+// =============================================================================
+
+/** Render a vertical dashed cursor line at the given x position */
+export function renderCursorLine(
+  g: d3.Selection<SVGGElement, unknown, null, undefined>,
+  x: number,
+  innerH: number
+): void {
+  let line = g.select<SVGLineElement>('line.cursor');
+  if (line.empty()) {
+    line = g.append('line').attr('class', 'cursor');
+  }
+  line
+    .attr('x1', x)
+    .attr('x2', x)
+    .attr('y1', 0)
+    .attr('y2', innerH)
+    .attr('stroke', '#555')
+    .attr('stroke-width', 1)
+    .attr('stroke-dasharray', '4,3');
+}
+
+/** Remove the cursor line */
+export function hideCursorLine(g: d3.Selection<SVGGElement, unknown, null, undefined>): void {
+  g.select('line.cursor').remove();
+}
+
+/** Find the index of the nearest time point to the mouse x position */
+export function findNearestIndex(
+  rows: StreamgraphRow[],
+  xScale: d3.ScaleLinear<number, number>,
+  mouseX: number
+): number {
+  const time = xScale.invert(mouseX);
+  const bisect = d3.bisector<StreamgraphRow, number>((r) => r.time).center;
+  return bisect(rows, time);
 }
 
 // =============================================================================

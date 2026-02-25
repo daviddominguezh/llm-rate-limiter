@@ -4,17 +4,21 @@
  * Phase 1: Verify initial per-model per-job-type slot allocation (1 instance)
  * Phase 2: Fill Summarize on Anthropic (4 jobs, 3 slots), verify 3 running + 1 queued + ratio adjustment
  * Phase 3: Send mixed brainstorm+summarize batch, verify brainstorm recovers ratio from summarize
- * Phase 4: Submit 35 jobs to single instance A, wait for escalation, verify A is heavily loaded
- * Phase 5: Boot instance B, verify pools halved, B gets reduced capacity (not full half), invariant holds
- * Phase 6: Wait for brainstorm to drain, verify B's capacity grows gradually, invariant still holds
+ * Phase 4: Submit 15 jobs to single instance A, wait for escalation, verify A is heavily loaded
+ * Phase 5: Boot instance B, verify pools halved, B gets reduced capacity
+ * Phase 6: Wait for brainstorm to drain, verify invariant, submit jobs to B
+ * Phase 7: Wait for all jobs to drain, verify both instances have equal capacity (halves of total)
  */
 import {
   BRAINSTORM_DRAIN_WAIT_MS,
   DIST_PHASE_TIMEOUT_MS,
+  EQUALIZATION_WAIT_MS,
   ESCALATION_WAIT_MS,
   bootAndVerifyDistribution,
   submitDistributedJobs,
-  verifyCapacityGrowth,
+  submitJobsToB,
+  verifyCapacityEqualized,
+  verifyCapacityInvariant,
   verifyHeavyLoad,
 } from './aiWorkloadDistributedHelpers.js';
 import {
@@ -143,12 +147,8 @@ describe('Real World - Slot Allocation & Ratio Adjustment', () => {
 });
 
 describe('Distributed Scaling - In-Flight-Aware Pool Allocation', () => {
-  beforeAll(async () => {
-    await setupSingleInstance();
-  }, BEFORE_ALL_TIMEOUT_MS);
-
   it(
-    'Phase 4: Submit 35 jobs and verify A is heavily loaded after escalation',
+    'Phase 4: Submit 15 jobs and verify A is heavily loaded after escalation',
     async () => {
       await submitDistributedJobs();
       await sleep(ESCALATION_WAIT_MS);
@@ -158,7 +158,7 @@ describe('Distributed Scaling - In-Flight-Aware Pool Allocation', () => {
   );
 
   it(
-    'Phase 5: Boot B and verify in-flight-aware allocation',
+    'Phase 5: Boot B, verify in-flight-aware allocation',
     async () => {
       await bootAndVerifyDistribution();
     },
@@ -166,10 +166,20 @@ describe('Distributed Scaling - In-Flight-Aware Pool Allocation', () => {
   );
 
   it(
-    'Phase 6: Verify B capacity grows after brainstorm drains',
+    'Phase 6: Verify invariant holds, submit jobs to B',
     async () => {
       await sleep(BRAINSTORM_DRAIN_WAIT_MS);
-      await verifyCapacityGrowth();
+      await verifyCapacityInvariant();
+      await submitJobsToB();
+    },
+    DIST_PHASE_TIMEOUT_MS
+  );
+
+  it(
+    'Phase 7: Verify capacity equalizes after all jobs drain',
+    async () => {
+      await sleep(EQUALIZATION_WAIT_MS);
+      await verifyCapacityEqualized();
     },
     DIST_PHASE_TIMEOUT_MS
   );

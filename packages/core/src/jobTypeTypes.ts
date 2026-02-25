@@ -25,6 +25,8 @@ const DEFAULT_ADJUSTMENT_INTERVAL_MS = 5000;
 const DEFAULT_RELEASES_PER_ADJUSTMENT = 10;
 /** Default minimum job type capacity (slots per job type) */
 const DEFAULT_MIN_JOB_TYPE_CAPACITY = 1;
+/** Default idle decay rate (30% per cycle toward initial ratios) */
+const DEFAULT_IDLE_DECAY_RATE = 0.3;
 
 // =============================================================================
 // Job Type Configuration Types
@@ -247,6 +249,15 @@ export interface RatioAdjustmentConfig {
    * @default 1
    */
   minJobTypeCapacity?: number;
+
+  /**
+   * Rate at which idle ratios decay toward initial values (0-1).
+   * When all job types have zero load, each flexible ratio moves toward
+   * its initialRatio by this fraction of the distance per adjustment cycle.
+   * Set to 0 to disable idle decay.
+   * @default 0.3
+   */
+  idleDecayRate?: number;
 }
 
 /**
@@ -260,6 +271,7 @@ export const DEFAULT_RATIO_ADJUSTMENT_CONFIG: Required<RatioAdjustmentConfig> = 
   adjustmentIntervalMs: DEFAULT_ADJUSTMENT_INTERVAL_MS,
   releasesPerAdjustment: DEFAULT_RELEASES_PER_ADJUSTMENT,
   minJobTypeCapacity: DEFAULT_MIN_JOB_TYPE_CAPACITY,
+  idleDecayRate: DEFAULT_IDLE_DECAY_RATE,
 };
 
 // =============================================================================

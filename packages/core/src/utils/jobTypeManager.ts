@@ -12,6 +12,8 @@ import {
   collectLoadMetrics,
   collectPrimaryModelLoadMetrics,
   createInitialStates,
+  decayToInitialRatios,
+  drainWaitQueues,
   identifyDonors,
   identifyReceivers,
   logRatioAdjustment,
@@ -85,10 +87,6 @@ class JobTypeManagerImpl implements JobTypeManager {
       ratios: Object.fromEntries(calculated.ratios),
     });
 
-    this.startPeriodicAdjustment();
-  }
-
-  private startPeriodicAdjustment(): void {
     if (this.config.adjustmentIntervalMs > ZERO) {
       this.adjustmentInterval = setInterval(() => {
         this.adjustRatios();
@@ -147,7 +145,12 @@ class JobTypeManagerImpl implements JobTypeManager {
       state.inFlight -= ONE;
     }
     this.releasesSinceAdjustment += ONE;
-    this.maybeAdjustOnRelease();
+    if (
+      this.releasesSinceAdjustment >= this.config.releasesPerAdjustment &&
+      this.config.releasesPerAdjustment > ZERO
+    ) {
+      this.adjustRatios();
+    }
   }
 
   setModelPool(modelId: string, pool: ModelPoolAllocation): void {
@@ -173,20 +176,18 @@ class JobTypeManagerImpl implements JobTypeManager {
   }
 
   acquireForModel(modelId: string, jobTypeId: string): void {
-    const windowMs = this.getWindowMsForModel(modelId, jobTypeId);
-    this.modelState.acquire(modelId, jobTypeId, windowMs);
-  }
-
-  private getWindowMsForModel(modelId: string, jobTypeId: string): number {
     const pool = this.modelState.getModelPool(modelId);
     const state = this.states.get(jobTypeId);
-    if (pool === undefined || state === undefined) return ZERO;
-    return calculateModelJobTypeSlots(
-      pool,
-      state.currentRatio,
-      state.resources,
-      this.config.minJobTypeCapacity
-    ).windowMs;
+    const windowMs =
+      pool === undefined || state === undefined
+        ? ZERO
+        : calculateModelJobTypeSlots(
+            pool,
+            state.currentRatio,
+            state.resources,
+            this.config.minJobTypeCapacity
+          ).windowMs;
+    this.modelState.acquire(modelId, jobTypeId, windowMs);
   }
 
   releaseForModel(modelId: string, jobTypeId: string, hadRefund?: boolean): void {
@@ -194,26 +195,15 @@ class JobTypeManagerImpl implements JobTypeManager {
     this.onModelCapacityRelease?.(modelId);
   }
 
-  private maybeAdjustOnRelease(): void {
-    const shouldAdjust =
-      this.config.releasesPerAdjustment > ZERO &&
-      this.releasesSinceAdjustment >= this.config.releasesPerAdjustment;
-    if (shouldAdjust) {
-      this.adjustRatios();
-    }
-  }
-
   setTotalCapacity(totalSlots: number): void {
     this.totalCapacity = Math.max(ZERO, totalSlots);
-    recalculateAllocatedSlots(this.states, this.totalCapacity, this.config.minJobTypeCapacity);
-    applyMemoryConstraints(this.states, this.memoryCapacityKB, this.config.minJobTypeCapacity);
+    this.applyAndDrain();
     this.notifyRatioChange();
     this.validateInvariant();
   }
   setMemoryCapacityKB(kb: number): void {
     this.memoryCapacityKB = kb;
-    recalculateAllocatedSlots(this.states, this.totalCapacity, this.config.minJobTypeCapacity);
-    applyMemoryConstraints(this.states, this.memoryCapacityKB, this.config.minJobTypeCapacity);
+    this.applyAndDrain();
     this.notifyRatioChange();
   }
   private notifyRatioChange(): void {
@@ -248,24 +238,40 @@ class JobTypeManagerImpl implements JobTypeManager {
     const donors = identifyDonors(metrics, this.config.lowLoadThreshold, this.config.minRatio);
     const receivers = identifyReceivers(metrics, this.config.highLoadThreshold);
     if (donors.length === ZERO || receivers.length === ZERO) {
+      this.maybeDecayIdleRatios(metrics);
       return;
     }
-    const donorContributions = calculateDonorContributions(donors, this.states, this.config);
+    const contributions = calculateDonorContributions(donors, this.states, this.config);
     let availableToTransfer = ZERO;
-    for (const contribution of donorContributions.values()) {
+    for (const contribution of contributions.values()) {
       availableToTransfer += contribution;
     }
     if (availableToTransfer <= ZERO) {
       return;
     }
-    applyRatioTransfers(this.states, donorContributions, receivers, availableToTransfer);
-    normalizeRatios(this.states);
-    recalculateAllocatedSlots(this.states, this.totalCapacity, this.config.minJobTypeCapacity);
-    applyMemoryConstraints(this.states, this.memoryCapacityKB, this.config.minJobTypeCapacity);
+    applyRatioTransfers(this.states, contributions, receivers, availableToTransfer);
+    this.applyAndDrain();
     this.lastAdjustmentTime = Date.now();
     logRatioAdjustment(this.log, this.states, donors, receivers);
     this.notifyRatioChange();
     this.validateInvariant();
+  }
+
+  private maybeDecayIdleRatios(metrics: ReturnType<typeof collectLoadMetrics>): void {
+    if (this.config.idleDecayRate <= ZERO) return;
+    const allIdle = metrics.every((m) => m.loadPercentage <= ZERO);
+    if (!allIdle) return;
+    const decayed = decayToInitialRatios(this.states, this.config.idleDecayRate);
+    if (!decayed) return;
+    this.applyAndDrain();
+    this.notifyRatioChange();
+  }
+
+  private applyAndDrain(): void {
+    normalizeRatios(this.states);
+    recalculateAllocatedSlots(this.states, this.totalCapacity, this.config.minJobTypeCapacity);
+    applyMemoryConstraints(this.states, this.memoryCapacityKB, this.config.minJobTypeCapacity);
+    drainWaitQueues(this.states, this.waitQueues);
   }
 
   getStats(): JobTypeStats {

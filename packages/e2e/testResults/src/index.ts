@@ -7,6 +7,8 @@ export type {
   JobRecord,
   JobStatus,
   JobSummaryByCategory,
+  JobTypeResourceEstimate,
+  ModelCapacity,
   StateSnapshot,
   TestData,
   TestMetadata,

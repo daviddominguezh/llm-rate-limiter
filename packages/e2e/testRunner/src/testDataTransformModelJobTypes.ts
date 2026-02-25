@@ -99,6 +99,8 @@ interface ModelEnrichContext {
   pool: ModelPoolAllocation;
   /** Unreduced pool for computing totalSlots (full allocation before dynamic reductions) */
   basePool: ModelPoolAllocation;
+  /** Pool with totalSlots replaced by acquirableSlots for computing acquirable-based capacity */
+  acquirablePool: ModelPoolAllocation;
   jobTypeInfos: Record<string, JobTypeInfo>;
   modelInFlight: Map<string, number> | undefined;
   jtmInfo: Record<string, ModelJobTypeInfo> | undefined;
@@ -115,8 +117,14 @@ const buildModelJobTypes = (context: ModelEnrichContext): Record<string, Compact
       info.resources,
       MIN_CAPACITY
     );
+    const { slots: acquirableSlots } = calculateModelJobTypeSlots(
+      context.acquirablePool,
+      info.ratio,
+      info.resources,
+      MIN_CAPACITY
+    );
     const inFlight = getEffectiveInFlight(jtId, context.jtmInfo, context.modelInFlight);
-    result[jtId] = { slots, totalSlots, inFlight };
+    result[jtId] = { slots, totalSlots, acquirableSlots, inFlight };
   }
   return result;
 };
@@ -139,6 +147,12 @@ const enrichModel = (modelState: CompactModelState, context: ModelEnrichContext)
 const getJtmModelJobTypes = (state: InstanceState): JtmModelJobTypes | undefined =>
   state.stats.jobTypes?.modelJobTypes;
 
+/** Create pool with totalSlots replaced by acquirableSlots for dynamic capacity */
+const toAcquirablePool = (pool: ModelPoolAllocation): ModelPoolAllocation => ({
+  ...pool,
+  totalSlots: pool.acquirableSlots ?? pool.totalSlots,
+});
+
 /** Build per-model enrichment context from shared data */
 const buildEnrichContext = (
   pool: ModelPoolAllocation,
@@ -147,6 +161,7 @@ const buildEnrichContext = (
 ): ModelEnrichContext => ({
   pool,
   basePool: shared.basePools?.[modelId] ?? pool,
+  acquirablePool: toAcquirablePool(pool),
   jobTypeInfos: shared.jobTypeInfos,
   modelInFlight: shared.inFlightByModel.get(modelId),
   jtmInfo: shared.jtmModelJobTypes?.[modelId],

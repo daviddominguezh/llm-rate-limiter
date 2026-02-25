@@ -2,17 +2,15 @@
 
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { getInstanceConfigs, transformToCapacityData } from '@/lib/timeseries/capacityTransform';
-import type { CapacityDataPoint, InstanceConfig } from '@/lib/timeseries/capacityTypes';
-import { buildHighwayConfigs } from '@/lib/timeseries/highwayTransform';
-import type { HighwayInstanceConfig } from '@/lib/timeseries/highwayTypes';
+import { transformToStructuredData } from '@/lib/timeseries/structuredTransform';
+import type { StructuredCapacityResult } from '@/lib/timeseries/structuredTransform';
 import type { TestData } from '@llm-rate-limiter/e2e-test-results';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
 
-import { CapacityContext } from './CapacityContext';
 import { DatasetSelector } from './DatasetSelector';
 import { MetricsRow } from './MetricsRow';
 import { ResourceDashboard } from './ResourceDashboard';
+import { StreamgraphChart } from './StreamgraphChart';
 
 async function loadDatasetJson(datasetId: string): Promise<TestData | null> {
   switch (datasetId) {
@@ -70,11 +68,8 @@ async function loadDatasetJson(datasetId: string): Promise<TestData | null> {
 export function TimeseriesPage() {
   const [selectedDataset, setSelectedDataset] = useState('realWorld');
   const [testData, setTestData] = useState<TestData | null>(null);
-  const [chartData, setChartData] = useState<CapacityDataPoint[]>([]);
-  const [instances, setInstances] = useState<InstanceConfig[]>([]);
+  const [structuredData, setStructuredData] = useState<StructuredCapacityResult | null>(null);
   const [loading, setLoading] = useState(true);
-  const [focusIndex, setFocusIndex] = useState<number | null>(null);
-  const highwayInstances: HighwayInstanceConfig[] = useMemo(() => buildHighwayConfigs(instances), [instances]);
 
   useEffect(() => {
     let cancelled = false;
@@ -84,9 +79,10 @@ export function TimeseriesPage() {
       const data = await loadDatasetJson(selectedDataset);
       if (cancelled || data === null) return;
 
+      const structured = transformToStructuredData(data);
+
       setTestData(data);
-      setChartData(transformToCapacityData(data));
-      setInstances(getInstanceConfigs(data));
+      setStructuredData(structured);
       setLoading(false);
     }
 
@@ -121,8 +117,8 @@ export function TimeseriesPage() {
             <div className="h-[400px] flex items-center justify-center text-muted-foreground">Loading...</div>
           ) : (
             <>
-              {testData && <MetricsRow testData={testData} instances={instances} />}
-              <CapacityContext data={chartData} instances={instances} highwayInstances={highwayInstances} />
+              {testData && <MetricsRow testData={testData} />}
+              {structuredData && <StreamgraphChart data={structuredData} />}
             </>
           )}
 
@@ -139,9 +135,11 @@ interface SummarySectionProps {
   testData: TestData;
 }
 
+const MS_PER_SECOND = 1000;
+
 function SummarySection({ testData }: SummarySectionProps) {
   const { summary, metadata } = testData;
-  const durationSec = (metadata.durationMs / 1000).toFixed(1);
+  const durationSec = (metadata.durationMs / MS_PER_SECOND).toFixed(1);
 
   return (
     <div className="w-full justify-center flex flex-wrap gap-2 pt-4 border-t">
@@ -150,7 +148,7 @@ function SummarySection({ testData }: SummarySectionProps) {
       <Badge variant="outline">Completed: {summary.completed}</Badge>
       <Badge variant="outline">Failed: {summary.failed}</Badge>
       {summary.avgDurationMs && (
-        <Badge variant="outline">Avg Duration: {(summary.avgDurationMs / 1000).toFixed(2)}s</Badge>
+        <Badge variant="outline">Avg Duration: {(summary.avgDurationMs / MS_PER_SECOND).toFixed(2)}s</Badge>
       )}
     </div>
   );

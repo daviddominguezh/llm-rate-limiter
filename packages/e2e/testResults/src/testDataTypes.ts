@@ -6,12 +6,38 @@
 // Metadata
 // =============================================================================
 
+/** Per-model capacity limits (from pool allocation) */
+export interface ModelCapacity {
+  /** Total concurrency slots for this model (per instance, before JTM split) */
+  totalSlots: number;
+  /** Tokens per minute limit (per instance) */
+  tokensPerMinute: number;
+  /** Requests per minute limit (per instance) */
+  requestsPerMinute: number;
+  /** Tokens per day limit (per instance) */
+  tokensPerDay: number;
+  /** Requests per day limit (per instance) */
+  requestsPerDay: number;
+}
+
+/** Per-job-type estimated resource consumption */
+export interface JobTypeResourceEstimate {
+  /** Estimated tokens per job */
+  estimatedUsedTokens: number;
+  /** Estimated requests per job */
+  estimatedNumberOfRequests: number;
+}
+
 export interface TestMetadata {
   startTime: number;
   endTime: number;
   durationMs: number;
   /** Map of instance URL to instance ID */
   instances: Record<string, string>;
+  /** Per-model capacity limits (extracted from first allocation) */
+  modelCapacities?: Record<string, ModelCapacity>;
+  /** Per-job-type resource estimates (extracted from first snapshot with jobTypes) */
+  jobTypeResources?: Record<string, JobTypeResourceEstimate>;
 }
 
 // =============================================================================
@@ -102,6 +128,8 @@ export interface CompactModelJobTypeState {
   slots: number;
   /** Full allocation slots using per-jobType formula with unreduced (base) pool */
   totalSlots: number;
+  /** Acquirable slots based on pool.acquirableSlots (dynamic, reflects in-flight on other instances) */
+  acquirableSlots: number;
   /** In-flight jobs of this type on this model */
   inFlight: number;
 }

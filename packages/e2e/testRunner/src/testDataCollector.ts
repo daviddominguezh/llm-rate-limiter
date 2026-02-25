@@ -10,6 +10,7 @@ import { sleep } from './testUtils.js';
 export type { TestData } from '@llm-rate-limiter/e2e-test-results';
 
 const SLEEP_DURATION_MS = 100;
+const SSE_RETRY_DELAY_MS = 2000;
 const SSE_DATA_PREFIX = 'data: ';
 const SSE_DATA_PREFIX_LENGTH = 6;
 const JSON_INDENT_SPACES = 2;
@@ -63,25 +64,16 @@ const isRawEventData = (value: unknown): value is RawEventData => {
   return hasType && hasInstanceId && hasTimestamp;
 };
 
-/** Convert captured event to raw event */
-const toRawEvent = (captured: CapturedEvent): RawEvent | null => {
-  if (!isRawEventData(captured.event)) {
-    return null;
-  }
-  return {
-    receivedAt: captured.receivedAt,
-    sourceUrl: captured.sourceUrl,
-    event: captured.event,
-  };
-};
-
-/** Convert captured events to raw events */
+/** Convert captured events to raw events, filtering invalid entries */
 const convertToRawEvents = (events: CapturedEvent[]): RawEvent[] => {
   const rawEvents: RawEvent[] = [];
   for (const captured of events) {
-    const raw = toRawEvent(captured);
-    if (raw !== null) {
-      rawEvents.push(raw);
+    if (isRawEventData(captured.event)) {
+      rawEvents.push({
+        receivedAt: captured.receivedAt,
+        sourceUrl: captured.sourceUrl,
+        event: captured.event,
+      });
     }
   }
   return rawEvents;
@@ -218,6 +210,7 @@ export class TestDataCollector {
   private readonly startTime: number;
   private readonly sseConnections = new Map<string, { close: () => void }>();
   private readonly onJobEvent?: (event: JobEvent) => void;
+  private listenersStopped = false;
 
   constructor(instanceUrls: string[], options: TestDataCollectorOptions = {}) {
     this.instanceUrls = instanceUrls;
@@ -265,7 +258,7 @@ export class TestDataCollector {
     );
 
     req.on('error', () => {
-      // Ignore connection errors
+      this.scheduleRetry(baseUrl);
     });
 
     req.end();
@@ -278,9 +271,22 @@ export class TestDataCollector {
   }
 
   /**
+   * Schedule SSE reconnection after delay.
+   */
+  private scheduleRetry(baseUrl: string): void {
+    const timer = setTimeout(() => {
+      if (!this.listenersStopped) {
+        this.connectToSSE(baseUrl);
+      }
+    }, SSE_RETRY_DELAY_MS);
+    timer.unref();
+  }
+
+  /**
    * Stop all SSE listeners.
    */
   stopEventListeners(): void {
+    this.listenersStopped = true;
     for (const connection of this.sseConnections.values()) {
       connection.close();
     }

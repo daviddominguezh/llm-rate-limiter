@@ -31,6 +31,7 @@ export const mergeRatioConfig = (config?: RatioAdjustmentConfig): Required<Ratio
   adjustmentIntervalMs: withDefault(config, 'adjustmentIntervalMs'),
   releasesPerAdjustment: withDefault(config, 'releasesPerAdjustment'),
   minJobTypeCapacity: withDefault(config, 'minJobTypeCapacity'),
+  idleDecayRate: withDefault(config, 'idleDecayRate'),
 });
 
 /** Create initial states from config and calculated ratios */
@@ -227,6 +228,53 @@ export const recalculateAllocatedSlots = (
   for (const state of states.values()) {
     state.allocatedSlots = Math.max(minCapacity, Math.floor(totalCapacity * state.currentRatio));
   }
+};
+
+/** Wake queued waiters for a single job type until capacity is full */
+const drainJobTypeQueue = (
+  states: Map<string, JobTypeState>,
+  waitQueues: Map<string, QueuedWaiter[]>,
+  jobTypeId: string
+): void => {
+  const state = states.get(jobTypeId);
+  const queue = waitQueues.get(jobTypeId);
+  if (state === undefined || queue === undefined) return;
+  while (queue.length > ZERO && state.inFlight < state.allocatedSlots) {
+    const waiter = queue.shift();
+    if (waiter !== undefined) {
+      state.inFlight += ONE;
+      waiter.resolve();
+    }
+  }
+};
+
+/** Wake all queued waiters that can now be served after capacity changes */
+export const drainWaitQueues = (
+  states: Map<string, JobTypeState>,
+  waitQueues: Map<string, QueuedWaiter[]>
+): void => {
+  for (const jobTypeId of states.keys()) {
+    drainJobTypeQueue(states, waitQueues, jobTypeId);
+  }
+};
+
+/** Decay flexible ratios toward their initial values when all job types are idle */
+export const decayToInitialRatios = (states: Map<string, JobTypeState>, decayRate: number): boolean => {
+  const minDistance = 0.001;
+  let anyDecayed = false;
+
+  for (const state of states.values()) {
+    if (!state.flexible) continue;
+    const distance = state.initialRatio - state.currentRatio;
+    if (Math.abs(distance) < minDistance) continue;
+    state.currentRatio += distance * decayRate;
+    anyDecayed = true;
+  }
+
+  if (anyDecayed) {
+    normalizeRatios(states);
+  }
+  return anyDecayed;
 };
 
 /** Apply memory constraints to allocated slots: finalSlots = min(distributed, memoryBased) */

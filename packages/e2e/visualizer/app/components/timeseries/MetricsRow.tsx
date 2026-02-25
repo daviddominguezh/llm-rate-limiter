@@ -1,18 +1,17 @@
 'use client';
 
-import type { InstanceConfig } from '@/lib/timeseries/capacityTypes';
 import type { TestData } from '@llm-rate-limiter/e2e-test-results';
 
 interface MetricsRowProps {
   testData: TestData;
-  instances: InstanceConfig[];
 }
 
 const MS_PER_SECOND = 1000;
 
-export function MetricsRow({ testData, instances }: MetricsRowProps) {
+export function MetricsRow({ testData }: MetricsRowProps) {
   const { summary, metadata } = testData;
   const durationSec = (metadata.durationMs / MS_PER_SECOND).toFixed(1);
+  const instanceCount = Object.keys(metadata.instances).length;
 
   return (
     <div
@@ -42,7 +41,7 @@ export function MetricsRow({ testData, instances }: MetricsRowProps) {
       <span style={{ color: '#333' }}>·</span>
       <span>
         <span style={{ color: '#666' }}>Instances:</span>{' '}
-        <span style={{ color: '#6EC97D', fontWeight: 600 }}>{instances.length}</span>
+        <span style={{ color: '#6EC97D', fontWeight: 600 }}>{instanceCount}</span>
       </span>
       <span style={{ color: '#333' }}>·</span>
       <span>

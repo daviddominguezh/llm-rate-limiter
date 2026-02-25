@@ -41,6 +41,8 @@ interface StreamgraphChartProps {
 // =============================================================================
 
 const MIN_WIDTH = 100;
+const MIN_PANEL_HEIGHT = 80;
+const MAX_PANEL_HEIGHT = 400;
 
 // =============================================================================
 // Main component — renders one panel per (instance, model)
@@ -55,6 +57,7 @@ export function StreamgraphChart({ data, height: propHeight }: StreamgraphChartP
     return { sortedPanels: flat, groups: grouped };
   }, [data]);
   const axisPositions = useMemo(() => computeAxisPositions(sortedPanels), [sortedPanels]);
+  const groupHeights = useMemo(() => computeGroupHeights(groups), [groups]);
 
   if (sortedPanels.length === 0) {
     return <div className="h-64 flex items-center justify-center text-muted-foreground">No data</div>;
@@ -64,11 +67,11 @@ export function StreamgraphChart({ data, height: propHeight }: StreamgraphChartP
 
   return (
     <div className="space-y-4">
-      {groups.map((group) => (
+      {groups.map((group, gi) => (
         <ModelGroup
           key={group[0].modelId}
           group={group}
-          propHeight={propHeight}
+          propHeight={groupHeights[gi]}
           axisPositions={axisPositions}
           startIdx={sortedPanels.indexOf(group[0])}
           PanelComponent={StreamgraphPanelView}
@@ -279,6 +282,27 @@ function detectHoveredKey(event: React.MouseEvent<SVGSVGElement>): string | null
 // =============================================================================
 // Axis position helpers
 // =============================================================================
+
+/** Get the max pool value for a group of panels */
+function groupMaxPool(group: StreamgraphPanel[]): number {
+  let max = 1;
+  for (const panel of group) {
+    for (const val of panel.poolPerRow) {
+      if (val > max) max = val;
+    }
+  }
+  return max;
+}
+
+/** Compute proportional pixel heights per model group based on their max capacity */
+function computeGroupHeights(groups: StreamgraphPanel[][]): number[] {
+  const maxPools = groups.map(groupMaxPool);
+  const globalMax = Math.max(...maxPools);
+  return maxPools.map((pool) => {
+    const ratio = globalMax > 0 ? pool / globalMax : 1;
+    return Math.max(MIN_PANEL_HEIGHT, Math.round(ratio * MAX_PANEL_HEIGHT));
+  });
+}
 
 /** Find the earliest time a panel has data (first non-zero pool) */
 function earliestDataTime(panel: StreamgraphPanel): number {

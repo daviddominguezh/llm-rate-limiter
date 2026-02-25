@@ -194,6 +194,25 @@ function cubicEase(t: number): number {
 }
 
 // =============================================================================
+// Capacity clamping — scale bands down when they exceed the pool
+// =============================================================================
+
+/** Scale capacity rows down (never up) so their sum fits within poolPerRow */
+function clampCapacityToPool(rows: StreamgraphRow[], pool: number[], keys: string[]): StreamgraphRow[] {
+  return rows.map((row, i) => {
+    const target = pool[i];
+    if (target <= 0) return row;
+    let sum = 0;
+    for (const k of keys) sum += row[k];
+    if (sum <= target) return row;
+    const scale = target / sum;
+    const out: StreamgraphRow = { time: row.time };
+    for (const k of keys) out[k] = row[k] * scale;
+    return out;
+  });
+}
+
+// =============================================================================
 // Public API
 // =============================================================================
 
@@ -211,7 +230,9 @@ export function buildStreamgraphPanels(result: StructuredCapacityResult): Stream
     }));
 
     const runningRows = buildRows(result, panel.instanceId, panel.modelId, sortedJts, 'runningHeight');
-    const capacityRows = buildRows(result, panel.instanceId, panel.modelId, sortedJts, 'capacityHeight');
+    const rawCapacity = buildRows(result, panel.instanceId, panel.modelId, sortedJts, 'capacityHeight');
+    const poolPerRow = computePoolPerRow(result, panel.instanceId, panel.modelId);
+    const capacityRows = clampCapacityToPool(rawCapacity, poolPerRow, sortedJts);
 
     panels.push({
       instanceId: panel.instanceId,
@@ -220,7 +241,7 @@ export function buildStreamgraphPanels(result: StructuredCapacityResult): Stream
       capacityRows,
       tooltipData: buildTooltipData(result, panel.instanceId, panel.modelId),
       streams,
-      poolPerRow: computePoolPerRow(result, panel.instanceId, panel.modelId),
+      poolPerRow,
     });
   }
 

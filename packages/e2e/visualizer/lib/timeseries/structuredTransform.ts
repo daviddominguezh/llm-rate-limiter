@@ -118,7 +118,7 @@ function toMetrics(jt: CompactModelJobTypeState, weight: number): JobTypeMetrics
     queued: 0,
     capacity,
     runningHeight: running,
-    capacityHeight: capacity,
+    capacityHeight: jt.totalSlots,
     slots: jt.slots,
   };
 }

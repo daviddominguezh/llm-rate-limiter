@@ -157,54 +157,25 @@ function countActiveForModel(interval: CapacityInterval, modelId: string): numbe
 /** Compute per-row pool size; 0 when this instance is inactive */
 function computePoolPerRow(result: StructuredCapacityResult, instanceId: string, modelId: string): number[] {
   const totalSlots = result.setup.models[modelId]?.totalSlots ?? 0;
-  const raw = result.data.map((interval) => {
+  return result.data.map((interval) => {
     if (interval.instances[instanceId]?.[modelId] === undefined) return 0;
     const active = countActiveForModel(interval, modelId);
     return active > 0 ? Math.floor(totalSlots / active) : 0;
   });
-  return smoothTransitions(raw);
-}
-
-/** Smooth step changes using cubic ease-in-out over a wide ramp */
-function smoothTransitions(values: number[]): number[] {
-  const RAMP = 55;
-  const result = [...values];
-  for (let i = 1; i < values.length; i += 1) {
-    if (values[i] === values[i - 1] || values[i] === 0 || values[i - 1] === 0) continue;
-    const from = values[i - 1];
-    const to = values[i];
-    const start = i;
-    const end = Math.min(values.length - 1, i + RAMP);
-    const span = end - start;
-    for (let j = start; j <= end; j += 1) {
-      const t = span > 0 ? (j - start) / span : 1;
-      result[j] = from + (to - from) * cubicEase(t);
-    }
-  }
-  return result;
-}
-
-/** Cubic ease-in-out: smooth S-curve from 0 to 1 */
-function cubicEase(t: number): number {
-  const HALF = 0.5;
-  const CUBIC_SCALE = 4;
-  if (t < HALF) return CUBIC_SCALE * t * t * t;
-  const inv = 1 - t;
-  return 1 - CUBIC_SCALE * inv * inv * inv;
 }
 
 // =============================================================================
-// Capacity clamping — scale bands down when they exceed the pool
+// Capacity scaling — proportionally distribute pool across job types
 // =============================================================================
 
-/** Scale capacity rows down (never up) so their sum fits within poolPerRow */
-function clampCapacityToPool(rows: StreamgraphRow[], pool: number[], keys: string[]): StreamgraphRow[] {
+/** Scale capacity rows so their sum matches poolPerRow, using raw values for proportions */
+function scaleCapacityToPool(rows: StreamgraphRow[], pool: number[], keys: string[]): StreamgraphRow[] {
   return rows.map((row, i) => {
     const target = pool[i];
     if (target <= 0) return row;
     let sum = 0;
     for (const k of keys) sum += row[k];
-    if (sum <= target) return row;
+    if (sum <= 0) return row;
     const scale = target / sum;
     const out: StreamgraphRow = { time: row.time };
     for (const k of keys) out[k] = row[k] * scale;
@@ -232,7 +203,7 @@ export function buildStreamgraphPanels(result: StructuredCapacityResult): Stream
     const runningRows = buildRows(result, panel.instanceId, panel.modelId, sortedJts, 'runningHeight');
     const rawCapacity = buildRows(result, panel.instanceId, panel.modelId, sortedJts, 'capacityHeight');
     const poolPerRow = computePoolPerRow(result, panel.instanceId, panel.modelId);
-    const capacityRows = clampCapacityToPool(rawCapacity, poolPerRow, sortedJts);
+    const capacityRows = scaleCapacityToPool(rawCapacity, poolPerRow, sortedJts);
 
     panels.push({
       instanceId: panel.instanceId,

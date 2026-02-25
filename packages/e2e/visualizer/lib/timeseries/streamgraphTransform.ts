@@ -165,18 +165,25 @@ function computePoolPerRow(result: StructuredCapacityResult, instanceId: string,
 }
 
 // =============================================================================
-// Capacity scaling — proportionally distribute pool across job types
+// Capacity rescaling — adjust frozen-basePool values to actual pool
 // =============================================================================
 
-/** Scale capacity rows so their sum matches poolPerRow, using raw values for proportions */
-function scaleCapacityToPool(rows: StreamgraphRow[], pool: number[], keys: string[]): StreamgraphRow[] {
+/** Find the first non-zero value in poolPerRow (the frozen pool for this instance) */
+function findFrozenPool(pool: number[]): number {
+  for (const v of pool) {
+    if (v > 0) return v;
+  }
+  return 0;
+}
+
+/** Rescale capacity rows from frozen-basePool values to actual pool at each interval */
+function rescaleCapacityToPool(rows: StreamgraphRow[], pool: number[], keys: string[]): StreamgraphRow[] {
+  const frozenPool = findFrozenPool(pool);
+  if (frozenPool <= 0) return rows;
   return rows.map((row, i) => {
     const target = pool[i];
-    if (target <= 0) return row;
-    let sum = 0;
-    for (const k of keys) sum += row[k];
-    if (sum <= 0) return row;
-    const scale = target / sum;
+    if (target <= 0 || target === frozenPool) return row;
+    const scale = target / frozenPool;
     const out: StreamgraphRow = { time: row.time };
     for (const k of keys) out[k] = row[k] * scale;
     return out;
@@ -203,7 +210,7 @@ export function buildStreamgraphPanels(result: StructuredCapacityResult): Stream
     const runningRows = buildRows(result, panel.instanceId, panel.modelId, sortedJts, 'runningHeight');
     const rawCapacity = buildRows(result, panel.instanceId, panel.modelId, sortedJts, 'capacityHeight');
     const poolPerRow = computePoolPerRow(result, panel.instanceId, panel.modelId);
-    const capacityRows = scaleCapacityToPool(rawCapacity, poolPerRow, sortedJts);
+    const capacityRows = rescaleCapacityToPool(rawCapacity, poolPerRow, sortedJts);
 
     panels.push({
       instanceId: panel.instanceId,

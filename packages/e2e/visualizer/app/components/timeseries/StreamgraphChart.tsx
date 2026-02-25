@@ -20,8 +20,10 @@ import {
   renderRunning,
 } from './streamgraphHelpers';
 import type { StreamgraphDimensions, StreamgraphLayout } from './streamgraphHelpers';
+import { ModelGroup } from './StreamgraphModelGroup';
 import type { CursorTooltipState } from './StreamgraphTooltip';
 import { CursorTooltip } from './StreamgraphTooltip';
+import type { AxisPosition, GroupCursorState, PanelProps } from './streamgraphTypes';
 
 // =============================================================================
 // Types
@@ -30,14 +32,6 @@ import { CursorTooltip } from './StreamgraphTooltip';
 interface StreamgraphChartProps {
   data: StructuredCapacityResult;
   height?: number;
-}
-
-type AxisPosition = 'top' | 'bottom' | 'none';
-
-interface PanelProps {
-  panel: StreamgraphPanel;
-  height?: number;
-  axisPosition: AxisPosition;
 }
 
 // =============================================================================
@@ -63,25 +57,19 @@ export function StreamgraphChart({ data, height: propHeight }: StreamgraphChartP
   }
 
   const legend = panels[0].streams;
+  const groups = groupPanelsByModel(panels);
 
   return (
     <div className="space-y-4">
-      {groupPanelsByModel(panels).map((group) => (
-        <div key={group[0].modelId}>
-          {group.map((panel, gi) => {
-            const i = panels.indexOf(panel);
-            return (
-              <div key={`${panel.instanceId}|${panel.modelId}`}>
-                {gi > 0 && <div style={{ height: 2, background: '#fff' }} />}
-                <StreamgraphPanel
-                  panel={panel}
-                  height={propHeight}
-                  axisPosition={axisPositions[i]}
-                />
-              </div>
-            );
-          })}
-        </div>
+      {groups.map((group) => (
+        <ModelGroup
+          key={group[0].modelId}
+          group={group}
+          propHeight={propHeight}
+          axisPositions={axisPositions}
+          startIdx={panels.indexOf(group[0])}
+          PanelComponent={StreamgraphPanelView}
+        />
       ))}
       <StreamLegend streams={legend} />
     </div>
@@ -92,7 +80,7 @@ export function StreamgraphChart({ data, height: propHeight }: StreamgraphChartP
 // Single panel — one SVG for one (instance, model)
 // =============================================================================
 
-function StreamgraphPanel({ panel, height: propHeight, axisPosition }: PanelProps) {
+function StreamgraphPanelView({ panel, height: propHeight, axisPosition, groupCursor, onCursorChange }: PanelProps) {
   const svgRef = useRef<SVGSVGElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const [width, setWidth] = useState(DEFAULT_DIMENSIONS.width);
@@ -111,9 +99,10 @@ function StreamgraphPanel({ panel, height: propHeight, axisPosition }: PanelProp
 
   const layout = useLayout(panel, dims);
   useRenderEffect({ svgRef, layout, dims, colorMap, axisPosition });
+  useCursorSync({ svgRef, layout, dims, groupCursor, panel });
 
-  const handleMouseMove = useCursorHover({ svgRef, panel, layout, dims, setTooltip });
-  const handleMouseLeave = useCursorLeave(svgRef, setTooltip);
+  const handleMouseMove = useCursorHover({ svgRef, panel, layout, dims, setTooltip, onCursorChange });
+  const handleMouseLeave = useCallback(() => setTooltip(null), []);
 
   return (
     <div ref={containerRef} className="flex w-full">
@@ -191,7 +180,40 @@ function useRenderEffect(params: RenderEffectParams): void {
 }
 
 // =============================================================================
-// Cursor hover
+// Cursor sync — renders cursor line + highlight from shared group state
+// =============================================================================
+
+interface CursorSyncParams {
+  svgRef: React.RefObject<SVGSVGElement | null>;
+  layout: StreamgraphLayout | null;
+  dims: StreamgraphDimensions;
+  groupCursor: GroupCursorState | null;
+  panel: StreamgraphPanel;
+}
+
+function useCursorSync(params: CursorSyncParams): void {
+  const { svgRef, layout, dims, groupCursor, panel } = params;
+
+  useEffect(() => {
+    const svg = svgRef.current;
+    if (!svg || !layout) return;
+    const g = d3.select(svg).select<SVGGElement>('g.chart-area');
+
+    if (groupCursor === null) {
+      hideCursorLine(g);
+      highlightStream(g, null);
+      return;
+    }
+
+    const innerH = dims.height - dims.margin.top - dims.margin.bottom;
+    const xPos = layout.xScale(panel.capacityRows[groupCursor.index].time);
+    renderCursorLine(g, xPos, innerH);
+    highlightStream(g, groupCursor.hoveredKey);
+  }, [svgRef, layout, dims, groupCursor, panel]);
+}
+
+// =============================================================================
+// Cursor hover — computes index and reports to group
 // =============================================================================
 
 interface CursorHoverParams {
@@ -200,25 +222,23 @@ interface CursorHoverParams {
   layout: StreamgraphLayout | null;
   dims: StreamgraphDimensions;
   setTooltip: (t: CursorTooltipState | null) => void;
+  onCursorChange: (c: GroupCursorState | null) => void;
 }
 
 function useCursorHover(params: CursorHoverParams): (e: React.MouseEvent<SVGSVGElement>) => void {
-  const { svgRef, panel, layout, dims, setTooltip } = params;
+  const { svgRef, panel, layout, dims, setTooltip, onCursorChange } = params;
 
   return useCallback(
     (event: React.MouseEvent<SVGSVGElement>) => {
       const svg = svgRef.current;
       if (!svg || !layout) return;
 
-      const g = d3.select(svg).select<SVGGElement>('g.chart-area');
       const rect = svg.getBoundingClientRect();
       const chartX = event.clientX - rect.left - dims.margin.left;
       const index = findNearestIndex(panel.capacityRows, layout.xScale, chartX);
-      const innerH = dims.height - dims.margin.top - dims.margin.bottom;
-      renderCursorLine(g, layout.xScale(panel.capacityRows[index].time), innerH);
-
       const hoveredKey = detectHoveredKey(event);
-      highlightStream(g, hoveredKey);
+
+      onCursorChange({ index, hoveredKey });
 
       const tooltipRow = panel.tooltipData[index];
       setTooltip({
@@ -234,7 +254,7 @@ function useCursorHover(params: CursorHoverParams): (e: React.MouseEvent<SVGSVGE
         })),
       });
     },
-    [svgRef, panel, layout, dims, setTooltip]
+    [svgRef, panel, layout, dims, setTooltip, onCursorChange]
   );
 }
 
@@ -247,22 +267,8 @@ function detectHoveredKey(event: React.MouseEvent<SVGSVGElement>): string | null
   return datum?.key ?? null;
 }
 
-function useCursorLeave(
-  svgRef: React.RefObject<SVGSVGElement | null>,
-  setTooltip: (t: CursorTooltipState | null) => void
-): () => void {
-  return useCallback(() => {
-    const svg = svgRef.current;
-    if (!svg) return;
-    const g = d3.select(svg).select<SVGGElement>('g.chart-area');
-    setTooltip(null);
-    highlightStream(g, null);
-    hideCursorLine(g);
-  }, [svgRef, setTooltip]);
-}
-
 // =============================================================================
-// Axis position per panel
+// Axis position helpers
 // =============================================================================
 
 /** Group consecutive panels by modelId (panels must already be sorted) */

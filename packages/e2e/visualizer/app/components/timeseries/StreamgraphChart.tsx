@@ -72,7 +72,7 @@ export function StreamgraphChart({ data, height: propHeight }: StreamgraphChartP
             const i = panels.indexOf(panel);
             return (
               <div key={`${panel.instanceId}|${panel.modelId}`}>
-                {gi > 0 && <div className="h-px" style={{ background: 'rgba(255,255,255,0.3)' }} />}
+                {gi > 0 && <div style={{ height: 2, background: '#fff' }} />}
                 <StreamgraphPanel
                   panel={panel}
                   height={propHeight}
@@ -214,7 +214,6 @@ function useCursorHover(params: CursorHoverParams): (e: React.MouseEvent<SVGSVGE
       const rect = svg.getBoundingClientRect();
       const chartX = event.clientX - rect.left - dims.margin.left;
       const index = findNearestIndex(panel.capacityRows, layout.xScale, chartX);
-      console.log(`[cursor] ${panel.instanceId}|${panel.modelId} interval=${index} t=${panel.capacityRows[index].time}s`);
       const innerH = dims.height - dims.margin.top - dims.margin.bottom;
       renderCursorLine(g, layout.xScale(panel.capacityRows[index].time), innerH);
 

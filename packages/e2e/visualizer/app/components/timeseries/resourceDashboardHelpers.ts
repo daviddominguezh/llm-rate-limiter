@@ -2,13 +2,7 @@
  * Helper functions for ResourceDashboard gauge and metadata extraction.
  */
 import type { ResourceType } from '@/lib/timeseries/dashboardTypes';
-import type {
-  CompactInstanceState,
-  CompactModelState,
-  JobRecord,
-  StateSnapshot,
-  TestData,
-} from '@llm-rate-limiter/e2e-test-results';
+import type { CompactInstanceState, CompactModelState, TestData } from '@llm-rate-limiter/e2e-test-results';
 
 const JOB_TYPE_PALETTE = [
   '#E85E3B',
@@ -49,55 +43,41 @@ export interface JobTypeUsage {
   totalTokens: number;
 }
 
-function sumJobTokens(job: JobRecord): number {
-  let tokens = 0;
-  for (const entry of job.usage) {
-    tokens += entry.inputTokens + entry.outputTokens;
-  }
-  return tokens;
+/** Per-model job usage (jobs and tokens broken down by job type) */
+export interface ModelJobUsage {
+  modelId: string;
+  usage: JobTypeUsage;
 }
 
-export function computeJobUsage(testData: TestData): JobTypeUsage {
-  const result: JobTypeUsage = { jobCount: {}, tokenUsage: {}, totalJobs: 0, totalTokens: 0 };
-
-  for (const job of Object.values(testData.jobs)) {
-    const tokens = sumJobTokens(job);
-    result.jobCount[job.jobType] = (result.jobCount[job.jobType] ?? 0) + 1;
-    result.tokenUsage[job.jobType] = (result.tokenUsage[job.jobType] ?? 0) + tokens;
-    result.totalJobs += 1;
-    result.totalTokens += tokens;
-  }
-
-  return result;
+export interface ModelCapacity {
+  modelId: string;
+  rpm: number;
+  tpm: number;
+  rpd: number;
+  tpd: number;
+  /** Per-instance max concurrent requests (from model config, 0 if not configured) */
+  concurrent: number;
 }
 
-function sumModelCapacity(models: Record<string, CompactModelState>): { rpm: number; tpm: number } {
-  let rpm = 0;
-  let tpm = 0;
-  for (const model of Object.values(models)) {
-    rpm += model.rpm + model.rpmRemaining;
-    tpm += model.tpm + model.tpmRemaining;
-  }
-  return { rpm, tpm };
+function positiveOrZero(val: number): number {
+  return val > 0 ? val : 0;
 }
 
-function sumSnapshotCapacity(snapshot: StateSnapshot): { rpm: number; tpm: number } {
-  let rpm = 0;
-  let tpm = 0;
-  for (const state of Object.values(snapshot.instances)) {
-    const cap = sumModelCapacity(state.models);
-    rpm += cap.rpm;
-    tpm += cap.tpm;
-  }
-  return { rpm, tpm };
-}
+/** Extract per-model capacity from metadata (provider-imposed limits) */
+export function extractModelCapacities(testData: TestData): ModelCapacity[] {
+  const caps = testData.metadata.modelCapacities;
+  if (!caps) return [];
 
-export function extractCapacity(testData: TestData): { rpm: number; tpm: number } {
-  for (const snapshot of testData.snapshots) {
-    const cap = sumSnapshotCapacity(snapshot);
-    if (cap.rpm > 0 || cap.tpm > 0) return cap;
-  }
-  return { rpm: 0, tpm: 0 };
+  return Object.entries(caps)
+    .map(([modelId, cap]) => ({
+      modelId,
+      rpm: positiveOrZero(cap.requestsPerMinute),
+      tpm: positiveOrZero(cap.tokensPerMinute),
+      rpd: positiveOrZero(cap.requestsPerDay),
+      tpd: positiveOrZero(cap.tokensPerDay),
+      concurrent: positiveOrZero(cap.maxConcurrentRequests ?? 0),
+    }))
+    .filter((c) => c.rpm > 0 || c.tpm > 0 || c.rpd > 0 || c.tpd > 0 || c.concurrent > 0);
 }
 
 export function assignJobTypeColors(jobTypeIds: string[]): Record<string, string> {
@@ -114,54 +94,65 @@ function makeSegments(usage: Record<string, number>, colors: Record<string, stri
     .sort((a, b) => b.used - a.used);
 }
 
-function buildRpmGauge(
-  jobUsage: JobTypeUsage,
-  capacity: { rpm: number },
-  colors: Record<string, string>
-): GaugeData | null {
-  if (capacity.rpm <= 0) return null;
-  return {
-    resource: 'RPM',
-    total: capacity.rpm,
-    used: jobUsage.totalJobs,
-    segments: makeSegments(jobUsage.jobCount, colors),
-  };
+function formatModelLabel(modelId: string): string {
+  return modelId.replace(/[_-]/gu, '-');
 }
 
-function buildTpmGauge(
-  jobUsage: JobTypeUsage,
-  capacity: { tpm: number },
-  colors: Record<string, string>
-): GaugeData | null {
-  if (capacity.tpm <= 0 || jobUsage.totalTokens <= 0) return null;
-  return {
-    resource: 'TPM',
-    total: capacity.tpm,
-    used: jobUsage.totalTokens,
-    segments: makeSegments(jobUsage.tokenUsage, colors),
-  };
+function addGauge(
+  gauges: GaugeData[],
+  label: string,
+  total: number,
+  used: number,
+  segments: GaugeSegment[]
+): void {
+  if (total > 0) {
+    gauges.push({ resource: label, total, used, segments });
+  }
 }
 
+/** Build per-model gauges for all applicable resource limits */
 export function buildGauges(
-  jobUsage: JobTypeUsage,
-  capacity: { rpm: number; tpm: number },
+  modelUsages: ModelJobUsage[],
+  modelCapacities: ModelCapacity[],
   colors: Record<string, string>
 ): GaugeData[] {
   const gauges: GaugeData[] = [];
+  const usageMap = new Map(modelUsages.map((m) => [m.modelId, m.usage]));
 
-  const rpmGauge = buildRpmGauge(jobUsage, capacity, colors);
-  if (rpmGauge) gauges.push(rpmGauge);
+  for (const cap of modelCapacities) {
+    const usage = usageMap.get(cap.modelId);
+    const label = formatModelLabel(cap.modelId);
+    const jobSegs = makeSegments(usage?.jobCount ?? {}, colors);
+    const tokenSegs = makeSegments(usage?.tokenUsage ?? {}, colors);
 
-  const tpmGauge = buildTpmGauge(jobUsage, capacity, colors);
-  if (tpmGauge) gauges.push(tpmGauge);
+    addGauge(gauges, `${label} · RPM`, cap.rpm, usage?.totalJobs ?? 0, jobSegs);
+    addGauge(gauges, `${label} · TPM`, cap.tpm, usage?.totalTokens ?? 0, tokenSegs);
+    addGauge(gauges, `${label} · RPD`, cap.rpd, usage?.totalJobs ?? 0, jobSegs);
+    addGauge(gauges, `${label} · TPD`, cap.tpd, usage?.totalTokens ?? 0, tokenSegs);
+    addGauge(gauges, `${label} · Concurrent`, cap.concurrent, usage?.totalJobs ?? 0, jobSegs);
+  }
 
-  gauges.sort((a, b) => {
+  return gauges.sort((a, b) => {
     const pctA = a.total > 0 ? a.used / a.total : 0;
     const pctB = b.total > 0 ? b.used / b.total : 0;
     return pctB - pctA;
   });
+}
 
-  return gauges;
+/** Combine per-model usages into a single aggregated JobTypeUsage (for legend display) */
+export function combineModelUsages(modelUsages: ModelJobUsage[]): JobTypeUsage {
+  const result: JobTypeUsage = { jobCount: {}, tokenUsage: {}, totalJobs: 0, totalTokens: 0 };
+  for (const mu of modelUsages) {
+    for (const [jt, count] of Object.entries(mu.usage.jobCount)) {
+      result.jobCount[jt] = (result.jobCount[jt] ?? 0) + count;
+    }
+    for (const [jt, tokens] of Object.entries(mu.usage.tokenUsage)) {
+      result.tokenUsage[jt] = (result.tokenUsage[jt] ?? 0) + tokens;
+    }
+    result.totalJobs += mu.usage.totalJobs;
+    result.totalTokens += mu.usage.totalTokens;
+  }
+  return result;
 }
 
 export function buildJobTypeInfo(jobUsage: JobTypeUsage, colors: Record<string, string>): RealJobTypeInfo[] {
@@ -213,77 +204,6 @@ export function countResourceDimensions(testData: TestData): number {
   }
 
   return Number(hasRpm) + Number(hasTpm) + Number(hasConcurrent);
-}
-
-// =============================================================================
-// Minute boundary helpers
-// =============================================================================
-
-export interface MinuteBoundary {
-  label: string;
-  startSeconds: number;
-  endSeconds: number;
-  epochStartMs: number;
-  epochEndMs: number;
-}
-
-const MS_PER_MINUTE = 60000;
-const MS_TO_SEC = 1000;
-
-function findTestEndTime(testData: TestData): number {
-  const lastSnapshot = testData.snapshots[testData.snapshots.length - 1];
-  return Object.values(testData.jobs).reduce((max, job) => {
-    const end = job.events[job.events.length - 1]?.timestamp ?? 0;
-    return end > max ? end : max;
-  }, lastSnapshot?.timestamp ?? 0);
-}
-
-/** Compute epoch-minute boundaries relative to test start time */
-export function computeMinuteBoundaries(testData: TestData): MinuteBoundary[] {
-  if (Object.keys(testData.jobs).length === 0) return [];
-
-  const { startTime } = testData.metadata;
-  const endTime = findTestEndTime(testData);
-  const firstMinute = Math.floor(startTime / MS_PER_MINUTE);
-  const lastMinute = Math.floor(endTime / MS_PER_MINUTE);
-
-  const boundaries: MinuteBoundary[] = [];
-  for (let m = firstMinute; m <= lastMinute; m++) {
-    const epochStart = m * MS_PER_MINUTE;
-    const epochEnd = epochStart + MS_PER_MINUTE;
-    boundaries.push({
-      label: `Min ${boundaries.length + 1}`,
-      startSeconds: (epochStart - startTime) / MS_TO_SEC,
-      endSeconds: (epochEnd - startTime) / MS_TO_SEC,
-      epochStartMs: epochStart,
-      epochEndMs: epochEnd,
-    });
-  }
-  return boundaries;
-}
-
-/** Get the timestamp when a job started (consuming rate-limit capacity) */
-function getJobStartedMs(job: JobRecord): number {
-  const started = job.events.find((e) => e.type === 'started');
-  return started?.timestamp ?? job.sentAt;
-}
-
-/** Compute job usage filtered to a specific epoch-minute window */
-export function computeJobUsageForWindow(testData: TestData, boundary: MinuteBoundary): JobTypeUsage {
-  const result: JobTypeUsage = { jobCount: {}, tokenUsage: {}, totalJobs: 0, totalTokens: 0 };
-
-  for (const job of Object.values(testData.jobs)) {
-    const startedMs = getJobStartedMs(job);
-    if (startedMs < boundary.epochStartMs || startedMs >= boundary.epochEndMs) continue;
-
-    const tokens = sumJobTokens(job);
-    result.jobCount[job.jobType] = (result.jobCount[job.jobType] ?? 0) + 1;
-    result.tokenUsage[job.jobType] = (result.tokenUsage[job.jobType] ?? 0) + tokens;
-    result.totalJobs += 1;
-    result.totalTokens += tokens;
-  }
-
-  return result;
 }
 
 /** Determine which resource types have data in the test snapshots */

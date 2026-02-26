@@ -15,16 +15,16 @@ import { AggregatedJobTypeTable } from './charts/AggregatedJobTypeTable';
 import { AggregatedUtilizationCharts } from './charts/AggregatedUtilizationCharts';
 import { AllocationOverTimeChart } from './charts/AllocationOverTimeChart';
 import { InstanceLoadChart } from './charts/InstanceLoadChart';
-import type { GaugeData, MinuteBoundary, RealJobTypeInfo } from './resourceDashboardHelpers';
+import type { MinuteBoundary } from './minuteBoundaryHelpers';
+import { computeMinuteBoundaries, computeModelJobUsage, computeModelJobUsageForWindow } from './minuteBoundaryHelpers';
+import type { GaugeData, RealJobTypeInfo } from './resourceDashboardHelpers';
 import {
   assignJobTypeColors,
   buildGauges,
   buildJobTypeInfo,
-  computeJobUsage,
-  computeJobUsageForWindow,
-  computeMinuteBoundaries,
+  combineModelUsages,
   countResourceDimensions,
-  extractCapacity,
+  extractModelCapacities,
   getEnabledResourceTypes,
 } from './resourceDashboardHelpers';
 
@@ -184,14 +184,16 @@ export function ResourceDashboard({ testData }: ResourceDashboardProps) {
   const jobTypeCount = Object.keys(testData.summary.byJobType).length;
   const resourceDimensionCount = countResourceDimensions(testData);
 
-  const allJobUsage = computeJobUsage(testData);
+  const allModelUsages = computeModelJobUsage(testData);
   const selectedBoundary = minuteBoundaries[selectedMinute];
-  const jobUsage = selectedBoundary ? computeJobUsageForWindow(testData, selectedBoundary) : allJobUsage;
-  const capacity = extractCapacity(testData);
-  const realJobTypeIds = Object.keys(allJobUsage.jobCount);
+  const modelUsages = selectedBoundary ? computeModelJobUsageForWindow(testData, selectedBoundary) : allModelUsages;
+  const capacities = extractModelCapacities(testData);
+  const allJobTypes = allModelUsages.flatMap((m) => Object.keys(m.usage.jobCount));
+  const realJobTypeIds = [...new Set(allJobTypes)];
   const jobTypeColors = assignJobTypeColors(realJobTypeIds);
-  const gauges = buildGauges(jobUsage, capacity, jobTypeColors);
-  const realJobTypes = buildJobTypeInfo(jobUsage, jobTypeColors);
+  const gauges = buildGauges(modelUsages, capacities, jobTypeColors);
+  const allUsageCombined = combineModelUsages(modelUsages);
+  const realJobTypes = buildJobTypeInfo(allUsageCombined, jobTypeColors);
 
   return (
     <div className="px-6 py-6 text-muted-foreground">

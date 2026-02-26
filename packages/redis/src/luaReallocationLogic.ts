@@ -173,12 +173,19 @@ local function recalculateAllocations(instancesKey, allocationsKey, channel, mod
       end
     end
 
+    -- Per-instance maxConcurrentRequests (0 if not configured)
+    local perInstanceConcurrent = 0
+    if isValidNumber(model.maxConcurrentRequests) and model.maxConcurrentRequests > 0 then
+      perInstanceConcurrent = math.floor(model.maxConcurrentRequests / instanceCount)
+    end
+
     pools[modelId] = {
       totalSlots = totalSlots,
       tokensPerMinute = tpm,
       requestsPerMinute = rpm,
       tokensPerDay = tpd,
-      requestsPerDay = rpd
+      requestsPerDay = rpd,
+      maxConcurrentRequests = perInstanceConcurrent
     }
   end
 
@@ -218,7 +225,8 @@ local function recalculateAllocations(instancesKey, allocationsKey, channel, mod
         tokensPerMinute = bp.tokensPerMinute,
         requestsPerMinute = bp.requestsPerMinute,
         tokensPerDay = bp.tokensPerDay,
-        requestsPerDay = bp.requestsPerDay
+        requestsPerDay = bp.requestsPerDay,
+        maxConcurrentRequests = bp.maxConcurrentRequests
       }
     end
     local allocData = cjson.encode({

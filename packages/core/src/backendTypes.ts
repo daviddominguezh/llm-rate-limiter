@@ -39,6 +39,8 @@ export interface ModelPoolAllocation {
   tokensPerDay: number;
   /** Per-instance requests per day limit for this model */
   requestsPerDay: number;
+  /** Per-instance max concurrent requests (0 if not configured) */
+  maxConcurrentRequests?: number;
 }
 
 /** Pool allocation by model ID */

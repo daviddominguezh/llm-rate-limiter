@@ -18,6 +18,8 @@ export interface ModelCapacity {
   tokensPerDay: number;
   /** Requests per day limit (per instance) */
   requestsPerDay: number;
+  /** Max concurrent requests per instance (only present when model has this limit) */
+  maxConcurrentRequests?: number;
 }
 
 /** Per-job-type estimated resource consumption */

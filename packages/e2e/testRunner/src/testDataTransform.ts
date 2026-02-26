@@ -66,10 +66,15 @@ const discoverFromSnapshots = (
   return result;
 };
 
+const ZERO = 0;
 const DEFAULT_ESTIMATED_TOKENS = 0;
 const DEFAULT_ESTIMATED_REQUESTS = 1;
 
-/** Convert a pool allocation to ModelCapacity */
+/** Build optional maxConcurrentRequests fragment for spread */
+const concurrentFragment = (concurrent: number | undefined): Pick<ModelCapacity, 'maxConcurrentRequests'> =>
+  concurrent !== undefined && concurrent > ZERO ? { maxConcurrentRequests: concurrent } : {};
+
+/** Convert pool allocations to ModelCapacity map */
 const poolToCapacity = (pools: Record<string, ModelPoolAllocation>): Record<string, ModelCapacity> => {
   const result: Record<string, ModelCapacity> = {};
   for (const [modelId, pool] of Object.entries(pools)) {
@@ -79,6 +84,7 @@ const poolToCapacity = (pools: Record<string, ModelPoolAllocation>): Record<stri
       requestsPerMinute: pool.requestsPerMinute,
       tokensPerDay: pool.tokensPerDay,
       requestsPerDay: pool.requestsPerDay,
+      ...concurrentFragment(pool.maxConcurrentRequests),
     };
   }
   return result;

@@ -25,6 +25,7 @@ export function ModelGroup({ group, propHeight, axisPositions, startIdx, PanelCo
 
   return (
     <div onMouseLeave={handleGroupLeave}>
+      <ModelHeader modelId={group[0].modelId} />
       {group.map((panel, gi) => (
         <div key={`${panel.instanceId}|${panel.modelId}`}>
           {gi > 0 && <div style={{ height: 2, background: '#fff', marginLeft: 40 }} />}
@@ -38,6 +39,17 @@ export function ModelGroup({ group, propHeight, axisPositions, startIdx, PanelCo
           />
         </div>
       ))}
+    </div>
+  );
+}
+
+function ModelHeader({ modelId }: { modelId: string }) {
+  return (
+    <div
+      className="text-xs pl-3"
+      style={{ color: '#fff', fontFamily: "'JetBrains Mono', monospace", marginLeft: 40 }}
+    >
+      {modelId}
     </div>
   );
 }

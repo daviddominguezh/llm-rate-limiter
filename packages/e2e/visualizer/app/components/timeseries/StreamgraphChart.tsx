@@ -112,7 +112,7 @@ function StreamgraphPanelView({ panel, height: propHeight, axisPosition, groupCu
 
   return (
     <div ref={containerRef} className="flex w-full min-w-0">
-      <PanelLabel instanceId={panel.instanceId} modelId={panel.modelId} />
+      <PanelLabel instanceId={panel.instanceId} />
       <div className="relative flex-1 min-w-0">
         <svg ref={svgRef} className="w-full block" onMouseMove={handleMouseMove} onMouseLeave={handleMouseLeave} />
         {tooltip && <CursorTooltip state={tooltip} />}
@@ -346,7 +346,7 @@ function computeAxisPositions(panels: StreamgraphPanel[]): AxisPosition[] {
 // Panel label
 // =============================================================================
 
-function PanelLabel({ instanceId, modelId }: { instanceId: string; modelId: string }) {
+function PanelLabel({ instanceId }: { instanceId: string }) {
   return (
     <div className="flex items-center justify-center shrink-0 pl-3" style={{ width: 40 }}>
       <div
@@ -354,13 +354,12 @@ function PanelLabel({ instanceId, modelId }: { instanceId: string; modelId: stri
         style={{
           writingMode: 'vertical-rl',
           transform: 'rotate(180deg)',
-          color: '#888',
+          color: '#aaa',
+          fontWeight: 600,
           fontFamily: "'JetBrains Mono', monospace",
         }}
       >
-        <span style={{ color: '#aaa', fontWeight: 600 }}>{instanceId}</span>
-        <span style={{ color: '#555' }}> / </span>
-        <span>{modelId}</span>
+        {instanceId}
       </div>
     </div>
   );

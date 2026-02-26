@@ -134,10 +134,41 @@ function buildTooltipData(
     const modelData = interval.instances[instanceId]?.[modelId];
     if (modelData !== undefined) {
       for (const [jt, metrics] of Object.entries(modelData)) {
-        values[jt] = { running: metrics.running, capacity: metrics.capacity };
+        values[jt] = { running: metrics.running, capacity: metrics.capacityHeight };
       }
     }
     return { time: interval.time, values };
+  });
+}
+
+/** Derive instance count from pool values (avoids floor loss from pool = floor(total/count)) */
+function deriveActiveCount(frozenPool: number, currentPool: number): number {
+  if (frozenPool <= 0 || currentPool >= frozenPool) return 1;
+  return Math.round(frozenPool / currentPool);
+}
+
+/** Adjust tooltip capacity values: divide by instance count, then clamp to pool */
+function adjustTooltipCapacity(rows: PanelTooltipRow[], pool: number[]): PanelTooltipRow[] {
+  const frozenPool = findFrozenPool(pool);
+  return rows.map((row, i) => {
+    const target = pool[i];
+    if (target <= 0) return row;
+    const entries = Object.entries(row.values);
+    if (entries.length === 0) return row;
+    const activeCount = deriveActiveCount(frozenPool, target);
+    const scaled = entries.map(([jt, v]) => ({
+      jt,
+      cap: Math.floor(v.capacity / activeCount),
+      running: v.running,
+    }));
+    let sum = 0;
+    for (const s of scaled) sum += s.cap;
+    const clampScale = sum > target ? target / sum : 1;
+    const values: Record<string, { running: number; capacity: number }> = {};
+    for (const s of scaled) {
+      values[s.jt] = { running: s.running, capacity: Math.floor(s.cap * clampScale) };
+    }
+    return { time: row.time, values };
   });
 }
 
@@ -190,6 +221,21 @@ function rescaleCapacityToPool(rows: StreamgraphRow[], pool: number[], keys: str
   });
 }
 
+/** Scale capacity rows down (never up) so their sum fits within poolPerRow */
+function clampCapacityToPool(rows: StreamgraphRow[], pool: number[], keys: string[]): StreamgraphRow[] {
+  return rows.map((row, i) => {
+    const target = pool[i];
+    if (target <= 0) return row;
+    let sum = 0;
+    for (const k of keys) sum += row[k];
+    if (sum <= target) return row;
+    const scale = target / sum;
+    const out: StreamgraphRow = { time: row.time };
+    for (const k of keys) out[k] = row[k] * scale;
+    return out;
+  });
+}
+
 // =============================================================================
 // Public API
 // =============================================================================
@@ -210,14 +256,18 @@ export function buildStreamgraphPanels(result: StructuredCapacityResult): Stream
     const runningRows = buildRows(result, panel.instanceId, panel.modelId, sortedJts, 'runningHeight');
     const rawCapacity = buildRows(result, panel.instanceId, panel.modelId, sortedJts, 'capacityHeight');
     const poolPerRow = computePoolPerRow(result, panel.instanceId, panel.modelId);
-    const capacityRows = rescaleCapacityToPool(rawCapacity, poolPerRow, sortedJts);
+    const rescaled = rescaleCapacityToPool(rawCapacity, poolPerRow, sortedJts);
+    const capacityRows = clampCapacityToPool(rescaled, poolPerRow, sortedJts);
 
     panels.push({
       instanceId: panel.instanceId,
       modelId: panel.modelId,
       runningRows,
       capacityRows,
-      tooltipData: buildTooltipData(result, panel.instanceId, panel.modelId),
+      tooltipData: adjustTooltipCapacity(
+        buildTooltipData(result, panel.instanceId, panel.modelId),
+        poolPerRow
+      ),
       streams,
       poolPerRow,
     });

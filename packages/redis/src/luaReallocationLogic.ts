@@ -224,7 +224,8 @@ local function recalculateAllocations(instancesKey, allocationsKey, channel, mod
     local allocData = cjson.encode({
       instanceCount = instanceCount,
       pools = instPools,
-      dynamicLimits = dynamicLimits
+      dynamicLimits = dynamicLimits,
+      allocatedAt = timestamp
     })
     redis.call('HSET', allocationsKey, instId, allocData)
     redis.call('PUBLISH', channel, cjson.encode({instanceId=instId, allocation=allocData}))

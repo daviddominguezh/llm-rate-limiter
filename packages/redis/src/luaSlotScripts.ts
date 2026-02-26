@@ -30,10 +30,20 @@ if not poolAlloc then return "0" end
 -- Use acquirableSlots (in-flight-aware), fall back to totalSlots for backwards compat
 local acquirable = poolAlloc.acquirableSlots
 if acquirable == nil then acquirable = poolAlloc.totalSlots end
-if not acquirable or acquirable <= 0 then return "0" end
+if not acquirable or acquirable <= 0 then
+  -- Check if allocation is from a previous rate-limit window (minute boundary crossed)
+  local MS_PER_MINUTE = 60000
+  local now = tonumber(redis.call('TIME')[1]) * 1000
+  local allocatedAt = alloc.allocatedAt or 0
+  local isStale = allocatedAt > 0
+    and math.floor(now / MS_PER_MINUTE) > math.floor(allocatedAt / MS_PER_MINUTE)
+  if not isStale then return "0" end
+  -- Allocation is stale — local limiter has already validated capacity.
+  -- Allow acquisition; next reallocation will update the allocation.
+end
 
--- Decrement acquirable slot
-poolAlloc.acquirableSlots = acquirable - 1
+-- Decrement acquirable slot (may go negative for stale window-boundary acquires)
+poolAlloc.acquirableSlots = (acquirable or 0) - 1
 redis.call('HSET', allocationsKey, instanceId, cjson.encode(alloc))
 
 -- Increment in-flight

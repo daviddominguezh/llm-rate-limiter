@@ -113,6 +113,15 @@ const assertJobWaitedForNextWindow = (jobsSorted: JobRecord[]): void => {
   expect(startedMinute).toBe(sentMinute + NEXT_MINUTE_OFFSET);
 };
 
+/** Assert that the overflow job ran on openai (not escalated to a fallback model) */
+const OPENAI_MODEL_PREFIX = 'openai/';
+const assertOverflowJobRanOnOpenai = (jobsSorted: JobRecord[]): void => {
+  const [job15] = jobsSorted.slice(OPENAI_SUMMARY_CAPACITY);
+  expect(job15).toBeDefined();
+  expect(job15?.modelUsed).toBeDefined();
+  expect(job15?.modelUsed?.startsWith(OPENAI_MODEL_PREFIX)).toBe(true);
+};
+
 describe('Capacity Plus One', () => {
   let testSetup: TestSetupData = createEmptyTestSetup();
 
@@ -150,6 +159,10 @@ describe('Capacity Plus One', () => {
 
   it('should have the 15th job wait for the next minute window', () => {
     assertJobWaitedForNextWindow(testSetup.jobsSortedBySentTime);
+  });
+
+  it('should have the 15th job run on openai (not escalated)', () => {
+    assertOverflowJobRanOnOpenai(testSetup.jobsSortedBySentTime);
   });
 
   it('should complete all jobs through the full lifecycle', () => {

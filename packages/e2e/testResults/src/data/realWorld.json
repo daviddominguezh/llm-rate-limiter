@@ -2788,9 +2788,7 @@
       "instances": {
         "inst-1772120465462-6ct1qjubn": {
           "activeJobs": 1,
-          "activeJobIds": [
-            "summarize-0"
-          ],
+          "activeJobIds": ["summarize-0"],
           "models": {
             "anthropic-opus-4.6": {
               "rpm": 1,
@@ -2854,11 +2852,7 @@
       "instances": {
         "inst-1772120465462-6ct1qjubn": {
           "activeJobs": 3,
-          "activeJobIds": [
-            "summarize-0",
-            "summarize-1",
-            "summarize-2"
-          ],
+          "activeJobIds": ["summarize-0", "summarize-1", "summarize-2"],
           "models": {
             "anthropic-opus-4.6": {
               "rpm": 3,
@@ -2922,12 +2916,7 @@
       "instances": {
         "inst-1772120465462-6ct1qjubn": {
           "activeJobs": 4,
-          "activeJobIds": [
-            "summarize-0",
-            "summarize-1",
-            "summarize-2",
-            "summarize-3"
-          ],
+          "activeJobIds": ["summarize-0", "summarize-1", "summarize-2", "summarize-3"],
           "models": {
             "anthropic-opus-4.6": {
               "rpm": 3,
@@ -2991,12 +2980,7 @@
       "instances": {
         "inst-1772120465462-6ct1qjubn": {
           "activeJobs": 4,
-          "activeJobIds": [
-            "summarize-0",
-            "summarize-1",
-            "summarize-2",
-            "summarize-3"
-          ],
+          "activeJobIds": ["summarize-0", "summarize-1", "summarize-2", "summarize-3"],
           "models": {
             "anthropic-opus-4.6": {
               "rpm": 3,
@@ -3060,12 +3044,7 @@
       "instances": {
         "inst-1772120465462-6ct1qjubn": {
           "activeJobs": 4,
-          "activeJobIds": [
-            "summarize-0",
-            "summarize-1",
-            "summarize-2",
-            "summarize-3"
-          ],
+          "activeJobIds": ["summarize-0", "summarize-1", "summarize-2", "summarize-3"],
           "models": {
             "anthropic-opus-4.6": {
               "rpm": 3,
@@ -3129,12 +3108,7 @@
       "instances": {
         "inst-1772120465462-6ct1qjubn": {
           "activeJobs": 4,
-          "activeJobIds": [
-            "summarize-0",
-            "summarize-1",
-            "summarize-2",
-            "summarize-3"
-          ],
+          "activeJobIds": ["summarize-0", "summarize-1", "summarize-2", "summarize-3"],
           "models": {
             "anthropic-opus-4.6": {
               "rpm": 3,
@@ -3198,12 +3172,7 @@
       "instances": {
         "inst-1772120465462-6ct1qjubn": {
           "activeJobs": 4,
-          "activeJobIds": [
-            "summarize-0",
-            "summarize-1",
-            "summarize-2",
-            "summarize-3"
-          ],
+          "activeJobIds": ["summarize-0", "summarize-1", "summarize-2", "summarize-3"],
           "models": {
             "anthropic-opus-4.6": {
               "rpm": 3,
@@ -3267,12 +3236,7 @@
       "instances": {
         "inst-1772120465462-6ct1qjubn": {
           "activeJobs": 4,
-          "activeJobIds": [
-            "summarize-0",
-            "summarize-1",
-            "summarize-2",
-            "summarize-3"
-          ],
+          "activeJobIds": ["summarize-0", "summarize-1", "summarize-2", "summarize-3"],
           "models": {
             "anthropic-opus-4.6": {
               "rpm": 3,
@@ -3336,12 +3300,7 @@
       "instances": {
         "inst-1772120465462-6ct1qjubn": {
           "activeJobs": 4,
-          "activeJobIds": [
-            "summarize-0",
-            "summarize-1",
-            "summarize-2",
-            "summarize-3"
-          ],
+          "activeJobIds": ["summarize-0", "summarize-1", "summarize-2", "summarize-3"],
           "models": {
             "anthropic-opus-4.6": {
               "rpm": 3,
@@ -3405,12 +3364,7 @@
       "instances": {
         "inst-1772120465462-6ct1qjubn": {
           "activeJobs": 4,
-          "activeJobIds": [
-            "summarize-0",
-            "summarize-1",
-            "summarize-2",
-            "summarize-3"
-          ],
+          "activeJobIds": ["summarize-0", "summarize-1", "summarize-2", "summarize-3"],
           "models": {
             "anthropic-opus-4.6": {
               "rpm": 4,
@@ -3474,12 +3428,7 @@
       "instances": {
         "inst-1772120465462-6ct1qjubn": {
           "activeJobs": 4,
-          "activeJobIds": [
-            "summarize-0",
-            "summarize-1",
-            "summarize-2",
-            "summarize-3"
-          ],
+          "activeJobIds": ["summarize-0", "summarize-1", "summarize-2", "summarize-3"],
           "models": {
             "anthropic-opus-4.6": {
               "rpm": 4,
@@ -3543,12 +3492,7 @@
       "instances": {
         "inst-1772120465462-6ct1qjubn": {
           "activeJobs": 4,
-          "activeJobIds": [
-            "summarize-0",
-            "summarize-1",
-            "summarize-2",
-            "summarize-3"
-          ],
+          "activeJobIds": ["summarize-0", "summarize-1", "summarize-2", "summarize-3"],
           "models": {
             "anthropic-opus-4.6": {
               "rpm": 4,
@@ -3612,12 +3556,7 @@
       "instances": {
         "inst-1772120465462-6ct1qjubn": {
           "activeJobs": 4,
-          "activeJobIds": [
-            "summarize-0",
-            "summarize-1",
-            "summarize-2",
-            "summarize-3"
-          ],
+          "activeJobIds": ["summarize-0", "summarize-1", "summarize-2", "summarize-3"],
           "models": {
             "anthropic-opus-4.6": {
               "rpm": 4,
@@ -3681,12 +3620,7 @@
       "instances": {
         "inst-1772120465462-6ct1qjubn": {
           "activeJobs": 4,
-          "activeJobIds": [
-            "summarize-0",
-            "summarize-1",
-            "summarize-2",
-            "summarize-3"
-          ],
+          "activeJobIds": ["summarize-0", "summarize-1", "summarize-2", "summarize-3"],
           "models": {
             "anthropic-opus-4.6": {
               "rpm": 4,
@@ -3750,12 +3684,7 @@
       "instances": {
         "inst-1772120465462-6ct1qjubn": {
           "activeJobs": 4,
-          "activeJobIds": [
-            "summarize-0",
-            "summarize-1",
-            "summarize-2",
-            "summarize-3"
-          ],
+          "activeJobIds": ["summarize-0", "summarize-1", "summarize-2", "summarize-3"],
           "models": {
             "anthropic-opus-4.6": {
               "rpm": 4,
@@ -3819,12 +3748,7 @@
       "instances": {
         "inst-1772120465462-6ct1qjubn": {
           "activeJobs": 4,
-          "activeJobIds": [
-            "summarize-0",
-            "summarize-1",
-            "summarize-2",
-            "summarize-3"
-          ],
+          "activeJobIds": ["summarize-0", "summarize-1", "summarize-2", "summarize-3"],
           "models": {
             "anthropic-opus-4.6": {
               "rpm": 4,
@@ -3888,12 +3812,7 @@
       "instances": {
         "inst-1772120465462-6ct1qjubn": {
           "activeJobs": 4,
-          "activeJobIds": [
-            "summarize-0",
-            "summarize-1",
-            "summarize-2",
-            "summarize-3"
-          ],
+          "activeJobIds": ["summarize-0", "summarize-1", "summarize-2", "summarize-3"],
           "models": {
             "anthropic-opus-4.6": {
               "rpm": 4,
@@ -3957,12 +3876,7 @@
       "instances": {
         "inst-1772120465462-6ct1qjubn": {
           "activeJobs": 4,
-          "activeJobIds": [
-            "summarize-0",
-            "summarize-1",
-            "summarize-2",
-            "summarize-3"
-          ],
+          "activeJobIds": ["summarize-0", "summarize-1", "summarize-2", "summarize-3"],
           "models": {
             "anthropic-opus-4.6": {
               "rpm": 4,
@@ -4026,12 +3940,7 @@
       "instances": {
         "inst-1772120465462-6ct1qjubn": {
           "activeJobs": 4,
-          "activeJobIds": [
-            "summarize-0",
-            "summarize-1",
-            "summarize-2",
-            "summarize-3"
-          ],
+          "activeJobIds": ["summarize-0", "summarize-1", "summarize-2", "summarize-3"],
           "models": {
             "anthropic-opus-4.6": {
               "rpm": 4,
@@ -4095,12 +4004,7 @@
       "instances": {
         "inst-1772120465462-6ct1qjubn": {
           "activeJobs": 4,
-          "activeJobIds": [
-            "summarize-0",
-            "summarize-1",
-            "summarize-2",
-            "summarize-3"
-          ],
+          "activeJobIds": ["summarize-0", "summarize-1", "summarize-2", "summarize-3"],
           "models": {
             "anthropic-opus-4.6": {
               "rpm": 4,
@@ -4164,12 +4068,7 @@
       "instances": {
         "inst-1772120465462-6ct1qjubn": {
           "activeJobs": 4,
-          "activeJobIds": [
-            "summarize-0",
-            "summarize-1",
-            "summarize-2",
-            "summarize-3"
-          ],
+          "activeJobIds": ["summarize-0", "summarize-1", "summarize-2", "summarize-3"],
           "models": {
             "anthropic-opus-4.6": {
               "rpm": 4,
@@ -4233,12 +4132,7 @@
       "instances": {
         "inst-1772120465462-6ct1qjubn": {
           "activeJobs": 4,
-          "activeJobIds": [
-            "summarize-0",
-            "summarize-1",
-            "summarize-2",
-            "summarize-3"
-          ],
+          "activeJobIds": ["summarize-0", "summarize-1", "summarize-2", "summarize-3"],
           "models": {
             "anthropic-opus-4.6": {
               "rpm": 4,
@@ -4302,12 +4196,7 @@
       "instances": {
         "inst-1772120465462-6ct1qjubn": {
           "activeJobs": 4,
-          "activeJobIds": [
-            "summarize-0",
-            "summarize-1",
-            "summarize-2",
-            "summarize-3"
-          ],
+          "activeJobIds": ["summarize-0", "summarize-1", "summarize-2", "summarize-3"],
           "models": {
             "anthropic-opus-4.6": {
               "rpm": 4,
@@ -4371,12 +4260,7 @@
       "instances": {
         "inst-1772120465462-6ct1qjubn": {
           "activeJobs": 4,
-          "activeJobIds": [
-            "summarize-0",
-            "summarize-1",
-            "summarize-2",
-            "summarize-3"
-          ],
+          "activeJobIds": ["summarize-0", "summarize-1", "summarize-2", "summarize-3"],
           "models": {
             "anthropic-opus-4.6": {
               "rpm": 4,
@@ -4440,12 +4324,7 @@
       "instances": {
         "inst-1772120465462-6ct1qjubn": {
           "activeJobs": 4,
-          "activeJobIds": [
-            "summarize-0",
-            "summarize-1",
-            "summarize-2",
-            "summarize-3"
-          ],
+          "activeJobIds": ["summarize-0", "summarize-1", "summarize-2", "summarize-3"],
           "models": {
             "anthropic-opus-4.6": {
               "rpm": 4,
@@ -4509,12 +4388,7 @@
       "instances": {
         "inst-1772120465462-6ct1qjubn": {
           "activeJobs": 4,
-          "activeJobIds": [
-            "summarize-0",
-            "summarize-1",
-            "summarize-2",
-            "summarize-3"
-          ],
+          "activeJobIds": ["summarize-0", "summarize-1", "summarize-2", "summarize-3"],
           "models": {
             "anthropic-opus-4.6": {
               "rpm": 4,
@@ -4578,12 +4452,7 @@
       "instances": {
         "inst-1772120465462-6ct1qjubn": {
           "activeJobs": 4,
-          "activeJobIds": [
-            "summarize-0",
-            "summarize-1",
-            "summarize-2",
-            "summarize-3"
-          ],
+          "activeJobIds": ["summarize-0", "summarize-1", "summarize-2", "summarize-3"],
           "models": {
             "anthropic-opus-4.6": {
               "rpm": 4,
@@ -4647,12 +4516,7 @@
       "instances": {
         "inst-1772120465462-6ct1qjubn": {
           "activeJobs": 4,
-          "activeJobIds": [
-            "summarize-0",
-            "summarize-1",
-            "summarize-2",
-            "summarize-3"
-          ],
+          "activeJobIds": ["summarize-0", "summarize-1", "summarize-2", "summarize-3"],
           "models": {
             "anthropic-opus-4.6": {
               "rpm": 4,
@@ -4716,12 +4580,7 @@
       "instances": {
         "inst-1772120465462-6ct1qjubn": {
           "activeJobs": 4,
-          "activeJobIds": [
-            "summarize-0",
-            "summarize-1",
-            "summarize-2",
-            "summarize-3"
-          ],
+          "activeJobIds": ["summarize-0", "summarize-1", "summarize-2", "summarize-3"],
           "models": {
             "anthropic-opus-4.6": {
               "rpm": 4,
@@ -4785,12 +4644,7 @@
       "instances": {
         "inst-1772120465462-6ct1qjubn": {
           "activeJobs": 4,
-          "activeJobIds": [
-            "summarize-0",
-            "summarize-1",
-            "summarize-2",
-            "summarize-3"
-          ],
+          "activeJobIds": ["summarize-0", "summarize-1", "summarize-2", "summarize-3"],
           "models": {
             "anthropic-opus-4.6": {
               "rpm": 4,
@@ -4854,12 +4708,7 @@
       "instances": {
         "inst-1772120465462-6ct1qjubn": {
           "activeJobs": 4,
-          "activeJobIds": [
-            "summarize-0",
-            "summarize-1",
-            "summarize-2",
-            "summarize-3"
-          ],
+          "activeJobIds": ["summarize-0", "summarize-1", "summarize-2", "summarize-3"],
           "models": {
             "anthropic-opus-4.6": {
               "rpm": 4,
@@ -4923,12 +4772,7 @@
       "instances": {
         "inst-1772120465462-6ct1qjubn": {
           "activeJobs": 4,
-          "activeJobIds": [
-            "summarize-0",
-            "summarize-1",
-            "summarize-2",
-            "summarize-3"
-          ],
+          "activeJobIds": ["summarize-0", "summarize-1", "summarize-2", "summarize-3"],
           "models": {
             "anthropic-opus-4.6": {
               "rpm": 4,
@@ -4992,12 +4836,7 @@
       "instances": {
         "inst-1772120465462-6ct1qjubn": {
           "activeJobs": 4,
-          "activeJobIds": [
-            "summarize-0",
-            "summarize-1",
-            "summarize-2",
-            "summarize-3"
-          ],
+          "activeJobIds": ["summarize-0", "summarize-1", "summarize-2", "summarize-3"],
           "models": {
             "anthropic-opus-4.6": {
               "rpm": 4,
@@ -5061,12 +4900,7 @@
       "instances": {
         "inst-1772120465462-6ct1qjubn": {
           "activeJobs": 4,
-          "activeJobIds": [
-            "summarize-0",
-            "summarize-1",
-            "summarize-2",
-            "summarize-3"
-          ],
+          "activeJobIds": ["summarize-0", "summarize-1", "summarize-2", "summarize-3"],
           "models": {
             "anthropic-opus-4.6": {
               "rpm": 4,
@@ -5130,12 +4964,7 @@
       "instances": {
         "inst-1772120465462-6ct1qjubn": {
           "activeJobs": 4,
-          "activeJobIds": [
-            "summarize-0",
-            "summarize-1",
-            "summarize-2",
-            "summarize-3"
-          ],
+          "activeJobIds": ["summarize-0", "summarize-1", "summarize-2", "summarize-3"],
           "models": {
             "anthropic-opus-4.6": {
               "rpm": 4,
@@ -5199,12 +5028,7 @@
       "instances": {
         "inst-1772120465462-6ct1qjubn": {
           "activeJobs": 4,
-          "activeJobIds": [
-            "summarize-0",
-            "summarize-1",
-            "summarize-2",
-            "summarize-3"
-          ],
+          "activeJobIds": ["summarize-0", "summarize-1", "summarize-2", "summarize-3"],
           "models": {
             "anthropic-opus-4.6": {
               "rpm": 4,
@@ -5268,12 +5092,7 @@
       "instances": {
         "inst-1772120465462-6ct1qjubn": {
           "activeJobs": 4,
-          "activeJobIds": [
-            "summarize-0",
-            "summarize-1",
-            "summarize-2",
-            "summarize-3"
-          ],
+          "activeJobIds": ["summarize-0", "summarize-1", "summarize-2", "summarize-3"],
           "models": {
             "anthropic-opus-4.6": {
               "rpm": 4,
@@ -5337,12 +5156,7 @@
       "instances": {
         "inst-1772120465462-6ct1qjubn": {
           "activeJobs": 4,
-          "activeJobIds": [
-            "summarize-0",
-            "summarize-1",
-            "summarize-2",
-            "summarize-3"
-          ],
+          "activeJobIds": ["summarize-0", "summarize-1", "summarize-2", "summarize-3"],
           "models": {
             "anthropic-opus-4.6": {
               "rpm": 4,
@@ -30852,9 +30666,7 @@
         },
         "inst-1772120574830-nbfc9q5tv": {
           "activeJobs": 1,
-          "activeJobIds": [
-            "b-bs-0"
-          ],
+          "activeJobIds": ["b-bs-0"],
           "models": {
             "anthropic-opus-4.6": {
               "rpm": 1,
@@ -30988,11 +30800,7 @@
         },
         "inst-1772120574830-nbfc9q5tv": {
           "activeJobs": 3,
-          "activeJobIds": [
-            "b-bs-0",
-            "b-bs-2",
-            "b-bs-1"
-          ],
+          "activeJobIds": ["b-bs-0", "b-bs-2", "b-bs-1"],
           "models": {
             "anthropic-opus-4.6": {
               "rpm": 2,
@@ -31126,13 +30934,7 @@
         },
         "inst-1772120574830-nbfc9q5tv": {
           "activeJobs": 5,
-          "activeJobIds": [
-            "b-bs-0",
-            "b-bs-2",
-            "b-bs-1",
-            "b-sm-0",
-            "b-sm-2"
-          ],
+          "activeJobIds": ["b-bs-0", "b-bs-2", "b-bs-1", "b-sm-0", "b-sm-2"],
           "models": {
             "anthropic-opus-4.6": {
               "rpm": 3,
@@ -31266,16 +31068,7 @@
         },
         "inst-1772120574830-nbfc9q5tv": {
           "activeJobs": 8,
-          "activeJobIds": [
-            "b-bs-0",
-            "b-bs-2",
-            "b-bs-1",
-            "b-sm-0",
-            "b-sm-2",
-            "b-sm-1",
-            "b-ap-0",
-            "b-ap-1"
-          ],
+          "activeJobIds": ["b-bs-0", "b-bs-2", "b-bs-1", "b-sm-0", "b-sm-2", "b-sm-1", "b-ap-0", "b-ap-1"],
           "models": {
             "anthropic-opus-4.6": {
               "rpm": 3,
@@ -31409,16 +31202,7 @@
         },
         "inst-1772120574830-nbfc9q5tv": {
           "activeJobs": 8,
-          "activeJobIds": [
-            "b-bs-0",
-            "b-bs-2",
-            "b-bs-1",
-            "b-sm-0",
-            "b-sm-2",
-            "b-sm-1",
-            "b-ap-0",
-            "b-ap-1"
-          ],
+          "activeJobIds": ["b-bs-0", "b-bs-2", "b-bs-1", "b-sm-0", "b-sm-2", "b-sm-1", "b-ap-0", "b-ap-1"],
           "models": {
             "anthropic-opus-4.6": {
               "rpm": 5,
@@ -31552,16 +31336,7 @@
         },
         "inst-1772120574830-nbfc9q5tv": {
           "activeJobs": 8,
-          "activeJobIds": [
-            "b-bs-0",
-            "b-bs-2",
-            "b-bs-1",
-            "b-sm-0",
-            "b-sm-2",
-            "b-sm-1",
-            "b-ap-0",
-            "b-ap-1"
-          ],
+          "activeJobIds": ["b-bs-0", "b-bs-2", "b-bs-1", "b-sm-0", "b-sm-2", "b-sm-1", "b-ap-0", "b-ap-1"],
           "models": {
             "anthropic-opus-4.6": {
               "rpm": 5,
@@ -31695,16 +31470,7 @@
         },
         "inst-1772120574830-nbfc9q5tv": {
           "activeJobs": 8,
-          "activeJobIds": [
-            "b-bs-0",
-            "b-bs-2",
-            "b-bs-1",
-            "b-sm-0",
-            "b-sm-2",
-            "b-sm-1",
-            "b-ap-0",
-            "b-ap-1"
-          ],
+          "activeJobIds": ["b-bs-0", "b-bs-2", "b-bs-1", "b-sm-0", "b-sm-2", "b-sm-1", "b-ap-0", "b-ap-1"],
           "models": {
             "anthropic-opus-4.6": {
               "rpm": 5,
@@ -31838,16 +31604,7 @@
         },
         "inst-1772120574830-nbfc9q5tv": {
           "activeJobs": 8,
-          "activeJobIds": [
-            "b-bs-0",
-            "b-bs-2",
-            "b-bs-1",
-            "b-sm-0",
-            "b-sm-2",
-            "b-sm-1",
-            "b-ap-0",
-            "b-ap-1"
-          ],
+          "activeJobIds": ["b-bs-0", "b-bs-2", "b-bs-1", "b-sm-0", "b-sm-2", "b-sm-1", "b-ap-0", "b-ap-1"],
           "models": {
             "anthropic-opus-4.6": {
               "rpm": 5,
@@ -31981,16 +31738,7 @@
         },
         "inst-1772120574830-nbfc9q5tv": {
           "activeJobs": 8,
-          "activeJobIds": [
-            "b-bs-0",
-            "b-bs-2",
-            "b-bs-1",
-            "b-sm-0",
-            "b-sm-2",
-            "b-sm-1",
-            "b-ap-0",
-            "b-ap-1"
-          ],
+          "activeJobIds": ["b-bs-0", "b-bs-2", "b-bs-1", "b-sm-0", "b-sm-2", "b-sm-1", "b-ap-0", "b-ap-1"],
           "models": {
             "anthropic-opus-4.6": {
               "rpm": 5,
@@ -32124,16 +31872,7 @@
         },
         "inst-1772120574830-nbfc9q5tv": {
           "activeJobs": 8,
-          "activeJobIds": [
-            "b-bs-0",
-            "b-bs-2",
-            "b-bs-1",
-            "b-sm-0",
-            "b-sm-2",
-            "b-sm-1",
-            "b-ap-0",
-            "b-ap-1"
-          ],
+          "activeJobIds": ["b-bs-0", "b-bs-2", "b-bs-1", "b-sm-0", "b-sm-2", "b-sm-1", "b-ap-0", "b-ap-1"],
           "models": {
             "anthropic-opus-4.6": {
               "rpm": 5,
@@ -32267,16 +32006,7 @@
         },
         "inst-1772120574830-nbfc9q5tv": {
           "activeJobs": 8,
-          "activeJobIds": [
-            "b-bs-0",
-            "b-bs-2",
-            "b-bs-1",
-            "b-sm-0",
-            "b-sm-2",
-            "b-sm-1",
-            "b-ap-0",
-            "b-ap-1"
-          ],
+          "activeJobIds": ["b-bs-0", "b-bs-2", "b-bs-1", "b-sm-0", "b-sm-2", "b-sm-1", "b-ap-0", "b-ap-1"],
           "models": {
             "anthropic-opus-4.6": {
               "rpm": 5,
@@ -32410,16 +32140,7 @@
         },
         "inst-1772120574830-nbfc9q5tv": {
           "activeJobs": 8,
-          "activeJobIds": [
-            "b-bs-0",
-            "b-bs-2",
-            "b-bs-1",
-            "b-sm-0",
-            "b-sm-2",
-            "b-sm-1",
-            "b-ap-0",
-            "b-ap-1"
-          ],
+          "activeJobIds": ["b-bs-0", "b-bs-2", "b-bs-1", "b-sm-0", "b-sm-2", "b-sm-1", "b-ap-0", "b-ap-1"],
           "models": {
             "anthropic-opus-4.6": {
               "rpm": 5,
@@ -32553,16 +32274,7 @@
         },
         "inst-1772120574830-nbfc9q5tv": {
           "activeJobs": 8,
-          "activeJobIds": [
-            "b-bs-0",
-            "b-bs-2",
-            "b-bs-1",
-            "b-sm-0",
-            "b-sm-2",
-            "b-sm-1",
-            "b-ap-0",
-            "b-ap-1"
-          ],
+          "activeJobIds": ["b-bs-0", "b-bs-2", "b-bs-1", "b-sm-0", "b-sm-2", "b-sm-1", "b-ap-0", "b-ap-1"],
           "models": {
             "anthropic-opus-4.6": {
               "rpm": 5,
@@ -32696,16 +32408,7 @@
         },
         "inst-1772120574830-nbfc9q5tv": {
           "activeJobs": 8,
-          "activeJobIds": [
-            "b-bs-0",
-            "b-bs-2",
-            "b-bs-1",
-            "b-sm-0",
-            "b-sm-2",
-            "b-sm-1",
-            "b-ap-0",
-            "b-ap-1"
-          ],
+          "activeJobIds": ["b-bs-0", "b-bs-2", "b-bs-1", "b-sm-0", "b-sm-2", "b-sm-1", "b-ap-0", "b-ap-1"],
           "models": {
             "anthropic-opus-4.6": {
               "rpm": 5,
@@ -32839,16 +32542,7 @@
         },
         "inst-1772120574830-nbfc9q5tv": {
           "activeJobs": 8,
-          "activeJobIds": [
-            "b-bs-0",
-            "b-bs-2",
-            "b-bs-1",
-            "b-sm-0",
-            "b-sm-2",
-            "b-sm-1",
-            "b-ap-0",
-            "b-ap-1"
-          ],
+          "activeJobIds": ["b-bs-0", "b-bs-2", "b-bs-1", "b-sm-0", "b-sm-2", "b-sm-1", "b-ap-0", "b-ap-1"],
           "models": {
             "anthropic-opus-4.6": {
               "rpm": 5,
@@ -32982,16 +32676,7 @@
         },
         "inst-1772120574830-nbfc9q5tv": {
           "activeJobs": 8,
-          "activeJobIds": [
-            "b-bs-0",
-            "b-bs-2",
-            "b-bs-1",
-            "b-sm-0",
-            "b-sm-2",
-            "b-sm-1",
-            "b-ap-0",
-            "b-ap-1"
-          ],
+          "activeJobIds": ["b-bs-0", "b-bs-2", "b-bs-1", "b-sm-0", "b-sm-2", "b-sm-1", "b-ap-0", "b-ap-1"],
           "models": {
             "anthropic-opus-4.6": {
               "rpm": 5,
@@ -33125,16 +32810,7 @@
         },
         "inst-1772120574830-nbfc9q5tv": {
           "activeJobs": 8,
-          "activeJobIds": [
-            "b-bs-0",
-            "b-bs-2",
-            "b-bs-1",
-            "b-sm-0",
-            "b-sm-2",
-            "b-sm-1",
-            "b-ap-0",
-            "b-ap-1"
-          ],
+          "activeJobIds": ["b-bs-0", "b-bs-2", "b-bs-1", "b-sm-0", "b-sm-2", "b-sm-1", "b-ap-0", "b-ap-1"],
           "models": {
             "anthropic-opus-4.6": {
               "rpm": 5,
@@ -33268,16 +32944,7 @@
         },
         "inst-1772120574830-nbfc9q5tv": {
           "activeJobs": 8,
-          "activeJobIds": [
-            "b-bs-0",
-            "b-bs-2",
-            "b-bs-1",
-            "b-sm-0",
-            "b-sm-2",
-            "b-sm-1",
-            "b-ap-0",
-            "b-ap-1"
-          ],
+          "activeJobIds": ["b-bs-0", "b-bs-2", "b-bs-1", "b-sm-0", "b-sm-2", "b-sm-1", "b-ap-0", "b-ap-1"],
           "models": {
             "anthropic-opus-4.6": {
               "rpm": 5,
@@ -33411,16 +33078,7 @@
         },
         "inst-1772120574830-nbfc9q5tv": {
           "activeJobs": 8,
-          "activeJobIds": [
-            "b-bs-0",
-            "b-bs-2",
-            "b-bs-1",
-            "b-sm-0",
-            "b-sm-2",
-            "b-sm-1",
-            "b-ap-0",
-            "b-ap-1"
-          ],
+          "activeJobIds": ["b-bs-0", "b-bs-2", "b-bs-1", "b-sm-0", "b-sm-2", "b-sm-1", "b-ap-0", "b-ap-1"],
           "models": {
             "anthropic-opus-4.6": {
               "rpm": 5,
@@ -33554,16 +33212,7 @@
         },
         "inst-1772120574830-nbfc9q5tv": {
           "activeJobs": 8,
-          "activeJobIds": [
-            "b-bs-0",
-            "b-bs-2",
-            "b-bs-1",
-            "b-sm-0",
-            "b-sm-2",
-            "b-sm-1",
-            "b-ap-0",
-            "b-ap-1"
-          ],
+          "activeJobIds": ["b-bs-0", "b-bs-2", "b-bs-1", "b-sm-0", "b-sm-2", "b-sm-1", "b-ap-0", "b-ap-1"],
           "models": {
             "anthropic-opus-4.6": {
               "rpm": 5,
@@ -33697,16 +33346,7 @@
         },
         "inst-1772120574830-nbfc9q5tv": {
           "activeJobs": 8,
-          "activeJobIds": [
-            "b-bs-0",
-            "b-bs-2",
-            "b-bs-1",
-            "b-sm-0",
-            "b-sm-2",
-            "b-sm-1",
-            "b-ap-0",
-            "b-ap-1"
-          ],
+          "activeJobIds": ["b-bs-0", "b-bs-2", "b-bs-1", "b-sm-0", "b-sm-2", "b-sm-1", "b-ap-0", "b-ap-1"],
           "models": {
             "anthropic-opus-4.6": {
               "rpm": 5,
@@ -33840,16 +33480,7 @@
         },
         "inst-1772120574830-nbfc9q5tv": {
           "activeJobs": 8,
-          "activeJobIds": [
-            "b-bs-0",
-            "b-bs-2",
-            "b-bs-1",
-            "b-sm-0",
-            "b-sm-2",
-            "b-sm-1",
-            "b-ap-0",
-            "b-ap-1"
-          ],
+          "activeJobIds": ["b-bs-0", "b-bs-2", "b-bs-1", "b-sm-0", "b-sm-2", "b-sm-1", "b-ap-0", "b-ap-1"],
           "models": {
             "anthropic-opus-4.6": {
               "rpm": 5,
@@ -33983,16 +33614,7 @@
         },
         "inst-1772120574830-nbfc9q5tv": {
           "activeJobs": 8,
-          "activeJobIds": [
-            "b-bs-0",
-            "b-bs-2",
-            "b-bs-1",
-            "b-sm-0",
-            "b-sm-2",
-            "b-sm-1",
-            "b-ap-0",
-            "b-ap-1"
-          ],
+          "activeJobIds": ["b-bs-0", "b-bs-2", "b-bs-1", "b-sm-0", "b-sm-2", "b-sm-1", "b-ap-0", "b-ap-1"],
           "models": {
             "anthropic-opus-4.6": {
               "rpm": 5,
@@ -34126,16 +33748,7 @@
         },
         "inst-1772120574830-nbfc9q5tv": {
           "activeJobs": 8,
-          "activeJobIds": [
-            "b-bs-0",
-            "b-bs-2",
-            "b-bs-1",
-            "b-sm-0",
-            "b-sm-2",
-            "b-sm-1",
-            "b-ap-0",
-            "b-ap-1"
-          ],
+          "activeJobIds": ["b-bs-0", "b-bs-2", "b-bs-1", "b-sm-0", "b-sm-2", "b-sm-1", "b-ap-0", "b-ap-1"],
           "models": {
             "anthropic-opus-4.6": {
               "rpm": 5,
@@ -34268,16 +33881,7 @@
         },
         "inst-1772120574830-nbfc9q5tv": {
           "activeJobs": 8,
-          "activeJobIds": [
-            "b-bs-0",
-            "b-bs-2",
-            "b-bs-1",
-            "b-sm-0",
-            "b-sm-2",
-            "b-sm-1",
-            "b-ap-0",
-            "b-ap-1"
-          ],
+          "activeJobIds": ["b-bs-0", "b-bs-2", "b-bs-1", "b-sm-0", "b-sm-2", "b-sm-1", "b-ap-0", "b-ap-1"],
           "models": {
             "anthropic-opus-4.6": {
               "rpm": 5,
@@ -34410,16 +34014,7 @@
         },
         "inst-1772120574830-nbfc9q5tv": {
           "activeJobs": 8,
-          "activeJobIds": [
-            "b-bs-0",
-            "b-bs-2",
-            "b-bs-1",
-            "b-sm-0",
-            "b-sm-2",
-            "b-sm-1",
-            "b-ap-0",
-            "b-ap-1"
-          ],
+          "activeJobIds": ["b-bs-0", "b-bs-2", "b-bs-1", "b-sm-0", "b-sm-2", "b-sm-1", "b-ap-0", "b-ap-1"],
           "models": {
             "anthropic-opus-4.6": {
               "rpm": 5,
@@ -34551,16 +34146,7 @@
         },
         "inst-1772120574830-nbfc9q5tv": {
           "activeJobs": 8,
-          "activeJobIds": [
-            "b-bs-0",
-            "b-bs-2",
-            "b-bs-1",
-            "b-sm-0",
-            "b-sm-2",
-            "b-sm-1",
-            "b-ap-0",
-            "b-ap-1"
-          ],
+          "activeJobIds": ["b-bs-0", "b-bs-2", "b-bs-1", "b-sm-0", "b-sm-2", "b-sm-1", "b-ap-0", "b-ap-1"],
           "models": {
             "anthropic-opus-4.6": {
               "rpm": 5,
@@ -34692,16 +34278,7 @@
         },
         "inst-1772120574830-nbfc9q5tv": {
           "activeJobs": 8,
-          "activeJobIds": [
-            "b-bs-0",
-            "b-bs-2",
-            "b-bs-1",
-            "b-sm-0",
-            "b-sm-2",
-            "b-sm-1",
-            "b-ap-0",
-            "b-ap-1"
-          ],
+          "activeJobIds": ["b-bs-0", "b-bs-2", "b-bs-1", "b-sm-0", "b-sm-2", "b-sm-1", "b-ap-0", "b-ap-1"],
           "models": {
             "anthropic-opus-4.6": {
               "rpm": 5,
@@ -34833,16 +34410,7 @@
         },
         "inst-1772120574830-nbfc9q5tv": {
           "activeJobs": 8,
-          "activeJobIds": [
-            "b-bs-0",
-            "b-bs-2",
-            "b-bs-1",
-            "b-sm-0",
-            "b-sm-2",
-            "b-sm-1",
-            "b-ap-0",
-            "b-ap-1"
-          ],
+          "activeJobIds": ["b-bs-0", "b-bs-2", "b-bs-1", "b-sm-0", "b-sm-2", "b-sm-1", "b-ap-0", "b-ap-1"],
           "models": {
             "anthropic-opus-4.6": {
               "rpm": 5,
@@ -34974,16 +34542,7 @@
         },
         "inst-1772120574830-nbfc9q5tv": {
           "activeJobs": 8,
-          "activeJobIds": [
-            "b-bs-0",
-            "b-bs-2",
-            "b-bs-1",
-            "b-sm-0",
-            "b-sm-2",
-            "b-sm-1",
-            "b-ap-0",
-            "b-ap-1"
-          ],
+          "activeJobIds": ["b-bs-0", "b-bs-2", "b-bs-1", "b-sm-0", "b-sm-2", "b-sm-1", "b-ap-0", "b-ap-1"],
           "models": {
             "anthropic-opus-4.6": {
               "rpm": 5,
@@ -35115,16 +34674,7 @@
         },
         "inst-1772120574830-nbfc9q5tv": {
           "activeJobs": 8,
-          "activeJobIds": [
-            "b-bs-0",
-            "b-bs-2",
-            "b-bs-1",
-            "b-sm-0",
-            "b-sm-2",
-            "b-sm-1",
-            "b-ap-0",
-            "b-ap-1"
-          ],
+          "activeJobIds": ["b-bs-0", "b-bs-2", "b-bs-1", "b-sm-0", "b-sm-2", "b-sm-1", "b-ap-0", "b-ap-1"],
           "models": {
             "anthropic-opus-4.6": {
               "rpm": 5,
@@ -35256,16 +34806,7 @@
         },
         "inst-1772120574830-nbfc9q5tv": {
           "activeJobs": 8,
-          "activeJobIds": [
-            "b-bs-0",
-            "b-bs-2",
-            "b-bs-1",
-            "b-sm-0",
-            "b-sm-2",
-            "b-sm-1",
-            "b-ap-0",
-            "b-ap-1"
-          ],
+          "activeJobIds": ["b-bs-0", "b-bs-2", "b-bs-1", "b-sm-0", "b-sm-2", "b-sm-1", "b-ap-0", "b-ap-1"],
           "models": {
             "anthropic-opus-4.6": {
               "rpm": 5,
@@ -35397,16 +34938,7 @@
         },
         "inst-1772120574830-nbfc9q5tv": {
           "activeJobs": 8,
-          "activeJobIds": [
-            "b-bs-0",
-            "b-bs-2",
-            "b-bs-1",
-            "b-sm-0",
-            "b-sm-2",
-            "b-sm-1",
-            "b-ap-0",
-            "b-ap-1"
-          ],
+          "activeJobIds": ["b-bs-0", "b-bs-2", "b-bs-1", "b-sm-0", "b-sm-2", "b-sm-1", "b-ap-0", "b-ap-1"],
           "models": {
             "anthropic-opus-4.6": {
               "rpm": 5,
@@ -35538,16 +35070,7 @@
         },
         "inst-1772120574830-nbfc9q5tv": {
           "activeJobs": 8,
-          "activeJobIds": [
-            "b-bs-0",
-            "b-bs-2",
-            "b-bs-1",
-            "b-sm-0",
-            "b-sm-2",
-            "b-sm-1",
-            "b-ap-0",
-            "b-ap-1"
-          ],
+          "activeJobIds": ["b-bs-0", "b-bs-2", "b-bs-1", "b-sm-0", "b-sm-2", "b-sm-1", "b-ap-0", "b-ap-1"],
           "models": {
             "anthropic-opus-4.6": {
               "rpm": 5,
@@ -35679,16 +35202,7 @@
         },
         "inst-1772120574830-nbfc9q5tv": {
           "activeJobs": 8,
-          "activeJobIds": [
-            "b-bs-0",
-            "b-bs-2",
-            "b-bs-1",
-            "b-sm-0",
-            "b-sm-2",
-            "b-sm-1",
-            "b-ap-0",
-            "b-ap-1"
-          ],
+          "activeJobIds": ["b-bs-0", "b-bs-2", "b-bs-1", "b-sm-0", "b-sm-2", "b-sm-1", "b-ap-0", "b-ap-1"],
           "models": {
             "anthropic-opus-4.6": {
               "rpm": 5,
@@ -35819,16 +35333,7 @@
         },
         "inst-1772120574830-nbfc9q5tv": {
           "activeJobs": 8,
-          "activeJobIds": [
-            "b-bs-0",
-            "b-bs-2",
-            "b-bs-1",
-            "b-sm-0",
-            "b-sm-2",
-            "b-sm-1",
-            "b-ap-0",
-            "b-ap-1"
-          ],
+          "activeJobIds": ["b-bs-0", "b-bs-2", "b-bs-1", "b-sm-0", "b-sm-2", "b-sm-1", "b-ap-0", "b-ap-1"],
           "models": {
             "anthropic-opus-4.6": {
               "rpm": 5,
@@ -35959,16 +35464,7 @@
         },
         "inst-1772120574830-nbfc9q5tv": {
           "activeJobs": 8,
-          "activeJobIds": [
-            "b-bs-0",
-            "b-bs-2",
-            "b-bs-1",
-            "b-sm-0",
-            "b-sm-2",
-            "b-sm-1",
-            "b-ap-0",
-            "b-ap-1"
-          ],
+          "activeJobIds": ["b-bs-0", "b-bs-2", "b-bs-1", "b-sm-0", "b-sm-2", "b-sm-1", "b-ap-0", "b-ap-1"],
           "models": {
             "anthropic-opus-4.6": {
               "rpm": 5,
@@ -36099,16 +35595,7 @@
         },
         "inst-1772120574830-nbfc9q5tv": {
           "activeJobs": 8,
-          "activeJobIds": [
-            "b-bs-0",
-            "b-bs-2",
-            "b-bs-1",
-            "b-sm-0",
-            "b-sm-2",
-            "b-sm-1",
-            "b-ap-0",
-            "b-ap-1"
-          ],
+          "activeJobIds": ["b-bs-0", "b-bs-2", "b-bs-1", "b-sm-0", "b-sm-2", "b-sm-1", "b-ap-0", "b-ap-1"],
           "models": {
             "anthropic-opus-4.6": {
               "rpm": 5,
@@ -36238,16 +35725,7 @@
         },
         "inst-1772120574830-nbfc9q5tv": {
           "activeJobs": 8,
-          "activeJobIds": [
-            "b-bs-0",
-            "b-bs-2",
-            "b-bs-1",
-            "b-sm-0",
-            "b-sm-2",
-            "b-sm-1",
-            "b-ap-0",
-            "b-ap-1"
-          ],
+          "activeJobIds": ["b-bs-0", "b-bs-2", "b-bs-1", "b-sm-0", "b-sm-2", "b-sm-1", "b-ap-0", "b-ap-1"],
           "models": {
             "anthropic-opus-4.6": {
               "rpm": 5,
@@ -36377,16 +35855,7 @@
         },
         "inst-1772120574830-nbfc9q5tv": {
           "activeJobs": 8,
-          "activeJobIds": [
-            "b-bs-0",
-            "b-bs-2",
-            "b-bs-1",
-            "b-sm-0",
-            "b-sm-2",
-            "b-sm-1",
-            "b-ap-0",
-            "b-ap-1"
-          ],
+          "activeJobIds": ["b-bs-0", "b-bs-2", "b-bs-1", "b-sm-0", "b-sm-2", "b-sm-1", "b-ap-0", "b-ap-1"],
           "models": {
             "anthropic-opus-4.6": {
               "rpm": 5,
@@ -36516,16 +35985,7 @@
         },
         "inst-1772120574830-nbfc9q5tv": {
           "activeJobs": 8,
-          "activeJobIds": [
-            "b-bs-0",
-            "b-bs-2",
-            "b-bs-1",
-            "b-sm-0",
-            "b-sm-2",
-            "b-sm-1",
-            "b-ap-0",
-            "b-ap-1"
-          ],
+          "activeJobIds": ["b-bs-0", "b-bs-2", "b-bs-1", "b-sm-0", "b-sm-2", "b-sm-1", "b-ap-0", "b-ap-1"],
           "models": {
             "anthropic-opus-4.6": {
               "rpm": 5,
@@ -36655,16 +36115,7 @@
         },
         "inst-1772120574830-nbfc9q5tv": {
           "activeJobs": 8,
-          "activeJobIds": [
-            "b-bs-0",
-            "b-bs-2",
-            "b-bs-1",
-            "b-sm-0",
-            "b-sm-2",
-            "b-sm-1",
-            "b-ap-0",
-            "b-ap-1"
-          ],
+          "activeJobIds": ["b-bs-0", "b-bs-2", "b-bs-1", "b-sm-0", "b-sm-2", "b-sm-1", "b-ap-0", "b-ap-1"],
           "models": {
             "anthropic-opus-4.6": {
               "rpm": 5,
@@ -36794,16 +36245,7 @@
         },
         "inst-1772120574830-nbfc9q5tv": {
           "activeJobs": 8,
-          "activeJobIds": [
-            "b-bs-0",
-            "b-bs-2",
-            "b-bs-1",
-            "b-sm-0",
-            "b-sm-2",
-            "b-sm-1",
-            "b-ap-0",
-            "b-ap-1"
-          ],
+          "activeJobIds": ["b-bs-0", "b-bs-2", "b-bs-1", "b-sm-0", "b-sm-2", "b-sm-1", "b-ap-0", "b-ap-1"],
           "models": {
             "anthropic-opus-4.6": {
               "rpm": 5,
@@ -36933,16 +36375,7 @@
         },
         "inst-1772120574830-nbfc9q5tv": {
           "activeJobs": 8,
-          "activeJobIds": [
-            "b-bs-0",
-            "b-bs-2",
-            "b-bs-1",
-            "b-sm-0",
-            "b-sm-2",
-            "b-sm-1",
-            "b-ap-0",
-            "b-ap-1"
-          ],
+          "activeJobIds": ["b-bs-0", "b-bs-2", "b-bs-1", "b-sm-0", "b-sm-2", "b-sm-1", "b-ap-0", "b-ap-1"],
           "models": {
             "anthropic-opus-4.6": {
               "rpm": 5,
@@ -37006,14 +36439,7 @@
       "instances": {
         "inst-1772120465462-6ct1qjubn": {
           "activeJobs": 6,
-          "activeJobIds": [
-            "dist-sm-2",
-            "dist-sm-3",
-            "dist-sm-1",
-            "dist-sm-4",
-            "dist-ap-4",
-            "dist-ap-3"
-          ],
+          "activeJobIds": ["dist-sm-2", "dist-sm-3", "dist-sm-1", "dist-sm-4", "dist-ap-4", "dist-ap-3"],
           "models": {
             "openai-gpt-5.2": {
               "rpm": 1,
@@ -37071,16 +36497,7 @@
         },
         "inst-1772120574830-nbfc9q5tv": {
           "activeJobs": 8,
-          "activeJobIds": [
-            "b-bs-0",
-            "b-bs-2",
-            "b-bs-1",
-            "b-sm-0",
-            "b-sm-2",
-            "b-sm-1",
-            "b-ap-0",
-            "b-ap-1"
-          ],
+          "activeJobIds": ["b-bs-0", "b-bs-2", "b-bs-1", "b-sm-0", "b-sm-2", "b-sm-1", "b-ap-0", "b-ap-1"],
           "models": {
             "anthropic-opus-4.6": {
               "rpm": 5,
@@ -37144,14 +36561,7 @@
       "instances": {
         "inst-1772120465462-6ct1qjubn": {
           "activeJobs": 6,
-          "activeJobIds": [
-            "dist-sm-2",
-            "dist-sm-3",
-            "dist-sm-1",
-            "dist-sm-4",
-            "dist-ap-4",
-            "dist-ap-3"
-          ],
+          "activeJobIds": ["dist-sm-2", "dist-sm-3", "dist-sm-1", "dist-sm-4", "dist-ap-4", "dist-ap-3"],
           "models": {
             "openai-gpt-5.2": {
               "rpm": 1,
@@ -37209,16 +36619,7 @@
         },
         "inst-1772120574830-nbfc9q5tv": {
           "activeJobs": 8,
-          "activeJobIds": [
-            "b-bs-0",
-            "b-bs-2",
-            "b-bs-1",
-            "b-sm-0",
-            "b-sm-2",
-            "b-sm-1",
-            "b-ap-0",
-            "b-ap-1"
-          ],
+          "activeJobIds": ["b-bs-0", "b-bs-2", "b-bs-1", "b-sm-0", "b-sm-2", "b-sm-1", "b-ap-0", "b-ap-1"],
           "models": {
             "anthropic-opus-4.6": {
               "rpm": 5,
@@ -37282,14 +36683,7 @@
       "instances": {
         "inst-1772120465462-6ct1qjubn": {
           "activeJobs": 6,
-          "activeJobIds": [
-            "dist-sm-2",
-            "dist-sm-3",
-            "dist-sm-1",
-            "dist-sm-4",
-            "dist-ap-4",
-            "dist-ap-3"
-          ],
+          "activeJobIds": ["dist-sm-2", "dist-sm-3", "dist-sm-1", "dist-sm-4", "dist-ap-4", "dist-ap-3"],
           "models": {
             "openai-gpt-5.2": {
               "rpm": 1,
@@ -37347,16 +36741,7 @@
         },
         "inst-1772120574830-nbfc9q5tv": {
           "activeJobs": 8,
-          "activeJobIds": [
-            "b-bs-0",
-            "b-bs-2",
-            "b-bs-1",
-            "b-sm-0",
-            "b-sm-2",
-            "b-sm-1",
-            "b-ap-0",
-            "b-ap-1"
-          ],
+          "activeJobIds": ["b-bs-0", "b-bs-2", "b-bs-1", "b-sm-0", "b-sm-2", "b-sm-1", "b-ap-0", "b-ap-1"],
           "models": {
             "anthropic-opus-4.6": {
               "rpm": 5,
@@ -37420,14 +36805,7 @@
       "instances": {
         "inst-1772120465462-6ct1qjubn": {
           "activeJobs": 6,
-          "activeJobIds": [
-            "dist-sm-2",
-            "dist-sm-3",
-            "dist-sm-1",
-            "dist-sm-4",
-            "dist-ap-4",
-            "dist-ap-3"
-          ],
+          "activeJobIds": ["dist-sm-2", "dist-sm-3", "dist-sm-1", "dist-sm-4", "dist-ap-4", "dist-ap-3"],
           "models": {
             "openai-gpt-5.2": {
               "rpm": 1,
@@ -37485,16 +36863,7 @@
         },
         "inst-1772120574830-nbfc9q5tv": {
           "activeJobs": 8,
-          "activeJobIds": [
-            "b-bs-0",
-            "b-bs-2",
-            "b-bs-1",
-            "b-sm-0",
-            "b-sm-2",
-            "b-sm-1",
-            "b-ap-0",
-            "b-ap-1"
-          ],
+          "activeJobIds": ["b-bs-0", "b-bs-2", "b-bs-1", "b-sm-0", "b-sm-2", "b-sm-1", "b-ap-0", "b-ap-1"],
           "models": {
             "anthropic-opus-4.6": {
               "rpm": 5,
@@ -37558,14 +36927,7 @@
       "instances": {
         "inst-1772120465462-6ct1qjubn": {
           "activeJobs": 6,
-          "activeJobIds": [
-            "dist-sm-2",
-            "dist-sm-3",
-            "dist-sm-1",
-            "dist-sm-4",
-            "dist-ap-4",
-            "dist-ap-3"
-          ],
+          "activeJobIds": ["dist-sm-2", "dist-sm-3", "dist-sm-1", "dist-sm-4", "dist-ap-4", "dist-ap-3"],
           "models": {
             "openai-gpt-5.2": {
               "rpm": 1,
@@ -37623,16 +36985,7 @@
         },
         "inst-1772120574830-nbfc9q5tv": {
           "activeJobs": 8,
-          "activeJobIds": [
-            "b-bs-0",
-            "b-bs-2",
-            "b-bs-1",
-            "b-sm-0",
-            "b-sm-2",
-            "b-sm-1",
-            "b-ap-0",
-            "b-ap-1"
-          ],
+          "activeJobIds": ["b-bs-0", "b-bs-2", "b-bs-1", "b-sm-0", "b-sm-2", "b-sm-1", "b-ap-0", "b-ap-1"],
           "models": {
             "anthropic-opus-4.6": {
               "rpm": 5,
@@ -37696,14 +37049,7 @@
       "instances": {
         "inst-1772120465462-6ct1qjubn": {
           "activeJobs": 6,
-          "activeJobIds": [
-            "dist-sm-2",
-            "dist-sm-3",
-            "dist-sm-1",
-            "dist-sm-4",
-            "dist-ap-4",
-            "dist-ap-3"
-          ],
+          "activeJobIds": ["dist-sm-2", "dist-sm-3", "dist-sm-1", "dist-sm-4", "dist-ap-4", "dist-ap-3"],
           "models": {
             "openai-gpt-5.2": {
               "rpm": 1,
@@ -37761,16 +37107,7 @@
         },
         "inst-1772120574830-nbfc9q5tv": {
           "activeJobs": 8,
-          "activeJobIds": [
-            "b-bs-0",
-            "b-bs-2",
-            "b-bs-1",
-            "b-sm-0",
-            "b-sm-2",
-            "b-sm-1",
-            "b-ap-0",
-            "b-ap-1"
-          ],
+          "activeJobIds": ["b-bs-0", "b-bs-2", "b-bs-1", "b-sm-0", "b-sm-2", "b-sm-1", "b-ap-0", "b-ap-1"],
           "models": {
             "anthropic-opus-4.6": {
               "rpm": 5,
@@ -37834,13 +37171,7 @@
       "instances": {
         "inst-1772120465462-6ct1qjubn": {
           "activeJobs": 5,
-          "activeJobIds": [
-            "dist-sm-2",
-            "dist-sm-3",
-            "dist-sm-1",
-            "dist-sm-4",
-            "dist-ap-3"
-          ],
+          "activeJobIds": ["dist-sm-2", "dist-sm-3", "dist-sm-1", "dist-sm-4", "dist-ap-3"],
           "models": {
             "anthropic-opus-4.6": {
               "rpm": 1,
@@ -37898,16 +37229,7 @@
         },
         "inst-1772120574830-nbfc9q5tv": {
           "activeJobs": 8,
-          "activeJobIds": [
-            "b-bs-0",
-            "b-bs-2",
-            "b-bs-1",
-            "b-sm-0",
-            "b-sm-2",
-            "b-sm-1",
-            "b-ap-0",
-            "b-ap-1"
-          ],
+          "activeJobIds": ["b-bs-0", "b-bs-2", "b-bs-1", "b-sm-0", "b-sm-2", "b-sm-1", "b-ap-0", "b-ap-1"],
           "models": {
             "anthropic-opus-4.6": {
               "rpm": 5,
@@ -37971,13 +37293,7 @@
       "instances": {
         "inst-1772120465462-6ct1qjubn": {
           "activeJobs": 5,
-          "activeJobIds": [
-            "dist-sm-2",
-            "dist-sm-3",
-            "dist-sm-1",
-            "dist-sm-4",
-            "dist-ap-3"
-          ],
+          "activeJobIds": ["dist-sm-2", "dist-sm-3", "dist-sm-1", "dist-sm-4", "dist-ap-3"],
           "models": {
             "anthropic-opus-4.6": {
               "rpm": 1,
@@ -38035,16 +37351,7 @@
         },
         "inst-1772120574830-nbfc9q5tv": {
           "activeJobs": 8,
-          "activeJobIds": [
-            "b-bs-0",
-            "b-bs-2",
-            "b-bs-1",
-            "b-sm-0",
-            "b-sm-2",
-            "b-sm-1",
-            "b-ap-0",
-            "b-ap-1"
-          ],
+          "activeJobIds": ["b-bs-0", "b-bs-2", "b-bs-1", "b-sm-0", "b-sm-2", "b-sm-1", "b-ap-0", "b-ap-1"],
           "models": {
             "anthropic-opus-4.6": {
               "rpm": 5,
@@ -38108,13 +37415,7 @@
       "instances": {
         "inst-1772120465462-6ct1qjubn": {
           "activeJobs": 5,
-          "activeJobIds": [
-            "dist-sm-2",
-            "dist-sm-3",
-            "dist-sm-1",
-            "dist-sm-4",
-            "dist-ap-3"
-          ],
+          "activeJobIds": ["dist-sm-2", "dist-sm-3", "dist-sm-1", "dist-sm-4", "dist-ap-3"],
           "models": {
             "anthropic-opus-4.6": {
               "rpm": 1,
@@ -38172,15 +37473,7 @@
         },
         "inst-1772120574830-nbfc9q5tv": {
           "activeJobs": 7,
-          "activeJobIds": [
-            "b-bs-2",
-            "b-bs-1",
-            "b-sm-0",
-            "b-sm-2",
-            "b-sm-1",
-            "b-ap-0",
-            "b-ap-1"
-          ],
+          "activeJobIds": ["b-bs-2", "b-bs-1", "b-sm-0", "b-sm-2", "b-sm-1", "b-ap-0", "b-ap-1"],
           "models": {
             "anthropic-opus-4.6": {
               "rpm": 6,
@@ -38244,13 +37537,7 @@
       "instances": {
         "inst-1772120465462-6ct1qjubn": {
           "activeJobs": 5,
-          "activeJobIds": [
-            "dist-sm-2",
-            "dist-sm-3",
-            "dist-sm-1",
-            "dist-sm-4",
-            "dist-ap-3"
-          ],
+          "activeJobIds": ["dist-sm-2", "dist-sm-3", "dist-sm-1", "dist-sm-4", "dist-ap-3"],
           "models": {
             "anthropic-opus-4.6": {
               "rpm": 1,
@@ -38308,15 +37595,7 @@
         },
         "inst-1772120574830-nbfc9q5tv": {
           "activeJobs": 7,
-          "activeJobIds": [
-            "b-bs-2",
-            "b-bs-1",
-            "b-sm-0",
-            "b-sm-2",
-            "b-sm-1",
-            "b-ap-0",
-            "b-ap-1"
-          ],
+          "activeJobIds": ["b-bs-2", "b-bs-1", "b-sm-0", "b-sm-2", "b-sm-1", "b-ap-0", "b-ap-1"],
           "models": {
             "anthropic-opus-4.6": {
               "rpm": 6,
@@ -38380,13 +37659,7 @@
       "instances": {
         "inst-1772120465462-6ct1qjubn": {
           "activeJobs": 5,
-          "activeJobIds": [
-            "dist-sm-2",
-            "dist-sm-3",
-            "dist-sm-1",
-            "dist-sm-4",
-            "dist-ap-3"
-          ],
+          "activeJobIds": ["dist-sm-2", "dist-sm-3", "dist-sm-1", "dist-sm-4", "dist-ap-3"],
           "models": {
             "anthropic-opus-4.6": {
               "rpm": 1,
@@ -38444,15 +37717,7 @@
         },
         "inst-1772120574830-nbfc9q5tv": {
           "activeJobs": 7,
-          "activeJobIds": [
-            "b-bs-2",
-            "b-bs-1",
-            "b-sm-0",
-            "b-sm-2",
-            "b-sm-1",
-            "b-ap-0",
-            "b-ap-1"
-          ],
+          "activeJobIds": ["b-bs-2", "b-bs-1", "b-sm-0", "b-sm-2", "b-sm-1", "b-ap-0", "b-ap-1"],
           "models": {
             "anthropic-opus-4.6": {
               "rpm": 6,
@@ -38516,13 +37781,7 @@
       "instances": {
         "inst-1772120465462-6ct1qjubn": {
           "activeJobs": 5,
-          "activeJobIds": [
-            "dist-sm-2",
-            "dist-sm-3",
-            "dist-sm-1",
-            "dist-sm-4",
-            "dist-ap-3"
-          ],
+          "activeJobIds": ["dist-sm-2", "dist-sm-3", "dist-sm-1", "dist-sm-4", "dist-ap-3"],
           "models": {
             "anthropic-opus-4.6": {
               "rpm": 1,
@@ -38580,15 +37839,7 @@
         },
         "inst-1772120574830-nbfc9q5tv": {
           "activeJobs": 7,
-          "activeJobIds": [
-            "b-bs-2",
-            "b-bs-1",
-            "b-sm-0",
-            "b-sm-2",
-            "b-sm-1",
-            "b-ap-0",
-            "b-ap-1"
-          ],
+          "activeJobIds": ["b-bs-2", "b-bs-1", "b-sm-0", "b-sm-2", "b-sm-1", "b-ap-0", "b-ap-1"],
           "models": {
             "anthropic-opus-4.6": {
               "rpm": 6,
@@ -38652,13 +37903,7 @@
       "instances": {
         "inst-1772120465462-6ct1qjubn": {
           "activeJobs": 5,
-          "activeJobIds": [
-            "dist-sm-2",
-            "dist-sm-3",
-            "dist-sm-1",
-            "dist-sm-4",
-            "dist-ap-3"
-          ],
+          "activeJobIds": ["dist-sm-2", "dist-sm-3", "dist-sm-1", "dist-sm-4", "dist-ap-3"],
           "models": {
             "anthropic-opus-4.6": {
               "rpm": 1,
@@ -38716,15 +37961,7 @@
         },
         "inst-1772120574830-nbfc9q5tv": {
           "activeJobs": 7,
-          "activeJobIds": [
-            "b-bs-2",
-            "b-bs-1",
-            "b-sm-0",
-            "b-sm-2",
-            "b-sm-1",
-            "b-ap-0",
-            "b-ap-1"
-          ],
+          "activeJobIds": ["b-bs-2", "b-bs-1", "b-sm-0", "b-sm-2", "b-sm-1", "b-ap-0", "b-ap-1"],
           "models": {
             "anthropic-opus-4.6": {
               "rpm": 6,
@@ -38788,13 +38025,7 @@
       "instances": {
         "inst-1772120465462-6ct1qjubn": {
           "activeJobs": 5,
-          "activeJobIds": [
-            "dist-sm-2",
-            "dist-sm-3",
-            "dist-sm-1",
-            "dist-sm-4",
-            "dist-ap-3"
-          ],
+          "activeJobIds": ["dist-sm-2", "dist-sm-3", "dist-sm-1", "dist-sm-4", "dist-ap-3"],
           "models": {
             "anthropic-opus-4.6": {
               "rpm": 1,
@@ -38852,15 +38083,7 @@
         },
         "inst-1772120574830-nbfc9q5tv": {
           "activeJobs": 7,
-          "activeJobIds": [
-            "b-bs-2",
-            "b-bs-1",
-            "b-sm-0",
-            "b-sm-2",
-            "b-sm-1",
-            "b-ap-0",
-            "b-ap-1"
-          ],
+          "activeJobIds": ["b-bs-2", "b-bs-1", "b-sm-0", "b-sm-2", "b-sm-1", "b-ap-0", "b-ap-1"],
           "models": {
             "anthropic-opus-4.6": {
               "rpm": 6,
@@ -38924,13 +38147,7 @@
       "instances": {
         "inst-1772120465462-6ct1qjubn": {
           "activeJobs": 5,
-          "activeJobIds": [
-            "dist-sm-2",
-            "dist-sm-3",
-            "dist-sm-1",
-            "dist-sm-4",
-            "dist-ap-3"
-          ],
+          "activeJobIds": ["dist-sm-2", "dist-sm-3", "dist-sm-1", "dist-sm-4", "dist-ap-3"],
           "models": {
             "anthropic-opus-4.6": {
               "rpm": 1,
@@ -38988,14 +38205,7 @@
         },
         "inst-1772120574830-nbfc9q5tv": {
           "activeJobs": 6,
-          "activeJobIds": [
-            "b-bs-1",
-            "b-sm-0",
-            "b-sm-2",
-            "b-sm-1",
-            "b-ap-0",
-            "b-ap-1"
-          ],
+          "activeJobIds": ["b-bs-1", "b-sm-0", "b-sm-2", "b-sm-1", "b-ap-0", "b-ap-1"],
           "models": {
             "anthropic-opus-4.6": {
               "rpm": 6,
@@ -39059,13 +38269,7 @@
       "instances": {
         "inst-1772120465462-6ct1qjubn": {
           "activeJobs": 5,
-          "activeJobIds": [
-            "dist-sm-2",
-            "dist-sm-3",
-            "dist-sm-1",
-            "dist-sm-4",
-            "dist-ap-3"
-          ],
+          "activeJobIds": ["dist-sm-2", "dist-sm-3", "dist-sm-1", "dist-sm-4", "dist-ap-3"],
           "models": {
             "anthropic-opus-4.6": {
               "rpm": 1,
@@ -39123,14 +38327,7 @@
         },
         "inst-1772120574830-nbfc9q5tv": {
           "activeJobs": 6,
-          "activeJobIds": [
-            "b-bs-1",
-            "b-sm-0",
-            "b-sm-2",
-            "b-sm-1",
-            "b-ap-0",
-            "b-ap-1"
-          ],
+          "activeJobIds": ["b-bs-1", "b-sm-0", "b-sm-2", "b-sm-1", "b-ap-0", "b-ap-1"],
           "models": {
             "anthropic-opus-4.6": {
               "rpm": 6,
@@ -39194,12 +38391,7 @@
       "instances": {
         "inst-1772120465462-6ct1qjubn": {
           "activeJobs": 4,
-          "activeJobIds": [
-            "dist-sm-2",
-            "dist-sm-3",
-            "dist-sm-1",
-            "dist-sm-4"
-          ],
+          "activeJobIds": ["dist-sm-2", "dist-sm-3", "dist-sm-1", "dist-sm-4"],
           "models": {
             "anthropic-opus-4.6": {
               "rpm": 1,
@@ -39257,14 +38449,7 @@
         },
         "inst-1772120574830-nbfc9q5tv": {
           "activeJobs": 6,
-          "activeJobIds": [
-            "b-bs-1",
-            "b-sm-0",
-            "b-sm-2",
-            "b-sm-1",
-            "b-ap-0",
-            "b-ap-1"
-          ],
+          "activeJobIds": ["b-bs-1", "b-sm-0", "b-sm-2", "b-sm-1", "b-ap-0", "b-ap-1"],
           "models": {
             "anthropic-opus-4.6": {
               "rpm": 6,
@@ -39328,12 +38513,7 @@
       "instances": {
         "inst-1772120465462-6ct1qjubn": {
           "activeJobs": 4,
-          "activeJobIds": [
-            "dist-sm-2",
-            "dist-sm-3",
-            "dist-sm-1",
-            "dist-sm-4"
-          ],
+          "activeJobIds": ["dist-sm-2", "dist-sm-3", "dist-sm-1", "dist-sm-4"],
           "models": {
             "anthropic-opus-4.6": {
               "rpm": 1,
@@ -39391,14 +38571,7 @@
         },
         "inst-1772120574830-nbfc9q5tv": {
           "activeJobs": 6,
-          "activeJobIds": [
-            "b-bs-1",
-            "b-sm-0",
-            "b-sm-2",
-            "b-sm-1",
-            "b-ap-0",
-            "b-ap-1"
-          ],
+          "activeJobIds": ["b-bs-1", "b-sm-0", "b-sm-2", "b-sm-1", "b-ap-0", "b-ap-1"],
           "models": {
             "anthropic-opus-4.6": {
               "rpm": 6,
@@ -39462,12 +38635,7 @@
       "instances": {
         "inst-1772120465462-6ct1qjubn": {
           "activeJobs": 4,
-          "activeJobIds": [
-            "dist-sm-2",
-            "dist-sm-3",
-            "dist-sm-1",
-            "dist-sm-4"
-          ],
+          "activeJobIds": ["dist-sm-2", "dist-sm-3", "dist-sm-1", "dist-sm-4"],
           "models": {
             "anthropic-opus-4.6": {
               "rpm": 1,
@@ -39525,14 +38693,7 @@
         },
         "inst-1772120574830-nbfc9q5tv": {
           "activeJobs": 6,
-          "activeJobIds": [
-            "b-bs-1",
-            "b-sm-0",
-            "b-sm-2",
-            "b-sm-1",
-            "b-ap-0",
-            "b-ap-1"
-          ],
+          "activeJobIds": ["b-bs-1", "b-sm-0", "b-sm-2", "b-sm-1", "b-ap-0", "b-ap-1"],
           "models": {
             "anthropic-opus-4.6": {
               "rpm": 6,
@@ -39596,12 +38757,7 @@
       "instances": {
         "inst-1772120465462-6ct1qjubn": {
           "activeJobs": 4,
-          "activeJobIds": [
-            "dist-sm-2",
-            "dist-sm-3",
-            "dist-sm-1",
-            "dist-sm-4"
-          ],
+          "activeJobIds": ["dist-sm-2", "dist-sm-3", "dist-sm-1", "dist-sm-4"],
           "models": {
             "anthropic-opus-4.6": {
               "rpm": 1,
@@ -39659,13 +38815,7 @@
         },
         "inst-1772120574830-nbfc9q5tv": {
           "activeJobs": 5,
-          "activeJobIds": [
-            "b-bs-1",
-            "b-sm-0",
-            "b-sm-2",
-            "b-sm-1",
-            "b-ap-1"
-          ],
+          "activeJobIds": ["b-bs-1", "b-sm-0", "b-sm-2", "b-sm-1", "b-ap-1"],
           "models": {
             "anthropic-opus-4.6": {
               "rpm": 6,
@@ -39729,12 +38879,7 @@
       "instances": {
         "inst-1772120465462-6ct1qjubn": {
           "activeJobs": 4,
-          "activeJobIds": [
-            "dist-sm-2",
-            "dist-sm-3",
-            "dist-sm-1",
-            "dist-sm-4"
-          ],
+          "activeJobIds": ["dist-sm-2", "dist-sm-3", "dist-sm-1", "dist-sm-4"],
           "models": {
             "anthropic-opus-4.6": {
               "rpm": 1,
@@ -39792,13 +38937,7 @@
         },
         "inst-1772120574830-nbfc9q5tv": {
           "activeJobs": 5,
-          "activeJobIds": [
-            "b-bs-1",
-            "b-sm-0",
-            "b-sm-2",
-            "b-sm-1",
-            "b-ap-1"
-          ],
+          "activeJobIds": ["b-bs-1", "b-sm-0", "b-sm-2", "b-sm-1", "b-ap-1"],
           "models": {
             "anthropic-opus-4.6": {
               "rpm": 6,
@@ -39862,12 +39001,7 @@
       "instances": {
         "inst-1772120465462-6ct1qjubn": {
           "activeJobs": 4,
-          "activeJobIds": [
-            "dist-sm-2",
-            "dist-sm-3",
-            "dist-sm-1",
-            "dist-sm-4"
-          ],
+          "activeJobIds": ["dist-sm-2", "dist-sm-3", "dist-sm-1", "dist-sm-4"],
           "models": {
             "anthropic-opus-4.6": {
               "rpm": 3,
@@ -39925,12 +39059,7 @@
         },
         "inst-1772120574830-nbfc9q5tv": {
           "activeJobs": 4,
-          "activeJobIds": [
-            "b-bs-1",
-            "b-sm-2",
-            "b-sm-1",
-            "b-ap-1"
-          ],
+          "activeJobIds": ["b-bs-1", "b-sm-2", "b-sm-1", "b-ap-1"],
           "models": {
             "anthropic-opus-4.6": {
               "rpm": 7,
@@ -39994,12 +39123,7 @@
       "instances": {
         "inst-1772120465462-6ct1qjubn": {
           "activeJobs": 4,
-          "activeJobIds": [
-            "dist-sm-2",
-            "dist-sm-3",
-            "dist-sm-1",
-            "dist-sm-4"
-          ],
+          "activeJobIds": ["dist-sm-2", "dist-sm-3", "dist-sm-1", "dist-sm-4"],
           "models": {
             "anthropic-opus-4.6": {
               "rpm": 3,
@@ -40057,12 +39181,7 @@
         },
         "inst-1772120574830-nbfc9q5tv": {
           "activeJobs": 4,
-          "activeJobIds": [
-            "b-bs-1",
-            "b-sm-2",
-            "b-sm-1",
-            "b-ap-1"
-          ],
+          "activeJobIds": ["b-bs-1", "b-sm-2", "b-sm-1", "b-ap-1"],
           "models": {
             "anthropic-opus-4.6": {
               "rpm": 7,
@@ -40126,12 +39245,7 @@
       "instances": {
         "inst-1772120465462-6ct1qjubn": {
           "activeJobs": 4,
-          "activeJobIds": [
-            "dist-sm-2",
-            "dist-sm-3",
-            "dist-sm-1",
-            "dist-sm-4"
-          ],
+          "activeJobIds": ["dist-sm-2", "dist-sm-3", "dist-sm-1", "dist-sm-4"],
           "models": {
             "anthropic-opus-4.6": {
               "rpm": 3,
@@ -40189,12 +39303,7 @@
         },
         "inst-1772120574830-nbfc9q5tv": {
           "activeJobs": 4,
-          "activeJobIds": [
-            "b-bs-1",
-            "b-sm-2",
-            "b-sm-1",
-            "b-ap-1"
-          ],
+          "activeJobIds": ["b-bs-1", "b-sm-2", "b-sm-1", "b-ap-1"],
           "models": {
             "anthropic-opus-4.6": {
               "rpm": 7,
@@ -40258,12 +39367,7 @@
       "instances": {
         "inst-1772120465462-6ct1qjubn": {
           "activeJobs": 4,
-          "activeJobIds": [
-            "dist-sm-2",
-            "dist-sm-3",
-            "dist-sm-1",
-            "dist-sm-4"
-          ],
+          "activeJobIds": ["dist-sm-2", "dist-sm-3", "dist-sm-1", "dist-sm-4"],
           "models": {
             "anthropic-opus-4.6": {
               "rpm": 3,
@@ -40321,11 +39425,7 @@
         },
         "inst-1772120574830-nbfc9q5tv": {
           "activeJobs": 3,
-          "activeJobIds": [
-            "b-bs-1",
-            "b-sm-2",
-            "b-sm-1"
-          ],
+          "activeJobIds": ["b-bs-1", "b-sm-2", "b-sm-1"],
           "models": {
             "anthropic-opus-4.6": {
               "rpm": 7,
@@ -40389,12 +39489,7 @@
       "instances": {
         "inst-1772120465462-6ct1qjubn": {
           "activeJobs": 4,
-          "activeJobIds": [
-            "dist-sm-2",
-            "dist-sm-3",
-            "dist-sm-1",
-            "dist-sm-4"
-          ],
+          "activeJobIds": ["dist-sm-2", "dist-sm-3", "dist-sm-1", "dist-sm-4"],
           "models": {
             "anthropic-opus-4.6": {
               "rpm": 3,
@@ -40452,11 +39547,7 @@
         },
         "inst-1772120574830-nbfc9q5tv": {
           "activeJobs": 3,
-          "activeJobIds": [
-            "b-bs-1",
-            "b-sm-2",
-            "b-sm-1"
-          ],
+          "activeJobIds": ["b-bs-1", "b-sm-2", "b-sm-1"],
           "models": {
             "anthropic-opus-4.6": {
               "rpm": 7,
@@ -40520,12 +39611,7 @@
       "instances": {
         "inst-1772120465462-6ct1qjubn": {
           "activeJobs": 4,
-          "activeJobIds": [
-            "dist-sm-2",
-            "dist-sm-3",
-            "dist-sm-1",
-            "dist-sm-4"
-          ],
+          "activeJobIds": ["dist-sm-2", "dist-sm-3", "dist-sm-1", "dist-sm-4"],
           "models": {
             "anthropic-opus-4.6": {
               "rpm": 3,
@@ -40583,11 +39669,7 @@
         },
         "inst-1772120574830-nbfc9q5tv": {
           "activeJobs": 3,
-          "activeJobIds": [
-            "b-bs-1",
-            "b-sm-2",
-            "b-sm-1"
-          ],
+          "activeJobIds": ["b-bs-1", "b-sm-2", "b-sm-1"],
           "models": {
             "anthropic-opus-4.6": {
               "rpm": 7,
@@ -40651,12 +39733,7 @@
       "instances": {
         "inst-1772120465462-6ct1qjubn": {
           "activeJobs": 4,
-          "activeJobIds": [
-            "dist-sm-2",
-            "dist-sm-3",
-            "dist-sm-1",
-            "dist-sm-4"
-          ],
+          "activeJobIds": ["dist-sm-2", "dist-sm-3", "dist-sm-1", "dist-sm-4"],
           "models": {
             "anthropic-opus-4.6": {
               "rpm": 3,
@@ -40714,11 +39791,7 @@
         },
         "inst-1772120574830-nbfc9q5tv": {
           "activeJobs": 3,
-          "activeJobIds": [
-            "b-bs-1",
-            "b-sm-2",
-            "b-sm-1"
-          ],
+          "activeJobIds": ["b-bs-1", "b-sm-2", "b-sm-1"],
           "models": {
             "anthropic-opus-4.6": {
               "rpm": 7,
@@ -40782,12 +39855,7 @@
       "instances": {
         "inst-1772120465462-6ct1qjubn": {
           "activeJobs": 4,
-          "activeJobIds": [
-            "dist-sm-2",
-            "dist-sm-3",
-            "dist-sm-1",
-            "dist-sm-4"
-          ],
+          "activeJobIds": ["dist-sm-2", "dist-sm-3", "dist-sm-1", "dist-sm-4"],
           "models": {
             "anthropic-opus-4.6": {
               "rpm": 3,
@@ -40845,11 +39913,7 @@
         },
         "inst-1772120574830-nbfc9q5tv": {
           "activeJobs": 3,
-          "activeJobIds": [
-            "b-bs-1",
-            "b-sm-2",
-            "b-sm-1"
-          ],
+          "activeJobIds": ["b-bs-1", "b-sm-2", "b-sm-1"],
           "models": {
             "anthropic-opus-4.6": {
               "rpm": 7,
@@ -40913,12 +39977,7 @@
       "instances": {
         "inst-1772120465462-6ct1qjubn": {
           "activeJobs": 4,
-          "activeJobIds": [
-            "dist-sm-2",
-            "dist-sm-3",
-            "dist-sm-1",
-            "dist-sm-4"
-          ],
+          "activeJobIds": ["dist-sm-2", "dist-sm-3", "dist-sm-1", "dist-sm-4"],
           "models": {
             "anthropic-opus-4.6": {
               "rpm": 3,
@@ -40976,11 +40035,7 @@
         },
         "inst-1772120574830-nbfc9q5tv": {
           "activeJobs": 3,
-          "activeJobIds": [
-            "b-bs-1",
-            "b-sm-2",
-            "b-sm-1"
-          ],
+          "activeJobIds": ["b-bs-1", "b-sm-2", "b-sm-1"],
           "models": {
             "anthropic-opus-4.6": {
               "rpm": 7,
@@ -41044,12 +40099,7 @@
       "instances": {
         "inst-1772120465462-6ct1qjubn": {
           "activeJobs": 4,
-          "activeJobIds": [
-            "dist-sm-2",
-            "dist-sm-3",
-            "dist-sm-1",
-            "dist-sm-4"
-          ],
+          "activeJobIds": ["dist-sm-2", "dist-sm-3", "dist-sm-1", "dist-sm-4"],
           "models": {
             "anthropic-opus-4.6": {
               "rpm": 3,
@@ -41107,11 +40157,7 @@
         },
         "inst-1772120574830-nbfc9q5tv": {
           "activeJobs": 3,
-          "activeJobIds": [
-            "b-bs-1",
-            "b-sm-2",
-            "b-sm-1"
-          ],
+          "activeJobIds": ["b-bs-1", "b-sm-2", "b-sm-1"],
           "models": {
             "anthropic-opus-4.6": {
               "rpm": 7,
@@ -41175,12 +40221,7 @@
       "instances": {
         "inst-1772120465462-6ct1qjubn": {
           "activeJobs": 4,
-          "activeJobIds": [
-            "dist-sm-2",
-            "dist-sm-3",
-            "dist-sm-1",
-            "dist-sm-4"
-          ],
+          "activeJobIds": ["dist-sm-2", "dist-sm-3", "dist-sm-1", "dist-sm-4"],
           "models": {
             "anthropic-opus-4.6": {
               "rpm": 3,
@@ -41238,11 +40279,7 @@
         },
         "inst-1772120574830-nbfc9q5tv": {
           "activeJobs": 3,
-          "activeJobIds": [
-            "b-bs-1",
-            "b-sm-2",
-            "b-sm-1"
-          ],
+          "activeJobIds": ["b-bs-1", "b-sm-2", "b-sm-1"],
           "models": {
             "anthropic-opus-4.6": {
               "rpm": 7,
@@ -41306,12 +40343,7 @@
       "instances": {
         "inst-1772120465462-6ct1qjubn": {
           "activeJobs": 4,
-          "activeJobIds": [
-            "dist-sm-2",
-            "dist-sm-3",
-            "dist-sm-1",
-            "dist-sm-4"
-          ],
+          "activeJobIds": ["dist-sm-2", "dist-sm-3", "dist-sm-1", "dist-sm-4"],
           "models": {
             "anthropic-opus-4.6": {
               "rpm": 3,
@@ -41369,11 +40401,7 @@
         },
         "inst-1772120574830-nbfc9q5tv": {
           "activeJobs": 3,
-          "activeJobIds": [
-            "b-bs-1",
-            "b-sm-2",
-            "b-sm-1"
-          ],
+          "activeJobIds": ["b-bs-1", "b-sm-2", "b-sm-1"],
           "models": {
             "anthropic-opus-4.6": {
               "rpm": 7,
@@ -41437,12 +40465,7 @@
       "instances": {
         "inst-1772120465462-6ct1qjubn": {
           "activeJobs": 4,
-          "activeJobIds": [
-            "dist-sm-2",
-            "dist-sm-3",
-            "dist-sm-1",
-            "dist-sm-4"
-          ],
+          "activeJobIds": ["dist-sm-2", "dist-sm-3", "dist-sm-1", "dist-sm-4"],
           "models": {
             "anthropic-opus-4.6": {
               "rpm": 3,
@@ -41500,11 +40523,7 @@
         },
         "inst-1772120574830-nbfc9q5tv": {
           "activeJobs": 3,
-          "activeJobIds": [
-            "b-bs-1",
-            "b-sm-2",
-            "b-sm-1"
-          ],
+          "activeJobIds": ["b-bs-1", "b-sm-2", "b-sm-1"],
           "models": {
             "anthropic-opus-4.6": {
               "rpm": 7,
@@ -41568,12 +40587,7 @@
       "instances": {
         "inst-1772120465462-6ct1qjubn": {
           "activeJobs": 4,
-          "activeJobIds": [
-            "dist-sm-2",
-            "dist-sm-3",
-            "dist-sm-1",
-            "dist-sm-4"
-          ],
+          "activeJobIds": ["dist-sm-2", "dist-sm-3", "dist-sm-1", "dist-sm-4"],
           "models": {
             "anthropic-opus-4.6": {
               "rpm": 3,
@@ -41631,11 +40645,7 @@
         },
         "inst-1772120574830-nbfc9q5tv": {
           "activeJobs": 3,
-          "activeJobIds": [
-            "b-bs-1",
-            "b-sm-2",
-            "b-sm-1"
-          ],
+          "activeJobIds": ["b-bs-1", "b-sm-2", "b-sm-1"],
           "models": {
             "anthropic-opus-4.6": {
               "rpm": 7,
@@ -41699,12 +40709,7 @@
       "instances": {
         "inst-1772120465462-6ct1qjubn": {
           "activeJobs": 4,
-          "activeJobIds": [
-            "dist-sm-2",
-            "dist-sm-3",
-            "dist-sm-1",
-            "dist-sm-4"
-          ],
+          "activeJobIds": ["dist-sm-2", "dist-sm-3", "dist-sm-1", "dist-sm-4"],
           "models": {
             "anthropic-opus-4.6": {
               "rpm": 3,
@@ -41762,11 +40767,7 @@
         },
         "inst-1772120574830-nbfc9q5tv": {
           "activeJobs": 3,
-          "activeJobIds": [
-            "b-bs-1",
-            "b-sm-2",
-            "b-sm-1"
-          ],
+          "activeJobIds": ["b-bs-1", "b-sm-2", "b-sm-1"],
           "models": {
             "anthropic-opus-4.6": {
               "rpm": 7,
@@ -41830,12 +40831,7 @@
       "instances": {
         "inst-1772120465462-6ct1qjubn": {
           "activeJobs": 4,
-          "activeJobIds": [
-            "dist-sm-2",
-            "dist-sm-3",
-            "dist-sm-1",
-            "dist-sm-4"
-          ],
+          "activeJobIds": ["dist-sm-2", "dist-sm-3", "dist-sm-1", "dist-sm-4"],
           "models": {
             "anthropic-opus-4.6": {
               "rpm": 3,
@@ -41893,11 +40889,7 @@
         },
         "inst-1772120574830-nbfc9q5tv": {
           "activeJobs": 3,
-          "activeJobIds": [
-            "b-bs-1",
-            "b-sm-2",
-            "b-sm-1"
-          ],
+          "activeJobIds": ["b-bs-1", "b-sm-2", "b-sm-1"],
           "models": {
             "anthropic-opus-4.6": {
               "rpm": 7,
@@ -41961,12 +40953,7 @@
       "instances": {
         "inst-1772120465462-6ct1qjubn": {
           "activeJobs": 4,
-          "activeJobIds": [
-            "dist-sm-2",
-            "dist-sm-3",
-            "dist-sm-1",
-            "dist-sm-4"
-          ],
+          "activeJobIds": ["dist-sm-2", "dist-sm-3", "dist-sm-1", "dist-sm-4"],
           "models": {
             "anthropic-opus-4.6": {
               "rpm": 3,
@@ -42024,11 +41011,7 @@
         },
         "inst-1772120574830-nbfc9q5tv": {
           "activeJobs": 3,
-          "activeJobIds": [
-            "b-bs-1",
-            "b-sm-2",
-            "b-sm-1"
-          ],
+          "activeJobIds": ["b-bs-1", "b-sm-2", "b-sm-1"],
           "models": {
             "anthropic-opus-4.6": {
               "rpm": 7,
@@ -42092,12 +41075,7 @@
       "instances": {
         "inst-1772120465462-6ct1qjubn": {
           "activeJobs": 4,
-          "activeJobIds": [
-            "dist-sm-2",
-            "dist-sm-3",
-            "dist-sm-1",
-            "dist-sm-4"
-          ],
+          "activeJobIds": ["dist-sm-2", "dist-sm-3", "dist-sm-1", "dist-sm-4"],
           "models": {
             "anthropic-opus-4.6": {
               "rpm": 3,
@@ -42155,11 +41133,7 @@
         },
         "inst-1772120574830-nbfc9q5tv": {
           "activeJobs": 3,
-          "activeJobIds": [
-            "b-bs-1",
-            "b-sm-2",
-            "b-sm-1"
-          ],
+          "activeJobIds": ["b-bs-1", "b-sm-2", "b-sm-1"],
           "models": {
             "anthropic-opus-4.6": {
               "rpm": 7,
@@ -42223,12 +41197,7 @@
       "instances": {
         "inst-1772120465462-6ct1qjubn": {
           "activeJobs": 4,
-          "activeJobIds": [
-            "dist-sm-2",
-            "dist-sm-3",
-            "dist-sm-1",
-            "dist-sm-4"
-          ],
+          "activeJobIds": ["dist-sm-2", "dist-sm-3", "dist-sm-1", "dist-sm-4"],
           "models": {
             "anthropic-opus-4.6": {
               "rpm": 3,
@@ -42286,11 +41255,7 @@
         },
         "inst-1772120574830-nbfc9q5tv": {
           "activeJobs": 3,
-          "activeJobIds": [
-            "b-bs-1",
-            "b-sm-2",
-            "b-sm-1"
-          ],
+          "activeJobIds": ["b-bs-1", "b-sm-2", "b-sm-1"],
           "models": {
             "anthropic-opus-4.6": {
               "rpm": 7,
@@ -42354,12 +41319,7 @@
       "instances": {
         "inst-1772120465462-6ct1qjubn": {
           "activeJobs": 4,
-          "activeJobIds": [
-            "dist-sm-2",
-            "dist-sm-3",
-            "dist-sm-1",
-            "dist-sm-4"
-          ],
+          "activeJobIds": ["dist-sm-2", "dist-sm-3", "dist-sm-1", "dist-sm-4"],
           "models": {
             "anthropic-opus-4.6": {
               "rpm": 3,
@@ -42417,11 +41377,7 @@
         },
         "inst-1772120574830-nbfc9q5tv": {
           "activeJobs": 3,
-          "activeJobIds": [
-            "b-bs-1",
-            "b-sm-2",
-            "b-sm-1"
-          ],
+          "activeJobIds": ["b-bs-1", "b-sm-2", "b-sm-1"],
           "models": {
             "anthropic-opus-4.6": {
               "rpm": 7,
@@ -42485,12 +41441,7 @@
       "instances": {
         "inst-1772120465462-6ct1qjubn": {
           "activeJobs": 4,
-          "activeJobIds": [
-            "dist-sm-2",
-            "dist-sm-3",
-            "dist-sm-1",
-            "dist-sm-4"
-          ],
+          "activeJobIds": ["dist-sm-2", "dist-sm-3", "dist-sm-1", "dist-sm-4"],
           "models": {
             "anthropic-opus-4.6": {
               "rpm": 3,
@@ -42548,11 +41499,7 @@
         },
         "inst-1772120574830-nbfc9q5tv": {
           "activeJobs": 3,
-          "activeJobIds": [
-            "b-bs-1",
-            "b-sm-2",
-            "b-sm-1"
-          ],
+          "activeJobIds": ["b-bs-1", "b-sm-2", "b-sm-1"],
           "models": {
             "anthropic-opus-4.6": {
               "rpm": 7,
@@ -42616,12 +41563,7 @@
       "instances": {
         "inst-1772120465462-6ct1qjubn": {
           "activeJobs": 4,
-          "activeJobIds": [
-            "dist-sm-2",
-            "dist-sm-3",
-            "dist-sm-1",
-            "dist-sm-4"
-          ],
+          "activeJobIds": ["dist-sm-2", "dist-sm-3", "dist-sm-1", "dist-sm-4"],
           "models": {
             "anthropic-opus-4.6": {
               "rpm": 3,
@@ -42679,11 +41621,7 @@
         },
         "inst-1772120574830-nbfc9q5tv": {
           "activeJobs": 3,
-          "activeJobIds": [
-            "b-bs-1",
-            "b-sm-2",
-            "b-sm-1"
-          ],
+          "activeJobIds": ["b-bs-1", "b-sm-2", "b-sm-1"],
           "models": {
             "anthropic-opus-4.6": {
               "rpm": 7,
@@ -42747,12 +41685,7 @@
       "instances": {
         "inst-1772120465462-6ct1qjubn": {
           "activeJobs": 4,
-          "activeJobIds": [
-            "dist-sm-2",
-            "dist-sm-3",
-            "dist-sm-1",
-            "dist-sm-4"
-          ],
+          "activeJobIds": ["dist-sm-2", "dist-sm-3", "dist-sm-1", "dist-sm-4"],
           "models": {
             "anthropic-opus-4.6": {
               "rpm": 3,
@@ -42810,11 +41743,7 @@
         },
         "inst-1772120574830-nbfc9q5tv": {
           "activeJobs": 3,
-          "activeJobIds": [
-            "b-bs-1",
-            "b-sm-2",
-            "b-sm-1"
-          ],
+          "activeJobIds": ["b-bs-1", "b-sm-2", "b-sm-1"],
           "models": {
             "anthropic-opus-4.6": {
               "rpm": 7,
@@ -42878,12 +41807,7 @@
       "instances": {
         "inst-1772120465462-6ct1qjubn": {
           "activeJobs": 4,
-          "activeJobIds": [
-            "dist-sm-2",
-            "dist-sm-3",
-            "dist-sm-1",
-            "dist-sm-4"
-          ],
+          "activeJobIds": ["dist-sm-2", "dist-sm-3", "dist-sm-1", "dist-sm-4"],
           "models": {
             "anthropic-opus-4.6": {
               "rpm": 3,
@@ -42941,11 +41865,7 @@
         },
         "inst-1772120574830-nbfc9q5tv": {
           "activeJobs": 3,
-          "activeJobIds": [
-            "b-bs-1",
-            "b-sm-2",
-            "b-sm-1"
-          ],
+          "activeJobIds": ["b-bs-1", "b-sm-2", "b-sm-1"],
           "models": {
             "anthropic-opus-4.6": {
               "rpm": 7,
@@ -43009,12 +41929,7 @@
       "instances": {
         "inst-1772120465462-6ct1qjubn": {
           "activeJobs": 4,
-          "activeJobIds": [
-            "dist-sm-2",
-            "dist-sm-3",
-            "dist-sm-1",
-            "dist-sm-4"
-          ],
+          "activeJobIds": ["dist-sm-2", "dist-sm-3", "dist-sm-1", "dist-sm-4"],
           "models": {
             "anthropic-opus-4.6": {
               "rpm": 3,
@@ -43072,11 +41987,7 @@
         },
         "inst-1772120574830-nbfc9q5tv": {
           "activeJobs": 3,
-          "activeJobIds": [
-            "b-bs-1",
-            "b-sm-2",
-            "b-sm-1"
-          ],
+          "activeJobIds": ["b-bs-1", "b-sm-2", "b-sm-1"],
           "models": {
             "anthropic-opus-4.6": {
               "rpm": 7,
@@ -43140,12 +42051,7 @@
       "instances": {
         "inst-1772120465462-6ct1qjubn": {
           "activeJobs": 4,
-          "activeJobIds": [
-            "dist-sm-2",
-            "dist-sm-3",
-            "dist-sm-1",
-            "dist-sm-4"
-          ],
+          "activeJobIds": ["dist-sm-2", "dist-sm-3", "dist-sm-1", "dist-sm-4"],
           "models": {
             "anthropic-opus-4.6": {
               "rpm": 3,
@@ -43203,11 +42109,7 @@
         },
         "inst-1772120574830-nbfc9q5tv": {
           "activeJobs": 3,
-          "activeJobIds": [
-            "b-bs-1",
-            "b-sm-2",
-            "b-sm-1"
-          ],
+          "activeJobIds": ["b-bs-1", "b-sm-2", "b-sm-1"],
           "models": {
             "anthropic-opus-4.6": {
               "rpm": 7,
@@ -43271,12 +42173,7 @@
       "instances": {
         "inst-1772120465462-6ct1qjubn": {
           "activeJobs": 4,
-          "activeJobIds": [
-            "dist-sm-2",
-            "dist-sm-3",
-            "dist-sm-1",
-            "dist-sm-4"
-          ],
+          "activeJobIds": ["dist-sm-2", "dist-sm-3", "dist-sm-1", "dist-sm-4"],
           "models": {
             "anthropic-opus-4.6": {
               "rpm": 3,
@@ -43334,11 +42231,7 @@
         },
         "inst-1772120574830-nbfc9q5tv": {
           "activeJobs": 3,
-          "activeJobIds": [
-            "b-bs-1",
-            "b-sm-2",
-            "b-sm-1"
-          ],
+          "activeJobIds": ["b-bs-1", "b-sm-2", "b-sm-1"],
           "models": {
             "anthropic-opus-4.6": {
               "rpm": 7,
@@ -43402,12 +42295,7 @@
       "instances": {
         "inst-1772120465462-6ct1qjubn": {
           "activeJobs": 4,
-          "activeJobIds": [
-            "dist-sm-2",
-            "dist-sm-3",
-            "dist-sm-1",
-            "dist-sm-4"
-          ],
+          "activeJobIds": ["dist-sm-2", "dist-sm-3", "dist-sm-1", "dist-sm-4"],
           "models": {
             "anthropic-opus-4.6": {
               "rpm": 3,
@@ -43465,11 +42353,7 @@
         },
         "inst-1772120574830-nbfc9q5tv": {
           "activeJobs": 3,
-          "activeJobIds": [
-            "b-bs-1",
-            "b-sm-2",
-            "b-sm-1"
-          ],
+          "activeJobIds": ["b-bs-1", "b-sm-2", "b-sm-1"],
           "models": {
             "anthropic-opus-4.6": {
               "rpm": 7,
@@ -43533,12 +42417,7 @@
       "instances": {
         "inst-1772120465462-6ct1qjubn": {
           "activeJobs": 4,
-          "activeJobIds": [
-            "dist-sm-2",
-            "dist-sm-3",
-            "dist-sm-1",
-            "dist-sm-4"
-          ],
+          "activeJobIds": ["dist-sm-2", "dist-sm-3", "dist-sm-1", "dist-sm-4"],
           "models": {
             "anthropic-opus-4.6": {
               "rpm": 3,
@@ -43596,11 +42475,7 @@
         },
         "inst-1772120574830-nbfc9q5tv": {
           "activeJobs": 3,
-          "activeJobIds": [
-            "b-bs-1",
-            "b-sm-2",
-            "b-sm-1"
-          ],
+          "activeJobIds": ["b-bs-1", "b-sm-2", "b-sm-1"],
           "models": {
             "anthropic-opus-4.6": {
               "rpm": 7,
@@ -43664,12 +42539,7 @@
       "instances": {
         "inst-1772120465462-6ct1qjubn": {
           "activeJobs": 4,
-          "activeJobIds": [
-            "dist-sm-2",
-            "dist-sm-3",
-            "dist-sm-1",
-            "dist-sm-4"
-          ],
+          "activeJobIds": ["dist-sm-2", "dist-sm-3", "dist-sm-1", "dist-sm-4"],
           "models": {
             "anthropic-opus-4.6": {
               "rpm": 3,
@@ -43727,11 +42597,7 @@
         },
         "inst-1772120574830-nbfc9q5tv": {
           "activeJobs": 3,
-          "activeJobIds": [
-            "b-bs-1",
-            "b-sm-2",
-            "b-sm-1"
-          ],
+          "activeJobIds": ["b-bs-1", "b-sm-2", "b-sm-1"],
           "models": {
             "anthropic-opus-4.6": {
               "rpm": 7,
@@ -43795,12 +42661,7 @@
       "instances": {
         "inst-1772120465462-6ct1qjubn": {
           "activeJobs": 4,
-          "activeJobIds": [
-            "dist-sm-2",
-            "dist-sm-3",
-            "dist-sm-1",
-            "dist-sm-4"
-          ],
+          "activeJobIds": ["dist-sm-2", "dist-sm-3", "dist-sm-1", "dist-sm-4"],
           "models": {
             "anthropic-opus-4.6": {
               "rpm": 3,
@@ -43858,11 +42719,7 @@
         },
         "inst-1772120574830-nbfc9q5tv": {
           "activeJobs": 3,
-          "activeJobIds": [
-            "b-bs-1",
-            "b-sm-2",
-            "b-sm-1"
-          ],
+          "activeJobIds": ["b-bs-1", "b-sm-2", "b-sm-1"],
           "models": {
             "anthropic-opus-4.6": {
               "rpm": 7,
@@ -43926,12 +42783,7 @@
       "instances": {
         "inst-1772120465462-6ct1qjubn": {
           "activeJobs": 4,
-          "activeJobIds": [
-            "dist-sm-2",
-            "dist-sm-3",
-            "dist-sm-1",
-            "dist-sm-4"
-          ],
+          "activeJobIds": ["dist-sm-2", "dist-sm-3", "dist-sm-1", "dist-sm-4"],
           "models": {
             "anthropic-opus-4.6": {
               "rpm": 3,
@@ -43989,11 +42841,7 @@
         },
         "inst-1772120574830-nbfc9q5tv": {
           "activeJobs": 3,
-          "activeJobIds": [
-            "b-bs-1",
-            "b-sm-2",
-            "b-sm-1"
-          ],
+          "activeJobIds": ["b-bs-1", "b-sm-2", "b-sm-1"],
           "models": {
             "anthropic-opus-4.6": {
               "rpm": 7,
@@ -44057,12 +42905,7 @@
       "instances": {
         "inst-1772120465462-6ct1qjubn": {
           "activeJobs": 4,
-          "activeJobIds": [
-            "dist-sm-2",
-            "dist-sm-3",
-            "dist-sm-1",
-            "dist-sm-4"
-          ],
+          "activeJobIds": ["dist-sm-2", "dist-sm-3", "dist-sm-1", "dist-sm-4"],
           "models": {
             "anthropic-opus-4.6": {
               "rpm": 3,
@@ -44120,11 +42963,7 @@
         },
         "inst-1772120574830-nbfc9q5tv": {
           "activeJobs": 3,
-          "activeJobIds": [
-            "b-bs-1",
-            "b-sm-2",
-            "b-sm-1"
-          ],
+          "activeJobIds": ["b-bs-1", "b-sm-2", "b-sm-1"],
           "models": {
             "anthropic-opus-4.6": {
               "rpm": 7,
@@ -44188,12 +43027,7 @@
       "instances": {
         "inst-1772120465462-6ct1qjubn": {
           "activeJobs": 4,
-          "activeJobIds": [
-            "dist-sm-2",
-            "dist-sm-3",
-            "dist-sm-1",
-            "dist-sm-4"
-          ],
+          "activeJobIds": ["dist-sm-2", "dist-sm-3", "dist-sm-1", "dist-sm-4"],
           "models": {
             "anthropic-opus-4.6": {
               "rpm": 3,
@@ -44251,11 +43085,7 @@
         },
         "inst-1772120574830-nbfc9q5tv": {
           "activeJobs": 3,
-          "activeJobIds": [
-            "b-bs-1",
-            "b-sm-2",
-            "b-sm-1"
-          ],
+          "activeJobIds": ["b-bs-1", "b-sm-2", "b-sm-1"],
           "models": {
             "anthropic-opus-4.6": {
               "rpm": 7,
@@ -44319,12 +43149,7 @@
       "instances": {
         "inst-1772120465462-6ct1qjubn": {
           "activeJobs": 4,
-          "activeJobIds": [
-            "dist-sm-2",
-            "dist-sm-3",
-            "dist-sm-1",
-            "dist-sm-4"
-          ],
+          "activeJobIds": ["dist-sm-2", "dist-sm-3", "dist-sm-1", "dist-sm-4"],
           "models": {
             "anthropic-opus-4.6": {
               "rpm": 3,
@@ -44382,11 +43207,7 @@
         },
         "inst-1772120574830-nbfc9q5tv": {
           "activeJobs": 3,
-          "activeJobIds": [
-            "b-bs-1",
-            "b-sm-2",
-            "b-sm-1"
-          ],
+          "activeJobIds": ["b-bs-1", "b-sm-2", "b-sm-1"],
           "models": {
             "anthropic-opus-4.6": {
               "rpm": 7,
@@ -44450,12 +43271,7 @@
       "instances": {
         "inst-1772120465462-6ct1qjubn": {
           "activeJobs": 4,
-          "activeJobIds": [
-            "dist-sm-2",
-            "dist-sm-3",
-            "dist-sm-1",
-            "dist-sm-4"
-          ],
+          "activeJobIds": ["dist-sm-2", "dist-sm-3", "dist-sm-1", "dist-sm-4"],
           "models": {
             "anthropic-opus-4.6": {
               "rpm": 3,
@@ -44513,11 +43329,7 @@
         },
         "inst-1772120574830-nbfc9q5tv": {
           "activeJobs": 3,
-          "activeJobIds": [
-            "b-bs-1",
-            "b-sm-2",
-            "b-sm-1"
-          ],
+          "activeJobIds": ["b-bs-1", "b-sm-2", "b-sm-1"],
           "models": {
             "anthropic-opus-4.6": {
               "rpm": 7,
@@ -44581,12 +43393,7 @@
       "instances": {
         "inst-1772120465462-6ct1qjubn": {
           "activeJobs": 4,
-          "activeJobIds": [
-            "dist-sm-2",
-            "dist-sm-3",
-            "dist-sm-1",
-            "dist-sm-4"
-          ],
+          "activeJobIds": ["dist-sm-2", "dist-sm-3", "dist-sm-1", "dist-sm-4"],
           "models": {
             "anthropic-opus-4.6": {
               "rpm": 3,
@@ -44644,11 +43451,7 @@
         },
         "inst-1772120574830-nbfc9q5tv": {
           "activeJobs": 3,
-          "activeJobIds": [
-            "b-bs-1",
-            "b-sm-2",
-            "b-sm-1"
-          ],
+          "activeJobIds": ["b-bs-1", "b-sm-2", "b-sm-1"],
           "models": {
             "anthropic-opus-4.6": {
               "rpm": 7,
@@ -44712,12 +43515,7 @@
       "instances": {
         "inst-1772120465462-6ct1qjubn": {
           "activeJobs": 4,
-          "activeJobIds": [
-            "dist-sm-2",
-            "dist-sm-3",
-            "dist-sm-1",
-            "dist-sm-4"
-          ],
+          "activeJobIds": ["dist-sm-2", "dist-sm-3", "dist-sm-1", "dist-sm-4"],
           "models": {
             "anthropic-opus-4.6": {
               "rpm": 3,
@@ -44775,11 +43573,7 @@
         },
         "inst-1772120574830-nbfc9q5tv": {
           "activeJobs": 3,
-          "activeJobIds": [
-            "b-bs-1",
-            "b-sm-2",
-            "b-sm-1"
-          ],
+          "activeJobIds": ["b-bs-1", "b-sm-2", "b-sm-1"],
           "models": {
             "anthropic-opus-4.6": {
               "rpm": 7,
@@ -44843,12 +43637,7 @@
       "instances": {
         "inst-1772120465462-6ct1qjubn": {
           "activeJobs": 4,
-          "activeJobIds": [
-            "dist-sm-2",
-            "dist-sm-3",
-            "dist-sm-1",
-            "dist-sm-4"
-          ],
+          "activeJobIds": ["dist-sm-2", "dist-sm-3", "dist-sm-1", "dist-sm-4"],
           "models": {
             "anthropic-opus-4.6": {
               "rpm": 3,
@@ -44906,11 +43695,7 @@
         },
         "inst-1772120574830-nbfc9q5tv": {
           "activeJobs": 3,
-          "activeJobIds": [
-            "b-bs-1",
-            "b-sm-2",
-            "b-sm-1"
-          ],
+          "activeJobIds": ["b-bs-1", "b-sm-2", "b-sm-1"],
           "models": {
             "anthropic-opus-4.6": {
               "rpm": 7,
@@ -44974,12 +43759,7 @@
       "instances": {
         "inst-1772120465462-6ct1qjubn": {
           "activeJobs": 4,
-          "activeJobIds": [
-            "dist-sm-2",
-            "dist-sm-3",
-            "dist-sm-1",
-            "dist-sm-4"
-          ],
+          "activeJobIds": ["dist-sm-2", "dist-sm-3", "dist-sm-1", "dist-sm-4"],
           "models": {
             "anthropic-opus-4.6": {
               "rpm": 3,
@@ -45037,11 +43817,7 @@
         },
         "inst-1772120574830-nbfc9q5tv": {
           "activeJobs": 3,
-          "activeJobIds": [
-            "b-bs-1",
-            "b-sm-2",
-            "b-sm-1"
-          ],
+          "activeJobIds": ["b-bs-1", "b-sm-2", "b-sm-1"],
           "models": {
             "anthropic-opus-4.6": {
               "rpm": 7,
@@ -45105,12 +43881,7 @@
       "instances": {
         "inst-1772120465462-6ct1qjubn": {
           "activeJobs": 4,
-          "activeJobIds": [
-            "dist-sm-2",
-            "dist-sm-3",
-            "dist-sm-1",
-            "dist-sm-4"
-          ],
+          "activeJobIds": ["dist-sm-2", "dist-sm-3", "dist-sm-1", "dist-sm-4"],
           "models": {
             "anthropic-opus-4.6": {
               "rpm": 3,
@@ -45168,10 +43939,7 @@
         },
         "inst-1772120574830-nbfc9q5tv": {
           "activeJobs": 2,
-          "activeJobIds": [
-            "b-sm-2",
-            "b-sm-1"
-          ],
+          "activeJobIds": ["b-sm-2", "b-sm-1"],
           "models": {
             "anthropic-opus-4.6": {
               "rpm": 7,
@@ -45235,12 +44003,7 @@
       "instances": {
         "inst-1772120465462-6ct1qjubn": {
           "activeJobs": 4,
-          "activeJobIds": [
-            "dist-sm-2",
-            "dist-sm-3",
-            "dist-sm-1",
-            "dist-sm-4"
-          ],
+          "activeJobIds": ["dist-sm-2", "dist-sm-3", "dist-sm-1", "dist-sm-4"],
           "models": {
             "anthropic-opus-4.6": {
               "rpm": 3,
@@ -45298,10 +44061,7 @@
         },
         "inst-1772120574830-nbfc9q5tv": {
           "activeJobs": 2,
-          "activeJobIds": [
-            "b-sm-2",
-            "b-sm-1"
-          ],
+          "activeJobIds": ["b-sm-2", "b-sm-1"],
           "models": {
             "anthropic-opus-4.6": {
               "rpm": 8,
@@ -45365,12 +44125,7 @@
       "instances": {
         "inst-1772120465462-6ct1qjubn": {
           "activeJobs": 4,
-          "activeJobIds": [
-            "dist-sm-2",
-            "dist-sm-3",
-            "dist-sm-1",
-            "dist-sm-4"
-          ],
+          "activeJobIds": ["dist-sm-2", "dist-sm-3", "dist-sm-1", "dist-sm-4"],
           "models": {
             "openai-gpt-5.2": {
               "rpm": 0,
@@ -45428,10 +44183,7 @@
         },
         "inst-1772120574830-nbfc9q5tv": {
           "activeJobs": 2,
-          "activeJobIds": [
-            "b-sm-2",
-            "b-sm-1"
-          ],
+          "activeJobIds": ["b-sm-2", "b-sm-1"],
           "models": {
             "openai-gpt-5.2": {
               "rpm": 0,
@@ -45495,12 +44247,7 @@
       "instances": {
         "inst-1772120465462-6ct1qjubn": {
           "activeJobs": 4,
-          "activeJobIds": [
-            "dist-sm-2",
-            "dist-sm-3",
-            "dist-sm-1",
-            "dist-sm-4"
-          ],
+          "activeJobIds": ["dist-sm-2", "dist-sm-3", "dist-sm-1", "dist-sm-4"],
           "models": {
             "openai-gpt-5.2": {
               "rpm": 0,
@@ -45558,10 +44305,7 @@
         },
         "inst-1772120574830-nbfc9q5tv": {
           "activeJobs": 2,
-          "activeJobIds": [
-            "b-sm-2",
-            "b-sm-1"
-          ],
+          "activeJobIds": ["b-sm-2", "b-sm-1"],
           "models": {
             "openai-gpt-5.2": {
               "rpm": 0,
@@ -45625,12 +44369,7 @@
       "instances": {
         "inst-1772120465462-6ct1qjubn": {
           "activeJobs": 4,
-          "activeJobIds": [
-            "dist-sm-2",
-            "dist-sm-3",
-            "dist-sm-1",
-            "dist-sm-4"
-          ],
+          "activeJobIds": ["dist-sm-2", "dist-sm-3", "dist-sm-1", "dist-sm-4"],
           "models": {
             "openai-gpt-5.2": {
               "rpm": 0,
@@ -45688,10 +44427,7 @@
         },
         "inst-1772120574830-nbfc9q5tv": {
           "activeJobs": 2,
-          "activeJobIds": [
-            "b-sm-2",
-            "b-sm-1"
-          ],
+          "activeJobIds": ["b-sm-2", "b-sm-1"],
           "models": {
             "openai-gpt-5.2": {
               "rpm": 0,
@@ -45755,12 +44491,7 @@
       "instances": {
         "inst-1772120465462-6ct1qjubn": {
           "activeJobs": 4,
-          "activeJobIds": [
-            "dist-sm-2",
-            "dist-sm-3",
-            "dist-sm-1",
-            "dist-sm-4"
-          ],
+          "activeJobIds": ["dist-sm-2", "dist-sm-3", "dist-sm-1", "dist-sm-4"],
           "models": {
             "openai-gpt-5.2": {
               "rpm": 0,
@@ -45818,10 +44549,7 @@
         },
         "inst-1772120574830-nbfc9q5tv": {
           "activeJobs": 2,
-          "activeJobIds": [
-            "b-sm-2",
-            "b-sm-1"
-          ],
+          "activeJobIds": ["b-sm-2", "b-sm-1"],
           "models": {
             "openai-gpt-5.2": {
               "rpm": 0,
@@ -45885,12 +44613,7 @@
       "instances": {
         "inst-1772120465462-6ct1qjubn": {
           "activeJobs": 4,
-          "activeJobIds": [
-            "dist-sm-2",
-            "dist-sm-3",
-            "dist-sm-1",
-            "dist-sm-4"
-          ],
+          "activeJobIds": ["dist-sm-2", "dist-sm-3", "dist-sm-1", "dist-sm-4"],
           "models": {
             "openai-gpt-5.2": {
               "rpm": 0,
@@ -45948,10 +44671,7 @@
         },
         "inst-1772120574830-nbfc9q5tv": {
           "activeJobs": 2,
-          "activeJobIds": [
-            "b-sm-2",
-            "b-sm-1"
-          ],
+          "activeJobIds": ["b-sm-2", "b-sm-1"],
           "models": {
             "openai-gpt-5.2": {
               "rpm": 0,
@@ -46015,12 +44735,7 @@
       "instances": {
         "inst-1772120465462-6ct1qjubn": {
           "activeJobs": 4,
-          "activeJobIds": [
-            "dist-sm-2",
-            "dist-sm-3",
-            "dist-sm-1",
-            "dist-sm-4"
-          ],
+          "activeJobIds": ["dist-sm-2", "dist-sm-3", "dist-sm-1", "dist-sm-4"],
           "models": {
             "openai-gpt-5.2": {
               "rpm": 0,
@@ -46078,10 +44793,7 @@
         },
         "inst-1772120574830-nbfc9q5tv": {
           "activeJobs": 2,
-          "activeJobIds": [
-            "b-sm-2",
-            "b-sm-1"
-          ],
+          "activeJobIds": ["b-sm-2", "b-sm-1"],
           "models": {
             "openai-gpt-5.2": {
               "rpm": 0,
@@ -46145,12 +44857,7 @@
       "instances": {
         "inst-1772120465462-6ct1qjubn": {
           "activeJobs": 4,
-          "activeJobIds": [
-            "dist-sm-2",
-            "dist-sm-3",
-            "dist-sm-1",
-            "dist-sm-4"
-          ],
+          "activeJobIds": ["dist-sm-2", "dist-sm-3", "dist-sm-1", "dist-sm-4"],
           "models": {
             "openai-gpt-5.2": {
               "rpm": 0,
@@ -46208,10 +44915,7 @@
         },
         "inst-1772120574830-nbfc9q5tv": {
           "activeJobs": 2,
-          "activeJobIds": [
-            "b-sm-2",
-            "b-sm-1"
-          ],
+          "activeJobIds": ["b-sm-2", "b-sm-1"],
           "models": {
             "openai-gpt-5.2": {
               "rpm": 0,
@@ -46275,12 +44979,7 @@
       "instances": {
         "inst-1772120465462-6ct1qjubn": {
           "activeJobs": 4,
-          "activeJobIds": [
-            "dist-sm-2",
-            "dist-sm-3",
-            "dist-sm-1",
-            "dist-sm-4"
-          ],
+          "activeJobIds": ["dist-sm-2", "dist-sm-3", "dist-sm-1", "dist-sm-4"],
           "models": {
             "openai-gpt-5.2": {
               "rpm": 0,
@@ -46338,9 +45037,7 @@
         },
         "inst-1772120574830-nbfc9q5tv": {
           "activeJobs": 1,
-          "activeJobIds": [
-            "b-sm-1"
-          ],
+          "activeJobIds": ["b-sm-1"],
           "models": {
             "openai-gpt-5.2": {
               "rpm": 0,
@@ -46404,12 +45101,7 @@
       "instances": {
         "inst-1772120465462-6ct1qjubn": {
           "activeJobs": 4,
-          "activeJobIds": [
-            "dist-sm-2",
-            "dist-sm-3",
-            "dist-sm-1",
-            "dist-sm-4"
-          ],
+          "activeJobIds": ["dist-sm-2", "dist-sm-3", "dist-sm-1", "dist-sm-4"],
           "models": {
             "openai-gpt-5.2": {
               "rpm": 0,
@@ -46467,9 +45159,7 @@
         },
         "inst-1772120574830-nbfc9q5tv": {
           "activeJobs": 1,
-          "activeJobIds": [
-            "b-sm-1"
-          ],
+          "activeJobIds": ["b-sm-1"],
           "models": {
             "openai-gpt-5.2": {
               "rpm": 0,
@@ -46533,12 +45223,7 @@
       "instances": {
         "inst-1772120465462-6ct1qjubn": {
           "activeJobs": 4,
-          "activeJobIds": [
-            "dist-sm-2",
-            "dist-sm-3",
-            "dist-sm-1",
-            "dist-sm-4"
-          ],
+          "activeJobIds": ["dist-sm-2", "dist-sm-3", "dist-sm-1", "dist-sm-4"],
           "models": {
             "openai-gpt-5.2": {
               "rpm": 0,
@@ -46596,9 +45281,7 @@
         },
         "inst-1772120574830-nbfc9q5tv": {
           "activeJobs": 1,
-          "activeJobIds": [
-            "b-sm-1"
-          ],
+          "activeJobIds": ["b-sm-1"],
           "models": {
             "openai-gpt-5.2": {
               "rpm": 0,
@@ -46662,12 +45345,7 @@
       "instances": {
         "inst-1772120465462-6ct1qjubn": {
           "activeJobs": 4,
-          "activeJobIds": [
-            "dist-sm-2",
-            "dist-sm-3",
-            "dist-sm-1",
-            "dist-sm-4"
-          ],
+          "activeJobIds": ["dist-sm-2", "dist-sm-3", "dist-sm-1", "dist-sm-4"],
           "models": {
             "openai-gpt-5.2": {
               "rpm": 0,
@@ -46725,9 +45403,7 @@
         },
         "inst-1772120574830-nbfc9q5tv": {
           "activeJobs": 1,
-          "activeJobIds": [
-            "b-sm-1"
-          ],
+          "activeJobIds": ["b-sm-1"],
           "models": {
             "openai-gpt-5.2": {
               "rpm": 0,
@@ -46791,12 +45467,7 @@
       "instances": {
         "inst-1772120465462-6ct1qjubn": {
           "activeJobs": 4,
-          "activeJobIds": [
-            "dist-sm-2",
-            "dist-sm-3",
-            "dist-sm-1",
-            "dist-sm-4"
-          ],
+          "activeJobIds": ["dist-sm-2", "dist-sm-3", "dist-sm-1", "dist-sm-4"],
           "models": {
             "openai-gpt-5.2": {
               "rpm": 0,
@@ -46854,9 +45525,7 @@
         },
         "inst-1772120574830-nbfc9q5tv": {
           "activeJobs": 1,
-          "activeJobIds": [
-            "b-sm-1"
-          ],
+          "activeJobIds": ["b-sm-1"],
           "models": {
             "openai-gpt-5.2": {
               "rpm": 0,
@@ -46920,12 +45589,7 @@
       "instances": {
         "inst-1772120465462-6ct1qjubn": {
           "activeJobs": 4,
-          "activeJobIds": [
-            "dist-sm-2",
-            "dist-sm-3",
-            "dist-sm-1",
-            "dist-sm-4"
-          ],
+          "activeJobIds": ["dist-sm-2", "dist-sm-3", "dist-sm-1", "dist-sm-4"],
           "models": {
             "openai-gpt-5.2": {
               "rpm": 0,
@@ -46983,9 +45647,7 @@
         },
         "inst-1772120574830-nbfc9q5tv": {
           "activeJobs": 1,
-          "activeJobIds": [
-            "b-sm-1"
-          ],
+          "activeJobIds": ["b-sm-1"],
           "models": {
             "openai-gpt-5.2": {
               "rpm": 0,
@@ -47049,12 +45711,7 @@
       "instances": {
         "inst-1772120465462-6ct1qjubn": {
           "activeJobs": 4,
-          "activeJobIds": [
-            "dist-sm-2",
-            "dist-sm-3",
-            "dist-sm-1",
-            "dist-sm-4"
-          ],
+          "activeJobIds": ["dist-sm-2", "dist-sm-3", "dist-sm-1", "dist-sm-4"],
           "models": {
             "openai-gpt-5.2": {
               "rpm": 0,
@@ -47112,9 +45769,7 @@
         },
         "inst-1772120574830-nbfc9q5tv": {
           "activeJobs": 1,
-          "activeJobIds": [
-            "b-sm-1"
-          ],
+          "activeJobIds": ["b-sm-1"],
           "models": {
             "openai-gpt-5.2": {
               "rpm": 0,
@@ -47178,12 +45833,7 @@
       "instances": {
         "inst-1772120465462-6ct1qjubn": {
           "activeJobs": 4,
-          "activeJobIds": [
-            "dist-sm-2",
-            "dist-sm-3",
-            "dist-sm-1",
-            "dist-sm-4"
-          ],
+          "activeJobIds": ["dist-sm-2", "dist-sm-3", "dist-sm-1", "dist-sm-4"],
           "models": {
             "openai-gpt-5.2": {
               "rpm": 0,
@@ -47241,9 +45891,7 @@
         },
         "inst-1772120574830-nbfc9q5tv": {
           "activeJobs": 1,
-          "activeJobIds": [
-            "b-sm-1"
-          ],
+          "activeJobIds": ["b-sm-1"],
           "models": {
             "openai-gpt-5.2": {
               "rpm": 0,
@@ -47307,12 +45955,7 @@
       "instances": {
         "inst-1772120465462-6ct1qjubn": {
           "activeJobs": 4,
-          "activeJobIds": [
-            "dist-sm-2",
-            "dist-sm-3",
-            "dist-sm-1",
-            "dist-sm-4"
-          ],
+          "activeJobIds": ["dist-sm-2", "dist-sm-3", "dist-sm-1", "dist-sm-4"],
           "models": {
             "openai-gpt-5.2": {
               "rpm": 0,
@@ -47370,9 +46013,7 @@
         },
         "inst-1772120574830-nbfc9q5tv": {
           "activeJobs": 1,
-          "activeJobIds": [
-            "b-sm-1"
-          ],
+          "activeJobIds": ["b-sm-1"],
           "models": {
             "openai-gpt-5.2": {
               "rpm": 0,
@@ -47436,12 +46077,7 @@
       "instances": {
         "inst-1772120465462-6ct1qjubn": {
           "activeJobs": 4,
-          "activeJobIds": [
-            "dist-sm-2",
-            "dist-sm-3",
-            "dist-sm-1",
-            "dist-sm-4"
-          ],
+          "activeJobIds": ["dist-sm-2", "dist-sm-3", "dist-sm-1", "dist-sm-4"],
           "models": {
             "openai-gpt-5.2": {
               "rpm": 0,
@@ -47499,9 +46135,7 @@
         },
         "inst-1772120574830-nbfc9q5tv": {
           "activeJobs": 1,
-          "activeJobIds": [
-            "b-sm-1"
-          ],
+          "activeJobIds": ["b-sm-1"],
           "models": {
             "openai-gpt-5.2": {
               "rpm": 0,
@@ -47565,12 +46199,7 @@
       "instances": {
         "inst-1772120465462-6ct1qjubn": {
           "activeJobs": 4,
-          "activeJobIds": [
-            "dist-sm-2",
-            "dist-sm-3",
-            "dist-sm-1",
-            "dist-sm-4"
-          ],
+          "activeJobIds": ["dist-sm-2", "dist-sm-3", "dist-sm-1", "dist-sm-4"],
           "models": {
             "openai-gpt-5.2": {
               "rpm": 0,
@@ -47628,9 +46257,7 @@
         },
         "inst-1772120574830-nbfc9q5tv": {
           "activeJobs": 1,
-          "activeJobIds": [
-            "b-sm-1"
-          ],
+          "activeJobIds": ["b-sm-1"],
           "models": {
             "openai-gpt-5.2": {
               "rpm": 0,
@@ -47694,12 +46321,7 @@
       "instances": {
         "inst-1772120465462-6ct1qjubn": {
           "activeJobs": 4,
-          "activeJobIds": [
-            "dist-sm-2",
-            "dist-sm-3",
-            "dist-sm-1",
-            "dist-sm-4"
-          ],
+          "activeJobIds": ["dist-sm-2", "dist-sm-3", "dist-sm-1", "dist-sm-4"],
           "models": {
             "openai-gpt-5.2": {
               "rpm": 0,
@@ -47757,9 +46379,7 @@
         },
         "inst-1772120574830-nbfc9q5tv": {
           "activeJobs": 1,
-          "activeJobIds": [
-            "b-sm-1"
-          ],
+          "activeJobIds": ["b-sm-1"],
           "models": {
             "openai-gpt-5.2": {
               "rpm": 0,
@@ -47823,12 +46443,7 @@
       "instances": {
         "inst-1772120465462-6ct1qjubn": {
           "activeJobs": 4,
-          "activeJobIds": [
-            "dist-sm-2",
-            "dist-sm-3",
-            "dist-sm-1",
-            "dist-sm-4"
-          ],
+          "activeJobIds": ["dist-sm-2", "dist-sm-3", "dist-sm-1", "dist-sm-4"],
           "models": {
             "openai-gpt-5.2": {
               "rpm": 0,
@@ -47886,9 +46501,7 @@
         },
         "inst-1772120574830-nbfc9q5tv": {
           "activeJobs": 1,
-          "activeJobIds": [
-            "b-sm-1"
-          ],
+          "activeJobIds": ["b-sm-1"],
           "models": {
             "openai-gpt-5.2": {
               "rpm": 0,
@@ -47952,12 +46565,7 @@
       "instances": {
         "inst-1772120465462-6ct1qjubn": {
           "activeJobs": 4,
-          "activeJobIds": [
-            "dist-sm-2",
-            "dist-sm-3",
-            "dist-sm-1",
-            "dist-sm-4"
-          ],
+          "activeJobIds": ["dist-sm-2", "dist-sm-3", "dist-sm-1", "dist-sm-4"],
           "models": {
             "openai-gpt-5.2": {
               "rpm": 0,
@@ -48015,9 +46623,7 @@
         },
         "inst-1772120574830-nbfc9q5tv": {
           "activeJobs": 1,
-          "activeJobIds": [
-            "b-sm-1"
-          ],
+          "activeJobIds": ["b-sm-1"],
           "models": {
             "openai-gpt-5.2": {
               "rpm": 0,
@@ -48081,12 +46687,7 @@
       "instances": {
         "inst-1772120465462-6ct1qjubn": {
           "activeJobs": 4,
-          "activeJobIds": [
-            "dist-sm-2",
-            "dist-sm-3",
-            "dist-sm-1",
-            "dist-sm-4"
-          ],
+          "activeJobIds": ["dist-sm-2", "dist-sm-3", "dist-sm-1", "dist-sm-4"],
           "models": {
             "openai-gpt-5.2": {
               "rpm": 0,
@@ -48144,9 +46745,7 @@
         },
         "inst-1772120574830-nbfc9q5tv": {
           "activeJobs": 1,
-          "activeJobIds": [
-            "b-sm-1"
-          ],
+          "activeJobIds": ["b-sm-1"],
           "models": {
             "openai-gpt-5.2": {
               "rpm": 0,
@@ -48210,12 +46809,7 @@
       "instances": {
         "inst-1772120465462-6ct1qjubn": {
           "activeJobs": 4,
-          "activeJobIds": [
-            "dist-sm-2",
-            "dist-sm-3",
-            "dist-sm-1",
-            "dist-sm-4"
-          ],
+          "activeJobIds": ["dist-sm-2", "dist-sm-3", "dist-sm-1", "dist-sm-4"],
           "models": {
             "openai-gpt-5.2": {
               "rpm": 0,
@@ -48273,9 +46867,7 @@
         },
         "inst-1772120574830-nbfc9q5tv": {
           "activeJobs": 1,
-          "activeJobIds": [
-            "b-sm-1"
-          ],
+          "activeJobIds": ["b-sm-1"],
           "models": {
             "openai-gpt-5.2": {
               "rpm": 0,
@@ -48339,12 +46931,7 @@
       "instances": {
         "inst-1772120465462-6ct1qjubn": {
           "activeJobs": 4,
-          "activeJobIds": [
-            "dist-sm-2",
-            "dist-sm-3",
-            "dist-sm-1",
-            "dist-sm-4"
-          ],
+          "activeJobIds": ["dist-sm-2", "dist-sm-3", "dist-sm-1", "dist-sm-4"],
           "models": {
             "openai-gpt-5.2": {
               "rpm": 0,
@@ -48402,9 +46989,7 @@
         },
         "inst-1772120574830-nbfc9q5tv": {
           "activeJobs": 1,
-          "activeJobIds": [
-            "b-sm-1"
-          ],
+          "activeJobIds": ["b-sm-1"],
           "models": {
             "openai-gpt-5.2": {
               "rpm": 0,
@@ -48468,12 +47053,7 @@
       "instances": {
         "inst-1772120465462-6ct1qjubn": {
           "activeJobs": 4,
-          "activeJobIds": [
-            "dist-sm-2",
-            "dist-sm-3",
-            "dist-sm-1",
-            "dist-sm-4"
-          ],
+          "activeJobIds": ["dist-sm-2", "dist-sm-3", "dist-sm-1", "dist-sm-4"],
           "models": {
             "openai-gpt-5.2": {
               "rpm": 0,
@@ -48531,9 +47111,7 @@
         },
         "inst-1772120574830-nbfc9q5tv": {
           "activeJobs": 1,
-          "activeJobIds": [
-            "b-sm-1"
-          ],
+          "activeJobIds": ["b-sm-1"],
           "models": {
             "openai-gpt-5.2": {
               "rpm": 0,
@@ -48597,12 +47175,7 @@
       "instances": {
         "inst-1772120465462-6ct1qjubn": {
           "activeJobs": 4,
-          "activeJobIds": [
-            "dist-sm-2",
-            "dist-sm-3",
-            "dist-sm-1",
-            "dist-sm-4"
-          ],
+          "activeJobIds": ["dist-sm-2", "dist-sm-3", "dist-sm-1", "dist-sm-4"],
           "models": {
             "openai-gpt-5.2": {
               "rpm": 0,
@@ -48660,9 +47233,7 @@
         },
         "inst-1772120574830-nbfc9q5tv": {
           "activeJobs": 1,
-          "activeJobIds": [
-            "b-sm-1"
-          ],
+          "activeJobIds": ["b-sm-1"],
           "models": {
             "openai-gpt-5.2": {
               "rpm": 0,
@@ -48726,12 +47297,7 @@
       "instances": {
         "inst-1772120465462-6ct1qjubn": {
           "activeJobs": 4,
-          "activeJobIds": [
-            "dist-sm-2",
-            "dist-sm-3",
-            "dist-sm-1",
-            "dist-sm-4"
-          ],
+          "activeJobIds": ["dist-sm-2", "dist-sm-3", "dist-sm-1", "dist-sm-4"],
           "models": {
             "openai-gpt-5.2": {
               "rpm": 0,
@@ -48789,9 +47355,7 @@
         },
         "inst-1772120574830-nbfc9q5tv": {
           "activeJobs": 1,
-          "activeJobIds": [
-            "b-sm-1"
-          ],
+          "activeJobIds": ["b-sm-1"],
           "models": {
             "openai-gpt-5.2": {
               "rpm": 0,
@@ -48855,12 +47419,7 @@
       "instances": {
         "inst-1772120465462-6ct1qjubn": {
           "activeJobs": 4,
-          "activeJobIds": [
-            "dist-sm-2",
-            "dist-sm-3",
-            "dist-sm-1",
-            "dist-sm-4"
-          ],
+          "activeJobIds": ["dist-sm-2", "dist-sm-3", "dist-sm-1", "dist-sm-4"],
           "models": {
             "openai-gpt-5.2": {
               "rpm": 0,
@@ -48918,9 +47477,7 @@
         },
         "inst-1772120574830-nbfc9q5tv": {
           "activeJobs": 1,
-          "activeJobIds": [
-            "b-sm-1"
-          ],
+          "activeJobIds": ["b-sm-1"],
           "models": {
             "openai-gpt-5.2": {
               "rpm": 0,
@@ -48984,12 +47541,7 @@
       "instances": {
         "inst-1772120465462-6ct1qjubn": {
           "activeJobs": 4,
-          "activeJobIds": [
-            "dist-sm-2",
-            "dist-sm-3",
-            "dist-sm-1",
-            "dist-sm-4"
-          ],
+          "activeJobIds": ["dist-sm-2", "dist-sm-3", "dist-sm-1", "dist-sm-4"],
           "models": {
             "openai-gpt-5.2": {
               "rpm": 0,
@@ -49047,9 +47599,7 @@
         },
         "inst-1772120574830-nbfc9q5tv": {
           "activeJobs": 1,
-          "activeJobIds": [
-            "b-sm-1"
-          ],
+          "activeJobIds": ["b-sm-1"],
           "models": {
             "openai-gpt-5.2": {
               "rpm": 0,
@@ -49113,12 +47663,7 @@
       "instances": {
         "inst-1772120465462-6ct1qjubn": {
           "activeJobs": 4,
-          "activeJobIds": [
-            "dist-sm-2",
-            "dist-sm-3",
-            "dist-sm-1",
-            "dist-sm-4"
-          ],
+          "activeJobIds": ["dist-sm-2", "dist-sm-3", "dist-sm-1", "dist-sm-4"],
           "models": {
             "openai-gpt-5.2": {
               "rpm": 0,
@@ -49176,9 +47721,7 @@
         },
         "inst-1772120574830-nbfc9q5tv": {
           "activeJobs": 1,
-          "activeJobIds": [
-            "b-sm-1"
-          ],
+          "activeJobIds": ["b-sm-1"],
           "models": {
             "openai-gpt-5.2": {
               "rpm": 0,
@@ -49242,12 +47785,7 @@
       "instances": {
         "inst-1772120465462-6ct1qjubn": {
           "activeJobs": 4,
-          "activeJobIds": [
-            "dist-sm-2",
-            "dist-sm-3",
-            "dist-sm-1",
-            "dist-sm-4"
-          ],
+          "activeJobIds": ["dist-sm-2", "dist-sm-3", "dist-sm-1", "dist-sm-4"],
           "models": {
             "openai-gpt-5.2": {
               "rpm": 0,
@@ -49305,9 +47843,7 @@
         },
         "inst-1772120574830-nbfc9q5tv": {
           "activeJobs": 1,
-          "activeJobIds": [
-            "b-sm-1"
-          ],
+          "activeJobIds": ["b-sm-1"],
           "models": {
             "openai-gpt-5.2": {
               "rpm": 0,
@@ -49371,12 +47907,7 @@
       "instances": {
         "inst-1772120465462-6ct1qjubn": {
           "activeJobs": 4,
-          "activeJobIds": [
-            "dist-sm-2",
-            "dist-sm-3",
-            "dist-sm-1",
-            "dist-sm-4"
-          ],
+          "activeJobIds": ["dist-sm-2", "dist-sm-3", "dist-sm-1", "dist-sm-4"],
           "models": {
             "openai-gpt-5.2": {
               "rpm": 0,
@@ -49434,9 +47965,7 @@
         },
         "inst-1772120574830-nbfc9q5tv": {
           "activeJobs": 1,
-          "activeJobIds": [
-            "b-sm-1"
-          ],
+          "activeJobIds": ["b-sm-1"],
           "models": {
             "openai-gpt-5.2": {
               "rpm": 0,
@@ -49500,12 +48029,7 @@
       "instances": {
         "inst-1772120465462-6ct1qjubn": {
           "activeJobs": 4,
-          "activeJobIds": [
-            "dist-sm-2",
-            "dist-sm-3",
-            "dist-sm-1",
-            "dist-sm-4"
-          ],
+          "activeJobIds": ["dist-sm-2", "dist-sm-3", "dist-sm-1", "dist-sm-4"],
           "models": {
             "openai-gpt-5.2": {
               "rpm": 0,
@@ -49563,9 +48087,7 @@
         },
         "inst-1772120574830-nbfc9q5tv": {
           "activeJobs": 1,
-          "activeJobIds": [
-            "b-sm-1"
-          ],
+          "activeJobIds": ["b-sm-1"],
           "models": {
             "openai-gpt-5.2": {
               "rpm": 0,
@@ -49629,12 +48151,7 @@
       "instances": {
         "inst-1772120465462-6ct1qjubn": {
           "activeJobs": 4,
-          "activeJobIds": [
-            "dist-sm-2",
-            "dist-sm-3",
-            "dist-sm-1",
-            "dist-sm-4"
-          ],
+          "activeJobIds": ["dist-sm-2", "dist-sm-3", "dist-sm-1", "dist-sm-4"],
           "models": {
             "openai-gpt-5.2": {
               "rpm": 0,
@@ -49692,9 +48209,7 @@
         },
         "inst-1772120574830-nbfc9q5tv": {
           "activeJobs": 1,
-          "activeJobIds": [
-            "b-sm-1"
-          ],
+          "activeJobIds": ["b-sm-1"],
           "models": {
             "openai-gpt-5.2": {
               "rpm": 0,
@@ -49758,12 +48273,7 @@
       "instances": {
         "inst-1772120465462-6ct1qjubn": {
           "activeJobs": 4,
-          "activeJobIds": [
-            "dist-sm-2",
-            "dist-sm-3",
-            "dist-sm-1",
-            "dist-sm-4"
-          ],
+          "activeJobIds": ["dist-sm-2", "dist-sm-3", "dist-sm-1", "dist-sm-4"],
           "models": {
             "openai-gpt-5.2": {
               "rpm": 0,
@@ -49821,9 +48331,7 @@
         },
         "inst-1772120574830-nbfc9q5tv": {
           "activeJobs": 1,
-          "activeJobIds": [
-            "b-sm-1"
-          ],
+          "activeJobIds": ["b-sm-1"],
           "models": {
             "openai-gpt-5.2": {
               "rpm": 0,
@@ -49887,12 +48395,7 @@
       "instances": {
         "inst-1772120465462-6ct1qjubn": {
           "activeJobs": 4,
-          "activeJobIds": [
-            "dist-sm-2",
-            "dist-sm-3",
-            "dist-sm-1",
-            "dist-sm-4"
-          ],
+          "activeJobIds": ["dist-sm-2", "dist-sm-3", "dist-sm-1", "dist-sm-4"],
           "models": {
             "openai-gpt-5.2": {
               "rpm": 0,
@@ -49950,9 +48453,7 @@
         },
         "inst-1772120574830-nbfc9q5tv": {
           "activeJobs": 1,
-          "activeJobIds": [
-            "b-sm-1"
-          ],
+          "activeJobIds": ["b-sm-1"],
           "models": {
             "openai-gpt-5.2": {
               "rpm": 0,
@@ -50016,12 +48517,7 @@
       "instances": {
         "inst-1772120465462-6ct1qjubn": {
           "activeJobs": 4,
-          "activeJobIds": [
-            "dist-sm-2",
-            "dist-sm-3",
-            "dist-sm-1",
-            "dist-sm-4"
-          ],
+          "activeJobIds": ["dist-sm-2", "dist-sm-3", "dist-sm-1", "dist-sm-4"],
           "models": {
             "openai-gpt-5.2": {
               "rpm": 0,
@@ -50079,9 +48575,7 @@
         },
         "inst-1772120574830-nbfc9q5tv": {
           "activeJobs": 1,
-          "activeJobIds": [
-            "b-sm-1"
-          ],
+          "activeJobIds": ["b-sm-1"],
           "models": {
             "openai-gpt-5.2": {
               "rpm": 0,
@@ -50145,12 +48639,7 @@
       "instances": {
         "inst-1772120465462-6ct1qjubn": {
           "activeJobs": 4,
-          "activeJobIds": [
-            "dist-sm-2",
-            "dist-sm-3",
-            "dist-sm-1",
-            "dist-sm-4"
-          ],
+          "activeJobIds": ["dist-sm-2", "dist-sm-3", "dist-sm-1", "dist-sm-4"],
           "models": {
             "openai-gpt-5.2": {
               "rpm": 0,
@@ -50272,12 +48761,7 @@
       "instances": {
         "inst-1772120465462-6ct1qjubn": {
           "activeJobs": 4,
-          "activeJobIds": [
-            "dist-sm-2",
-            "dist-sm-3",
-            "dist-sm-1",
-            "dist-sm-4"
-          ],
+          "activeJobIds": ["dist-sm-2", "dist-sm-3", "dist-sm-1", "dist-sm-4"],
           "models": {
             "openai-gpt-5.2": {
               "rpm": 0,
@@ -50399,12 +48883,7 @@
       "instances": {
         "inst-1772120465462-6ct1qjubn": {
           "activeJobs": 4,
-          "activeJobIds": [
-            "dist-sm-2",
-            "dist-sm-3",
-            "dist-sm-1",
-            "dist-sm-4"
-          ],
+          "activeJobIds": ["dist-sm-2", "dist-sm-3", "dist-sm-1", "dist-sm-4"],
           "models": {
             "openai-gpt-5.2": {
               "rpm": 0,
@@ -50526,12 +49005,7 @@
       "instances": {
         "inst-1772120465462-6ct1qjubn": {
           "activeJobs": 4,
-          "activeJobIds": [
-            "dist-sm-2",
-            "dist-sm-3",
-            "dist-sm-1",
-            "dist-sm-4"
-          ],
+          "activeJobIds": ["dist-sm-2", "dist-sm-3", "dist-sm-1", "dist-sm-4"],
           "models": {
             "openai-gpt-5.2": {
               "rpm": 0,
@@ -50653,12 +49127,7 @@
       "instances": {
         "inst-1772120465462-6ct1qjubn": {
           "activeJobs": 4,
-          "activeJobIds": [
-            "dist-sm-2",
-            "dist-sm-3",
-            "dist-sm-1",
-            "dist-sm-4"
-          ],
+          "activeJobIds": ["dist-sm-2", "dist-sm-3", "dist-sm-1", "dist-sm-4"],
           "models": {
             "openai-gpt-5.2": {
               "rpm": 0,
@@ -50780,12 +49249,7 @@
       "instances": {
         "inst-1772120465462-6ct1qjubn": {
           "activeJobs": 4,
-          "activeJobIds": [
-            "dist-sm-2",
-            "dist-sm-3",
-            "dist-sm-1",
-            "dist-sm-4"
-          ],
+          "activeJobIds": ["dist-sm-2", "dist-sm-3", "dist-sm-1", "dist-sm-4"],
           "models": {
             "openai-gpt-5.2": {
               "rpm": 0,
@@ -50907,12 +49371,7 @@
       "instances": {
         "inst-1772120465462-6ct1qjubn": {
           "activeJobs": 4,
-          "activeJobIds": [
-            "dist-sm-2",
-            "dist-sm-3",
-            "dist-sm-1",
-            "dist-sm-4"
-          ],
+          "activeJobIds": ["dist-sm-2", "dist-sm-3", "dist-sm-1", "dist-sm-4"],
           "models": {
             "openai-gpt-5.2": {
               "rpm": 0,
@@ -51034,11 +49493,7 @@
       "instances": {
         "inst-1772120465462-6ct1qjubn": {
           "activeJobs": 3,
-          "activeJobIds": [
-            "dist-sm-3",
-            "dist-sm-1",
-            "dist-sm-4"
-          ],
+          "activeJobIds": ["dist-sm-3", "dist-sm-1", "dist-sm-4"],
           "models": {
             "openai-gpt-5.2": {
               "rpm": 0,
@@ -51160,11 +49615,7 @@
       "instances": {
         "inst-1772120465462-6ct1qjubn": {
           "activeJobs": 3,
-          "activeJobIds": [
-            "dist-sm-3",
-            "dist-sm-1",
-            "dist-sm-4"
-          ],
+          "activeJobIds": ["dist-sm-3", "dist-sm-1", "dist-sm-4"],
           "models": {
             "openai-gpt-5.2": {
               "rpm": 0,
@@ -51286,11 +49737,7 @@
       "instances": {
         "inst-1772120465462-6ct1qjubn": {
           "activeJobs": 3,
-          "activeJobIds": [
-            "dist-sm-3",
-            "dist-sm-1",
-            "dist-sm-4"
-          ],
+          "activeJobIds": ["dist-sm-3", "dist-sm-1", "dist-sm-4"],
           "models": {
             "openai-gpt-5.2": {
               "rpm": 0,
@@ -51412,11 +49859,7 @@
       "instances": {
         "inst-1772120465462-6ct1qjubn": {
           "activeJobs": 3,
-          "activeJobIds": [
-            "dist-sm-3",
-            "dist-sm-1",
-            "dist-sm-4"
-          ],
+          "activeJobIds": ["dist-sm-3", "dist-sm-1", "dist-sm-4"],
           "models": {
             "openai-gpt-5.2": {
               "rpm": 0,
@@ -51538,11 +49981,7 @@
       "instances": {
         "inst-1772120465462-6ct1qjubn": {
           "activeJobs": 3,
-          "activeJobIds": [
-            "dist-sm-3",
-            "dist-sm-1",
-            "dist-sm-4"
-          ],
+          "activeJobIds": ["dist-sm-3", "dist-sm-1", "dist-sm-4"],
           "models": {
             "openai-gpt-5.2": {
               "rpm": 0,
@@ -51664,11 +50103,7 @@
       "instances": {
         "inst-1772120465462-6ct1qjubn": {
           "activeJobs": 3,
-          "activeJobIds": [
-            "dist-sm-3",
-            "dist-sm-1",
-            "dist-sm-4"
-          ],
+          "activeJobIds": ["dist-sm-3", "dist-sm-1", "dist-sm-4"],
           "models": {
             "openai-gpt-5.2": {
               "rpm": 0,
@@ -51790,11 +50225,7 @@
       "instances": {
         "inst-1772120465462-6ct1qjubn": {
           "activeJobs": 3,
-          "activeJobIds": [
-            "dist-sm-3",
-            "dist-sm-1",
-            "dist-sm-4"
-          ],
+          "activeJobIds": ["dist-sm-3", "dist-sm-1", "dist-sm-4"],
           "models": {
             "openai-gpt-5.2": {
               "rpm": 0,
@@ -51916,11 +50347,7 @@
       "instances": {
         "inst-1772120465462-6ct1qjubn": {
           "activeJobs": 3,
-          "activeJobIds": [
-            "dist-sm-3",
-            "dist-sm-1",
-            "dist-sm-4"
-          ],
+          "activeJobIds": ["dist-sm-3", "dist-sm-1", "dist-sm-4"],
           "models": {
             "openai-gpt-5.2": {
               "rpm": 0,
@@ -52042,11 +50469,7 @@
       "instances": {
         "inst-1772120465462-6ct1qjubn": {
           "activeJobs": 3,
-          "activeJobIds": [
-            "dist-sm-3",
-            "dist-sm-1",
-            "dist-sm-4"
-          ],
+          "activeJobIds": ["dist-sm-3", "dist-sm-1", "dist-sm-4"],
           "models": {
             "openai-gpt-5.2": {
               "rpm": 0,
@@ -52168,11 +50591,7 @@
       "instances": {
         "inst-1772120465462-6ct1qjubn": {
           "activeJobs": 3,
-          "activeJobIds": [
-            "dist-sm-3",
-            "dist-sm-1",
-            "dist-sm-4"
-          ],
+          "activeJobIds": ["dist-sm-3", "dist-sm-1", "dist-sm-4"],
           "models": {
             "openai-gpt-5.2": {
               "rpm": 0,
@@ -52294,11 +50713,7 @@
       "instances": {
         "inst-1772120465462-6ct1qjubn": {
           "activeJobs": 3,
-          "activeJobIds": [
-            "dist-sm-3",
-            "dist-sm-1",
-            "dist-sm-4"
-          ],
+          "activeJobIds": ["dist-sm-3", "dist-sm-1", "dist-sm-4"],
           "models": {
             "openai-gpt-5.2": {
               "rpm": 0,
@@ -52420,11 +50835,7 @@
       "instances": {
         "inst-1772120465462-6ct1qjubn": {
           "activeJobs": 3,
-          "activeJobIds": [
-            "dist-sm-3",
-            "dist-sm-1",
-            "dist-sm-4"
-          ],
+          "activeJobIds": ["dist-sm-3", "dist-sm-1", "dist-sm-4"],
           "models": {
             "openai-gpt-5.2": {
               "rpm": 0,
@@ -52546,11 +50957,7 @@
       "instances": {
         "inst-1772120465462-6ct1qjubn": {
           "activeJobs": 3,
-          "activeJobIds": [
-            "dist-sm-3",
-            "dist-sm-1",
-            "dist-sm-4"
-          ],
+          "activeJobIds": ["dist-sm-3", "dist-sm-1", "dist-sm-4"],
           "models": {
             "openai-gpt-5.2": {
               "rpm": 0,
@@ -52672,11 +51079,7 @@
       "instances": {
         "inst-1772120465462-6ct1qjubn": {
           "activeJobs": 3,
-          "activeJobIds": [
-            "dist-sm-3",
-            "dist-sm-1",
-            "dist-sm-4"
-          ],
+          "activeJobIds": ["dist-sm-3", "dist-sm-1", "dist-sm-4"],
           "models": {
             "openai-gpt-5.2": {
               "rpm": 0,
@@ -52798,11 +51201,7 @@
       "instances": {
         "inst-1772120465462-6ct1qjubn": {
           "activeJobs": 3,
-          "activeJobIds": [
-            "dist-sm-3",
-            "dist-sm-1",
-            "dist-sm-4"
-          ],
+          "activeJobIds": ["dist-sm-3", "dist-sm-1", "dist-sm-4"],
           "models": {
             "openai-gpt-5.2": {
               "rpm": 0,
@@ -52924,11 +51323,7 @@
       "instances": {
         "inst-1772120465462-6ct1qjubn": {
           "activeJobs": 3,
-          "activeJobIds": [
-            "dist-sm-3",
-            "dist-sm-1",
-            "dist-sm-4"
-          ],
+          "activeJobIds": ["dist-sm-3", "dist-sm-1", "dist-sm-4"],
           "models": {
             "openai-gpt-5.2": {
               "rpm": 0,
@@ -53050,11 +51445,7 @@
       "instances": {
         "inst-1772120465462-6ct1qjubn": {
           "activeJobs": 3,
-          "activeJobIds": [
-            "dist-sm-3",
-            "dist-sm-1",
-            "dist-sm-4"
-          ],
+          "activeJobIds": ["dist-sm-3", "dist-sm-1", "dist-sm-4"],
           "models": {
             "openai-gpt-5.2": {
               "rpm": 0,
@@ -53176,11 +51567,7 @@
       "instances": {
         "inst-1772120465462-6ct1qjubn": {
           "activeJobs": 3,
-          "activeJobIds": [
-            "dist-sm-3",
-            "dist-sm-1",
-            "dist-sm-4"
-          ],
+          "activeJobIds": ["dist-sm-3", "dist-sm-1", "dist-sm-4"],
           "models": {
             "openai-gpt-5.2": {
               "rpm": 0,
@@ -53302,11 +51689,7 @@
       "instances": {
         "inst-1772120465462-6ct1qjubn": {
           "activeJobs": 3,
-          "activeJobIds": [
-            "dist-sm-3",
-            "dist-sm-1",
-            "dist-sm-4"
-          ],
+          "activeJobIds": ["dist-sm-3", "dist-sm-1", "dist-sm-4"],
           "models": {
             "openai-gpt-5.2": {
               "rpm": 0,
@@ -53428,11 +51811,7 @@
       "instances": {
         "inst-1772120465462-6ct1qjubn": {
           "activeJobs": 3,
-          "activeJobIds": [
-            "dist-sm-3",
-            "dist-sm-1",
-            "dist-sm-4"
-          ],
+          "activeJobIds": ["dist-sm-3", "dist-sm-1", "dist-sm-4"],
           "models": {
             "openai-gpt-5.2": {
               "rpm": 0,
@@ -53554,11 +51933,7 @@
       "instances": {
         "inst-1772120465462-6ct1qjubn": {
           "activeJobs": 3,
-          "activeJobIds": [
-            "dist-sm-3",
-            "dist-sm-1",
-            "dist-sm-4"
-          ],
+          "activeJobIds": ["dist-sm-3", "dist-sm-1", "dist-sm-4"],
           "models": {
             "openai-gpt-5.2": {
               "rpm": 0,
@@ -53680,11 +52055,7 @@
       "instances": {
         "inst-1772120465462-6ct1qjubn": {
           "activeJobs": 3,
-          "activeJobIds": [
-            "dist-sm-3",
-            "dist-sm-1",
-            "dist-sm-4"
-          ],
+          "activeJobIds": ["dist-sm-3", "dist-sm-1", "dist-sm-4"],
           "models": {
             "openai-gpt-5.2": {
               "rpm": 0,
@@ -53806,11 +52177,7 @@
       "instances": {
         "inst-1772120465462-6ct1qjubn": {
           "activeJobs": 3,
-          "activeJobIds": [
-            "dist-sm-3",
-            "dist-sm-1",
-            "dist-sm-4"
-          ],
+          "activeJobIds": ["dist-sm-3", "dist-sm-1", "dist-sm-4"],
           "models": {
             "openai-gpt-5.2": {
               "rpm": 0,
@@ -53932,11 +52299,7 @@
       "instances": {
         "inst-1772120465462-6ct1qjubn": {
           "activeJobs": 3,
-          "activeJobIds": [
-            "dist-sm-3",
-            "dist-sm-1",
-            "dist-sm-4"
-          ],
+          "activeJobIds": ["dist-sm-3", "dist-sm-1", "dist-sm-4"],
           "models": {
             "openai-gpt-5.2": {
               "rpm": 0,
@@ -54058,11 +52421,7 @@
       "instances": {
         "inst-1772120465462-6ct1qjubn": {
           "activeJobs": 3,
-          "activeJobIds": [
-            "dist-sm-3",
-            "dist-sm-1",
-            "dist-sm-4"
-          ],
+          "activeJobIds": ["dist-sm-3", "dist-sm-1", "dist-sm-4"],
           "models": {
             "openai-gpt-5.2": {
               "rpm": 0,
@@ -54184,11 +52543,7 @@
       "instances": {
         "inst-1772120465462-6ct1qjubn": {
           "activeJobs": 3,
-          "activeJobIds": [
-            "dist-sm-3",
-            "dist-sm-1",
-            "dist-sm-4"
-          ],
+          "activeJobIds": ["dist-sm-3", "dist-sm-1", "dist-sm-4"],
           "models": {
             "openai-gpt-5.2": {
               "rpm": 0,
@@ -54310,11 +52665,7 @@
       "instances": {
         "inst-1772120465462-6ct1qjubn": {
           "activeJobs": 3,
-          "activeJobIds": [
-            "dist-sm-3",
-            "dist-sm-1",
-            "dist-sm-4"
-          ],
+          "activeJobIds": ["dist-sm-3", "dist-sm-1", "dist-sm-4"],
           "models": {
             "openai-gpt-5.2": {
               "rpm": 0,
@@ -54436,11 +52787,7 @@
       "instances": {
         "inst-1772120465462-6ct1qjubn": {
           "activeJobs": 3,
-          "activeJobIds": [
-            "dist-sm-3",
-            "dist-sm-1",
-            "dist-sm-4"
-          ],
+          "activeJobIds": ["dist-sm-3", "dist-sm-1", "dist-sm-4"],
           "models": {
             "openai-gpt-5.2": {
               "rpm": 0,
@@ -54562,11 +52909,7 @@
       "instances": {
         "inst-1772120465462-6ct1qjubn": {
           "activeJobs": 3,
-          "activeJobIds": [
-            "dist-sm-3",
-            "dist-sm-1",
-            "dist-sm-4"
-          ],
+          "activeJobIds": ["dist-sm-3", "dist-sm-1", "dist-sm-4"],
           "models": {
             "openai-gpt-5.2": {
               "rpm": 0,
@@ -54688,11 +53031,7 @@
       "instances": {
         "inst-1772120465462-6ct1qjubn": {
           "activeJobs": 3,
-          "activeJobIds": [
-            "dist-sm-3",
-            "dist-sm-1",
-            "dist-sm-4"
-          ],
+          "activeJobIds": ["dist-sm-3", "dist-sm-1", "dist-sm-4"],
           "models": {
             "openai-gpt-5.2": {
               "rpm": 0,
@@ -54814,11 +53153,7 @@
       "instances": {
         "inst-1772120465462-6ct1qjubn": {
           "activeJobs": 3,
-          "activeJobIds": [
-            "dist-sm-3",
-            "dist-sm-1",
-            "dist-sm-4"
-          ],
+          "activeJobIds": ["dist-sm-3", "dist-sm-1", "dist-sm-4"],
           "models": {
             "openai-gpt-5.2": {
               "rpm": 0,
@@ -54940,11 +53275,7 @@
       "instances": {
         "inst-1772120465462-6ct1qjubn": {
           "activeJobs": 3,
-          "activeJobIds": [
-            "dist-sm-3",
-            "dist-sm-1",
-            "dist-sm-4"
-          ],
+          "activeJobIds": ["dist-sm-3", "dist-sm-1", "dist-sm-4"],
           "models": {
             "openai-gpt-5.2": {
               "rpm": 0,
@@ -55066,11 +53397,7 @@
       "instances": {
         "inst-1772120465462-6ct1qjubn": {
           "activeJobs": 3,
-          "activeJobIds": [
-            "dist-sm-3",
-            "dist-sm-1",
-            "dist-sm-4"
-          ],
+          "activeJobIds": ["dist-sm-3", "dist-sm-1", "dist-sm-4"],
           "models": {
             "openai-gpt-5.2": {
               "rpm": 0,
@@ -55192,11 +53519,7 @@
       "instances": {
         "inst-1772120465462-6ct1qjubn": {
           "activeJobs": 3,
-          "activeJobIds": [
-            "dist-sm-3",
-            "dist-sm-1",
-            "dist-sm-4"
-          ],
+          "activeJobIds": ["dist-sm-3", "dist-sm-1", "dist-sm-4"],
           "models": {
             "openai-gpt-5.2": {
               "rpm": 0,
@@ -55318,11 +53641,7 @@
       "instances": {
         "inst-1772120465462-6ct1qjubn": {
           "activeJobs": 3,
-          "activeJobIds": [
-            "dist-sm-3",
-            "dist-sm-1",
-            "dist-sm-4"
-          ],
+          "activeJobIds": ["dist-sm-3", "dist-sm-1", "dist-sm-4"],
           "models": {
             "openai-gpt-5.2": {
               "rpm": 0,
@@ -55444,11 +53763,7 @@
       "instances": {
         "inst-1772120465462-6ct1qjubn": {
           "activeJobs": 3,
-          "activeJobIds": [
-            "dist-sm-3",
-            "dist-sm-1",
-            "dist-sm-4"
-          ],
+          "activeJobIds": ["dist-sm-3", "dist-sm-1", "dist-sm-4"],
           "models": {
             "openai-gpt-5.2": {
               "rpm": 0,
@@ -55570,11 +53885,7 @@
       "instances": {
         "inst-1772120465462-6ct1qjubn": {
           "activeJobs": 3,
-          "activeJobIds": [
-            "dist-sm-3",
-            "dist-sm-1",
-            "dist-sm-4"
-          ],
+          "activeJobIds": ["dist-sm-3", "dist-sm-1", "dist-sm-4"],
           "models": {
             "openai-gpt-5.2": {
               "rpm": 0,
@@ -55696,11 +54007,7 @@
       "instances": {
         "inst-1772120465462-6ct1qjubn": {
           "activeJobs": 3,
-          "activeJobIds": [
-            "dist-sm-3",
-            "dist-sm-1",
-            "dist-sm-4"
-          ],
+          "activeJobIds": ["dist-sm-3", "dist-sm-1", "dist-sm-4"],
           "models": {
             "openai-gpt-5.2": {
               "rpm": 0,
@@ -55822,11 +54129,7 @@
       "instances": {
         "inst-1772120465462-6ct1qjubn": {
           "activeJobs": 3,
-          "activeJobIds": [
-            "dist-sm-3",
-            "dist-sm-1",
-            "dist-sm-4"
-          ],
+          "activeJobIds": ["dist-sm-3", "dist-sm-1", "dist-sm-4"],
           "models": {
             "openai-gpt-5.2": {
               "rpm": 0,
@@ -55948,11 +54251,7 @@
       "instances": {
         "inst-1772120465462-6ct1qjubn": {
           "activeJobs": 3,
-          "activeJobIds": [
-            "dist-sm-3",
-            "dist-sm-1",
-            "dist-sm-4"
-          ],
+          "activeJobIds": ["dist-sm-3", "dist-sm-1", "dist-sm-4"],
           "models": {
             "openai-gpt-5.2": {
               "rpm": 0,
@@ -56074,11 +54373,7 @@
       "instances": {
         "inst-1772120465462-6ct1qjubn": {
           "activeJobs": 3,
-          "activeJobIds": [
-            "dist-sm-3",
-            "dist-sm-1",
-            "dist-sm-4"
-          ],
+          "activeJobIds": ["dist-sm-3", "dist-sm-1", "dist-sm-4"],
           "models": {
             "openai-gpt-5.2": {
               "rpm": 0,
@@ -56200,11 +54495,7 @@
       "instances": {
         "inst-1772120465462-6ct1qjubn": {
           "activeJobs": 3,
-          "activeJobIds": [
-            "dist-sm-3",
-            "dist-sm-1",
-            "dist-sm-4"
-          ],
+          "activeJobIds": ["dist-sm-3", "dist-sm-1", "dist-sm-4"],
           "models": {
             "openai-gpt-5.2": {
               "rpm": 0,
@@ -56326,11 +54617,7 @@
       "instances": {
         "inst-1772120465462-6ct1qjubn": {
           "activeJobs": 3,
-          "activeJobIds": [
-            "dist-sm-3",
-            "dist-sm-1",
-            "dist-sm-4"
-          ],
+          "activeJobIds": ["dist-sm-3", "dist-sm-1", "dist-sm-4"],
           "models": {
             "openai-gpt-5.2": {
               "rpm": 0,
@@ -56452,11 +54739,7 @@
       "instances": {
         "inst-1772120465462-6ct1qjubn": {
           "activeJobs": 3,
-          "activeJobIds": [
-            "dist-sm-3",
-            "dist-sm-1",
-            "dist-sm-4"
-          ],
+          "activeJobIds": ["dist-sm-3", "dist-sm-1", "dist-sm-4"],
           "models": {
             "openai-gpt-5.2": {
               "rpm": 0,
@@ -56578,11 +54861,7 @@
       "instances": {
         "inst-1772120465462-6ct1qjubn": {
           "activeJobs": 3,
-          "activeJobIds": [
-            "dist-sm-3",
-            "dist-sm-1",
-            "dist-sm-4"
-          ],
+          "activeJobIds": ["dist-sm-3", "dist-sm-1", "dist-sm-4"],
           "models": {
             "openai-gpt-5.2": {
               "rpm": 0,
@@ -56704,11 +54983,7 @@
       "instances": {
         "inst-1772120465462-6ct1qjubn": {
           "activeJobs": 3,
-          "activeJobIds": [
-            "dist-sm-3",
-            "dist-sm-1",
-            "dist-sm-4"
-          ],
+          "activeJobIds": ["dist-sm-3", "dist-sm-1", "dist-sm-4"],
           "models": {
             "openai-gpt-5.2": {
               "rpm": 0,
@@ -56830,11 +55105,7 @@
       "instances": {
         "inst-1772120465462-6ct1qjubn": {
           "activeJobs": 3,
-          "activeJobIds": [
-            "dist-sm-3",
-            "dist-sm-1",
-            "dist-sm-4"
-          ],
+          "activeJobIds": ["dist-sm-3", "dist-sm-1", "dist-sm-4"],
           "models": {
             "openai-gpt-5.2": {
               "rpm": 0,
@@ -56956,11 +55227,7 @@
       "instances": {
         "inst-1772120465462-6ct1qjubn": {
           "activeJobs": 3,
-          "activeJobIds": [
-            "dist-sm-3",
-            "dist-sm-1",
-            "dist-sm-4"
-          ],
+          "activeJobIds": ["dist-sm-3", "dist-sm-1", "dist-sm-4"],
           "models": {
             "openai-gpt-5.2": {
               "rpm": 0,
@@ -57082,11 +55349,7 @@
       "instances": {
         "inst-1772120465462-6ct1qjubn": {
           "activeJobs": 3,
-          "activeJobIds": [
-            "dist-sm-3",
-            "dist-sm-1",
-            "dist-sm-4"
-          ],
+          "activeJobIds": ["dist-sm-3", "dist-sm-1", "dist-sm-4"],
           "models": {
             "openai-gpt-5.2": {
               "rpm": 0,
@@ -57208,11 +55471,7 @@
       "instances": {
         "inst-1772120465462-6ct1qjubn": {
           "activeJobs": 3,
-          "activeJobIds": [
-            "dist-sm-3",
-            "dist-sm-1",
-            "dist-sm-4"
-          ],
+          "activeJobIds": ["dist-sm-3", "dist-sm-1", "dist-sm-4"],
           "models": {
             "openai-gpt-5.2": {
               "rpm": 0,
@@ -57334,11 +55593,7 @@
       "instances": {
         "inst-1772120465462-6ct1qjubn": {
           "activeJobs": 3,
-          "activeJobIds": [
-            "dist-sm-3",
-            "dist-sm-1",
-            "dist-sm-4"
-          ],
+          "activeJobIds": ["dist-sm-3", "dist-sm-1", "dist-sm-4"],
           "models": {
             "openai-gpt-5.2": {
               "rpm": 0,
@@ -57460,11 +55715,7 @@
       "instances": {
         "inst-1772120465462-6ct1qjubn": {
           "activeJobs": 3,
-          "activeJobIds": [
-            "dist-sm-3",
-            "dist-sm-1",
-            "dist-sm-4"
-          ],
+          "activeJobIds": ["dist-sm-3", "dist-sm-1", "dist-sm-4"],
           "models": {
             "openai-gpt-5.2": {
               "rpm": 0,
@@ -57586,11 +55837,7 @@
       "instances": {
         "inst-1772120465462-6ct1qjubn": {
           "activeJobs": 3,
-          "activeJobIds": [
-            "dist-sm-3",
-            "dist-sm-1",
-            "dist-sm-4"
-          ],
+          "activeJobIds": ["dist-sm-3", "dist-sm-1", "dist-sm-4"],
           "models": {
             "openai-gpt-5.2": {
               "rpm": 0,
@@ -57712,11 +55959,7 @@
       "instances": {
         "inst-1772120465462-6ct1qjubn": {
           "activeJobs": 3,
-          "activeJobIds": [
-            "dist-sm-3",
-            "dist-sm-1",
-            "dist-sm-4"
-          ],
+          "activeJobIds": ["dist-sm-3", "dist-sm-1", "dist-sm-4"],
           "models": {
             "openai-gpt-5.2": {
               "rpm": 0,
@@ -57838,11 +56081,7 @@
       "instances": {
         "inst-1772120465462-6ct1qjubn": {
           "activeJobs": 3,
-          "activeJobIds": [
-            "dist-sm-3",
-            "dist-sm-1",
-            "dist-sm-4"
-          ],
+          "activeJobIds": ["dist-sm-3", "dist-sm-1", "dist-sm-4"],
           "models": {
             "openai-gpt-5.2": {
               "rpm": 0,
@@ -57964,11 +56203,7 @@
       "instances": {
         "inst-1772120465462-6ct1qjubn": {
           "activeJobs": 3,
-          "activeJobIds": [
-            "dist-sm-3",
-            "dist-sm-1",
-            "dist-sm-4"
-          ],
+          "activeJobIds": ["dist-sm-3", "dist-sm-1", "dist-sm-4"],
           "models": {
             "openai-gpt-5.2": {
               "rpm": 0,
@@ -58090,11 +56325,7 @@
       "instances": {
         "inst-1772120465462-6ct1qjubn": {
           "activeJobs": 3,
-          "activeJobIds": [
-            "dist-sm-3",
-            "dist-sm-1",
-            "dist-sm-4"
-          ],
+          "activeJobIds": ["dist-sm-3", "dist-sm-1", "dist-sm-4"],
           "models": {
             "openai-gpt-5.2": {
               "rpm": 0,
@@ -58216,11 +56447,7 @@
       "instances": {
         "inst-1772120465462-6ct1qjubn": {
           "activeJobs": 3,
-          "activeJobIds": [
-            "dist-sm-3",
-            "dist-sm-1",
-            "dist-sm-4"
-          ],
+          "activeJobIds": ["dist-sm-3", "dist-sm-1", "dist-sm-4"],
           "models": {
             "openai-gpt-5.2": {
               "rpm": 0,
@@ -58342,11 +56569,7 @@
       "instances": {
         "inst-1772120465462-6ct1qjubn": {
           "activeJobs": 3,
-          "activeJobIds": [
-            "dist-sm-3",
-            "dist-sm-1",
-            "dist-sm-4"
-          ],
+          "activeJobIds": ["dist-sm-3", "dist-sm-1", "dist-sm-4"],
           "models": {
             "openai-gpt-5.2": {
               "rpm": 0,
@@ -58468,10 +56691,7 @@
       "instances": {
         "inst-1772120465462-6ct1qjubn": {
           "activeJobs": 2,
-          "activeJobIds": [
-            "dist-sm-1",
-            "dist-sm-4"
-          ],
+          "activeJobIds": ["dist-sm-1", "dist-sm-4"],
           "models": {
             "openai-gpt-5.2": {
               "rpm": 0,
@@ -58593,10 +56813,7 @@
       "instances": {
         "inst-1772120465462-6ct1qjubn": {
           "activeJobs": 2,
-          "activeJobIds": [
-            "dist-sm-1",
-            "dist-sm-4"
-          ],
+          "activeJobIds": ["dist-sm-1", "dist-sm-4"],
           "models": {
             "openai-gpt-5.2": {
               "rpm": 0,
@@ -58718,10 +56935,7 @@
       "instances": {
         "inst-1772120465462-6ct1qjubn": {
           "activeJobs": 2,
-          "activeJobIds": [
-            "dist-sm-1",
-            "dist-sm-4"
-          ],
+          "activeJobIds": ["dist-sm-1", "dist-sm-4"],
           "models": {
             "openai-gpt-5.2": {
               "rpm": 0,
@@ -58843,10 +57057,7 @@
       "instances": {
         "inst-1772120465462-6ct1qjubn": {
           "activeJobs": 2,
-          "activeJobIds": [
-            "dist-sm-1",
-            "dist-sm-4"
-          ],
+          "activeJobIds": ["dist-sm-1", "dist-sm-4"],
           "models": {
             "openai-gpt-5.2": {
               "rpm": 0,
@@ -58968,10 +57179,7 @@
       "instances": {
         "inst-1772120465462-6ct1qjubn": {
           "activeJobs": 2,
-          "activeJobIds": [
-            "dist-sm-1",
-            "dist-sm-4"
-          ],
+          "activeJobIds": ["dist-sm-1", "dist-sm-4"],
           "models": {
             "openai-gpt-5.2": {
               "rpm": 0,
@@ -59093,10 +57301,7 @@
       "instances": {
         "inst-1772120465462-6ct1qjubn": {
           "activeJobs": 2,
-          "activeJobIds": [
-            "dist-sm-1",
-            "dist-sm-4"
-          ],
+          "activeJobIds": ["dist-sm-1", "dist-sm-4"],
           "models": {
             "openai-gpt-5.2": {
               "rpm": 0,
@@ -59218,9 +57423,7 @@
       "instances": {
         "inst-1772120465462-6ct1qjubn": {
           "activeJobs": 1,
-          "activeJobIds": [
-            "dist-sm-1"
-          ],
+          "activeJobIds": ["dist-sm-1"],
           "models": {
             "openai-gpt-5.2": {
               "rpm": 0,
@@ -59342,9 +57545,7 @@
       "instances": {
         "inst-1772120465462-6ct1qjubn": {
           "activeJobs": 1,
-          "activeJobIds": [
-            "dist-sm-1"
-          ],
+          "activeJobIds": ["dist-sm-1"],
           "models": {
             "openai-gpt-5.2": {
               "rpm": 0,
@@ -59466,9 +57667,7 @@
       "instances": {
         "inst-1772120465462-6ct1qjubn": {
           "activeJobs": 1,
-          "activeJobIds": [
-            "dist-sm-1"
-          ],
+          "activeJobIds": ["dist-sm-1"],
           "models": {
             "openai-gpt-5.2": {
               "rpm": 0,
@@ -59590,9 +57789,7 @@
       "instances": {
         "inst-1772120465462-6ct1qjubn": {
           "activeJobs": 1,
-          "activeJobIds": [
-            "dist-sm-1"
-          ],
+          "activeJobIds": ["dist-sm-1"],
           "models": {
             "openai-gpt-5.2": {
               "rpm": 0,
@@ -59714,9 +57911,7 @@
       "instances": {
         "inst-1772120465462-6ct1qjubn": {
           "activeJobs": 1,
-          "activeJobIds": [
-            "dist-sm-1"
-          ],
+          "activeJobIds": ["dist-sm-1"],
           "models": {
             "openai-gpt-5.2": {
               "rpm": 0,
@@ -59838,9 +58033,7 @@
       "instances": {
         "inst-1772120465462-6ct1qjubn": {
           "activeJobs": 1,
-          "activeJobIds": [
-            "dist-sm-1"
-          ],
+          "activeJobIds": ["dist-sm-1"],
           "models": {
             "openai-gpt-5.2": {
               "rpm": 0,
@@ -59962,9 +58155,7 @@
       "instances": {
         "inst-1772120465462-6ct1qjubn": {
           "activeJobs": 1,
-          "activeJobIds": [
-            "dist-sm-1"
-          ],
+          "activeJobIds": ["dist-sm-1"],
           "models": {
             "openai-gpt-5.2": {
               "rpm": 0,
@@ -60086,9 +58277,7 @@
       "instances": {
         "inst-1772120465462-6ct1qjubn": {
           "activeJobs": 1,
-          "activeJobIds": [
-            "dist-sm-1"
-          ],
+          "activeJobIds": ["dist-sm-1"],
           "models": {
             "openai-gpt-5.2": {
               "rpm": 0,
@@ -60210,9 +58399,7 @@
       "instances": {
         "inst-1772120465462-6ct1qjubn": {
           "activeJobs": 1,
-          "activeJobIds": [
-            "dist-sm-1"
-          ],
+          "activeJobIds": ["dist-sm-1"],
           "models": {
             "openai-gpt-5.2": {
               "rpm": 0,

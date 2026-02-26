@@ -3,6 +3,12 @@
  */
 import type { DashboardDataPoint, InstanceInfo, JobTypeConfig } from './dashboardTypes';
 
+/** Configured capacity for a model (transformed key → limits) */
+export interface ModelCapacityConfig {
+  tpm: number;
+  rpm: number;
+}
+
 const PERCENT_MULTIPLIER = 100;
 
 /** Get a numeric value from a data point, defaulting to 0 */
@@ -43,7 +49,8 @@ function aggregateSingleModel(
   agg: DashboardDataPoint,
   point: DashboardDataPoint,
   model: string,
-  instances: InstanceInfo[]
+  instances: InstanceInfo[],
+  configCap?: ModelCapacityConfig
 ): void {
   let rpm = 0;
   let rpmCap = 0;
@@ -63,9 +70,9 @@ function aggregateSingleModel(
   }
 
   agg[`${model}_rpm`] = rpm;
-  agg[`${model}_rpmCapacity`] = rpmCap;
+  agg[`${model}_rpmCapacity`] = configCap?.rpm ?? rpmCap;
   agg[`${model}_tpm`] = tpm;
-  agg[`${model}_tpmCapacity`] = tpmCap;
+  agg[`${model}_tpmCapacity`] = configCap?.tpm ?? tpmCap;
   agg[`${model}_concurrent`] = concurrent;
   agg[`${model}_concurrentCapacity`] = concurrentCap;
 }
@@ -75,10 +82,11 @@ function aggregateModelMetrics(
   agg: DashboardDataPoint,
   point: DashboardDataPoint,
   models: string[],
-  instances: InstanceInfo[]
+  instances: InstanceInfo[],
+  modelCapacities?: Map<string, ModelCapacityConfig>
 ): void {
   for (const model of models) {
-    aggregateSingleModel(agg, point, model, instances);
+    aggregateSingleModel(agg, point, model, instances, modelCapacities?.get(model));
   }
 }
 
@@ -98,12 +106,13 @@ export function aggregateChartData(
   data: DashboardDataPoint[],
   jobTypes: JobTypeConfig[],
   instances: InstanceInfo[],
-  models: string[]
+  models: string[],
+  modelCapacities?: Map<string, ModelCapacityConfig>
 ): DashboardDataPoint[] {
   return data.map((point) => {
     const agg: DashboardDataPoint = { time: point.time, timeSeconds: point.timeSeconds };
     aggregateJobTypes(agg, point, jobTypes, instances);
-    aggregateModelMetrics(agg, point, models, instances);
+    aggregateModelMetrics(agg, point, models, instances, modelCapacities);
     copyInstanceJobs(agg, point, instances);
     return agg;
   });

@@ -215,6 +215,77 @@ export function countResourceDimensions(testData: TestData): number {
   return Number(hasRpm) + Number(hasTpm) + Number(hasConcurrent);
 }
 
+// =============================================================================
+// Minute boundary helpers
+// =============================================================================
+
+export interface MinuteBoundary {
+  label: string;
+  startSeconds: number;
+  endSeconds: number;
+  epochStartMs: number;
+  epochEndMs: number;
+}
+
+const MS_PER_MINUTE = 60000;
+const MS_TO_SEC = 1000;
+
+function findTestEndTime(testData: TestData): number {
+  const lastSnapshot = testData.snapshots[testData.snapshots.length - 1];
+  return Object.values(testData.jobs).reduce((max, job) => {
+    const end = job.events[job.events.length - 1]?.timestamp ?? 0;
+    return end > max ? end : max;
+  }, lastSnapshot?.timestamp ?? 0);
+}
+
+/** Compute epoch-minute boundaries relative to test start time */
+export function computeMinuteBoundaries(testData: TestData): MinuteBoundary[] {
+  if (Object.keys(testData.jobs).length === 0) return [];
+
+  const { startTime } = testData.metadata;
+  const endTime = findTestEndTime(testData);
+  const firstMinute = Math.floor(startTime / MS_PER_MINUTE);
+  const lastMinute = Math.floor(endTime / MS_PER_MINUTE);
+
+  const boundaries: MinuteBoundary[] = [];
+  for (let m = firstMinute; m <= lastMinute; m++) {
+    const epochStart = m * MS_PER_MINUTE;
+    const epochEnd = epochStart + MS_PER_MINUTE;
+    boundaries.push({
+      label: `Min ${boundaries.length + 1}`,
+      startSeconds: (epochStart - startTime) / MS_TO_SEC,
+      endSeconds: (epochEnd - startTime) / MS_TO_SEC,
+      epochStartMs: epochStart,
+      epochEndMs: epochEnd,
+    });
+  }
+  return boundaries;
+}
+
+/** Get the timestamp when a job started (consuming rate-limit capacity) */
+function getJobStartedMs(job: JobRecord): number {
+  const started = job.events.find((e) => e.type === 'started');
+  return started?.timestamp ?? job.sentAt;
+}
+
+/** Compute job usage filtered to a specific epoch-minute window */
+export function computeJobUsageForWindow(testData: TestData, boundary: MinuteBoundary): JobTypeUsage {
+  const result: JobTypeUsage = { jobCount: {}, tokenUsage: {}, totalJobs: 0, totalTokens: 0 };
+
+  for (const job of Object.values(testData.jobs)) {
+    const startedMs = getJobStartedMs(job);
+    if (startedMs < boundary.epochStartMs || startedMs >= boundary.epochEndMs) continue;
+
+    const tokens = sumJobTokens(job);
+    result.jobCount[job.jobType] = (result.jobCount[job.jobType] ?? 0) + 1;
+    result.tokenUsage[job.jobType] = (result.tokenUsage[job.jobType] ?? 0) + tokens;
+    result.totalJobs += 1;
+    result.totalTokens += tokens;
+  }
+
+  return result;
+}
+
 /** Determine which resource types have data in the test snapshots */
 export function getEnabledResourceTypes(testData: TestData): Set<ResourceType> {
   const enabled = new Set<ResourceType>();

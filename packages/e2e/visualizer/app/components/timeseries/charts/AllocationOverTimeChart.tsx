@@ -107,6 +107,40 @@ function ResourceTypeTabs({
   );
 }
 
+function CustomTooltipContent({
+  active,
+  label,
+  payload,
+  series,
+}: {
+  active?: boolean;
+  label?: number;
+  payload?: Array<{ dataKey: string; value: number }>;
+  series: ChartSeries[];
+}) {
+  if (!active || !payload || payload.length === 0) return null;
+
+  const valuesByKey = new Map<string, number>();
+  for (const entry of payload) {
+    valuesByKey.set(entry.dataKey, entry.value);
+  }
+
+  return (
+    <div style={TOOLTIP_STYLE}>
+      <p style={{ color: '#eee', fontWeight: 600, marginBottom: '6px' }}>{Number(label).toFixed(1)}s</p>
+      {series.map((s) => {
+        const used = valuesByKey.get(s.usedKey) ?? 0;
+        const capacity = valuesByKey.get(s.allocKey) ?? 0;
+        return (
+          <p key={s.label} style={{ color: s.color, margin: '2px 0', fontSize: 12 }}>
+            {s.label}: {formatValueTick(used)}/{formatValueTick(capacity)}
+          </p>
+        );
+      })}
+    </div>
+  );
+}
+
 function AllocationAreaChart({ data, series }: { data: DashboardDataPoint[]; series: ChartSeries[] }) {
   if (series.length === 0) {
     return (
@@ -128,23 +162,19 @@ function AllocationAreaChart({ data, series }: { data: DashboardDataPoint[]; ser
           tickFormatter={formatTimeTick}
         />
         <YAxis tick={{ fill: '#888', fontSize: 10 }} tickFormatter={formatValueTick} />
-        <Tooltip
-          contentStyle={TOOLTIP_STYLE}
-          labelStyle={{ color: '#eee', fontWeight: 600, marginBottom: '6px' }}
-          labelFormatter={(v) => `${Number(v).toFixed(1)}s`}
-        />
+        <Tooltip content={<CustomTooltipContent series={series} />} />
         {series.map((s) => (
           <Area
             key={s.allocKey}
             type="monotone"
             dataKey={s.allocKey}
             name={`${s.label} Capacity`}
-            stackId="alloc"
             fill={s.color}
-            fillOpacity={0.2}
+            fillOpacity={0.15}
             stroke={s.color}
             strokeWidth={1.5}
-            strokeOpacity={0.6}
+            strokeOpacity={0.4}
+            strokeDasharray="4 3"
             activeDot={false}
           />
         ))}
@@ -154,9 +184,8 @@ function AllocationAreaChart({ data, series }: { data: DashboardDataPoint[]; ser
             type="monotone"
             dataKey={s.usedKey}
             name={`${s.label} Used`}
-            stackId="used"
             fill={s.color}
-            fillOpacity={0.5}
+            fillOpacity={0.4}
             stroke={s.color}
             strokeWidth={2}
           />

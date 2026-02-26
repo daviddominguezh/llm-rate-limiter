@@ -4,7 +4,7 @@
 import type { TestData } from '@llm-rate-limiter/e2e-test-results';
 
 import type { DashboardConfig, DashboardDataPoint, InstanceInfo, JobTypeConfig } from './dashboardTypes';
-import { JOB_TYPE_COLORS } from './dashboardTypes';
+import { JOB_TYPE_COLOR_PALETTE } from './dashboardTypes';
 
 const MODEL_KEY_REGEXP = /[^a-zA-Z0-9]/gu;
 const MS_TO_SECONDS = 1000;
@@ -133,10 +133,10 @@ export function getJobTypes(testData: TestData): JobTypeConfig[] {
     }
   }
 
-  return Array.from(jobTypes).map((id) => ({
+  return Array.from(jobTypes).map((id, idx) => ({
     id,
     label: id.charAt(0).toUpperCase() + id.slice(1),
-    color: JOB_TYPE_COLORS[id] ?? JOB_TYPE_COLORS.default,
+    color: JOB_TYPE_COLOR_PALETTE[idx % JOB_TYPE_COLOR_PALETTE.length],
   }));
 }
 

@@ -52,7 +52,7 @@ function UtilizationLineChart({ data, jobTypes }: AggregatedUtilizationChartsPro
           <Tooltip
             contentStyle={TOOLTIP_STYLE}
             labelStyle={{ color: '#eee', fontWeight: 600 }}
-            formatter={(val) => [`${val}%`]}
+            formatter={(val: number, name: string) => [`${val}%`, name]}
             labelFormatter={(v) => `${Number(v).toFixed(1)}s`}
           />
           {jobTypes.map((jt) => (
@@ -96,7 +96,7 @@ function DynamicRatioChart({ data, jobTypes }: AggregatedUtilizationChartsProps)
           <Tooltip
             contentStyle={TOOLTIP_STYLE}
             labelStyle={{ color: '#eee', fontWeight: 600 }}
-            formatter={(val) => [`${val}%`]}
+            formatter={(val: number, name: string) => [`${val}%`, name]}
             labelFormatter={(v) => `${Number(v).toFixed(1)}s`}
           />
           {jobTypes.map((jt) => (

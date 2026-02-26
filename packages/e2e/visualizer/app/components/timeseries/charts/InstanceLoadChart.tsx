@@ -47,6 +47,7 @@ export function InstanceLoadChart({ data, instances }: InstanceLoadChartProps) {
           <Tooltip
             contentStyle={TOOLTIP_STYLE}
             labelStyle={{ color: '#eee', fontWeight: 600 }}
+            formatter={(val: number, name: string) => [val, name]}
             labelFormatter={(v) => `${Number(v).toFixed(1)}s`}
           />
           {instances.map((inst, i) => (

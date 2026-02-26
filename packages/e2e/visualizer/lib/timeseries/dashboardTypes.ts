@@ -25,12 +25,16 @@ export interface DashboardConfig {
   models: string[];
 }
 
-export const JOB_TYPE_COLORS: Record<string, string> = {
-  summary: '#E85E3B',
-  analysis: '#3B8EE8',
-  extraction: '#5EBB6E',
-  default: '#D4A843',
-};
+export const JOB_TYPE_COLOR_PALETTE = [
+  '#E85E3B',
+  '#3B8EE8',
+  '#5EBB6E',
+  '#D4A843',
+  '#9B59B6',
+  '#E67E22',
+  '#1ABC9C',
+  '#E74C3C',
+];
 
 export const INSTANCE_COLORS = ['#E8715A', '#5A9CE8', '#6EC97D', '#D4A843'];
 

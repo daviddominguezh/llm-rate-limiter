@@ -245,7 +245,8 @@ function useCursorHover(params: CursorHoverParams): (e: React.MouseEvent<SVGSVGE
       if (!svg || !layout) return;
 
       const rect = svg.getBoundingClientRect();
-      const chartX = event.clientX - rect.left - dims.margin.left;
+      const scaleX = dims.width / rect.width;
+      const chartX = (event.clientX - rect.left) * scaleX - dims.margin.left;
       const index = findNearestIndex(panel.capacityRows, layout.xScale, chartX);
       const hoveredKey = detectHoveredKey(event);
 

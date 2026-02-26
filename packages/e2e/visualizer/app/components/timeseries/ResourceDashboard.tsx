@@ -176,6 +176,12 @@ export function ResourceDashboard({ testData }: ResourceDashboardProps) {
       (p) => p.timeSeconds >= jobTimeBounds.startSeconds && p.timeSeconds <= jobTimeBounds.endSeconds
     );
   }, [aggregatedData, jobTimeBounds]);
+  const rawChartData = useMemo(() => {
+    if (!jobTimeBounds) return rawData;
+    return rawData.filter(
+      (p) => p.timeSeconds >= jobTimeBounds.startSeconds && p.timeSeconds <= jobTimeBounds.endSeconds
+    );
+  }, [rawData, jobTimeBounds]);
   const minuteBoundaries = useMemo(() => computeMinuteBoundaries(testData), [testData]);
   const [selectedMinute, setSelectedMinute] = useState(0);
   const enabledResourceTypes = useMemo(() => getEnabledResourceTypes(testData), [testData]);
@@ -214,7 +220,12 @@ export function ResourceDashboard({ testData }: ResourceDashboardProps) {
         models={config.models}
         enabledResourceTypes={enabledResourceTypes}
       />
-      <AggregatedUtilizationCharts data={chartData} jobTypes={config.jobTypes} />
+      <AggregatedUtilizationCharts
+        data={chartData}
+        rawData={rawChartData}
+        jobTypes={config.jobTypes}
+        instances={instances}
+      />
       <InstanceLoadChart data={chartData} instances={instances} />
       <AggregatedJobTypeTable data={chartData} jobTypes={config.jobTypes} />
 

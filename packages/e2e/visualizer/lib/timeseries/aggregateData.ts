@@ -17,6 +17,19 @@ function numVal(point: DashboardDataPoint, key: string): number {
   return typeof val === 'number' ? val : 0;
 }
 
+/** Count how many instances have data for this job type in this data point */
+function countActiveInstances(
+  point: DashboardDataPoint,
+  jt: JobTypeConfig,
+  instances: InstanceInfo[]
+): number {
+  let count = 0;
+  for (const inst of instances) {
+    if (numVal(point, `${inst.shortId}_${jt.id}_slots`) > 0) count += 1;
+  }
+  return count;
+}
+
 /** Aggregate job type data across instances for one data point */
 function aggregateJobTypes(
   agg: DashboardDataPoint,
@@ -37,7 +50,8 @@ function aggregateJobTypes(
 
     agg[`${jt.id}_slots`] = totalSlots;
     agg[`${jt.id}_inFlight`] = totalInFlight;
-    const avgRatio = instances.length > 0 ? totalRatio / instances.length : 0;
+    const activeCount = countActiveInstances(point, jt, instances);
+    const avgRatio = activeCount > 0 ? totalRatio / activeCount : 0;
     agg[`${jt.id}_ratio`] = Math.round(avgRatio);
     const utilPct = totalSlots > 0 ? (totalInFlight / totalSlots) * PERCENT_MULTIPLIER : 0;
     agg[`${jt.id}_utilization`] = Math.round(utilPct);

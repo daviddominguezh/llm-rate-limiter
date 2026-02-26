@@ -43,6 +43,30 @@ function aggregateJobTypeData(
   return aggregated;
 }
 
+/** Compute ratios that always sum to exactly 100 (adjusts largest to absorb rounding) */
+function computeNormalizedRatios(
+  jobTypeData: Record<string, { slots: number; inFlight: number }>,
+  totalSlots: number
+): Record<string, number> {
+  const ratios: Record<string, number> = {};
+  if (totalSlots <= 0) {
+    for (const jt of Object.keys(jobTypeData)) ratios[jt] = 0;
+    return ratios;
+  }
+
+  for (const [jt, data] of Object.entries(jobTypeData)) {
+    ratios[jt] = Math.round((data.slots / totalSlots) * PERCENT_MULTIPLIER);
+  }
+
+  const sum = Object.values(ratios).reduce((a, b) => a + b, 0);
+  if (sum !== PERCENT_MULTIPLIER && Object.keys(ratios).length > 0) {
+    const largest = Object.entries(ratios).reduce((a, b) => (b[1] >= a[1] ? b : a));
+    ratios[largest[0]] += PERCENT_MULTIPLIER - sum;
+  }
+
+  return ratios;
+}
+
 /** Transform a single snapshot to dashboard data point */
 function transformSnapshot(
   snapshot: TestData['snapshots'][0],
@@ -78,13 +102,12 @@ function transformSnapshot(
       // Aggregate job types across all models
       const jobTypeData = aggregateJobTypeData(state.models);
       const totalSlots = Object.values(jobTypeData).reduce((sum, jt) => sum + jt.slots, 0);
+      const ratios = computeNormalizedRatios(jobTypeData, totalSlots);
 
       for (const [jobType, jtData] of Object.entries(jobTypeData)) {
         point[`${shortId}_${jobType}_slots`] = jtData.slots;
         point[`${shortId}_${jobType}_inFlight`] = jtData.inFlight;
-        // Compute ratio from slots
-        const ratio = totalSlots > 0 ? Math.round((jtData.slots / totalSlots) * PERCENT_MULTIPLIER) : 0;
-        point[`${shortId}_${jobType}_ratio`] = ratio;
+        point[`${shortId}_${jobType}_ratio`] = ratios[jobType];
       }
     }
   }
